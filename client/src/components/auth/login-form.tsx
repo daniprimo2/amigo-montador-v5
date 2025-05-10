@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
+  username: z.string().email('Email inválido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
@@ -25,14 +25,14 @@ export const LoginForm: React.FC = () => {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     loginMutation.mutate(
-      { username: data.email, password: data.password },
+      { username: data.username, password: data.password },
       {
         onSuccess: (user) => {
           toast({

@@ -11,7 +11,7 @@ interface PasswordInputProps extends Omit<InputProps, 'type'> {
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, showCounter = false, maxLength = 26, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
-    const [inputValue, setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState(props.value as string || '');
 
     const togglePasswordVisibility = () => {
       setShowPassword(!showPassword);
