@@ -1,0 +1,296 @@
+
+Desenvolvimento do Aplicativo: Amigo Montador
+
+
+O projeto é um aplicativo que conecta lojas de móveis planejados a montadores profissionais. 
+O objetivo é facilitar a contratação de montadores para execução de projetos vendidos pelas lojas.
+O lojista poderá se cadastrar e publicar projetos no app, informando detalhes como o modelo do móvel,
+local de montagem e demais especificações relevantes.
+
+Montadores cadastrados no sistema poderão visualizar os projetos disponíveis, 
+candidatar-se aos que desejarem, e negociar diretamente com o lojista por meio de um chat integrado. 
+Uma vez aceita uma proposta, o status do projeto será atualizado automaticamente conforme o andamento (ex: "em negociação", "aceito", "em execução", "finalizado").
+
+
+Plataformas: Android e iOS
+Cores predominantes: Branco, Preto e Cinza
+
+1. Tipos de Usuário
+    Lojista:
+
+        Cadastra e gerencia ordens de serviço (projetos de montagem)
+
+        Contrata montadores
+
+        Acompanha o andamento dos serviços
+
+    Montador:
+
+        Visualiza ordens de serviço disponíveis na sua região
+
+        Se candidata às montagens
+
+        Executa os serviços contratados
+
+        Faz check-in/check-out e atualiza status de execução
+
+2. Cadastro e Login
+    Login:
+
+        Via e-mail e senha
+
+    Cadastro do Lojista:
+
+        Nome
+
+        CPF
+
+        Telefone
+
+        Nome da Loja
+
+        CNPJ
+
+        Endereço
+
+        Telefone
+
+        E-mail
+
+        Senha (com campo de visualização)
+
+        Confirmação de senha (com campo de visualização)
+
+        Foto do logotipo (obrigatória)
+
+        Tipo de material: Marcenaria, Plano de corte e/ou Fábrica
+
+        Cadastro do Montador:
+
+        Nome
+
+        CPF
+
+        Telefone
+
+        Endereço
+
+        E-mail
+
+        Senha (com campo de visualização)
+
+        Confirmação de senha (com campo de visualização)
+
+        Foto de perfil (obrigatória)
+
+        Especialidade: Marcenaria, Plano de corte e/ou Fábrica
+
+        Faz assistência técnica (sim ou não)
+
+        Descrição da experiência profissional
+
+        Upload de documentos
+
+3. Geolocalização e Alcance:
+
+    Montadores visualizam serviços com base em um raio de 20 km do CEP cadastrado
+
+        Possibilidade de aumentar alcance até 100 km
+
+        É possível alterar o CEP manualmente
+
+        Visualização dos serviços em formato de lista ou mapa
+
+4. Publicação de Serviços (Apenas Lojista):
+
+        Nome do projeto
+
+        Data de início
+
+        Valor
+
+        Endereço da montagem
+
+        Upload de projeto executivo em PDF (permitido múltiplos arquivos)
+
+5. Agenda e Check-in:
+
+    Montadores fazem check-in e check-out diariamente
+
+    Notificações são enviadas ao lojista com os horários
+
+    Montadores definem agenda e estimativa de dias para concluir a montagem
+
+    Essas informações aparecem também na agenda do lojista
+
+6. Candidatura e Contratação:
+
+    Montadores se candidatam aos serviços
+
+    Lojistas escolhem um candidato entre os interessados
+
+    Status do serviço:
+
+        Em aberto
+
+        Em andamento
+
+        Finalizado
+
+        Cancelado
+
+7. Pagamento e Sistema de Escrow:
+
+    Pagamento realizado via Pix dentro do app
+
+    Valor fica retido até o montador finalizar o serviço e o lojista aprovar
+
+    Lojista aprova a entrega para liberar o pagamento   
+
+    Taxa de 10% é retida pela plataforma
+
+8. Chat Interno:
+
+    Chat vinculado ao serviço entre lojista e montador
+
+    Após seleção do montador e pagamento, outros chats são encerrados automaticamente
+
+    Chat é arquivado ao final do serviço
+
+9. Avaliações:
+
+    Após cada serviço, ambos os usuários devem avaliar (obrigatório)
+
+    Avaliação de 1 a 5 estrelas + comentário
+
+    Avaliações são exibidas nos perfis
+
+10. Notificações Push
+
+    Novas propostas recebidas
+
+    Mudança de status dos serviços
+
+    Novas mensagens
+
+    Atualizações da plataforma
+
+11. Segurança e Moderação:
+
+    Denúncia de usuários ou serviços
+
+    Botão de suporte técnico
+
+    Acesso de administrador com permissões para gerenciar:
+
+        Denúncias
+
+        Usuários
+
+        Pagamentos
+
+12. Dashboard Administrativo
+Indicadores em tempo real para gestão:
+
+    Indicadores em tempo real:
+
+    Cadastros diários
+
+    Usuários por estado
+
+    Montador com mais candidaturas
+
+    Loja mais ativa
+
+    Quantidade de ordens de serviço por status e região
+
+13. Tecnologias Sugeridas:
+
+    DB: PostgresDB
+
+    Backend: Spring Boot 3.xxx / Java 21
+
+    Frontend: React Native
+
+    Push Notifications: Batch (Para gerenciar a fila de notificações)
+
+    Autenticação: Kaycloack
+
+    Pagamento com escrow: Pagar-me
+
+
+
+QUANTIDADE DE TELAS:
+Autenticação (3 telas)
+
+    Tela de Boas-Vindas / Escolha de Acesso (Entrar ou Cadastrar)
+
+    Tela de Login
+
+    Tela de Escolha de Tipo de Cadastro (Lojista ou Montador)
+
+Cadastro (2 fluxos, total: 6 telas)
+Lojista:
+    4. Cadastro - Dados Pessoais
+    5. Cadastro - Dados da Loja + Upload do Logotipo
+
+Montador:
+    6. Cadastro - Dados Pessoais + Foto
+    7. Cadastro - Especialidade e Experiência
+    8. Cadastro - Upload de Documentos
+
+Dashboard Principal (2 telas)
+    Home do Lojista (menu, publicações, agenda)
+
+    Home do Montador (serviços próximos, agenda)
+
+Publicações de Serviços (5 telas)
+    Criar Nova Ordem de Serviço (formulário em etapas)
+
+    Visualizar Ordem de Serviço
+
+    Lista de Serviços Ativos
+
+    Lista de Serviços Finalizados
+
+    Lista de Serviços Cancelados
+
+Geolocalização (2 telas)
+    Lista de Serviços Próximos
+
+    Mapa com Serviços
+
+Agenda e Check-in (2 telas)
+
+Agenda do Montador (com opção de adicionar dias estimados)
+
+Agenda do Lojista (resumo das montagens agendadas)
+
+Candidatura e Contratação (3 telas)
+    Tela de Candidatura (visualização antes de se candidatar)
+
+    Lista de Candidatos (para o Lojista escolher)
+
+    Tela de Acompanhamento do Serviço (status, documentos, avaliações)
+
+Chat (2 telas)
+    Lista de Conversas
+
+    Tela de Chat
+
+Avaliação (2 telas)
+    Tela de Avaliar Serviço
+
+    Tela de Ver Avaliações de um Perfil
+
+Pagamento (2 telas)
+    Tela de Pagamento (escrow, Pix)
+
+    Tela de Aprovação Final do Serviço (liberação do pagamento)
+
+Administração e Suporte (3 telas)
+    
+    Tela de Suporte Técnico
+
+Dashboard do Administrador (dados, denúncias, relatórios)
+
