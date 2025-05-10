@@ -21,6 +21,7 @@ export interface IStorage {
   
   // Montadores
   getAssemblerByUserId(userId: number): Promise<Assembler | undefined>;
+  getAssemblerById(id: number): Promise<Assembler | undefined>;
   createAssembler(assembler: InsertAssembler): Promise<Assembler>;
   updateAssembler(id: number, assemblerData: Partial<Assembler>): Promise<Assembler>;
   
@@ -41,6 +42,11 @@ export interface IStorage {
   // Mensagens
   getMessagesByServiceId(serviceId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  
+  // Avaliações
+  getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined>;
+  getRatingsByServiceId(serviceId: number): Promise<Rating[]>;
+  createRating(rating: InsertRating): Promise<Rating>;
   
   // Sessão
   sessionStore: session.Store;
@@ -110,6 +116,11 @@ export class DatabaseStorage implements IStorage {
   // Montadores
   async getAssemblerByUserId(userId: number): Promise<Assembler | undefined> {
     const [assembler] = await db.select().from(assemblers).where(eq(assemblers.userId, userId));
+    return assembler;
+  }
+  
+  async getAssemblerById(id: number): Promise<Assembler | undefined> {
+    const [assembler] = await db.select().from(assemblers).where(eq(assemblers.id, id));
     return assembler;
   }
 
@@ -286,6 +297,37 @@ export class DatabaseStorage implements IStorage {
       .values(messageData)
       .returning();
     return message;
+  }
+  
+  // Avaliações
+  async getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined> {
+    const [rating] = await db
+      .select()
+      .from(ratings)
+      .where(
+        and(
+          eq(ratings.serviceId, serviceId),
+          eq(ratings.fromUserId, fromUserId),
+          eq(ratings.toUserId, toUserId)
+        )
+      );
+    return rating;
+  }
+  
+  async getRatingsByServiceId(serviceId: number): Promise<Rating[]> {
+    return await db
+      .select()
+      .from(ratings)
+      .where(eq(ratings.serviceId, serviceId))
+      .orderBy(desc(ratings.createdAt));
+  }
+  
+  async createRating(ratingData: InsertRating): Promise<Rating> {
+    const [rating] = await db
+      .insert(ratings)
+      .values(ratingData)
+      .returning();
+    return rating;
   }
 }
 

@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, not, isNotNull } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, type User, type Store, type Assembler, type Service, type Message } from "@shared/schema";
+import { services, applications, stores, assemblers, messages, users, type User, type Store, type Assembler, type Service, type Message } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Declarar as funções globais de notificação
@@ -150,6 +150,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar serviços ativos:", error);
       res.status(500).json({ message: "Erro ao buscar serviços ativos" });
+    }
+  });
+  
+  // Obter serviços com candidaturas aceitas para a loja
+  app.get("/api/store/services/with-applications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Acesso permitido apenas para lojistas" });
+      }
+
+      // Obter o id da loja do usuário
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Buscar todos os serviços da loja com status 'in-progress' (são os que têm candidaturas aceitas)
+      const storeServices = await db
+        .select({
+          id: services.id,
+          title: services.title,
+          description: services.description,
+          location: services.location,
+          date: services.date,
+          price: services.price,
+          status: services.status,
+          storeId: services.storeId
+        })
+        .from(services)
+        .where(
+          and(
+            eq(services.storeId, store.id),
+            eq(services.status, 'in-progress')
+          )
+        );
+
+      // Para cada serviço, obter a candidatura aceita
+      const servicesWithApplication = await Promise.all(storeServices.map(async (service) => {
+        // Buscar a candidatura aceita para este serviço
+        const acceptedApplications = await db
+          .select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, service.id),
+              eq(applications.status, 'accepted')
+            )
+          );
+
+        // Se houver uma candidatura aceita, obter detalhes do montador
+        if (acceptedApplications.length > 0) {
+          const assemblerId = acceptedApplications[0].assemblerId;
+          
+          // Buscar dados do montador
+          const assembler = await storage.getAssemblerById(assemblerId);
+            
+          if (assembler) {
+            const assemblerUserId = assembler.userId;
+            
+            // Buscar dados do usuário montador
+            const userResult = await db
+              .select({
+                id: users.id,
+                name: users.name
+              })
+              .from(users)
+              .where(eq(users.id, assemblerUserId))
+              .limit(1);
+              
+            if (userResult.length > 0) {
+              return {
+                ...service,
+                assembler: {
+                  id: assemblerId,
+                  name: userResult[0].name,
+                  userId: assemblerUserId
+                }
+              };
+            }
+          }
+        }
+        
+        // Se não houver candidatura aceita ou não encontrar o montador, retornar apenas o serviço
+        return service;
+      }));
+
+      res.json(servicesWithApplication);
+    } catch (error) {
+      console.error("Erro ao buscar serviços com candidaturas:", error);
+      res.status(500).json({ message: "Erro ao buscar serviços com candidaturas" });
     }
   });
 
