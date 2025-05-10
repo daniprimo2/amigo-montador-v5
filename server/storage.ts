@@ -38,6 +38,10 @@ export interface IStorage {
   createApplication(application: InsertApplication): Promise<Application>;
   acceptApplication(id: number, serviceId: number): Promise<void>;
   
+  // Mensagens
+  getMessagesByServiceId(serviceId: number): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  
   // Sessão
   sessionStore: session.Store;
 }
@@ -266,6 +270,22 @@ export class DatabaseStorage implements IStorage {
           not(eq(applications.id, id))
         )
       );
+  }
+  
+  // Mensagens
+  async getMessagesByServiceId(serviceId: number): Promise<Message[]> {
+    return await db.select()
+      .from(messages)
+      .where(eq(messages.serviceId, serviceId))
+      .orderBy(asc(messages.sentAt));
+  }
+
+  async createMessage(messageData: InsertMessage): Promise<Message> {
+    const [message] = await db
+      .insert(messages)
+      .values(messageData)
+      .returning();
+    return message;
   }
 }
 

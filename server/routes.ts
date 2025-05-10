@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { services, applications, type User, type Store, type Assembler, type Service } from "@shared/schema";
+import { WebSocketServer, WebSocket } from 'ws';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Log das requisições
@@ -244,7 +245,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const newApplication = await storage.createApplication(applicationData);
-      res.status(201).json(newApplication);
+      
+      // Atualizar status do serviço para 'in-progress'
+      await storage.updateServiceStatus(serviceId, 'in-progress');
+      
+      // Criar mensagem inicial para iniciar o chat
+      const messageData = {
+        serviceId,
+        senderId: req.user.id,
+        content: `Olá! Eu sou ${req.user.name} e me candidatei para realizar este serviço. Estou à disposição para discutirmos os detalhes.`,
+        sentAt: new Date()
+      };
+      
+      await storage.createMessage(messageData);
+      
+      res.status(201).json({
+        application: newApplication,
+        message: "Candidatura enviada com sucesso. O status do serviço foi atualizado para 'Em andamento' e um chat foi iniciado."
+      });
     } catch (error) {
       console.error("Erro ao candidatar-se para serviço:", error);
       res.status(500).json({ message: "Erro ao candidatar-se para serviço" });
@@ -435,6 +453,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
       res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+
+  // Obter mensagens de um serviço
+  app.get("/api/services/:id/messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se é o lojista dono do serviço ou o montador candidato
+      let hasAccess = false;
+      
+      if (req.user?.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (store && store.id === service.storeId) {
+          hasAccess = true;
+        }
+      } else if (req.user?.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        if (assembler) {
+          // Verificar se o montador tem uma candidatura para esse serviço
+          const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+          if (application) {
+            hasAccess = true;
+          }
+        }
+      }
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Não autorizado a acessar este chat" });
+      }
+
+      // Obter mensagens
+      const messages = await storage.getMessagesByServiceId(serviceId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Erro ao buscar mensagens:", error);
+      res.status(500).json({ message: "Erro ao buscar mensagens" });
+    }
+  });
+
+  // Enviar mensagem em um serviço
+  app.post("/api/services/:id/messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+      const { content } = req.body;
+
+      if (!content || content.trim() === '') {
+        return res.status(400).json({ message: "Conteúdo da mensagem não pode ser vazio" });
+      }
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se é o lojista dono do serviço ou o montador candidato
+      let hasAccess = false;
+      
+      if (req.user?.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (store && store.id === service.storeId) {
+          hasAccess = true;
+        }
+      } else if (req.user?.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        if (assembler) {
+          // Verificar se o montador tem uma candidatura para esse serviço
+          const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+          if (application) {
+            hasAccess = true;
+          }
+        }
+      }
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Não autorizado a enviar mensagens neste chat" });
+      }
+
+      // Criar mensagem
+      const messageData = {
+        serviceId,
+        senderId: req.user.id,
+        content,
+        sentAt: new Date()
+      };
+
+      const newMessage = await storage.createMessage(messageData);
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      res.status(500).json({ message: "Erro ao enviar mensagem" });
     }
   });
 
