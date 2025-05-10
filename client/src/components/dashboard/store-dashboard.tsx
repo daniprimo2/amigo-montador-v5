@@ -88,9 +88,21 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       if (lastMessage.type === 'new_application') {
         // Atualizar a lista de serviços para mostrar a nova candidatura
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
         
-        // Se o usuário não estiver na seção de serviços, sugerir uma mudança
-        if (dashboardSection !== 'services') {
+        // Redirecionar automaticamente para a seção de chat se tiver serviceId
+        if (lastMessage.serviceId) {
+          // Definir o serviço selecionado para o chat
+          setSelectedChatService(lastMessage.serviceId);
+          // Mudar para a seção de chat
+          setDashboardSection('chat');
+          
+          toast({
+            title: "Nova candidatura recebida",
+            description: "Chat aberto automaticamente para negociação",
+            duration: 5000
+          });
+        } else if (dashboardSection !== 'services') {
           toast({
             title: "Nova candidatura recebida",
             description: "Vá para a seção 'Serviços' para visualizar",
