@@ -18,7 +18,9 @@ const storeStep2Schema = z.object({
   state: z.string().min(2, 'Selecione um estado'),
   storePhone: z.string().min(10, 'Telefone da loja inválido'),
   materialTypes: z.array(z.string()).min(1, 'Selecione pelo menos um tipo de material'),
-  logoFile: z.any().optional(),
+  logoFile: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
+    message: "Upload obrigatório do logotipo da loja"
+  }),
 });
 
 export type StoreStep2Data = z.infer<typeof storeStep2Schema>;
@@ -302,6 +304,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               accept="image/*"
               onChange={handleLogoChange}
               helpText="PNG, JPG, GIF até 10MB"
+              required={true}
             />
             {form.formState.errors.logoFile && (
               <p className="text-sm text-red-500 mt-1">

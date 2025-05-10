@@ -11,9 +11,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 
 const assemblerStep3Schema = z.object({
-  identityFront: z.any().optional(),
-  identityBack: z.any().optional(),
-  proofOfAddress: z.any().optional(),
+  identityFront: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
+    message: "Upload obrigatório do documento (frente)"
+  }),
+  identityBack: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
+    message: "Upload obrigatório do documento (verso)"
+  }),
+  proofOfAddress: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
+    message: "Upload obrigatório do comprovante de residência"
+  }),
   certificates: z.any().optional(),
   termsAgreed: z.boolean().refine(val => val === true, {
     message: "Você deve concordar com os termos de serviço",
@@ -71,7 +77,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
       }
       
       if (certFiles && certFiles.length > 0) {
-        documentUrls.certificates = Array.from(certFiles).map(file => URL.createObjectURL(file));
+        documentUrls.certificates = Array.from(certFiles).map(file => URL.createObjectURL(file)).join(',');
       }
 
       // Combinar dados de todos os passos
@@ -138,6 +144,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 form.setValue('identityFront', files);
               }}
               helpText="PNG, JPG, PDF até 10MB"
+              required={true}
             />
           </div>
           
@@ -151,6 +158,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 form.setValue('identityBack', files);
               }}
               helpText="PNG, JPG, PDF até 10MB"
+              required={true}
             />
           </div>
           
@@ -164,6 +172,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 form.setValue('proofOfAddress', files);
               }}
               helpText="PNG, JPG, PDF até 10MB"
+              required={true}
             />
           </div>
           
