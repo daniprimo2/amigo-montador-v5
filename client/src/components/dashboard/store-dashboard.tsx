@@ -19,7 +19,6 @@ import { ChatInterface } from '@/components/chat/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { RatingList } from '@/components/rating/rating-list';
-import InputMask from 'react-input-mask';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -153,44 +152,56 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   }, [lastMessage, dashboardSection, queryClient, toast]);
   
-  // Função para extrair o valor numérico de um formato monetário
-  const extractNumericValue = (value: string): number => {
-    // Remove todos os caracteres não numéricos, exceto ponto e vírgula
-    const cleanValue = value.replace(/[^\d,.]/g, '');
+  // Função para formatar um valor em centavos como moeda brasileira
+  const formatAsBrazilianCurrency = (centavos: number): string => {
+    // Converter centavos para reais
+    const reais = centavos / 100;
     
-    // Converte para o formato que o JavaScript entende (ponto como separador decimal)
-    // Primeiro remove pontos de milhar, depois substitui vírgula por ponto
-    const numericString = cleanValue.replace(/\./g, '').replace(',', '.');
-    
-    return parseFloat(numericString) || 0;
-  };
-
-  // Função para formatar um valor numérico como moeda brasileira
-  const formatAsCurrency = (value: number): string => {
-    return value.toLocaleString('pt-BR', {
+    // Formatar como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    });
+    }).format(reais);
   };
-
+  
+  // Função para extrair apenas números de uma string
+  const extractOnlyNumbers = (value: string): string => {
+    return value.replace(/\D/g, '');
+  };
+  
+  // Função para extrair o valor numérico (em formato decimal) de uma string formatada como moeda
+  const extractNumericValue = (formattedValue: string): number => {
+    // Remove todos os caracteres não numéricos, exceto pontos e vírgulas
+    const numericString = formattedValue.replace(/[^\d,.]/g, '');
+    
+    // Remove pontos de milhar e substitui vírgula por ponto para formato decimal
+    const decimalValue = numericString.replace(/\./g, '').replace(',', '.');
+    
+    // Retorna o valor como número (ou 0 se inválido)
+    return parseFloat(decimalValue) || 0;
+  };
+  
   // Função para lidar com mudanças no campo de preço
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Obter apenas os números do valor digitado
-    const rawValue = e.target.value.replace(/[^\d]/g, '');
+    // Obter apenas os números do valor digitado (sem pontos, vírgulas, etc)
+    const onlyNumbers = extractOnlyNumbers(e.target.value);
     
-    // Converter para número (em centavos)
-    const numericValue = parseInt(rawValue, 10) || 0;
+    // Se o valor for vazio, limpar o campo
+    if (!onlyNumbers) {
+      setNewService(prev => ({ ...prev, price: '' }));
+      return;
+    }
     
-    // Converter centavos para reais (dividir por 100)
-    const valueInReais = numericValue / 100;
+    // Tratar valor como centavos
+    const centavos = parseInt(onlyNumbers, 10);
+    
+    // Formatar o valor para exibição
+    const formattedValue = formatAsBrazilianCurrency(centavos);
     
     // Atualizar o estado com o valor formatado
-    setNewService(prev => ({ 
-      ...prev, 
-      price: formatAsCurrency(valueInReais) 
-    }));
+    setNewService(prev => ({ ...prev, price: formattedValue }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -389,10 +400,20 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    // Extrair o valor numérico do preço usando a função extractNumericValue
+    // Se o campo preço estiver vazio
+    if (!newService.price) {
+      toast({
+        title: "Valor obrigatório",
+        description: "Por favor, informe o valor do serviço.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Extrair o valor numérico do preço
     const priceNumeric = extractNumericValue(newService.price);
     
-    // Verifica se o preço é um número válido
+    // Verifica se o preço é um número válido e maior que zero
     if (isNaN(priceNumeric) || priceNumeric <= 0) {
       toast({
         title: "Valor inválido",
@@ -402,8 +423,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    // Converte para string com ponto como separador decimal para o backend
-    const priceValue = priceNumeric.toString();
+    // Formata o número com duas casas decimais e usa ponto como separador decimal
+    // para envio ao backend
+    const priceValue = priceNumeric.toFixed(2);
     
     // Verifica se há erro no CEP
     if (cepError) {
@@ -874,23 +896,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="price" className="text-sm font-medium">Valor *</Label>
-                <InputMask
-                  mask="R$ 999.999.999,99"
-                  maskChar={null}
+                <Input
+                  id="price"
+                  name="price"
+                  placeholder="Ex: R$ 0,00"
                   value={newService.price}
                   onChange={handlePriceChange}
-                  alwaysShowMask={false}
-                >
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      id="price"
-                      name="price"
-                      placeholder="Ex: R$ 500,00"
-                      className="w-full"
-                    />
-                  )}
-                </InputMask>
+                  className="w-full"
+                  inputMode="numeric"
+                />
+                <p className="text-xs text-gray-500">Digite apenas números (sem pontos ou vírgulas)</p>
               </div>
               
               <div className="grid gap-2">
