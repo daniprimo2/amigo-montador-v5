@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import FileUpload from '@/components/ui/file-upload';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -20,6 +21,7 @@ interface StoreDashboardProps {
 
 export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
@@ -41,6 +43,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isValidatingCep, setIsValidatingCep] = useState(false);
   const [cepError, setCepError] = useState('');
   const { toast } = useToast();
+  
+  // Buscar serviços da API
+  const servicesQuery = useQuery({
+    queryKey: ['/api/services'],
+    refetchOnWindowFocus: false
+  });
   
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {
@@ -137,10 +145,71 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   };
   
+  // Mutation para criar um serviço
+  const createServiceMutation = useMutation({
+    mutationFn: async (serviceData: any) => {
+      const formData = new FormData();
+      
+      // Adicionar campos de texto ao FormData
+      Object.keys(serviceData).forEach(key => {
+        formData.append(key, serviceData[key]);
+      });
+      
+      // Adicionar arquivo do projeto se existir
+      if (projectFile && projectFile.length > 0) {
+        formData.append('projectFile', projectFile[0]);
+      }
+      
+      // Enviar para a API
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar serviço');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Serviço criado",
+        description: "O serviço foi criado com sucesso!"
+      });
+      
+      // Resetar o formulário e fechar o modal
+      setNewService({
+        title: '',
+        description: '',
+        cep: '',
+        address: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        price: '',
+        type: '',
+        materialType: ''
+      });
+      setProjectFile(null);
+      setIsNewServiceOpen(false);
+      
+      // Recarregar a lista de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao criar serviço",
+        description: error.message || "Ocorreu um erro ao criar o serviço. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleCreateService = () => {
-    // Aqui você implementaria a lógica para enviar os dados para o backend
-    // Por enquanto, vamos apenas fechar o modal e mostrar um toast
-    
+    // Validar campos obrigatórios
     if (!newService.title || !newService.location || !newService.startDate || 
         !newService.endDate || !newService.price || !newService.cep) {
       toast({
@@ -181,94 +250,39 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    toast({
-      title: "Serviço criado",
-      description: "O serviço foi criado com sucesso!",
-    });
+    // Formatar os dados para a API
+    const serviceData = {
+      title: newService.title,
+      description: newService.description,
+      location: newService.location,
+      address: newService.address,
+      date: `${newService.startDate} - ${newService.endDate}`,
+      price: newService.price,
+      type: newService.type || "Não especificado",
+      materialType: newService.materialType || "Não especificado",
+      status: 'open' // Garantir que o serviço seja criado com status 'open'
+    };
     
-    // Resetar o formulário e fechar o modal
-    setNewService({
-      title: '',
-      description: '',
-      cep: '',
-      address: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      price: '',
-      type: '',
-      materialType: ''
-    });
-    setProjectFile(null);
-    setIsNewServiceOpen(false);
+    // Enviar para a API
+    createServiceMutation.mutate(serviceData);
   };
   
-  // Dados de exemplo para os cards de serviço
-  const allServices = [
-    {
-      id: 1,
-      title: 'Cozinha Planejada Milano',
-      location: 'São Paulo, SP',
-      date: '15/06/2023',
-      price: 'R$ 1.500,00',
-      candidates: 3,
-      status: 'open' as const,
-    },
-    {
-      id: 2,
-      title: 'Guarda-roupa Casal Completo',
-      location: 'São Paulo, SP',
-      date: '18/06/2023',
-      price: 'R$ 850,00',
-      candidates: 1,
-      status: 'open' as const,
-    },
-    {
-      id: 3,
-      title: 'Painel para TV com Rack',
-      location: 'São Paulo, SP',
-      date: '20/06/2023',
-      price: 'R$ 600,00',
+  // Processar dados de serviços da API
+  const processApiServices = (apiServices: any[] = []) => {
+    return apiServices.map(service => ({
+      id: service.id,
+      title: service.title,
+      location: service.location,
+      date: service.date,
+      price: service.price,
+      // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
-      status: 'open' as const,
-    },
-    {
-      id: 4,
-      title: 'Mesa de Jantar com 6 Cadeiras',
-      location: 'São Paulo, SP',
-      date: '25/06/2023',
-      price: 'R$ 780,00',
-      candidates: 2,
-      status: 'in-progress' as const,
-    },
-    {
-      id: 5,
-      title: 'Estante para Escritório',
-      location: 'São Paulo, SP',
-      date: '27/06/2023',
-      price: 'R$ 450,00',
-      candidates: 1,
-      status: 'in-progress' as const,
-    },
-    {
-      id: 6,
-      title: 'Home Theater Completo',
-      location: 'São Paulo, SP',
-      date: '02/06/2023',
-      price: 'R$ 920,00',
-      candidates: 3,
-      status: 'completed' as const,
-    },
-    {
-      id: 7,
-      title: 'Escrivaninha com Estante',
-      location: 'São Paulo, SP',
-      date: '05/06/2023',
-      price: 'R$ 380,00',
-      candidates: 2,
-      status: 'completed' as const,
-    },
-  ];
+      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
+    }));
+  };
+  
+  // Usar dados da API ou mostrar dados vazios se estiver carregando
+  const allServices = servicesQuery.data ? processApiServices(servicesQuery.data) : [];
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
@@ -385,9 +399,42 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         </div>
         
         <div className="divide-y">
-          {services.map(service => (
-            <StoreServiceCard key={service.id} service={service} />
-          ))}
+          {servicesQuery.isLoading ? (
+            // Estado de carregamento
+            <div className="p-6 text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+              <p className="text-gray-500">Carregando serviços...</p>
+            </div>
+          ) : servicesQuery.error ? (
+            // Estado de erro
+            <div className="p-6 text-center">
+              <p className="text-red-500 mb-2">Erro ao carregar serviços</p>
+              <Button 
+                variant="outline" 
+                onClick={() => servicesQuery.refetch()}
+                className="mx-auto"
+              >
+                Tentar novamente
+              </Button>
+            </div>
+          ) : services.length === 0 ? (
+            // Sem serviços
+            <div className="p-6 text-center">
+              <p className="text-gray-500 mb-2">Nenhum serviço encontrado para este status</p>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsNewServiceOpen(true)}
+                className="mx-auto"
+              >
+                Criar novo serviço
+              </Button>
+            </div>
+          ) : (
+            // Lista de serviços
+            services.map(service => (
+              <StoreServiceCard key={service.id} service={service} />
+            ))
+          )}
         </div>
       </div>
     </>
