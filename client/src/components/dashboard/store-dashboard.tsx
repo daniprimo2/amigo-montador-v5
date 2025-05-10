@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2 } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import axios from 'axios';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -25,12 +26,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [newService, setNewService] = useState({
     title: '',
     description: '',
+    cep: '',
+    address: '',
     location: '',
     date: '',
     price: '',
     type: '',
     materialType: ''
   });
+  const [isValidatingCep, setIsValidatingCep] = useState(false);
+  const [cepError, setCepError] = useState('');
   const { toast } = useToast();
   
   // Escuta os eventos de mudança de aba do layout
@@ -52,16 +57,78 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewService(prev => ({ ...prev, [name]: value }));
+    
+    // Se o campo for CEP, remove caracteres não numéricos e valida quando tiver 8 dígitos
+    if (name === 'cep') {
+      const cepNumbers = value.replace(/\D/g, '');
+      if (cepNumbers.length === 8) {
+        validateCep(cepNumbers);
+      } else if (cepNumbers.length < 8) {
+        // Limpa o erro e o endereço se o CEP for apagado
+        setCepError('');
+      }
+    }
+  };
+  
+  const validateCep = async (cep: string) => {
+    if (cep.length !== 8) {
+      setCepError('O CEP deve ter 8 números');
+      return;
+    }
+    
+    setIsValidatingCep(true);
+    setCepError('');
+    
+    try {
+      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      setIsValidatingCep(false);
+      
+      if (response.data.erro) {
+        setCepError('CEP não encontrado');
+        return;
+      }
+      
+      // Monta o endereço completo a partir dos dados da API
+      const { logradouro, bairro, localidade, uf } = response.data;
+      const formattedAddress = `${logradouro}, ${bairro}`;
+      const formattedLocation = `${localidade}, ${uf}`;
+      
+      setNewService(prev => ({
+        ...prev,
+        address: formattedAddress,
+        location: formattedLocation
+      }));
+      
+      toast({
+        title: "CEP Validado",
+        description: "Endereço preenchido automaticamente.",
+        variant: "default"
+      });
+    } catch (error) {
+      setIsValidatingCep(false);
+      setCepError('Erro ao validar o CEP. Tente novamente.');
+      console.error('Erro ao validar CEP:', error);
+    }
   };
   
   const handleCreateService = () => {
     // Aqui você implementaria a lógica para enviar os dados para o backend
     // Por enquanto, vamos apenas fechar o modal e mostrar um toast
     
-    if (!newService.title || !newService.location || !newService.date || !newService.price) {
+    if (!newService.title || !newService.location || !newService.date || !newService.price || !newService.cep) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Verifica se há erro no CEP
+    if (cepError) {
+      toast({
+        title: "CEP inválido",
+        description: "Por favor, verifique o CEP informado.",
         variant: "destructive"
       });
       return;
@@ -76,6 +143,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     setNewService({
       title: '',
       description: '',
+      cep: '',
+      address: '',
       location: '',
       date: '',
       price: '',
@@ -351,15 +420,52 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               />
             </div>
             
+            <div className="grid gap-2">
+              <Label htmlFor="cep">CEP *</Label>
+              <div className="relative">
+                <Input 
+                  id="cep" 
+                  name="cep" 
+                  placeholder="Digite o CEP (somente números)" 
+                  value={newService.cep}
+                  onChange={handleInputChange}
+                  maxLength={9}
+                  className={cepError ? "border-red-500" : ""}
+                />
+                {isValidatingCep && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+              {cepError && <p className="text-xs text-red-500">{cepError}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="address">Endereço</Label>
+              <Input 
+                id="address" 
+                name="address" 
+                placeholder="Rua, número, bairro" 
+                value={newService.address}
+                onChange={handleInputChange}
+                readOnly={!newService.cep}
+                className={!newService.cep ? "bg-gray-100" : ""}
+              />
+              <p className="text-xs text-gray-500">Preenchido automaticamente ao digitar o CEP</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="location">Localização *</Label>
+                <Label htmlFor="location">Cidade/UF *</Label>
                 <Input 
                   id="location" 
                   name="location" 
                   placeholder="Ex: São Paulo, SP" 
                   value={newService.location}
                   onChange={handleInputChange}
+                  readOnly={!newService.cep}
+                  className={!newService.cep ? "bg-gray-100" : ""}
                 />
               </div>
               
