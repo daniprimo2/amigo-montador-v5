@@ -45,6 +45,53 @@ const formatServiceForDisplay = (service: ServiceData) => {
   };
 };
 
+// Extrair as datas dos serviços para marcação no calendário
+const getServiceDates = (services?: ServiceData[]) => {
+  if (!services) return [];
+  
+  const dates: string[] = [];
+  
+  services.forEach(service => {
+    try {
+      // Tenta extrair o dia da data do serviço
+      const dateString = service.date;
+      
+      // Verifica se contém um intervalo (formato "2025-05-15 - 2025-05-30")
+      if (dateString.includes(' - ')) {
+        const [startDate] = dateString.split(' - ');
+        const day = new Date(startDate).getDate().toString();
+        if (!dates.includes(day)) {
+          dates.push(day);
+        }
+      } else {
+        // Formato data normal
+        const day = new Date(dateString).getDate().toString();
+        if (!isNaN(Number(day)) && !dates.includes(day)) {
+          dates.push(day);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao processar data:', service.date);
+    }
+  });
+  
+  return dates;
+};
+
+// Obter o mês atual em português
+const getCurrentMonth = () => {
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  return months[new Date().getMonth()];
+};
+
+// Obter o ano atual
+const getCurrentYear = () => {
+  return new Date().getFullYear().toString();
+};
+
 export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -74,6 +121,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     select: (data: ServiceData[]) => data.map(formatServiceForDisplay)
   });
   
+  // Fetch available services
+  const { data: rawServices } = useQuery({
+    queryKey: ['/api/services'],
+    select: (data: ServiceData[]) => data
+  });
+  
   // Filter services by search term
   const filteredServices = services?.filter(service => 
     service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,6 +134,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.location.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
+  
+  // Calculate service counts by status
+  const serviceCounts = {
+    available: filteredServices.length || 0,
+    inProgress: rawServices?.filter(s => s.status === 'in-progress').length || 0,
+    completed: rawServices?.filter(s => s.status === 'completed').length || 0
+  };
   
   // Handle applying for a service
   const applyMutation = useMutation({
@@ -127,15 +187,15 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">{filteredServices.length || 0}</div>
+            <div className="font-bold text-xl text-primary">{serviceCounts.available}</div>
             <div className="text-xs text-gray-500">Disponíveis</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">0</div>
+            <div className="font-bold text-xl text-primary">{serviceCounts.inProgress}</div>
             <div className="text-xs text-gray-500">Em Andamento</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">0</div>
+            <div className="font-bold text-xl text-primary">{serviceCounts.completed}</div>
             <div className="text-xs text-gray-500">Finalizados</div>
           </div>
         </div>
@@ -181,9 +241,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       <h3 className="text-lg font-semibold mb-4">Próximos Serviços</h3>
       
       <ServiceCalendar 
-        markedDates={['13', '14']} 
-        month="Junho" 
-        year="2023" 
+        markedDates={getServiceDates(rawServices)} 
+        month={getCurrentMonth()} 
+        year={getCurrentYear()} 
       />
     </>
   );
@@ -270,9 +330,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     <div className="mt-2">
       <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
       <ServiceCalendar 
-        markedDates={['13', '14']} 
-        month="Junho" 
-        year="2023" 
+        markedDates={getServiceDates(rawServices)} 
+        month={getCurrentMonth()} 
+        year={getCurrentYear()} 
       />
     </div>
   );
