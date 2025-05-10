@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -17,6 +18,7 @@ interface StoreDashboardProps {
 export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [newService, setNewService] = useState({
     title: '',
     description: '',
@@ -65,7 +67,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   };
   
   // Dados de exemplo para os cards de serviço
-  const services = [
+  const allServices = [
     {
       id: 1,
       title: 'Cozinha Planejada Milano',
@@ -93,7 +95,51 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       candidates: 0,
       status: 'open' as const,
     },
+    {
+      id: 4,
+      title: 'Mesa de Jantar com 6 Cadeiras',
+      location: 'São Paulo, SP',
+      date: '25/06/2023',
+      price: 'R$ 780,00',
+      candidates: 2,
+      status: 'in-progress' as const,
+    },
+    {
+      id: 5,
+      title: 'Estante para Escritório',
+      location: 'São Paulo, SP',
+      date: '27/06/2023',
+      price: 'R$ 450,00',
+      candidates: 1,
+      status: 'in-progress' as const,
+    },
+    {
+      id: 6,
+      title: 'Home Theater Completo',
+      location: 'São Paulo, SP',
+      date: '02/06/2023',
+      price: 'R$ 920,00',
+      candidates: 3,
+      status: 'completed' as const,
+    },
+    {
+      id: 7,
+      title: 'Escrivaninha com Estante',
+      location: 'São Paulo, SP',
+      date: '05/06/2023',
+      price: 'R$ 380,00',
+      candidates: 2,
+      status: 'completed' as const,
+    },
   ];
+  
+  // Filtrar serviços com base na guia ativa
+  const services = allServices.filter(service => {
+    if (activeTab === 'open') return service.status === 'open';
+    if (activeTab === 'in-progress') return service.status === 'in-progress';
+    if (activeTab === 'completed') return service.status === 'completed';
+    return true;
+  });
 
   return (
     <div className="p-4">
@@ -143,13 +189,37 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
         <div className="flex border-b">
-          <div className="flex-1 py-3 text-center font-medium text-primary border-b-2 border-primary cursor-pointer">
+          <div 
+            onClick={() => setActiveTab('open')}
+            className={cn(
+              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              activeTab === 'open' 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-gray-500 hover:text-primary"
+            )}
+          >
             Em Aberto
           </div>
-          <div className="flex-1 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-primary transition-colors">
+          <div 
+            onClick={() => setActiveTab('in-progress')}
+            className={cn(
+              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              activeTab === 'in-progress' 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-gray-500 hover:text-primary"
+            )}
+          >
             Em Andamento
           </div>
-          <div className="flex-1 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-primary transition-colors">
+          <div 
+            onClick={() => setActiveTab('completed')}
+            className={cn(
+              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              activeTab === 'completed' 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-gray-500 hover:text-primary"
+            )}
+          >
             Finalizados
           </div>
         </div>
