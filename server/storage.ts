@@ -39,11 +39,11 @@ export interface IStorage {
   acceptApplication(id: number, serviceId: number): Promise<void>;
   
   // Sessão
-  sessionStore: any; // session.SessionStore
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
   
   constructor() {
     this.sessionStore = new PostgresSessionStore({
@@ -136,7 +136,14 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(services).where(eq(services.storeId, storeId));
     
     if (status) {
-      query = query.where(eq(services.status, status));
+      // Aplicar filtro de status apenas se for fornecido
+      return await db.select()
+        .from(services)
+        .where(and(
+          eq(services.storeId, storeId),
+          eq(services.status, status)
+        ))
+        .orderBy(desc(services.createdAt));
     }
     
     return await query.orderBy(desc(services.createdAt));

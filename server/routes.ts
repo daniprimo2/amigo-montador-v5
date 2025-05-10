@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obter query params para filtros
       const { status, userType } = req.query;
       
-      let servicesList;
+      let servicesList: Service[] = [];
       
       // Buscar serviços baseado no tipo de usuário
       if (req.user?.userType === 'lojista') {
@@ -47,6 +47,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         servicesList = await storage.getAvailableServicesForAssembler(assembler);
       }
 
+      // Garantir que sempre retorne um array, mesmo vazio
+      if (!Array.isArray(servicesList)) {
+        servicesList = [];
+      }
+      
       res.json(servicesList);
     } catch (error) {
       console.error("Erro ao buscar serviços:", error);

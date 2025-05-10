@@ -209,12 +209,33 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   });
 
   const handleCreateService = () => {
-    // Validar campos obrigatórios
-    if (!newService.title || !newService.location || !newService.startDate || 
-        !newService.endDate || !newService.price || !newService.cep) {
+    // Criar uma lista de campos obrigatórios não preenchidos
+    const missingFields = [];
+    
+    if (!newService.title) missingFields.push("Título do Serviço");
+    if (!newService.cep) missingFields.push("CEP");
+    if (!newService.location) missingFields.push("Cidade/UF");
+    if (!newService.startDate) missingFields.push("Data de Início");
+    if (!newService.endDate) missingFields.push("Data de Fim");
+    if (!newService.price) missingFields.push("Valor");
+    
+    // Se houver campos obrigatórios faltando, exibe mensagem detalhada
+    if (missingFields.length > 0) {
       toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
+        title: "Campos obrigatórios não preenchidos",
+        description: `Por favor, preencha os seguintes campos: ${missingFields.join(", ")}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Validar formato de preço (aceita vírgula ou ponto como separador decimal)
+    const priceValue = newService.price.replace(/\s/g, '').replace("R$", "");
+    const priceRegex = /^[0-9]+([,.][0-9]{1,2})?$/;
+    if (!priceRegex.test(priceValue)) {
+      toast({
+        title: "Formato de valor inválido",
+        description: "Por favor, informe um valor no formato correto (ex: 500,00 ou 500.00).",
         variant: "destructive"
       });
       return;
@@ -250,16 +271,26 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
+    // Verifica o tamanho do arquivo (máximo 10MB = 10 * 1024 * 1024 bytes)
+    if (projectFile[0].size > 10 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 10MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Formatar os dados para a API
     const serviceData = {
-      title: newService.title,
-      description: newService.description,
-      location: newService.location,
-      address: newService.address,
+      title: newService.title.trim(),
+      description: newService.description.trim(),
+      location: newService.location.trim(),
+      address: newService.address.trim(),
       date: `${newService.startDate} - ${newService.endDate}`,
-      price: newService.price,
-      type: newService.type || "Não especificado",
-      materialType: newService.materialType || "Não especificado",
+      price: priceValue,
+      type: (newService.type ? newService.type.trim() : "Não especificado"),
+      materialType: (newService.materialType ? newService.materialType.trim() : "Não especificado"),
       status: 'open' // Garantir que o serviço seja criado com status 'open'
     };
     
@@ -282,7 +313,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   };
   
   // Usar dados da API ou mostrar dados vazios se estiver carregando
-  const allServices = servicesQuery.data ? processApiServices(servicesQuery.data) : [];
+  const allServices = servicesQuery.data && Array.isArray(servicesQuery.data) ? processApiServices(servicesQuery.data) : [];
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
