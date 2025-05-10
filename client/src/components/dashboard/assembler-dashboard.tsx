@@ -154,15 +154,23 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const applyMutation = useMutation({
     mutationFn: async (serviceId: number) => {
       const url = `/api/services/${serviceId}/apply`;
-      return await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json"
         }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Falha ao enviar candidatura");
+      }
+      
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Candidatura enviada com sucesso:", data);
       toast({
         title: "Candidatura enviada",
         description: "Sua candidatura foi enviada com sucesso!"
@@ -171,6 +179,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     },
     onError: (error: any) => {
+      console.error("Erro completo ao candidatar-se:", error);
       toast({
         title: "Erro ao candidatar-se",
         description: error.message || "Não foi possível enviar sua candidatura. Tente novamente.",
