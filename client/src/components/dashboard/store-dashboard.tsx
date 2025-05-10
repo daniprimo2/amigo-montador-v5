@@ -70,8 +70,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Serviços</h3>
-        <Button className="bg-primary text-white text-sm py-2 px-4 rounded-full flex items-center">
-          <Plus className="mr-2 h-4 w-4" /> Novo Serviço
+        <Button variant="default" className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium">
+          <Plus className="h-4 w-4" /> Novo Serviço
         </Button>
       </div>
       
