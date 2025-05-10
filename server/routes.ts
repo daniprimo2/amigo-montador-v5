@@ -25,6 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obter query params para filtros
       const { status, userType } = req.query;
       
+      console.log(`[${new Date().toISOString()}] Buscando serviços para usuário tipo: ${req.user?.userType}`);
+      
       let servicesList: Service[] = [];
       
       // Buscar serviços baseado no tipo de usuário
@@ -35,22 +37,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Loja não encontrada" });
         }
         
+        console.log(`Buscando serviços para o lojista (store_id: ${store.id})`);
         servicesList = await storage.getServicesByStoreId(store.id, status as string);
-      } else {
+      } else if (req.user?.userType === 'montador') {
         // Montadores veem serviços disponíveis na sua região
         const assembler = await storage.getAssemblerByUserId(req.user.id);
         if (!assembler) {
           return res.status(404).json({ message: "Montador não encontrado" });
         }
         
-        // Filtrar por raio de distância e especialidades
+        console.log(`Buscando serviços disponíveis para o montador (id: ${assembler.id})`);
+        // Buscar serviços disponíveis para montador (incluindo nome da loja)
         servicesList = await storage.getAvailableServicesForAssembler(assembler);
+      } else {
+        // Tipo de usuário não reconhecido
+        return res.status(403).json({ message: "Tipo de usuário não autorizado" });
       }
 
       // Garantir que sempre retorne um array, mesmo vazio
       if (!Array.isArray(servicesList)) {
         servicesList = [];
       }
+      
+      console.log(`Encontrados ${servicesList.length} serviços para o usuário tipo: ${req.user?.userType}`);
       
       res.json(servicesList);
     } catch (error) {

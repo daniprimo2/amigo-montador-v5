@@ -150,25 +150,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
-    // Obter serviços disponíveis que correspondem às especialidades do montador
-    const servicesList = await db.select()
-      .from(services)
-      .where(
-        and(
-          eq(services.status, 'open'),
+    try {
+      // Obter serviços disponíveis (status 'open')
+      const servicesList = await db.select()
+        .from(services)
+        .leftJoin(stores, eq(services.storeId, stores.id))
+        .where(
+          eq(services.status, 'open')
           // Aqui seria implementada a lógica para filtrar por distância
           // Na implementação real, utilizaríamos longitude/latitude para calcular distância
         )
-      )
-      .orderBy(desc(services.createdAt));
-    
-    // Filtrar manualmente os serviços que correspondem às especialidades do montador
-    // Isto é uma simplificação - numa implementação completa, isso seria feito no banco
-    return servicesList.filter(service => {
-      const assemblerSpecialties = assembler.specialties as string[];
-      // Verificar se o tipo de material do serviço está nas especialidades do montador
-      return assemblerSpecialties.includes(service.materialType);
-    });
+        .orderBy(desc(services.createdAt));
+      
+      // Log para depuração
+      console.log(`Encontrados ${servicesList.length} serviços com status 'open'`);
+      
+      // Mapear resultados para incluir informações da loja
+      const enhancedServices = servicesList.map(result => {
+        const { services: service, stores: store } = result;
+        return {
+          ...service,
+          store: {
+            name: store?.name || 'Loja não especificada'
+          }
+        } as Service;
+      });
+      
+      // Se o montador tiver especialidades definidas, podemos filtrar por elas
+      if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
+        const assemblerSpecialties = assembler.specialties as string[];
+        console.log(`Filtrando por especialidades do montador: ${assemblerSpecialties.join(', ')}`);
+        
+        // Filtrar por especialidades do montador se ele tiver alguma definida
+        const filteredServices = enhancedServices.filter(service => 
+          service.materialType && assemblerSpecialties.includes(service.materialType)
+        );
+        
+        console.log(`Após filtro por especialidades: ${filteredServices.length} serviços correspondem`);
+        return filteredServices;
+      }
+      
+      console.log(`Nenhuma especialidade definida para o montador, retornando todos os serviços disponíveis (${enhancedServices.length})`);
+      // Se o montador não tiver especialidades definidas, retorna todos os serviços disponíveis
+      return enhancedServices;
+    } catch (error) {
+      console.error('Erro ao buscar serviços disponíveis para montador:', error);
+      return []; // Retorna lista vazia em caso de erro
+    }
   }
 
   async createService(serviceData: InsertService): Promise<Service> {
