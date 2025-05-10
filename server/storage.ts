@@ -93,6 +93,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return store;
   }
+
+  async updateStore(id: number, storeData: Partial<Store>): Promise<Store> {
+    const [updatedStore] = await db
+      .update(stores)
+      .set(storeData)
+      .where(eq(stores.id, id))
+      .returning();
+    return updatedStore;
+  }
   
   // Montadores
   async getAssemblerByUserId(userId: number): Promise<Assembler | undefined> {
@@ -106,6 +115,15 @@ export class DatabaseStorage implements IStorage {
       .values(assemblerData)
       .returning();
     return assembler;
+  }
+
+  async updateAssembler(id: number, assemblerData: Partial<Assembler>): Promise<Assembler> {
+    const [updatedAssembler] = await db
+      .update(assemblers)
+      .set(assemblerData)
+      .where(eq(assemblers.id, id))
+      .returning();
+    return updatedAssembler;
   }
   
   // Serviços

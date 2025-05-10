@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { services, applications } from "@shared/schema";
+import { services, applications, type User, type Store, type Assembler } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Log das requisições
@@ -277,6 +277,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar perfil:", error);
       res.status(500).json({ message: "Erro ao buscar perfil" });
+    }
+  });
+  
+  // Atualizar perfil do usuário
+  app.patch("/api/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id, userType } = req.user;
+      const userData = req.body.user;
+      
+      // Atualizar dados básicos do usuário
+      if (userData) {
+        // Campos que o usuário pode atualizar
+        const allowedFields = ['name', 'email', 'phone'];
+        const updateData: Partial<User> = {};
+        
+        allowedFields.forEach(field => {
+          if (userData[field] !== undefined) {
+            updateData[field as keyof User] = userData[field];
+          }
+        });
+        
+        if (Object.keys(updateData).length > 0) {
+          const updatedUser = await storage.updateUser(id, updateData);
+          req.user = updatedUser; // Atualizar o usuário na sessão
+        }
+      }
+      
+      // Atualizar dados específicos com base no tipo de usuário
+      if (userType === 'lojista' && req.body.store) {
+        const store = await storage.getStoreByUserId(id);
+        if (store) {
+          // Campos que o lojista pode atualizar
+          const allowedFields = ['name', 'address', 'city', 'state', 'phone', 'logoUrl'];
+          const updateData: Partial<Store> = {};
+          
+          allowedFields.forEach(field => {
+            if (req.body.store[field] !== undefined) {
+              updateData[field as keyof Store] = req.body.store[field];
+            }
+          });
+          
+          if (Object.keys(updateData).length > 0) {
+            await storage.updateStore(store.id, updateData);
+          }
+        }
+      } else if (userType === 'montador' && req.body.assembler) {
+        const assembler = await storage.getAssemblerByUserId(id);
+        if (assembler) {
+          // Campos que o montador pode atualizar
+          const allowedFields = ['cep', 'address', 'city', 'state', 'radius', 'specialties', 'profileImage'];
+          const updateData: Partial<Assembler> = {};
+          
+          allowedFields.forEach(field => {
+            if (req.body.assembler[field] !== undefined) {
+              updateData[field as keyof Assembler] = req.body.assembler[field];
+            }
+          });
+          
+          if (Object.keys(updateData).length > 0) {
+            await storage.updateAssembler(assembler.id, updateData);
+          }
+        }
+      }
+      
+      // Retornar o perfil atualizado
+      let profileData = {};
+      if (userType === 'lojista') {
+        const store = await storage.getStoreByUserId(id);
+        profileData = { ...req.user, store };
+      } else if (userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(id);
+        profileData = { ...req.user, assembler };
+      }
+      
+      res.json(profileData);
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      res.status(500).json({ message: "Erro ao atualizar perfil" });
     }
   });
 
