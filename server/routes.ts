@@ -548,6 +548,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Atualizar status do serviço para 'in-progress'
       await storage.updateServiceStatus(service.id, 'in-progress');
+      
+      // Buscar o montador para notificação
+      const assembler = await storage.getAssemblerById(application.assemblerId);
+      if (assembler) {
+        console.log(`[AcceptApplication] Enviando notificação para montador userId: ${assembler.userId}`);
+        
+        const notificationData = {
+          type: 'application_accepted',
+          serviceId: service.id,
+          message: `Sua candidatura para o serviço "${service.title}" foi aceita pelo lojista.`,
+          timestamp: new Date().toISOString()
+        };
+        
+        sendNotification(assembler.userId, notificationData);
+      }
 
       res.json({ message: "Candidatura aceita com sucesso" });
     } catch (error) {
