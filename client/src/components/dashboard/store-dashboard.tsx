@@ -211,6 +211,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       if (error.response && error.response.missingFields) {
         errorTitle = "Campos obrigatórios não preenchidos";
         errorDescription = `Por favor, preencha os seguintes campos: ${error.response.missingFields.join(", ")}.`;
+        
+        // Log detalhado dos campos faltantes e valores atuais
+        console.log("Campos obrigatórios faltantes:", error.response.missingFields);
+        console.log("Valores atuais do formulário:", newService);
       }
       
       // Log do erro completo para depuração
@@ -234,6 +238,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (!newService.startDate) missingFields.push("Data de Início");
     if (!newService.endDate) missingFields.push("Data de Fim");
     if (!newService.price) missingFields.push("Valor");
+    if (!newService.materialType) missingFields.push("Material");
     
     // Se houver campos obrigatórios faltando, exibe mensagem detalhada
     if (missingFields.length > 0) {
@@ -305,10 +310,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       address: newService.address.trim(),
       date: `${newService.startDate} - ${newService.endDate}`,
       price: priceValue,
-      type: (newService.type ? newService.type.trim() : "Não especificado"),
-      materialType: (newService.materialType ? newService.materialType.trim() : "Não especificado"),
+      type: (newService.type ? newService.type.trim() : ""),
+      materialType: newService.materialType.trim(),
       status: 'open' // Garantir que o serviço seja criado com status 'open'
     };
+    
+    // Adicionar log dos dados antes do envio para ajudar no diagnóstico
+    console.log("Dados do serviço antes do envio:", serviceData);
     
     // Enviar para a API
     createServiceMutation.mutate(serviceData);
@@ -667,7 +675,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="materialType" className="text-sm font-medium">Material</Label>
+              <Label htmlFor="materialType" className="text-sm font-medium">Material *</Label>
               <Input 
                 id="materialType" 
                 name="materialType" 
