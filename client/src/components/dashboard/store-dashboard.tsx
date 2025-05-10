@@ -30,11 +30,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     cep: '',
     address: '',
     location: '',
-    date: '',
+    startDate: '',
+    endDate: '',
     price: '',
     type: '',
     materialType: ''
   });
+  const [projectFile, setProjectFile] = useState<FileList | null>(null);
+  const [dateError, setDateError] = useState('');
   const [isValidatingCep, setIsValidatingCep] = useState(false);
   const [cepError, setCepError] = useState('');
   const { toast } = useToast();
@@ -67,6 +70,28 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       } else if (cepNumbers.length < 8) {
         // Limpa o erro e o endereço se o CEP for apagado
         setCepError('');
+      }
+    }
+    
+    // Validar datas quando uma das datas mudar
+    if (name === 'startDate' || name === 'endDate') {
+      validateDates(name === 'startDate' ? value : newService.startDate, 
+                   name === 'endDate' ? value : newService.endDate);
+    }
+  };
+  
+  const validateDates = (startDate: string, endDate: string) => {
+    // Limpar erro anterior
+    setDateError('');
+    
+    // Verifica se ambas as datas estão preenchidas para poder validar
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      // Verifica se a data de início é posterior à data de fim
+      if (start > end) {
+        setDateError('A data de início não pode ser posterior à data de fim');
       }
     }
   };
@@ -116,7 +141,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     // Aqui você implementaria a lógica para enviar os dados para o backend
     // Por enquanto, vamos apenas fechar o modal e mostrar um toast
     
-    if (!newService.title || !newService.location || !newService.date || !newService.price || !newService.cep) {
+    if (!newService.title || !newService.location || !newService.startDate || 
+        !newService.endDate || !newService.price || !newService.cep) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -135,6 +161,26 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
+    // Verifica se há erro nas datas
+    if (dateError) {
+      toast({
+        title: "Erro nas datas",
+        description: dateError,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Verifica se o arquivo PDF foi carregado
+    if (!projectFile || projectFile.length === 0) {
+      toast({
+        title: "Arquivo de projeto obrigatório",
+        description: "Por favor, faça o upload do arquivo PDF do projeto.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     toast({
       title: "Serviço criado",
       description: "O serviço foi criado com sucesso!",
@@ -147,11 +193,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       cep: '',
       address: '',
       location: '',
-      date: '',
+      startDate: '',
+      endDate: '',
       price: '',
       type: '',
       materialType: ''
     });
+    setProjectFile(null);
     setIsNewServiceOpen(false);
   };
   
@@ -469,17 +517,31 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                   className={!newService.cep ? "bg-gray-100" : ""}
                 />
               </div>
-              
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="date">Data *</Label>
+                <Label htmlFor="startDate">Data de Início *</Label>
                 <Input 
-                  id="date" 
-                  name="date" 
+                  id="startDate" 
+                  name="startDate" 
                   type="date"
-                  value={newService.date}
+                  value={newService.startDate}
                   onChange={handleInputChange}
                 />
               </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="endDate">Data de Fim *</Label>
+                <Input 
+                  id="endDate" 
+                  name="endDate" 
+                  type="date"
+                  value={newService.endDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+              {dateError && <p className="text-xs text-red-500 col-span-2">{dateError}</p>}
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -514,6 +576,18 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 placeholder="Ex: MDF, Madeira Maciça" 
                 value={newService.materialType}
                 onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="projectFile">Arquivo do Projeto (PDF) *</Label>
+              <FileUpload
+                accept=".pdf"
+                multiple={false}
+                label="Arquivo PDF do Projeto"
+                helpText="Apenas arquivos no formato PDF (máx. 10MB)"
+                onChange={setProjectFile}
+                required={true}
               />
             </div>
           </div>
