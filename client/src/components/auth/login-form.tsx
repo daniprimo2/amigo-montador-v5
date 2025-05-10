@@ -9,6 +9,15 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   username: z.string().email('Email inválido'),
@@ -21,6 +30,8 @@ export const LoginForm: React.FC = () => {
   const { loginMutation } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,6 +57,26 @@ export const LoginForm: React.FC = () => {
         },
       },
     );
+  };
+
+  const handlePasswordReset = () => {
+    if (!resetEmail) {
+      toast({
+        title: "Atenção",
+        description: "Por favor, informe seu email para redefinir a senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simulando o envio do email de redefinição
+    toast({
+      title: "Email enviado",
+      description: "Instruções para redefinição de senha foram enviadas para seu email.",
+    });
+
+    setIsResetDialogOpen(false);
+    setResetEmail("");
   };
 
   return (
@@ -94,9 +125,35 @@ export const LoginForm: React.FC = () => {
           />
 
           <div className="text-center">
-            <a href="#" className="text-indigo-600 text-sm">
-              Esqueci minha senha
-            </a>
+            <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+              <DialogTrigger asChild>
+                <button type="button" className="text-indigo-600 text-sm bg-transparent border-none cursor-pointer hover:underline">
+                  Esqueci minha senha
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Recuperação de senha</DialogTitle>
+                  <DialogDescription>
+                    Digite seu endereço de email para receber instruções de redefinição de senha.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Input 
+                      id="reset-email" 
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      placeholder="Seu email"
+                      className="col-span-4" 
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" onClick={handlePasswordReset}>Enviar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <Button 
