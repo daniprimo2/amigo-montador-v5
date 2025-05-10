@@ -149,6 +149,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     select: (data: ServiceData[]) => data
   });
   
+  // Buscar serviços em andamento que o montador está participando
+  const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
+    queryKey: ['/api/services/active'],
+    queryFn: async () => {
+      const response = await fetch('/api/services/active');
+      if (!response.ok) {
+        throw new Error('Falha ao buscar serviços ativos');
+      }
+      return response.json();
+    }
+    // Sempre buscar os serviços ativos independente da aba selecionada
+  });
+  
   // Filter services by search term
   const filteredServices = services?.filter(service => 
     service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -474,17 +487,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   );
 
   // Buscar serviços em andamento que o montador está participando
-  const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
-    queryKey: ['/api/services/active'],
-    queryFn: async () => {
-      const response = await fetch('/api/services/active');
-      if (!response.ok) {
-        throw new Error('Falha ao buscar serviços ativos');
-      }
-      return response.json();
-    }
-    // Sempre buscar os serviços ativos independente da aba selecionada
-  });
   
   // Estado para controlar qual serviço está selecionado para chat
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
