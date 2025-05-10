@@ -19,6 +19,7 @@ import { ChatInterface } from '@/components/chat/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { RatingList } from '@/components/rating/rating-list';
+import InputMask from 'react-input-mask';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -152,61 +153,69 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   }, [lastMessage, dashboardSection, queryClient, toast]);
   
-  // Função auxiliar para formatar valor como moeda brasileira
-  const formatAsBrazilianCurrency = (value: string): string => {
-    // Remove qualquer caractere não numérico, exceto pontos e vírgulas
-    let numericValue = value.replace(/[^\d,.]/g, '');
+  // Função para extrair o valor numérico de um formato monetário
+  const extractNumericValue = (value: string): number => {
+    // Remove todos os caracteres não numéricos, exceto ponto e vírgula
+    const cleanValue = value.replace(/[^\d,.]/g, '');
     
-    // Converte vírgulas para pontos para poder fazer cálculos
-    numericValue = numericValue.replace(',', '.');
+    // Converte para o formato que o JavaScript entende (ponto como separador decimal)
+    // Primeiro remove pontos de milhar, depois substitui vírgula por ponto
+    const numericString = cleanValue.replace(/\./g, '').replace(',', '.');
     
-    // Verifica se é um número válido
-    const numberValue = parseFloat(numericValue);
-    if (isNaN(numberValue)) return 'R$ ';
-    
-    // Formata o número para o padrão brasileiro (com vírgula como separador decimal)
-    const formattedValue = numberValue.toLocaleString('pt-BR', {
+    return parseFloat(numericString) || 0;
+  };
+
+  // Função para formatar um valor numérico como moeda brasileira
+  const formatAsCurrency = (value: number): string => {
+    return value.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
+  };
+
+  // Função para lidar com mudanças no campo de preço
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Obter apenas os números do valor digitado
+    const rawValue = e.target.value.replace(/[^\d]/g, '');
     
-    return formattedValue;
+    // Converter para número (em centavos)
+    const numericValue = parseInt(rawValue, 10) || 0;
+    
+    // Converter centavos para reais (dividir por 100)
+    const valueInReais = numericValue / 100;
+    
+    // Atualizar o estado com o valor formatado
+    setNewService(prev => ({ 
+      ...prev, 
+      price: formatAsCurrency(valueInReais) 
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Se for o campo de preço, formatar como moeda brasileira
-    if (name === 'price') {
-      // Apenas limpa se o usuário apagou tudo
-      if (!value || value === 'R$ ') {
-        setNewService(prev => ({ ...prev, [name]: '' }));
-      } else {
-        const formattedValue = formatAsBrazilianCurrency(value);
-        setNewService(prev => ({ ...prev, [name]: formattedValue }));
-      }
-    } else {
-      // Para outros campos, mantém o comportamento original
+    // Para outros campos diferentes de price, mantém o comportamento original
+    if (name !== 'price') {
       setNewService(prev => ({ ...prev, [name]: value }));
-    }
-    
-    // Se o campo for CEP, remove caracteres não numéricos e valida quando tiver 8 dígitos
-    if (name === 'cep') {
-      const cepNumbers = value.replace(/\D/g, '');
-      if (cepNumbers.length === 8) {
-        validateCep(cepNumbers);
-      } else if (cepNumbers.length < 8) {
-        // Limpa o erro e o endereço se o CEP for apagado
-        setCepError('');
+      
+      // Se o campo for CEP, remove caracteres não numéricos e valida quando tiver 8 dígitos
+      if (name === 'cep') {
+        const cepNumbers = value.replace(/\D/g, '');
+        if (cepNumbers.length === 8) {
+          validateCep(cepNumbers);
+        } else if (cepNumbers.length < 8) {
+          // Limpa o erro e o endereço se o CEP for apagado
+          setCepError('');
+        }
       }
-    }
-    
-    // Validar datas quando uma das datas mudar
-    if (name === 'startDate' || name === 'endDate') {
-      validateDates(name === 'startDate' ? value : newService.startDate, 
-                   name === 'endDate' ? value : newService.endDate);
+      
+      // Validar datas quando uma das datas mudar
+      if (name === 'startDate' || name === 'endDate') {
+        validateDates(name === 'startDate' ? value : newService.startDate, 
+                    name === 'endDate' ? value : newService.endDate);
+      }
     }
   };
   
@@ -380,13 +389,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    // Extrair o valor numérico do preço (já formatado como R$)
-    let priceValue = newService.price.replace(/[^\d,.]/g, '');
-    // Converte vírgula para ponto para processamento no backend
-    priceValue = priceValue.replace(',', '.');
+    // Extrair o valor numérico do preço usando a função extractNumericValue
+    const priceNumeric = extractNumericValue(newService.price);
     
     // Verifica se o preço é um número válido
-    if (isNaN(parseFloat(priceValue)) || parseFloat(priceValue) <= 0) {
+    if (isNaN(priceNumeric) || priceNumeric <= 0) {
       toast({
         title: "Valor inválido",
         description: "Por favor, informe um valor válido maior que zero.",
@@ -394,6 +401,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       });
       return;
     }
+    
+    // Converte para string com ponto como separador decimal para o backend
+    const priceValue = priceNumeric.toString();
     
     // Verifica se há erro no CEP
     if (cepError) {
@@ -864,14 +874,23 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="price" className="text-sm font-medium">Valor *</Label>
-                <Input 
-                  id="price" 
-                  name="price" 
-                  placeholder="Ex: R$ 500,00" 
+                <InputMask
+                  mask="R$ 999.999.999,99"
+                  maskChar={null}
                   value={newService.price}
-                  onChange={handleInputChange}
-                  className="w-full"
-                />
+                  onChange={handlePriceChange}
+                  alwaysShowMask={false}
+                >
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      id="price"
+                      name="price"
+                      placeholder="Ex: R$ 500,00"
+                      className="w-full"
+                    />
+                  )}
+                </InputMask>
               </div>
               
               <div className="grid gap-2">
