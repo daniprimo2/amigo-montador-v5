@@ -437,28 +437,29 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       {/* Modal de Novo Serviço */}
       <Dialog open={isNewServiceOpen} onOpenChange={setIsNewServiceOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Novo Serviço de Montagem</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:w-[90%] md:max-w-[40rem]">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-xl sm:text-2xl">Novo Serviço de Montagem</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               Preencha as informações abaixo para criar um novo serviço de montagem.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-2 sm:py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Título do Serviço *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Título do Serviço *</Label>
               <Input 
                 id="title" 
                 name="title" 
                 placeholder="Ex: Montagem de Cozinha Completa" 
                 value={newService.title}
                 onChange={handleInputChange}
+                className="w-full"
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="description">Descrição</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
               <Textarea 
                 id="description"
                 name="description"
@@ -466,12 +467,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 rows={3}
                 value={newService.description}
                 onChange={handleInputChange}
+                className="w-full resize-y min-h-[5rem]"
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="cep">CEP *</Label>
-              <div className="relative">
+              <Label htmlFor="cep" className="text-sm font-medium">CEP *</Label>
+              <div className="relative w-full">
                 <Input 
                   id="cep" 
                   name="cep" 
@@ -479,7 +481,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                   value={newService.cep}
                   onChange={handleInputChange}
                   maxLength={9}
-                  className={cepError ? "border-red-500" : ""}
+                  className={`w-full ${cepError ? "border-red-500" : ""}`}
                 />
                 {isValidatingCep && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -491,7 +493,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="address">Endereço</Label>
+              <Label htmlFor="address" className="text-sm font-medium">Endereço</Label>
               <Input 
                 id="address" 
                 name="address" 
@@ -499,88 +501,91 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 value={newService.address}
                 onChange={handleInputChange}
                 readOnly={!newService.cep}
-                className={!newService.cep ? "bg-gray-100" : ""}
+                className={`w-full ${!newService.cep ? "bg-gray-100" : ""}`}
               />
               <p className="text-xs text-gray-500">Preenchido automaticamente ao digitar o CEP</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="location">Cidade/UF *</Label>
-                <Input 
-                  id="location" 
-                  name="location" 
-                  placeholder="Ex: São Paulo, SP" 
-                  value={newService.location}
-                  onChange={handleInputChange}
-                  readOnly={!newService.cep}
-                  className={!newService.cep ? "bg-gray-100" : ""}
-                />
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="location" className="text-sm font-medium">Cidade/UF *</Label>
+              <Input 
+                id="location" 
+                name="location" 
+                placeholder="Ex: São Paulo, SP" 
+                value={newService.location}
+                onChange={handleInputChange}
+                readOnly={!newService.cep}
+                className={`w-full ${!newService.cep ? "bg-gray-100" : ""}`}
+              />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="startDate">Data de Início *</Label>
+                <Label htmlFor="startDate" className="text-sm font-medium">Data de Início *</Label>
                 <Input 
                   id="startDate" 
                   name="startDate" 
                   type="date"
                   value={newService.startDate}
                   onChange={handleInputChange}
+                  className="w-full"
                 />
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="endDate">Data de Fim *</Label>
+                <Label htmlFor="endDate" className="text-sm font-medium">Data de Fim *</Label>
                 <Input 
                   id="endDate" 
                   name="endDate" 
                   type="date"
                   value={newService.endDate}
                   onChange={handleInputChange}
+                  className="w-full"
                 />
               </div>
-              {dateError && <p className="text-xs text-red-500 col-span-2">{dateError}</p>}
+              {dateError && <p className="text-xs text-red-500 col-span-1 sm:col-span-2">{dateError}</p>}
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="price">Valor *</Label>
+                <Label htmlFor="price" className="text-sm font-medium">Valor *</Label>
                 <Input 
                   id="price" 
                   name="price" 
                   placeholder="Ex: R$ 500,00" 
                   value={newService.price}
                   onChange={handleInputChange}
+                  className="w-full"
                 />
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="type">Tipo de Móvel</Label>
+                <Label htmlFor="type" className="text-sm font-medium">Tipo de Móvel</Label>
                 <Input 
                   id="type" 
                   name="type" 
                   placeholder="Ex: Cozinha, Guarda-roupa" 
                   value={newService.type}
                   onChange={handleInputChange}
+                  className="w-full"
                 />
               </div>
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="materialType">Material</Label>
+              <Label htmlFor="materialType" className="text-sm font-medium">Material</Label>
               <Input 
                 id="materialType" 
                 name="materialType" 
                 placeholder="Ex: MDF, Madeira Maciça" 
                 value={newService.materialType}
                 onChange={handleInputChange}
+                className="w-full"
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="projectFile">Arquivo do Projeto (PDF) *</Label>
+              <Label htmlFor="projectFile" className="text-sm font-medium">Arquivo do Projeto (PDF) *</Label>
               <FileUpload
                 accept=".pdf"
                 multiple={false}
@@ -592,9 +597,20 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNewServiceOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreateService}>Criar Serviço</Button>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsNewServiceOpen(false)}
+              className="w-full sm:w-auto order-2 sm:order-1"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleCreateService}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
+              Criar Serviço
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

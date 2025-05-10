@@ -87,7 +87,10 @@
 }
 
 .file-upload-area {
-  @apply mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition;
+  @apply mt-1 flex justify-center px-3 sm:px-6 pt-3 sm:pt-5 pb-3 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-primary/50 transition;
+  width: 100%;
+  max-height: 15rem;
+  overflow-y: auto;
 }
 
 .dashboard-card {

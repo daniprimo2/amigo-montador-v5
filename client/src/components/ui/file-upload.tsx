@@ -61,24 +61,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className={className}>
       <div
-        className={`file-upload-area ${isDragging ? 'border-primary' : ''}`}
+        className={`file-upload-area ${isDragging ? 'border-primary' : ''} w-full`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleClick}
       >
         <div className="space-y-1 text-center">
-          <Upload className="mx-auto h-12 w-12 text-gray-400" />
-          <div className="flex text-sm text-gray-600 justify-center">
+          <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+          <div className="flex flex-col sm:flex-row text-xs sm:text-sm text-gray-600 justify-center items-center">
             <span className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary">
               Fazer upload de arquivo{required && <span className="text-red-500 ml-1">*</span>}
             </span>
-            <p className="pl-1">ou arraste e solte</p>
+            <p className="sm:pl-1 mt-1 sm:mt-0">ou arraste e solte</p>
           </div>
           <p className="text-xs text-gray-500">{helpText}</p>
           {files && files.length > 0 && (
             <div className="mt-2">
-              <p className="text-sm text-primary">
+              <p className="text-xs sm:text-sm text-primary">
                 {files.length} {files.length === 1 ? 'arquivo selecionado' : 'arquivos selecionados'}
               </p>
             </div>
