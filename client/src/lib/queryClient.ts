@@ -59,3 +59,14 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Disponibilizando globalmente para uso no WebSocket
+declare global {
+  interface Window {
+    queryClient: typeof queryClient;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.queryClient = queryClient;
+}

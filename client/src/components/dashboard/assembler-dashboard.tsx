@@ -284,9 +284,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-red-500">
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
-              ) : rawServices?.filter(s => s.status === 'completed').length > 0 ? (
+              ) : (rawServices && rawServices.filter(s => s.status === 'completed').length > 0) ? (
                 // Show completed services
-                rawServices?.filter(s => s.status === 'completed').map(service => (
+                rawServices.filter(s => s.status === 'completed').map(service => (
                   <CompletedServiceCard 
                     key={service.id} 
                     service={{

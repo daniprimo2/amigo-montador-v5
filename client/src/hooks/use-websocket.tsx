@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 type WebSocketMessage = {
   type: 'connection' | 'new_application' | 'new_message';
@@ -59,12 +60,23 @@ export function useWebSocket() {
         const data = JSON.parse(event.data) as WebSocketMessage;
         console.log('Mensagem recebida:', data);
         
+        // Atualizar último estado da mensagem
         setLastMessage(data);
         
-        // Mostrar notificação toast
-        if (data.type === 'new_application' || data.type === 'new_message') {
+        // Mostrar notificação toast e invalidar queries necessárias
+        if (data.type === 'new_application') {
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+          
           toast({
-            title: data.type === 'new_application' ? 'Nova candidatura' : 'Nova mensagem',
+            title: 'Nova candidatura',
+            description: data.message,
+            duration: 5000
+          });
+        } else if (data.type === 'new_message') {
+          toast({
+            title: 'Nova mensagem',
             description: data.message,
             duration: 5000
           });
