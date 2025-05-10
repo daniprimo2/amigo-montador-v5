@@ -15,6 +15,8 @@ import axios from 'axios';
 import FileUpload from '@/components/ui/file-upload';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWebSocket } from '@/hooks/use-websocket';
+import { ChatInterface } from '@/components/chat/chat-interface';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -552,16 +554,76 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     </>
   );
 
-  const renderChatSection = () => (
-    <div className="mt-2">
-      <h3 className="text-lg font-semibold mb-4">Mensagens</h3>
-      <div className="bg-white rounded-xl shadow-md p-6 text-center">
-        <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-        <h4 className="text-lg font-medium mb-2">Nenhuma mensagem disponível</h4>
-        <p className="text-gray-500 mb-4">Quando você tiver mensagens de montadores, elas aparecerão aqui.</p>
+  // Estado para o serviço de chat selecionado
+  const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
+  
+  // Buscar serviços com candidaturas aceitas
+  const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
+    queryKey: ['/api/store/services/with-applications'],
+    queryFn: async () => {
+      const response = await fetch('/api/store/services/with-applications');
+      if (!response.ok) {
+        throw new Error('Falha ao buscar serviços com candidaturas');
+      }
+      return response.json();
+    },
+    enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
+  });
+
+  const renderChatSection = () => {
+    // Se um serviço estiver selecionado para chat, mostrar a interface de chat
+    if (selectedChatService !== null) {
+      return (
+        <ChatInterface 
+          serviceId={selectedChatService} 
+          onBack={() => setSelectedChatService(null)} 
+        />
+      );
+    }
+    
+    return (
+      <div className="mt-2">
+        <h3 className="text-lg font-semibold mb-4">Conversas</h3>
+        
+        {isLoadingActiveServices ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-xl shadow-md p-4">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : activeServices && activeServices.length > 0 ? (
+          <div className="space-y-3">
+            {activeServices.map((service: any) => (
+              <div 
+                key={service.id} 
+                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer"
+                onClick={() => setSelectedChatService(service.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-medium">{service.title}</h4>
+                    <p className="text-sm text-gray-500">
+                      Montador: {service.assembler?.name || 'Não atribuído'}
+                    </p>
+                  </div>
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-md p-6 text-center">
+            <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
+            <p className="text-gray-500 mb-4">Quando você tiver candidaturas aceitas para seus serviços, as conversas aparecerão aqui.</p>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderCalendarSection = () => (
     <div className="mt-2">

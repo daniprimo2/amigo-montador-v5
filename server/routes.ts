@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : [];
 
       // Adicionar informações da loja a cada serviço
-      const enhancedServices = await Promise.all(servicesResult.map(async (service) => {
+      const enhancedServices = await Promise.all(filteredServices.map(async (service) => {
         const storeResult = await db
           .select({
             id: stores.id,
