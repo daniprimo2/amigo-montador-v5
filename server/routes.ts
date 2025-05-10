@@ -1,0 +1,280 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth } from "./auth";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { services, applications } from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Configurar autenticação
+  setupAuth(app);
+
+  // API para serviços
+  app.get("/api/services", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Obter query params para filtros
+      const { status, userType } = req.query;
+      
+      let servicesList;
+      
+      // Buscar serviços baseado no tipo de usuário
+      if (req.user?.userType === 'lojista') {
+        // Lojistas veem seus próprios serviços
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (!store) {
+          return res.status(404).json({ message: "Loja não encontrada" });
+        }
+        
+        servicesList = await storage.getServicesByStoreId(store.id, status as string);
+      } else {
+        // Montadores veem serviços disponíveis na sua região
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        if (!assembler) {
+          return res.status(404).json({ message: "Montador não encontrado" });
+        }
+        
+        // Filtrar por raio de distância e especialidades
+        servicesList = await storage.getAvailableServicesForAssembler(assembler);
+      }
+
+      res.json(servicesList);
+    } catch (error) {
+      console.error("Erro ao buscar serviços:", error);
+      res.status(500).json({ message: "Erro ao buscar serviços" });
+    }
+  });
+
+  // Criar novo serviço (apenas lojistas)
+  app.post("/api/services", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Verificar se é lojista
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
+      }
+
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Criar serviço
+      const serviceData = {
+        ...req.body,
+        storeId: store.id,
+        status: 'open',
+        createdAt: new Date()
+      };
+
+      const newService = await storage.createService(serviceData);
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error("Erro ao criar serviço:", error);
+      res.status(500).json({ message: "Erro ao criar serviço" });
+    }
+  });
+
+  // Atualizar status de serviço
+  app.patch("/api/services/:id/status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!['open', 'in-progress', 'completed', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Status inválido" });
+      }
+
+      // Verificar se o serviço existe e pertence ao lojista
+      const service = await storage.getServiceById(parseInt(id));
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Apenas o lojista dono do serviço pode atualizar o status
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (req.user?.userType === 'lojista' && store?.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a modificar este serviço" });
+      }
+
+      // Atualizar status
+      const updatedService = await storage.updateServiceStatus(parseInt(id), status);
+      res.json(updatedService);
+    } catch (error) {
+      console.error("Erro ao atualizar status do serviço:", error);
+      res.status(500).json({ message: "Erro ao atualizar status do serviço" });
+    }
+  });
+
+  // Candidatar-se a um serviço (apenas montadores)
+  app.post("/api/services/:id/apply", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Verificar se é montador
+      if (req.user?.userType !== 'montador') {
+        return res.status(403).json({ message: "Apenas montadores podem se candidatar a serviços" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se o serviço está aberto
+      if (service.status !== 'open') {
+        return res.status(400).json({ message: "Este serviço não está mais disponível" });
+      }
+
+      const assembler = await storage.getAssemblerByUserId(req.user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Montador não encontrado" });
+      }
+
+      // Verificar se já se candidatou
+      const existingApplication = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+      if (existingApplication) {
+        return res.status(400).json({ message: "Você já se candidatou para este serviço" });
+      }
+
+      // Criar candidatura
+      const applicationData = {
+        serviceId,
+        assemblerId: assembler.id,
+        status: 'pending',
+        createdAt: new Date()
+      };
+
+      const newApplication = await storage.createApplication(applicationData);
+      res.status(201).json(newApplication);
+    } catch (error) {
+      console.error("Erro ao candidatar-se para serviço:", error);
+      res.status(500).json({ message: "Erro ao candidatar-se para serviço" });
+    }
+  });
+
+  // Obter candidaturas para um serviço (apenas lojista dono do serviço)
+  app.get("/api/services/:id/applications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se é o lojista dono do serviço
+      if (req.user?.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (!store || store.id !== service.storeId) {
+          return res.status(403).json({ message: "Não autorizado a ver candidaturas deste serviço" });
+        }
+      } else {
+        return res.status(403).json({ message: "Apenas lojistas podem ver candidaturas" });
+      }
+
+      // Obter candidaturas
+      const applications = await storage.getApplicationsByServiceId(serviceId);
+      res.json(applications);
+    } catch (error) {
+      console.error("Erro ao buscar candidaturas:", error);
+      res.status(500).json({ message: "Erro ao buscar candidaturas" });
+    }
+  });
+
+  // Aceitar candidatura (apenas lojista dono do serviço)
+  app.post("/api/applications/:id/accept", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const applicationId = parseInt(id);
+
+      // Verificar se é lojista
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem aceitar candidaturas" });
+      }
+
+      // Verificar se a candidatura existe
+      const application = await storage.getApplicationById(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Candidatura não encontrada" });
+      }
+
+      // Verificar se é o lojista dono do serviço
+      const service = await storage.getServiceById(application.serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a aceitar esta candidatura" });
+      }
+
+      // Aceitar candidatura e rejeitar outras
+      await storage.acceptApplication(application.id, application.serviceId);
+      
+      // Atualizar status do serviço para 'in-progress'
+      await storage.updateServiceStatus(service.id, 'in-progress');
+
+      res.json({ message: "Candidatura aceita com sucesso" });
+    } catch (error) {
+      console.error("Erro ao aceitar candidatura:", error);
+      res.status(500).json({ message: "Erro ao aceitar candidatura" });
+    }
+  });
+
+  // Perfil do usuário
+  app.get("/api/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id, userType } = req.user;
+      let profileData = {};
+
+      if (userType === 'lojista') {
+        const store = await storage.getStoreByUserId(id);
+        profileData = { ...req.user, store };
+      } else if (userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(id);
+        profileData = { ...req.user, assembler };
+      }
+
+      res.json(profileData);
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
+      res.status(500).json({ message: "Erro ao buscar perfil" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
