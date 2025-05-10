@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PaymentDialog } from '@/components/payment/payment-dialog';
 
 interface ChatInterfaceProps {
   serviceId: number;
@@ -31,6 +32,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Buscar mensagens do chat
@@ -105,21 +107,36 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
   return (
     <div className="flex flex-col h-full">
       {/* Cabeçalho do chat */}
-      <div className="bg-white p-4 rounded-t-lg shadow-sm flex items-center gap-3">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="p-2 rounded-full" 
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h2 className="font-medium">{service?.title || 'Carregando...'}</h2>
-          <p className="text-sm text-muted-foreground">
-            {user?.userType === 'lojista' ? 'Chat com o montador' : 'Chat com a loja'}
-          </p>
+      <div className="bg-white p-4 rounded-t-lg shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-2 rounded-full" 
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h2 className="font-medium">{service?.title || 'Carregando...'}</h2>
+            <p className="text-sm text-muted-foreground">
+              {user?.userType === 'lojista' ? 'Chat com o montador' : 'Chat com a loja'}
+            </p>
+          </div>
         </div>
+        
+        {/* Botão de finalizar negociação */}
+        {service?.status === 'in_progress' && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
+            onClick={() => setIsPaymentDialogOpen(true)}
+          >
+            <DollarSign className="h-4 w-4" />
+            Finalizar
+          </Button>
+        )}
       </div>
       
       {/* Área de mensagens */}
