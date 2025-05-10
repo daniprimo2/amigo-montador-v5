@@ -27,11 +27,12 @@ export default function AuthPage() {
   const [assemblerStep2Data, setAssemblerStep2Data] = useState({});
 
   // Redirecionar se o usuário já estiver logado
-  if (user) {
-    const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
-    navigate(redirectPath);
-    return null;
-  }
+  React.useEffect(() => {
+    if (user) {
+      const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
+      navigate(redirectPath);
+    }
+  }, [user, navigate]);
 
   const handleTabChange = (tab: 'login' | 'register') => {
     setActiveTab(tab);
