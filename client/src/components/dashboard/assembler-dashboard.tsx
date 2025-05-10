@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi, Star, CheckCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
 import CompletedServiceCard from './completed-service-card';
 import ServiceCalendar from './service-calendar';
@@ -242,9 +243,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       </div>
       
       <Tabs defaultValue="available" className="mt-4">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="available">Serviços Disponíveis</TabsTrigger>
-          <TabsTrigger value="completed">Serviços Concluídos</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="available">Disponíveis</TabsTrigger>
+          <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+          <TabsTrigger value="completed">Concluídos</TabsTrigger>
         </TabsList>
         
         <TabsContent value="available">
@@ -266,7 +268,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
               ) : filteredServices.length > 0 ? (
-                // Show services (limitado a 2 para a tela inicial)
+                // Show services (limitado a 3 para a tela inicial)
                 filteredServices.slice(0, 3).map(service => (
                   <AvailableServiceCard 
                     key={service.id} 
@@ -279,6 +281,69 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-gray-500">
                   Nenhum serviço disponível no momento.
                 </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="in-progress">
+          <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
+            <div className="divide-y">
+              {isLoadingActiveServices ? (
+                // Show loading skeletons
+                Array(2).fill(0).map((_, index) => (
+                  <div key={index} className="p-4">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-3" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                  </div>
+                ))
+              ) : !activeServices || activeServices.length === 0 ? (
+                // Show empty state
+                <div className="p-8 text-center text-gray-500">
+                  <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <p>Nenhum serviço em andamento.</p>
+                </div>
+              ) : (
+                // Show active services
+                activeServices.map((service: any) => (
+                  <div 
+                    key={service.id} 
+                    className="p-4 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedChatService(service.id)}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium text-lg">{service.title}</h4>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          Em Andamento
+                        </span>
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500 mb-2">
+                      <p>Loja: {service.store?.name || 'Não especificada'}</p>
+                      <p>Local: {service.location || 'Não especificado'}</p>
+                      <p>Data: {service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Não especificada'}</p>
+                    </div>
+                    <div className="flex justify-between items-center mt-3">
+                      <div className="text-primary font-semibold">
+                        {service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'Preço não especificado'}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          setSelectedChatService(service.id);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Ver Chat
+                      </Button>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -417,8 +482,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         throw new Error('Falha ao buscar serviços ativos');
       }
       return response.json();
-    },
-    enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
+    }
+    // Sempre buscar os serviços ativos independente da aba selecionada
   });
   
   // Estado para controlar qual serviço está selecionado para chat
