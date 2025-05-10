@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Input, InputProps } from './input';
+import { Input } from './input';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Define InputProps interface since it's not exported from input.tsx
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 interface PasswordInputProps extends Omit<InputProps, 'type'> {
   showCounter?: boolean;

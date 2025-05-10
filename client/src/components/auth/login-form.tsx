@@ -59,7 +59,7 @@ export const LoginForm: React.FC = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="email"
+            name="username"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -67,6 +67,7 @@ export const LoginForm: React.FC = () => {
                     {...field}
                     className="round-input"
                     placeholder="Email"
+                    type="email"
                   />
                 </FormControl>
                 <FormMessage />
