@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import Logo from '../logo/logo';
-import { Bell, Home, List, MessageSquare, Calendar, Map, UserCircle } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface DashboardLayoutProps {
@@ -85,7 +85,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               onClick={handleLogout}
               className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden"
             >
-              <UserCircle className="h-6 w-6 text-gray-600" />
+              <LogOut className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         </div>
