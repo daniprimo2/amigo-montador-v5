@@ -46,11 +46,13 @@ type StoreFormValues = z.infer<typeof storeSchema>;
 interface ProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 export const ProfileDialog: React.FC<ProfileDialogProps> = ({ 
   open, 
-  onOpenChange 
+  onOpenChange,
+  onLogout
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -204,6 +206,18 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             Visualize e edite suas informações pessoais
           </DialogDescription>
         </DialogHeader>
+        
+        {onLogout && (
+          <div className="flex justify-end mb-4">
+            <Button 
+              variant="outline" 
+              onClick={onLogout}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              Logout
+            </Button>
+          </div>
+        )}
         
         {isLoading ? (
           <div className="flex justify-center items-center py-8">

@@ -406,9 +406,21 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       // Notificação já foi exibida pelo hook do WebSocket, então 
       // só precisamos atualizar as consultas
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
       
-      // Mudar para a seção de chat se o usuário não estiver lá
-      if (dashboardSection !== 'chat') {
+      // Redirecionar automaticamente para o chat se tiver serviceId
+      if (lastMessage.serviceId) {
+        // Definir o serviço selecionado para o chat
+        setSelectedChatService(lastMessage.serviceId);
+        // Mudar para a seção de chat
+        setDashboardSection('chat');
+        
+        toast({
+          title: "Nova mensagem recebida",
+          description: "Chat aberto automaticamente",
+          duration: 5000
+        });
+      } else if (dashboardSection !== 'chat') {
         toast({
           title: "Novo chat disponível",
           description: "Clique na aba Chat para visualizar a conversa",
