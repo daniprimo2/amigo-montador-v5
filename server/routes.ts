@@ -3,8 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, not } from "drizzle-orm";
-import { services, applications, stores, assemblers, type User, type Store, type Assembler, type Service } from "@shared/schema";
+import { eq, and, not, isNotNull } from "drizzle-orm";
+import { services, applications, stores, assemblers, messages, type User, type Store, type Assembler, type Service, type Message } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Declarar as funções globais de notificação
@@ -466,6 +466,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
       res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+
+  // Obter um serviço específico por ID
+  app.get("/api/services/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar a autorização baseada no tipo de usuário
+      let hasAccess = false;
+      
+      if (req.user?.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (store && store.id === service.storeId) {
+          hasAccess = true;
+        }
+      } else if (req.user?.userType === 'montador') {
+        // Para montadores, apenas podem ver serviços disponíveis ou serviços nos quais se candidataram
+        if (service.status === 'open') {
+          hasAccess = true;
+        } else {
+          const assembler = await storage.getAssemblerByUserId(req.user.id);
+          if (assembler) {
+            const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+            if (application) {
+              hasAccess = true;
+            }
+          }
+        }
+      }
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Não autorizado a ver este serviço" });
+      }
+
+      // Retornar o serviço com informações da loja
+      // Buscar a loja pelo storeId do serviço, não pelo userId
+      const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
+      const store = storeResult.length > 0 ? storeResult[0] : null;
+      
+      const serviceWithStore = {
+        ...service,
+        store: store ? {
+          id: store.id,
+          name: store.name
+        } : null
+      };
+
+      res.json(serviceWithStore);
+    } catch (error) {
+      console.error("Erro ao buscar serviço:", error);
+      res.status(500).json({ message: "Erro ao buscar serviço" });
     }
   });
 
