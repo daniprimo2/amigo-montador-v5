@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2 } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
+import FileUpload from '@/components/ui/file-upload';
 
 interface StoreDashboardProps {
   onLogout: () => void;
