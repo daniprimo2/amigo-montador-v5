@@ -3,6 +3,12 @@ import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
 import { queryClient } from '@/lib/queryClient';
 
+// Função global de debug para maior visibilidade nos logs
+const debugLogger = (context: string, message: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [${context}] ${message}`, data || '');
+};
+
 type WebSocketMessage = {
   type: 'connection' | 'new_application' | 'new_message';
   message: string;
@@ -19,10 +25,14 @@ export function useWebSocket() {
 
   // Função para conectar ao WebSocket
   const connect = useCallback(() => {
-    if (!user) return;
+    if (!user) {
+      debugLogger('WebSocket', 'Tentativa de conexão sem usuário autenticado');
+      return;
+    }
 
     // Fechar conexão anterior se existir
     if (socketRef.current) {
+      debugLogger('WebSocket', 'Fechando conexão WebSocket existente');
       socketRef.current.close();
     }
 
@@ -30,41 +40,52 @@ export function useWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
     
-    console.log('Conectando ao WebSocket:', wsUrl);
+    debugLogger('WebSocket', `Iniciando conexão para usuário ${user.id}`, { url: wsUrl });
     
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log('WebSocket conectado');
+      debugLogger('WebSocket', 'Conexão estabelecida com sucesso');
       setConnected(true);
     };
 
-    socket.onclose = () => {
-      console.log('WebSocket desconectado');
+    socket.onclose = (event) => {
+      debugLogger('WebSocket', `Conexão fechada: Código ${event.code}, Motivo: ${event.reason || 'Não especificado'}`);
       setConnected(false);
       
-      // Tentar reconectar após 5 segundos
-      setTimeout(() => {
-        if (user) connect();
-      }, 5000);
+      // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
+      if (user) {
+        debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
+        const timeoutId = setTimeout(() => {
+          debugLogger('WebSocket', 'Tentando reconexão automática');
+          connect();
+        }, 5000);
+        
+        // Armazenar o ID do timeout para cancelar se necessário
+        return () => clearTimeout(timeoutId);
+      }
     };
 
     socket.onerror = (error) => {
-      console.error('Erro no WebSocket:', error);
+      debugLogger('WebSocket', 'Erro na conexão WebSocket', error);
       setConnected(false);
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as WebSocketMessage;
-        console.log('Mensagem recebida:', data);
+        debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
         
         // Atualizar último estado da mensagem
         setLastMessage(data);
         
         // Mostrar notificação toast e invalidar queries necessárias
         if (data.type === 'new_application') {
+          debugLogger('WebSocket', 'Processando notificação de nova candidatura', {
+            serviceId: data.serviceId
+          });
+          
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
           queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
@@ -74,7 +95,17 @@ export function useWebSocket() {
             description: data.message,
             duration: 5000
           });
+          
+          // Importante: debugar para verificar se isto está sendo executado
+          debugLogger('WebSocket', 'Notificação de candidatura processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
+          });
         } else if (data.type === 'new_message') {
+          debugLogger('WebSocket', 'Processando notificação de nova mensagem', {
+            serviceId: data.serviceId
+          });
+          
           toast({
             title: 'Nova mensagem',
             description: data.message,
@@ -82,7 +113,7 @@ export function useWebSocket() {
           });
         }
       } catch (error) {
-        console.error('Erro ao processar mensagem:', error);
+        debugLogger('WebSocket', 'Erro ao processar mensagem', error);
       }
     };
   }, [user, toast]);

@@ -893,30 +893,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Função para enviar notificação para o lojista quando um montador se candidatar
   global.notifyStore = async (serviceId: number, montadorId: number, mensagem: string) => {
     try {
+      console.log(`[notifyStore] Iniciando envio de notificação: serviço ${serviceId}, montador ${montadorId}`);
+      
       // Obter o serviço
       const service = await storage.getServiceById(serviceId);
-      if (!service) return;
+      if (!service) {
+        console.error(`[notifyStore] Serviço ${serviceId} não encontrado`);
+        return;
+      }
+      
+      console.log(`[notifyStore] Serviço encontrado: "${service.title}", storeId: ${service.storeId}`);
       
       // Obter a loja
       const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
-      if (!storeResult.length) return;
+      if (!storeResult.length) {
+        console.error(`[notifyStore] Loja com ID ${service.storeId} não encontrada`);
+        return;
+      }
       
       // Obter o userId do lojista
       const storeUserId = storeResult[0].userId;
+      console.log(`[notifyStore] UserId do lojista encontrado: ${storeUserId}`);
       
       // Obter o montador para exibir o nome
       const montador = await storage.getUser(montadorId);
       const montadorNome = montador ? montador.name : 'Um montador';
       
+      // Montar a mensagem
+      const notificationMessage = mensagem || `${montadorNome} se candidatou ao serviço "${service.title}"`;
+      
+      // Verificar se o cliente WebSocket do lojista está conectado
+      console.log(`[notifyStore] Verificando se lojista (userId: ${storeUserId}) está conectado...`);
+      const isConnected = clients.has(storeUserId);
+      console.log(`[notifyStore] Lojista ${storeUserId} está ${isConnected ? 'conectado' : 'desconectado'}`);
+      
       // Enviar notificação
-      sendNotification(storeUserId, {
+      const notificationData = {
         type: 'new_application',
         serviceId,
-        message: mensagem || `${montadorNome} se candidatou ao serviço "${service.title}"`,
+        message: notificationMessage,
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      console.log(`[notifyStore] Enviando notificação:`, notificationData);
+      const sent = sendNotification(storeUserId, notificationData);
+      
+      console.log(`[notifyStore] Notificação ${sent ? 'enviada com sucesso' : 'não foi entregue'}`);
     } catch (error) {
-      console.error('Erro ao enviar notificação para loja:', error);
+      console.error('[notifyStore] Erro ao enviar notificação para loja:', error);
     }
   };
   

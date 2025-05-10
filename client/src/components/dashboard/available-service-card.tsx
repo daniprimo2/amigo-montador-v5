@@ -31,8 +31,13 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     
     try {
       setIsApplying(true);
-      console.log(`Enviando candidatura para serviço ID: ${service.id}`);
-      await onApply(service.id);
+      console.log(`[AvailableServiceCard] Iniciando candidatura para serviço ID: ${service.id}`);
+      
+      // Add a small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const response = await onApply(service.id);
+      console.log(`[AvailableServiceCard] Resposta da candidatura:`, response);
       
       toast({
         title: "Candidatura enviada",
@@ -40,10 +45,21 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
         duration: 5000
       });
     } catch (error) {
-      console.error("Erro ao candidatar-se:", error);
+      console.error("[AvailableServiceCard] Erro ao candidatar-se:", error);
+      
+      let errorMessage = "Falha ao enviar candidatura. Tente novamente.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+      
+      console.error("[AvailableServiceCard] Detalhes do erro:", errorMessage);
+      
       toast({
         title: "Erro ao enviar candidatura",
-        description: error instanceof Error ? error.message : "Falha ao enviar candidatura. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
         duration: 5000
       });
