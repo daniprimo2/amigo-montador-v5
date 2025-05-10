@@ -13,7 +13,6 @@ import { useLocation } from 'wouter';
 
 const storeStep2Schema = z.object({
   storeName: z.string().min(3, 'Nome da loja deve ter pelo menos 3 caracteres'),
-  cnpj: z.string().min(14, 'CNPJ inválido'),
   address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
   city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'Selecione um estado'),
@@ -46,7 +45,6 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
     resolver: zodResolver(storeStep2Schema),
     defaultValues: {
       storeName: '',
-      cnpj: '',
       address: '',
       city: '',
       state: '',
@@ -133,23 +131,6 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                   <Input
                     {...field}
                     placeholder="Nome da sua loja"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="cnpj"
-            render={({ field }) => (
-              <FormItem className="form-field">
-                <FormLabel>CNPJ</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="00.000.000/0000-00"
                   />
                 </FormControl>
                 <FormMessage />

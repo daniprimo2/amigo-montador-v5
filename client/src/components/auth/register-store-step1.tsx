@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,10 +6,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const storeStep1Schema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  cpf: z.string().min(11, 'CPF inválido'),
+  documentType: z.enum(['cpf', 'cnpj'], {
+    required_error: "Selecione o tipo de documento"
+  }),
+  documentNumber: z.string().min(1, 'Documento obrigatório'),
   phone: z.string().min(10, 'Telefone inválido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
@@ -17,7 +21,20 @@ const storeStep1Schema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
-});
+}).refine(
+  (data) => {
+    if (data.documentType === 'cpf') {
+      return data.documentNumber.length >= 11;
+    } else if (data.documentType === 'cnpj') {
+      return data.documentNumber.length >= 14;
+    }
+    return false;
+  },
+  {
+    message: "Documento inválido",
+    path: ["documentNumber"],
+  }
+);
 
 export type StoreStep1Data = z.infer<typeof storeStep1Schema>;
 
@@ -34,7 +51,8 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
     resolver: zodResolver(storeStep1Schema),
     defaultValues: {
       name: '',
-      cpf: '',
+      documentType: 'cpf',
+      documentNumber: '',
       phone: '',
       email: '',
       password: '',
@@ -42,6 +60,8 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
       ...defaultValues,
     },
   });
+
+  const documentType = form.watch('documentType');
 
   const onSubmit = (data: StoreStep1Data) => {
     onNext(data);
@@ -90,14 +110,45 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
           
           <FormField
             control={form.control}
-            name="cpf"
+            name="documentType"
             render={({ field }) => (
               <FormItem className="form-field">
-                <FormLabel>CPF</FormLabel>
+                <FormLabel>Tipo de Documento</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-row space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="cpf" />
+                      </FormControl>
+                      <FormLabel className="font-normal">CPF</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="cnpj" />
+                      </FormControl>
+                      <FormLabel className="font-normal">CNPJ</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="documentNumber"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>{documentType === 'cpf' ? 'CPF' : 'CNPJ'}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="000.000.000-00"
+                    placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                   />
                 </FormControl>
                 <FormMessage />

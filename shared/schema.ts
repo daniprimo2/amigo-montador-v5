@@ -20,7 +20,8 @@ export const stores = pgTable("stores", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
-  cnpj: text("cnpj").notNull(),
+  documentType: text("document_type").notNull(), // 'cpf' ou 'cnpj'
+  documentNumber: text("document_number").notNull(),
   address: text("address").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
