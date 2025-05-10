@@ -102,12 +102,17 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           <h2 className="text-lg font-semibold">
             Olá, <span className="text-primary">{user?.name || 'Lojista'}</span>
           </h2>
-          <Button 
-            variant="link" 
-            className="text-primary text-sm font-medium p-0"
+          <a 
+            href="#" 
+            className="text-primary text-sm font-medium hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              // Ação ao clicar no botão de perfil
+              console.log("Ver perfil clicado");
+            }}
           >
             Ver Perfil
-          </Button>
+          </a>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
@@ -138,24 +143,15 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
         <div className="flex border-b">
-          <Button 
-            variant="ghost" 
-            className="flex-1 py-3 text-center font-medium text-primary border-b-2 border-primary rounded-none"
-          >
+          <div className="flex-1 py-3 text-center font-medium text-primary border-b-2 border-primary cursor-pointer">
             Em Aberto
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="flex-1 py-3 text-center font-medium text-gray-500 rounded-none"
-          >
+          </div>
+          <div className="flex-1 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-primary transition-colors">
             Em Andamento
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="flex-1 py-3 text-center font-medium text-gray-500 rounded-none"
-          >
+          </div>
+          <div className="flex-1 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-primary transition-colors">
             Finalizados
-          </Button>
+          </div>
         </div>
         
         <div className="divide-y">
