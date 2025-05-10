@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { services, applications, type User, type Store, type Assembler } from "@shared/schema";
+import { services, applications, type User, type Store, type Assembler, type Service } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Log das requisições
@@ -84,11 +84,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date()
       };
 
+      // Verificar campos obrigatórios antes de enviar para o banco de dados
+      const requiredFields = {
+        title: "Título do Serviço",
+        location: "Cidade/UF",
+        date: "Data do Serviço",
+        price: "Valor",
+        materialType: "Material"
+      };
+
+      const missingFields = [];
+      for (const [field, label] of Object.entries(requiredFields)) {
+        if (!serviceData[field]) {
+          missingFields.push(label);
+        }
+      }
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: `Campos obrigatórios não preenchidos: ${missingFields.join(", ")}`,
+          missingFields
+        });
+      }
+
       const newService = await storage.createService(serviceData);
       res.status(201).json(newService);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar serviço:", error);
-      res.status(500).json({ message: "Erro ao criar serviço" });
+      
+      // Tratamento específico de erros de banco de dados
+      if (error.code === '23502') { // Violação de not-null constraint
+        const column = error.column;
+        let fieldName = column === 'title' ? 'Título do Serviço' :
+                        column === 'location' ? 'Cidade/UF' :
+                        column === 'date' ? 'Data do Serviço' :
+                        column === 'price' ? 'Valor' :
+                        column === 'material_type' ? 'Material' : column;
+        
+        return res.status(400).json({ 
+          message: `Campo obrigatório não preenchido: ${fieldName}`,
+          field: column
+        });
+      }
+      
+      res.status(500).json({ message: "Erro ao criar serviço: " + (error.message || error) });
     }
   });
 

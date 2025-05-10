@@ -200,9 +200,20 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     },
     onError: (error: any) => {
+      // Tentar extrair informações mais detalhadas do erro
+      let errorDescription = error.message || "Ocorreu um erro ao criar o serviço. Tente novamente.";
+      
+      // Verificar se a mensagem contém informações sobre campos obrigatórios
+      if (error.message && error.message.includes("Campo obrigatório")) {
+        errorDescription = error.message;
+      }
+      
+      // Log do erro completo para depuração
+      console.error("Erro completo ao criar serviço:", error);
+      
       toast({
         title: "Erro ao criar serviço",
-        description: error.message || "Ocorreu um erro ao criar o serviço. Tente novamente.",
+        description: errorDescription,
         variant: "destructive"
       });
     }
