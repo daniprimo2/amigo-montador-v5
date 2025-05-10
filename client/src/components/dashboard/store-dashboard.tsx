@@ -73,7 +73,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       date: '15/06/2023',
       price: 'R$ 1.500,00',
       candidates: 3,
-      status: 'open',
+      status: 'open' as const,
     },
     {
       id: 2,
@@ -82,7 +82,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       date: '18/06/2023',
       price: 'R$ 850,00',
       candidates: 1,
-      status: 'open',
+      status: 'open' as const,
     },
     {
       id: 3,
@@ -91,7 +91,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       date: '20/06/2023',
       price: 'R$ 600,00',
       candidates: 0,
-      status: 'open',
+      status: 'open' as const,
     },
   ];
 
@@ -102,7 +102,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           <h2 className="text-lg font-semibold">
             Olá, <span className="text-primary">{user?.name || 'Lojista'}</span>
           </h2>
-          <button className="text-primary text-sm font-medium">Ver Perfil</button>
+          <Button 
+            variant="link" 
+            className="text-primary text-sm font-medium p-0"
+          >
+            Ver Perfil
+          </Button>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
@@ -133,9 +138,24 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
         <div className="flex border-b">
-          <button className="flex-1 py-3 text-center font-medium text-primary border-b-2 border-primary">Em Aberto</button>
-          <button className="flex-1 py-3 text-center font-medium text-gray-500">Em Andamento</button>
-          <button className="flex-1 py-3 text-center font-medium text-gray-500">Finalizados</button>
+          <Button 
+            variant="ghost" 
+            className="flex-1 py-3 text-center font-medium text-primary border-b-2 border-primary rounded-none"
+          >
+            Em Aberto
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="flex-1 py-3 text-center font-medium text-gray-500 rounded-none"
+          >
+            Em Andamento
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="flex-1 py-3 text-center font-medium text-gray-500 rounded-none"
+          >
+            Finalizados
+          </Button>
         </div>
         
         <div className="divide-y">
