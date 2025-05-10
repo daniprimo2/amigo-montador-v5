@@ -422,6 +422,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao atualizar status do serviço" });
     }
   });
+  
+  // Finalizar serviço e confirmar pagamento
+  app.patch("/api/services/:id/complete", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const serviceId = parseInt(req.params.id, 10);
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar permissões
+      if (req.user?.userType === 'lojista') {
+        // Se for lojista, verificar se é o proprietário do serviço
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (!store || store.id !== service.storeId) {
+          return res.status(403).json({ message: "Não autorizado a finalizar este serviço" });
+        }
+      } else if (req.user?.userType === 'montador') {
+        // Se for montador, verificar se tem uma candidatura aceita para este serviço
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        if (!assembler) {
+          return res.status(403).json({ message: "Montador não encontrado" });
+        }
+        
+        // Verificar aplicação
+        const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+        if (!application || application.status !== 'accepted') {
+          return res.status(403).json({ message: "Você não está autorizado a finalizar este serviço" });
+        }
+      } else {
+        return res.status(403).json({ message: "Tipo de usuário não autorizado" });
+      }
+
+      // Atualizar status para 'completed'
+      const updatedService = await storage.updateServiceStatus(serviceId, 'completed');
+      
+      // Enviar notificação sobre a finalização do serviço
+      try {
+        // Obter informações do montador
+        const assemblerApp = await db
+          .select({
+            assemblerId: applications.assemblerId
+          })
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+          
+        if (assemblerApp.length > 0) {
+          // Notificar a loja e o montador sobre a finalização
+          const notifyMessage = "Serviço finalizado com sucesso! Pagamento confirmado.";
+          
+          if (global.notifyStore) {
+            await global.notifyStore(serviceId, assemblerApp[0].assemblerId, notifyMessage);
+          }
+        }
+      } catch (notifyError) {
+        console.error("Erro ao enviar notificação de finalização:", notifyError);
+        // Não falhar a API se a notificação não for enviada
+      }
+      
+      res.json({
+        success: true,
+        message: "Serviço finalizado com sucesso",
+        service: updatedService
+      });
+    } catch (error) {
+      console.error("Erro ao finalizar serviço:", error);
+      res.status(500).json({ message: "Erro ao finalizar serviço" });
+    }
+  });
 
   // Candidatar-se a um serviço (apenas montadores)
   app.post("/api/services/:id/apply", async (req, res) => {

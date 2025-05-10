@@ -213,6 +213,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
           </Button>
         </form>
       </div>
+      
+      {/* Modal de pagamento */}
+      {isPaymentDialogOpen && (
+        <PaymentDialog
+          open={isPaymentDialogOpen}
+          onClose={() => setIsPaymentDialogOpen(false)}
+          serviceId={serviceId}
+          amount={service?.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
+        />
+      )}
     </div>
   );
 };
