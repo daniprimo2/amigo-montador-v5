@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import storeOwnerSvg from '@/assets/store-owner.svg';
-import assemblerSvg from '@/assets/assembler.svg';
 
 interface RegisterOptionProps {
   image: string;
@@ -46,14 +44,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSelectType }) => {
 
       <div className="space-y-4">
         <RegisterOption
-          image={storeOwnerSvg}
+          image="/src/assets/store-owner.svg"
           title="Lojista"
           description="Para lojas que buscam montadores"
           onClick={() => onSelectType('lojista')}
         />
         
         <RegisterOption
-          image={assemblerSvg}
+          image="/src/assets/assembler.svg"
           title="Montador"
           description="Para profissionais de montagem"
           onClick={() => onSelectType('montador')}
