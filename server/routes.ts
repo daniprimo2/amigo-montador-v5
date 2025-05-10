@@ -93,12 +93,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         materialType: "Material"
       };
 
+      // Log dos dados recebidos para depuração
+      console.log("Dados do serviço recebidos no servidor:", serviceData);
+      
       const missingFields = [];
       for (const [field, label] of Object.entries(requiredFields)) {
-        if (!serviceData[field]) {
+        // Verifique se o campo está vazio ou é undefined/null
+        if (!serviceData[field] && serviceData[field] !== 0) {
           missingFields.push(label);
+          console.log(`Campo '${field}' faltando. Valor atual:`, serviceData[field]);
         }
       }
+
+      // Log dos campos faltantes
+      console.log("Campos faltantes:", missingFields);
 
       if (missingFields.length > 0) {
         return res.status(400).json({ 

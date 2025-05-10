@@ -150,17 +150,25 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     mutationFn: async (serviceData: any) => {
       const formData = new FormData();
       
-      // Adicionar campos de texto ao FormData
+      // Adicionar campos de texto ao FormData, garantindo que não enviamos nulls
       Object.keys(serviceData).forEach(key => {
-        formData.append(key, serviceData[key]);
+        // Só adiciona ao FormData se o valor não for null ou undefined
+        if (serviceData[key] !== null && serviceData[key] !== undefined) {
+          formData.append(key, serviceData[key]);
+          console.log(`Adicionado ao FormData: ${key}=${serviceData[key]}`);
+        } else {
+          console.log(`Campo ${key} não adicionado ao FormData pois é null/undefined`);
+        }
       });
       
       // Adicionar arquivo do projeto se existir
       if (projectFile && projectFile.length > 0) {
         formData.append('projectFile', projectFile[0]);
+        console.log("Arquivo de projeto adicionado ao FormData");
       }
       
       // Enviar para a API
+      console.log("Enviando FormData para o servidor...");
       const response = await fetch('/api/services', {
         method: 'POST',
         credentials: 'include',
@@ -315,8 +323,23 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       status: 'open' // Garantir que o serviço seja criado com status 'open'
     };
     
-    // Adicionar log dos dados antes do envio para ajudar no diagnóstico
+    // Verificar se algum campo obrigatório tem string vazia
+    Object.entries(serviceData).forEach(([key, value]) => {
+      if (value === "") {
+        // @ts-ignore: Tratando serviceData como um objeto dinâmico
+        serviceData[key] = null; // Converter strings vazias para null
+      }
+    });
+    
+    // Adicionar logs detalhados para depuração
     console.log("Dados do serviço antes do envio:", serviceData);
+    
+    // Log detalhado de cada campo específico para verificar valores
+    console.log("Título:", serviceData.title, typeof serviceData.title);
+    console.log("Localização:", serviceData.location, typeof serviceData.location);
+    console.log("Data:", serviceData.date, typeof serviceData.date);
+    console.log("Preço:", serviceData.price, typeof serviceData.price);
+    console.log("Material:", serviceData.materialType, typeof serviceData.materialType);
     
     // Enviar para a API
     createServiceMutation.mutate(serviceData);
