@@ -110,6 +110,8 @@ export function setupAuth(app: Express) {
           name: req.body.storeName,
           documentType: req.body.documentType,
           documentNumber: req.body.documentNumber,
+          // Adiciona CNPJ se o documento for do tipo CNPJ, caso contrário, usa o documentNumber
+          cnpj: req.body.documentType === 'cnpj' ? req.body.documentNumber : req.body.documentNumber,
           address: req.body.address,
           city: req.body.city,
           state: req.body.state,

@@ -22,6 +22,7 @@ export const stores = pgTable("stores", {
   name: text("name").notNull(),
   documentType: text("document_type").notNull(), // 'cpf' ou 'cnpj'
   documentNumber: text("document_number").notNull(),
+  cnpj: text("cnpj").notNull(), // Campo adicional encontrado no banco de dados
   address: text("address").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
