@@ -60,7 +60,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Filter services by search term
   const filteredServices = services?.filter(service => 
     service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
     service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.location.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -68,9 +68,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Handle applying for a service
   const applyMutation = useMutation({
     mutationFn: async (serviceId: number) => {
-      return await apiRequest(`/api/services/${serviceId}/apply`, {
-        method: "POST"
-      } as RequestInit);
+      const url = `/api/services/${serviceId}/apply`;
+      return await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
     },
     onSuccess: () => {
       toast({
