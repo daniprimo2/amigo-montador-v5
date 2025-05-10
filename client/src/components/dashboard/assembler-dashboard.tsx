@@ -1,50 +1,97 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AvailableServiceCard from './available-service-card';
 import ServiceCalendar from './service-calendar';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
 }
 
+// Define the service interface to match what's returned from the API
+interface ServiceData {
+  id: number;
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  price: number;
+  type: string;
+  storeId: number;
+  store?: {
+    name: string;
+  };
+  status: string;
+  createdAt: string;
+}
+
+// Format data for display in the UI
+const formatServiceForDisplay = (service: ServiceData) => {
+  return {
+    id: service.id,
+    title: service.title,
+    location: service.location,
+    distance: '5 km', // This would be calculated based on user location
+    date: new Date(service.date).toLocaleDateString('pt-BR'),
+    price: `R$ ${service.price.toFixed(2).replace('.', ',')}`,
+    store: service.store?.name || 'Loja não especificada',
+    type: service.type
+  };
+};
+
 export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // Dados de exemplo para os serviços disponíveis
-  const availableServices = [
-    {
-      id: 1,
-      title: 'Cozinha Planejada Milano',
-      location: 'São Paulo, SP',
-      distance: '5 km',
-      date: '15/06/2023',
-      price: 'R$ 1.500,00',
-      store: 'Móveis Planejados Ltda.',
-      type: 'Marcenaria',
+  // Fetch available services
+  const { data: services, isLoading, error } = useQuery({
+    queryKey: ['/api/services'],
+    select: (data: ServiceData[]) => data.map(formatServiceForDisplay)
+  });
+  
+  // Filter services by search term
+  const filteredServices = services?.filter(service => 
+    service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.location.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+  
+  // Handle applying for a service
+  const applyMutation = useMutation({
+    mutationFn: async (serviceId: number) => {
+      return await apiRequest(`/api/services/${serviceId}/apply`, {
+        method: "POST"
+      });
     },
-    {
-      id: 2,
-      title: 'Guarda-roupa Casal Completo',
-      location: 'São Paulo, SP',
-      distance: '8 km',
-      date: '18/06/2023',
-      price: 'R$ 850,00',
-      store: 'Casa & Decoração',
-      type: 'Marcenaria',
+    onSuccess: () => {
+      toast({
+        title: "Candidatura enviada",
+        description: "Sua candidatura foi enviada com sucesso!",
+        variant: "success"
+      });
+      // Refresh services list
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     },
-    {
-      id: 3,
-      title: 'Painel para TV com Rack',
-      location: 'São Paulo, SP',
-      distance: '3 km',
-      date: '20/06/2023',
-      price: 'R$ 600,00',
-      store: 'Móveis Sob Medida',
-      type: 'Plano de corte',
-    },
-  ];
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao candidatar-se",
+        description: error.message || "Não foi possível enviar sua candidatura. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const handleApply = (serviceId: number) => {
+    applyMutation.mutate(serviceId);
+  };
 
   return (
     <div className="p-4">
@@ -57,21 +104,21 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">15</div>
+            <div className="font-bold text-xl text-primary">{filteredServices.length || 0}</div>
             <div className="text-xs text-gray-500">Disponíveis</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">2</div>
+            <div className="font-bold text-xl text-primary">0</div>
             <div className="text-xs text-gray-500">Em Andamento</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">28</div>
+            <div className="font-bold text-xl text-primary">0</div>
             <div className="text-xs text-gray-500">Finalizados</div>
           </div>
         </div>
       </div>
       
-      <div className="dashboard-card">
+      <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
         <div className="p-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Serviços Próximos</h3>
@@ -85,6 +132,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               <Input
                 placeholder="Pesquisar serviços"
                 className="w-full pl-10 pr-12 py-2 rounded-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <Search className="h-4 w-4" />
@@ -99,9 +148,36 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
         
         <div className="divide-y">
-          {availableServices.map(service => (
-            <AvailableServiceCard key={service.id} service={service} />
-          ))}
+          {isLoading ? (
+            // Show loading skeletons
+            Array(3).fill(0).map((_, index) => (
+              <div key={index} className="p-4">
+                <Skeleton className="h-5 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-3" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-10 w-full rounded-full" />
+              </div>
+            ))
+          ) : error ? (
+            // Show error message
+            <div className="p-8 text-center text-red-500">
+              Erro ao carregar serviços. Por favor, tente novamente.
+            </div>
+          ) : filteredServices.length > 0 ? (
+            // Show services
+            filteredServices.map(service => (
+              <AvailableServiceCard 
+                key={service.id} 
+                service={service} 
+                onApply={handleApply}
+              />
+            ))
+          ) : (
+            // Show empty state
+            <div className="p-8 text-center text-gray-500">
+              Nenhum serviço disponível no momento.
+            </div>
+          )}
         </div>
       </div>
       
