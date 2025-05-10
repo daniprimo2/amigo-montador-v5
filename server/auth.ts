@@ -108,7 +108,8 @@ export function setupAuth(app: Express) {
         const storeData = {
           userId,
           name: req.body.storeName,
-          cnpj: req.body.cnpj,
+          documentType: req.body.documentType,
+          documentNumber: req.body.documentNumber,
           address: req.body.address,
           city: req.body.city,
           state: req.body.state,
