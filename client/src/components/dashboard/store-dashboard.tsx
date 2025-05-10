@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { ChevronRight, Calendar, CalendarDays, Plus } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -11,6 +16,53 @@ interface StoreDashboardProps {
 
 export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
+  const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
+  const [newService, setNewService] = useState({
+    title: '',
+    description: '',
+    location: '',
+    date: '',
+    price: '',
+    type: '',
+    materialType: ''
+  });
+  const { toast } = useToast();
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewService(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleCreateService = () => {
+    // Aqui você implementaria a lógica para enviar os dados para o backend
+    // Por enquanto, vamos apenas fechar o modal e mostrar um toast
+    
+    if (!newService.title || !newService.location || !newService.date || !newService.price) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Serviço criado",
+      description: "O serviço foi criado com sucesso!",
+    });
+    
+    // Resetar o formulário e fechar o modal
+    setNewService({
+      title: '',
+      description: '',
+      location: '',
+      date: '',
+      price: '',
+      type: '',
+      materialType: ''
+    });
+    setIsNewServiceOpen(false);
+  };
   
   // Dados de exemplo para os cards de serviço
   const services = [
@@ -70,7 +122,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Serviços</h3>
-        <Button variant="default" className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium">
+        <Button 
+          variant="default" 
+          className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium"
+          onClick={() => setIsNewServiceOpen(true)}
+        >
           <Plus className="h-4 w-4" /> Novo Serviço
         </Button>
       </div>
@@ -96,6 +152,107 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         month="Junho" 
         year="2023" 
       />
+      
+      {/* Modal de Novo Serviço */}
+      <Dialog open={isNewServiceOpen} onOpenChange={setIsNewServiceOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Novo Serviço de Montagem</DialogTitle>
+            <DialogDescription>
+              Preencha as informações abaixo para criar um novo serviço de montagem.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Título do Serviço *</Label>
+              <Input 
+                id="title" 
+                name="title" 
+                placeholder="Ex: Montagem de Cozinha Completa" 
+                value={newService.title}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea 
+                id="description"
+                name="description"
+                placeholder="Descreva detalhes do serviço, móveis a serem montados, etc." 
+                rows={3}
+                value={newService.description}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="location">Localização *</Label>
+                <Input 
+                  id="location" 
+                  name="location" 
+                  placeholder="Ex: São Paulo, SP" 
+                  value={newService.location}
+                  onChange={handleInputChange}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="date">Data *</Label>
+                <Input 
+                  id="date" 
+                  name="date" 
+                  type="date"
+                  value={newService.date}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="price">Valor *</Label>
+                <Input 
+                  id="price" 
+                  name="price" 
+                  placeholder="Ex: R$ 500,00" 
+                  value={newService.price}
+                  onChange={handleInputChange}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="type">Tipo de Móvel</Label>
+                <Input 
+                  id="type" 
+                  name="type" 
+                  placeholder="Ex: Cozinha, Guarda-roupa" 
+                  value={newService.type}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="materialType">Material</Label>
+              <Input 
+                id="materialType" 
+                name="materialType" 
+                placeholder="Ex: MDF, Madeira Maciça" 
+                value={newService.materialType}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewServiceOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateService}>Criar Serviço</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
