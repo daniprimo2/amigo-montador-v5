@@ -126,17 +126,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
         </div>
         
         {/* Botão de finalizar negociação */}
-        {service?.status === 'in_progress' && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
-            onClick={() => setIsPaymentDialogOpen(true)}
-          >
-            <DollarSign className="h-4 w-4" />
-            Finalizar
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
+          onClick={() => setIsPaymentDialogOpen(true)}
+        >
+          <DollarSign className="h-4 w-4" />
+          Finalizar
+        </Button>
       </div>
       
       {/* Área de mensagens */}
