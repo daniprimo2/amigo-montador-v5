@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import FileUpload from '@/components/ui/file-upload';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useWebSocket } from '@/hooks/use-websocket';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -26,6 +27,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
+  const { connected, lastMessage } = useWebSocket();
   const [newService, setNewService] = useState({
     title: '',
     description: '',
@@ -65,6 +67,39 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       window.removeEventListener('dashboard-tab-change', handleTabChange as EventListener);
     };
   }, []);
+  
+  // Reagir a novas mensagens ou candidaturas recebidas via WebSocket
+  useEffect(() => {
+    if (lastMessage) {
+      // Notificação já foi exibida pelo hook do WebSocket
+      
+      if (lastMessage.type === 'new_application') {
+        // Atualizar a lista de serviços para mostrar a nova candidatura
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        
+        // Se o usuário não estiver na seção de serviços, sugerir uma mudança
+        if (dashboardSection !== 'services') {
+          toast({
+            title: "Nova candidatura recebida",
+            description: "Vá para a seção 'Serviços' para visualizar",
+            duration: 5000
+          });
+        }
+      } else if (lastMessage.type === 'new_message') {
+        // Atualizar a lista de mensagens
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        
+        // Se o usuário não estiver na seção de chat, sugerir uma mudança
+        if (dashboardSection !== 'chat') {
+          toast({
+            title: "Nova mensagem recebida",
+            description: "Vá para a seção 'Chat' para visualizar",
+            duration: 5000
+          });
+        }
+      }
+    }
+  }, [lastMessage, dashboardSection, queryClient, toast]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

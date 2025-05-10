@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AvailableServiceCard from './available-service-card';
 import ServiceCalendar from './service-calendar';
@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useWebSocket } from '@/hooks/use-websocket';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
@@ -98,6 +99,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
+  const { connected, lastMessage } = useWebSocket();
   
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {
@@ -337,6 +339,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     </div>
   );
 
+  // Reagir a novas mensagens recebidas via WebSocket
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'new_message') {
+      // Notificação já foi exibida pelo hook do WebSocket, então 
+      // só precisamos atualizar as consultas
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      
+      // Mudar para a seção de chat se o usuário não estiver lá
+      if (dashboardSection !== 'chat') {
+        toast({
+          title: "Novo chat disponível",
+          description: "Clique na aba Chat para visualizar a conversa",
+          duration: 5000
+        });
+      }
+    }
+  }, [lastMessage, dashboardSection, queryClient, toast]);
+  
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
     switch(dashboardSection) {
