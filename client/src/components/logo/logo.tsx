@@ -29,23 +29,19 @@ export const Logo: React.FC<LogoProps> = ({
         <svg className={sizes[size]} viewBox="0 0 120 120" fill="none">
           {/* Top part (A shape in white with rounded corners) */}
           <path 
-            d="M60 20C72 40 84 60 90 70C60 70 30 70 30 70C36 60 48 40 60 20Z" 
+            d="M60 15C45 40 30 65 30 65L60 95L90 65C90 65 75 40 60 15Z" 
             fill="white" 
             style={{ 
-              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))',
-              strokeLinecap: 'round',
-              strokeLinejoin: 'round'
+              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))'
             }}
           />
           
           {/* Bottom part (M shape in gray with rounded corners) */}
           <path 
-            d="M28 80C32 84 36 88 40 95C46 90 53 85 60 80C67 85 74 90 80 95C84 88 88 84 92 80L28 80Z" 
-            fill="#AEAEAE" 
+            d="M30 75L20 85C20 85 30 105 40 105C50 105 60 95 60 95C60 95 70 105 80 105C90 105 100 85 100 85L90 75" 
+            fill="#B0B0B0" 
             style={{ 
-              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))',
-              strokeLinecap: 'round',
-              strokeLinejoin: 'round'
+              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))'
             }}
           />
         </svg>
