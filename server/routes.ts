@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, not, isNotNull } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, users, type User, type Store, type Assembler, type Service, type Message } from "@shared/schema";
+import { services, applications, stores, assemblers, messages, users, ratings, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Declarar as funções globais de notificação
@@ -957,6 +957,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Erro ao enviar notificação de nova mensagem:', error);
     }
   };
+  
+  // Obter avaliações de um serviço
+  app.get("/api/services/:id/ratings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const serviceId = Number(req.params.id);
+      const ratings = await storage.getRatingsByServiceId(serviceId);
+      
+      // Obter informações do usuário que avaliou e do usuário avaliado
+      const enhancedRatings = await Promise.all(ratings.map(async (rating) => {
+        const fromUser = await storage.getUser(rating.fromUserId);
+        const toUser = await storage.getUser(rating.toUserId);
+        
+        return {
+          ...rating,
+          fromUser: fromUser ? {
+            name: fromUser.name,
+            userType: fromUser.userType
+          } : undefined,
+          toUser: toUser ? {
+            name: toUser.name,
+            userType: toUser.userType
+          } : undefined
+        };
+      }));
+      
+      res.json(enhancedRatings);
+    } catch (error) {
+      console.error("Erro ao buscar avaliações:", error);
+      res.status(500).json({ message: "Erro ao buscar avaliações" });
+    }
+  });
+  
+  // Rota para finalizar serviço
+  app.post("/api/services/:id/complete", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const serviceId = Number(req.params.id);
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se o usuário é o lojista dono do serviço
+      const userType = req.user!.userType;
+      if (userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem finalizar serviços" });
+      }
+      
+      const store = await storage.getStoreByUserId(req.user!.id);
+      if (!store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a finalizar este serviço" });
+      }
+      
+      // Verificar se o serviço está em andamento
+      if (service.status !== 'in-progress') {
+        return res.status(400).json({ message: "Só é possível finalizar serviços em andamento" });
+      }
+      
+      // Atualizar status do serviço para 'completed'
+      const updatedService = await storage.updateServiceStatus(serviceId, 'completed');
+      
+      // Buscar a candidatura aceita para enviar notificação ao montador
+      const acceptedApplication = await db
+        .select()
+        .from(applications)
+        .where(
+          and(
+            eq(applications.serviceId, serviceId),
+            eq(applications.status, 'accepted')
+          )
+        ).limit(1);
+      
+      if (acceptedApplication.length > 0) {
+        const assemblerId = acceptedApplication[0].assemblerId;
+        const assembler = await storage.getAssemblerById(assemblerId);
+        
+        if (assembler) {
+          // Notificar o montador via WebSocket
+          sendNotification(assembler.userId, {
+            type: 'service_completed',
+            serviceId,
+            message: `O serviço "${service.title}" foi finalizado. Aguardando avaliação.`,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+      
+      res.json({ 
+        message: "Serviço finalizado com sucesso. Agora você pode avaliá-lo.", 
+        service: updatedService 
+      });
+    } catch (error) {
+      console.error("Erro ao finalizar serviço:", error);
+      res.status(500).json({ message: "Erro ao finalizar serviço" });
+    }
+  });
+  
+  // Criar avaliação para um serviço
+  app.post("/api/services/:id/rate", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const serviceId = Number(req.params.id);
+      const { toUserId, rating, comment } = req.body;
+      
+      if (!toUserId || !rating) {
+        return res.status(400).json({ message: "Dados incompletos para avaliação" });
+      }
+      
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Avaliação deve ser entre 1 e 5" });
+      }
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se o serviço está com status 'completed'
+      if (service.status !== 'completed') {
+        return res.status(400).json({ message: "Só é possível avaliar serviços concluídos" });
+      }
+      
+      // Verificar se o usuário que está avaliando está autorizado
+      // (ou é o montador ou é a loja do serviço)
+      const fromUserId = req.user!.id;
+      const userType = req.user!.userType;
+      
+      let isAuthorized = false;
+      if (userType === 'lojista') {
+        const store = await storage.getStoreByUserId(fromUserId);
+        if (store && store.id === service.storeId) {
+          isAuthorized = true;
+        }
+      } else if (userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(fromUserId);
+        if (assembler) {
+          const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+          if (application && application.status === 'accepted') {
+            isAuthorized = true;
+          }
+        }
+      }
+      
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Você não está autorizado a avaliar este serviço" });
+      }
+      
+      // Verificar se já existe uma avaliação deste usuário para este serviço
+      const existingRating = await storage.getRatingByServiceIdAndUser(serviceId, fromUserId, toUserId);
+      if (existingRating) {
+        return res.status(400).json({ message: "Você já avaliou este usuário para este serviço" });
+      }
+      
+      // Criar a avaliação
+      const newRating = await storage.createRating({
+        serviceId,
+        fromUserId,
+        toUserId,
+        rating,
+        comment
+      });
+      
+      // Notificar o usuário avaliado via WebSocket
+      sendNotification(toUserId, {
+        type: 'new_rating',
+        message: `Você recebeu uma nova avaliação para o serviço ${service.title}`,
+        serviceId,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.status(201).json(newRating);
+    } catch (error) {
+      console.error("Erro ao criar avaliação:", error);
+      res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
   
   return httpServer;
 }
