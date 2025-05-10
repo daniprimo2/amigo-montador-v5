@@ -27,10 +27,27 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`flex flex-col items-center ${className}`}>
       <div className="text-white mb-2">
         <svg className={sizes[size]} viewBox="0 0 120 120" fill="none">
-          <path d="M60 20L30 60H90L60 20Z" fill="white"/>
-          <path d="M30 70L45 90H15L30 70Z" fill="#9CA3AF"/>
-          <path d="M90 70L105 90H75L90 70Z" fill="#9CA3AF"/>
-          <path d="M60 90L75 70H45L60 90Z" fill="#9CA3AF"/>
+          {/* Top part (A shape in white with rounded corners) */}
+          <path 
+            d="M60 20C72 40 84 60 90 70C60 70 30 70 30 70C36 60 48 40 60 20Z" 
+            fill="white" 
+            style={{ 
+              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))',
+              strokeLinecap: 'round',
+              strokeLinejoin: 'round'
+            }}
+          />
+          
+          {/* Bottom part (M shape in gray with rounded corners) */}
+          <path 
+            d="M28 80C32 84 36 88 40 95C46 90 53 85 60 80C67 85 74 90 80 95C84 88 88 84 92 80L28 80Z" 
+            fill="#AEAEAE" 
+            style={{ 
+              filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))',
+              strokeLinecap: 'round',
+              strokeLinejoin: 'round'
+            }}
+          />
         </svg>
       </div>
       {withText && (
