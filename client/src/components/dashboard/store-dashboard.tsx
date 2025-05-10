@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
