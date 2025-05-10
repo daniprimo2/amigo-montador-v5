@@ -11,7 +11,7 @@ import RegisterAssemblerStep3 from '@/components/auth/register-assembler-step3';
 import { useAuth } from '@/hooks/use-auth';
 
 type UserType = 'lojista' | 'montador' | null;
-type AuthView = 'login' | 'register' | 'register-store' | 'register-assembler';
+type AuthView = 'login' | 'register' | 'register-store' | 'register-store-step2' | 'register-assembler' | 'register-assembler-step2' | 'register-assembler-step3';
 
 export default function AuthPage() {
   const { user } = useAuth();
@@ -47,15 +47,20 @@ export default function AuthPage() {
   };
 
   const handleBack = () => {
-    if (currentView === 'register-store' || currentView === 'register-assembler') {
-      setCurrentView('register');
+    if (currentView === 'register') {
+      setCurrentView('login');
+      setActiveTab('login');
       setShowBackButton(false);
+    } else if (currentView === 'register-store' || currentView === 'register-assembler') {
+      setCurrentView('register');
+      setShowBackButton(true); // Keep showing back button for return to login
     }
   };
 
   // Handlers para as etapas do registro de lojista
   const handleStoreStep1 = (data: any) => {
     setStoreStep1Data(data);
+    setCurrentView('register-store-step2' as AuthView);
   };
 
   const handleStoreStep2 = (data: any) => {
@@ -65,12 +70,12 @@ export default function AuthPage() {
   // Handlers para as etapas do registro de montador
   const handleAssemblerStep1 = (data: any) => {
     setAssemblerStep1Data(data);
-    setCurrentView('register-assembler-step2');
+    setCurrentView('register-assembler-step2' as AuthView);
   };
 
   const handleAssemblerStep2 = (data: any) => {
     setAssemblerStep2Data(data);
-    setCurrentView('register-assembler-step3');
+    setCurrentView('register-assembler-step3' as AuthView);
   };
 
   const handleAssemblerStep3 = (data: any) => {
@@ -79,9 +84,9 @@ export default function AuthPage() {
 
   const handleAssemblerBack = () => {
     if (currentView === 'register-assembler-step3') {
-      setCurrentView('register-assembler-step2');
+      setCurrentView('register-assembler-step2' as AuthView);
     } else if (currentView === 'register-assembler-step2') {
-      setCurrentView('register-assembler');
+      setCurrentView('register-assembler' as AuthView);
     }
   };
 
@@ -116,7 +121,7 @@ export default function AuthPage() {
         />
       ) : currentView === 'register-store-step2' ? (
         <RegisterStoreStep2 
-          onBack={() => setCurrentView('register-store')} 
+          onBack={() => setCurrentView('register-store' as AuthView)} 
           onComplete={handleStoreStep2}
           step1Data={storeStep1Data}
         />
@@ -127,7 +132,7 @@ export default function AuthPage() {
       ) : currentView === 'register-assembler-step2' ? (
         <RegisterAssemblerStep2 
           onNext={handleAssemblerStep2}
-          onBack={() => setCurrentView('register-assembler')} 
+          onBack={() => setCurrentView('register-assembler' as AuthView)} 
         />
       ) : currentView === 'register-assembler-step3' ? (
         <RegisterAssemblerStep3 
