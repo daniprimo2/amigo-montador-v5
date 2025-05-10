@@ -62,6 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Criar novo serviço (apenas lojistas)
   app.post("/api/services", async (req, res) => {
     try {
+      // Log do corpo da requisição para diagnóstico
+      console.log("Corpo da requisição recebido:", req.body);
+      
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
@@ -83,6 +86,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'open',
         createdAt: new Date()
       };
+      
+      // Garantir que valores em branco não sejam enviados como string vazia
+      Object.keys(serviceData).forEach(key => {
+        if (serviceData[key] === '') {
+          serviceData[key] = null;
+        }
+      });
 
       // Verificar campos obrigatórios antes de enviar para o banco de dados
       const requiredFields = {
@@ -98,10 +108,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const missingFields = [];
       for (const [field, label] of Object.entries(requiredFields)) {
-        // Verifique se o campo está vazio ou é undefined/null
-        if (!serviceData[field] && serviceData[field] !== 0) {
+        // Verificação mais detalhada: campo deve existir e não ser vazio/null/undefined
+        const value = serviceData[field];
+        if (value === null || value === undefined || value === '') {
           missingFields.push(label);
-          console.log(`Campo '${field}' faltando. Valor atual:`, serviceData[field]);
+          console.log(`Campo '${field}' faltando. Valor atual: [${value}] (${typeof value})`);
+        } else {
+          console.log(`Campo '${field}' validado. Valor: [${value}] (${typeof value})`);
         }
       }
 

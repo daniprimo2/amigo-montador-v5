@@ -145,9 +145,23 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   };
   
+  // Interface para os dados de serviço
+  interface ServiceFormData {
+    [key: string]: any;
+    title: string;
+    description: string;
+    location: string;
+    address: string;
+    date: string;
+    price: string;
+    type: string;
+    materialType: string;
+    status: string;
+  }
+
   // Mutation para criar um serviço
   const createServiceMutation = useMutation({
-    mutationFn: async (serviceData: any) => {
+    mutationFn: async (serviceData: ServiceFormData) => {
       const formData = new FormData();
       
       // Adicionar campos de texto ao FormData, garantindo que não enviamos nulls
@@ -310,8 +324,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
+    // Utilizando a interface ServiceFormData definida acima
+    
     // Formatar os dados para a API
-    const serviceData = {
+    const serviceData: ServiceFormData = {
       title: newService.title.trim(),
       description: newService.description.trim(),
       location: newService.location.trim(),
@@ -326,7 +342,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     // Verificar se algum campo obrigatório tem string vazia
     Object.entries(serviceData).forEach(([key, value]) => {
       if (value === "") {
-        // @ts-ignore: Tratando serviceData como um objeto dinâmico
         serviceData[key] = null; // Converter strings vazias para null
       }
     });
