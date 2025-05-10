@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import FileUpload from '../ui/file-upload';
+import InputMask from 'react-input-mask';
 
 const assemblerStep1Schema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
