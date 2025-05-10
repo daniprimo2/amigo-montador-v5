@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi, Star } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
@@ -17,6 +17,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RatingDialog } from '@/components/rating/rating-dialog';
+import { RatingList } from '@/components/rating/rating-list';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -27,6 +29,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const queryClient = useQueryClient();
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
   const { connected, lastMessage } = useWebSocket();
@@ -51,6 +55,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Buscar serviços da API
   const servicesQuery = useQuery({
     queryKey: ['/api/services'],
+    refetchOnWindowFocus: false
+  });
+  
+  // Buscar serviços com candidaturas aceitas
+  const servicesWithApplicationsQuery = useQuery({
+    queryKey: ['/api/store/services/with-applications'],
     refetchOnWindowFocus: false
   });
   
