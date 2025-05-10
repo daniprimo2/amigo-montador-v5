@@ -107,6 +107,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
   
+  // Reagir a mensagens de WebSocket
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'application_accepted') {
+      // Isso poderia mudar automaticamente para a seção de chat
+      setDashboardSection('chat');
+      
+      console.log("[AssemblerDashboard] Candidatura aceita! Atualizando interface...");
+      
+      // Invalidar queries manualmente para garantir atualização
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    }
+  }, [lastMessage, queryClient]);
+  
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {
     const handleTabChange = (event: CustomEvent) => {

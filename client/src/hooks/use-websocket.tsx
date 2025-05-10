@@ -10,7 +10,7 @@ const debugLogger = (context: string, message: string, data?: any) => {
 };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message';
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted';
   message: string;
   serviceId?: number;
   timestamp?: string;
@@ -110,6 +110,24 @@ export function useWebSocket() {
             title: 'Nova mensagem',
             description: data.message,
             duration: 5000
+          });
+        } else if (data.type === 'application_accepted') {
+          debugLogger('WebSocket', 'Processando notificação de candidatura aceita', {
+            serviceId: data.serviceId
+          });
+          
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          
+          toast({
+            title: 'Candidatura aceita!',
+            description: data.message,
+            duration: 5000
+          });
+          
+          debugLogger('WebSocket', 'Notificação de candidatura aceita processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
           });
         }
       } catch (error) {

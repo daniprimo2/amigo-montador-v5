@@ -34,6 +34,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
   const { connected, lastMessage } = useWebSocket();
+  
+  // Reagir a mensagens do WebSocket
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'new_application') {
+      console.log("[StoreDashboard] Nova candidatura recebida! Atualizando interface...", lastMessage);
+      
+      // Invalidar queries manualmente para garantir atualização
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      
+      // Poderia mudar automaticamente para a seção de serviços
+      setDashboardSection('services');
+      setActiveTab('in-progress');
+    }
+  }, [lastMessage, queryClient]);
+  
   const [newService, setNewService] = useState({
     title: '',
     description: '',
