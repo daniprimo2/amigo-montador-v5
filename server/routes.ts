@@ -3,9 +3,15 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { services, applications, type User, type Store, type Assembler, type Service } from "@shared/schema";
+import { eq, and, not } from "drizzle-orm";
+import { services, applications, stores, assemblers, type User, type Store, type Assembler, type Service } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
+
+// Declarar as funções globais de notificação
+declare global {
+  var notifyStore: (serviceId: number, montadorId: number, mensagem: string) => Promise<void>;
+  var notifyNewMessage: (serviceId: number, senderId: number) => Promise<void>;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Log das requisições
@@ -257,7 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sentAt: new Date()
       };
       
-      await storage.createMessage(messageData);
+      const newMessage = await storage.createMessage(messageData);
+      
+      // Notificar o lojista sobre a nova candidatura
+      if (global.notifyStore) {
+        global.notifyStore(serviceId, req.user.id, 
+          `${req.user.name} se candidatou ao serviço "${service.title}" e está esperando sua resposta.`
+        );
+      }
       
       res.status(201).json({
         application: newApplication,
@@ -557,6 +570,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const newMessage = await storage.createMessage(messageData);
+      
+      // Notificar usuário sobre a nova mensagem
+      if (global.notifyNewMessage) {
+        await global.notifyNewMessage(serviceId, req.user.id);
+      }
+      
       res.status(201).json(newMessage);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -565,5 +584,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Configurar WebSocket Server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Armazenar conexões dos clientes
+  const clients = new Map<number, WebSocket>();
+  
+  wss.on('connection', (ws, request) => {
+    console.log('Nova conexão WebSocket');
+    
+    // Autenticar o cliente
+    const url = new URL(request.url || '', `http://${request.headers.host}`);
+    const userId = url.searchParams.get('userId');
+    
+    if (!userId) {
+      console.log('Conexão rejeitada: userId não fornecido');
+      ws.close();
+      return;
+    }
+    
+    const userIdNum = parseInt(userId);
+    
+    // Armazenar a conexão
+    clients.set(userIdNum, ws);
+    console.log(`Cliente conectado: userId=${userIdNum}`);
+    
+    // Limpar quando desconectar
+    ws.on('close', () => {
+      console.log(`Cliente desconectado: userId=${userIdNum}`);
+      clients.delete(userIdNum);
+    });
+    
+    // Confirmar conexão
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Conectado com sucesso'
+    }));
+  });
+  
+  // Função para enviar notificação para um usuário
+  const sendNotification = (userId: number, data: any) => {
+    const client = clients.get(userId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+      return true;
+    }
+    return false;
+  };
+  
+  // Função para enviar notificação para o lojista quando um montador se candidatar
+  global.notifyStore = async (serviceId: number, montadorId: number, mensagem: string) => {
+    try {
+      // Obter o serviço
+      const service = await storage.getServiceById(serviceId);
+      if (!service) return;
+      
+      // Obter a loja
+      const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
+      if (!storeResult.length) return;
+      
+      // Obter o userId do lojista
+      const storeUserId = storeResult[0].userId;
+      
+      // Obter o montador para exibir o nome
+      const montador = await storage.getUser(montadorId);
+      const montadorNome = montador ? montador.name : 'Um montador';
+      
+      // Enviar notificação
+      sendNotification(storeUserId, {
+        type: 'new_application',
+        serviceId,
+        message: mensagem || `${montadorNome} se candidatou ao serviço "${service.title}"`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Erro ao enviar notificação para loja:', error);
+    }
+  };
+  
+  // Função para enviar notificação de nova mensagem
+  global.notifyNewMessage = async (serviceId: number, senderId: number) => {
+    try {
+      // Obter o serviço
+      const service = await storage.getServiceById(serviceId);
+      if (!service) return;
+      
+      // Obter o remetente
+      const sender = await storage.getUser(senderId);
+      if (!sender) return;
+      
+      // Obter a loja
+      const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
+      if (!storeResult.length) return;
+      
+      // Obter as candidaturas aceitas para este serviço
+      const acceptedApplications = await db.select()
+        .from(applications)
+        .where(and(
+          eq(applications.serviceId, serviceId),
+          eq(applications.status, 'accepted')
+        ));
+      
+      if (acceptedApplications.length === 0) return;
+      
+      const assembler = await storage.getAssemblerByUserId(sender.id);
+      
+      // Determinar para quem enviar a notificação
+      if (sender.userType === 'lojista') {
+        // Notificar o montador
+        for (const app of acceptedApplications) {
+          const assemblerDataResult = await db
+            .select()
+            .from(assemblers)
+            .where(eq(assemblers.id, app.assemblerId));
+          
+          if (assemblerDataResult.length > 0) {
+            // Enviar notificação para o montador
+            sendNotification(assemblerDataResult[0].userId, {
+              type: 'new_message',
+              serviceId,
+              message: `Nova mensagem da loja no serviço "${service.title}"`,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+      } else if (sender.userType === 'montador' && assembler) {
+        // Notificar o lojista
+        sendNotification(storeResult[0].userId, {
+          type: 'new_message',
+          serviceId,
+          message: `Nova mensagem do montador ${sender.name} no serviço "${service.title}"`,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar notificação de nova mensagem:', error);
+    }
+  };
+  
   return httpServer;
 }
