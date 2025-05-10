@@ -69,7 +69,7 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
           toUserId,
           rating: data.rating,
           comment: data.comment,
-        },
+        }
       });
 
       // Mostrar toast de sucesso
