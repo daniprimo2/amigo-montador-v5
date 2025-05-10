@@ -92,22 +92,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Montador não encontrado" });
       }
 
-      // Buscar as candidaturas aceitas do montador
-      const acceptedApplications = await db
+      console.log("Buscando serviços ativos para o montador id:", assembler.id);
+
+      // Buscar TODAS as candidaturas do montador (tanto aceitas como pendentes)
+      const allApplications = await db
         .select()
         .from(applications)
-        .where(and(
-          eq(applications.assemblerId, assembler.id),
-          eq(applications.status, 'accepted')
-        ));
+        .where(eq(applications.assemblerId, assembler.id));
 
-      // Se não há candidaturas aceitas, retornar array vazio
-      if (acceptedApplications.length === 0) {
+      // Se não há candidaturas, retornar array vazio
+      if (allApplications.length === 0) {
+        console.log("Nenhuma candidatura encontrada para o montador");
         return res.json([]);
       }
 
+      console.log(`Encontradas ${allApplications.length} candidaturas para o montador`);
+
       // Extrair os IDs dos serviços
-      const serviceIds = acceptedApplications.map(app => app.serviceId);
+      const serviceIds = allApplications.map(app => app.serviceId);
 
       // Buscar os serviços correspondentes
       const servicesResult = await db
@@ -121,16 +123,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: services.status,
           storeId: services.storeId
         })
-        .from(services)
-;
-      
+        .from(services);
+        
       // Filtrar para incluir apenas os serviços que estão na lista de IDs
-      const filteredServices = serviceIds.length > 0
-        ? servicesResult.filter(service => serviceIds.includes(service.id))
-        : [];
+      const filteredServices = servicesResult.filter(service => serviceIds.includes(service.id));
+      
+      console.log(`Encontrados ${filteredServices.length} serviços ativos para o montador`);
 
-      // Adicionar informações da loja a cada serviço
+      // Adicionar informações da loja e status da candidatura a cada serviço
       const enhancedServices = await Promise.all(filteredServices.map(async (service) => {
+        // Buscar dados da loja
         const storeResult = await db
           .select({
             id: stores.id,
@@ -139,10 +141,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from(stores)
           .where(eq(stores.id, service.storeId))
           .limit(1);
-
+        
+        // Buscar status da candidatura para este serviço
+        const application = allApplications.find(app => app.serviceId === service.id);
+        
         return {
           ...service,
-          store: storeResult.length > 0 ? storeResult[0] : null
+          store: storeResult.length > 0 ? storeResult[0] : null,
+          applicationStatus: application ? application.status : null
         };
       }));
 
