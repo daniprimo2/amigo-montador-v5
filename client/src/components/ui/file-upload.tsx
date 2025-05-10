@@ -8,6 +8,7 @@ interface FileUploadProps {
   helpText?: string;
   onChange: (files: FileList | null) => void;
   className?: string;
+  required?: boolean;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -17,6 +18,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   helpText = 'PNG, JPG, GIF até 10MB',
   onChange,
   className = '',
+  required = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -69,7 +71,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           <Upload className="mx-auto h-12 w-12 text-gray-400" />
           <div className="flex text-sm text-gray-600 justify-center">
             <span className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary">
-              Fazer upload de arquivo
+              Fazer upload de arquivo{required && <span className="text-red-500 ml-1">*</span>}
             </span>
             <p className="pl-1">ou arraste e solte</p>
           </div>
@@ -90,6 +92,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         accept={accept}
         multiple={multiple}
         onChange={handleChange}
+        required={required}
       />
     </div>
   );
