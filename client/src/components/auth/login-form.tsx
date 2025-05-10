@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -85,8 +86,23 @@ export const LoginForm: React.FC = () => {
     setResetEmail("");
   };
 
+  const handleBack = () => {
+    window.history.back();
+  };
+
   return (
     <div>
+      <div className="flex items-center mb-4">
+        <button 
+          type="button"
+          onClick={handleBack}
+          className="flex items-center text-gray-600 hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          <span className="text-sm">Voltar</span>
+        </button>
+      </div>
+      
       <h2 className="text-xl font-semibold text-gray-800 mb-1">Bem vindo</h2>
       <p className="text-sm text-gray-500 mb-6">
         Preencha as informações abaixo para acessar sua conta.

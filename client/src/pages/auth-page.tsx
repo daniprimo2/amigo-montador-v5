@@ -19,7 +19,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [currentView, setCurrentView] = useState<AuthView>('login');
   const [userType, setUserType] = useState<UserType>(null);
-  const [showBackButton, setShowBackButton] = useState(true);
+  const [showBackButton, setShowBackButton] = useState(false);
   
   // Dados de registro para guardar entre passos
   const [storeStep1Data, setStoreStep1Data] = useState({});
@@ -46,7 +46,7 @@ export default function AuthPage() {
   const handleTabChange = (tab: 'login' | 'register') => {
     setActiveTab(tab);
     setCurrentView(tab);
-    setShowBackButton(true); // Keep back button visible
+    setShowBackButton(false);
   };
 
   const handleUserTypeSelect = (type: UserType) => {
@@ -56,16 +56,13 @@ export default function AuthPage() {
   };
 
   const handleBack = () => {
-    if (currentView === 'login') {
-      // Navigate back to previous page
-      window.history.back();
-    } else if (currentView === 'register') {
+    if (currentView === 'register') {
       setCurrentView('login');
       setActiveTab('login');
-      setShowBackButton(true); // Keep showing back button on login
+      setShowBackButton(false);
     } else if (currentView === 'register-store' || currentView === 'register-assembler') {
       setCurrentView('register');
-      setShowBackButton(true); // Keep showing back button for return to login
+      setShowBackButton(true);
     }
   };
 
