@@ -101,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Log para depuração
+  console.log('AuthProvider - Estado do usuário:', { user, isLoading, error });
+
   return (
     <AuthContext.Provider
       value={{

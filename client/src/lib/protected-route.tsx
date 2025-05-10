@@ -50,10 +50,17 @@ export function ProtectedRoute({
   }
 
   if (!user) {
-    console.log('ProtectedRoute: redirecionando para / porque user =', user);
+    console.log('ProtectedRoute: redirecionando para /auth porque user =', user);
+    
+    // Se estamos em uma rota protegida e não temos usuário, redirecionar para /auth
+    if (window.location.pathname.includes('/lojista') || window.location.pathname.includes('/montador')) {
+      window.location.href = '/auth';
+      return null;
+    }
+    
     return (
       <Route path={path}>
-        <Redirect to="/" />
+        <Redirect to="/auth" />
       </Route>
     );
   }

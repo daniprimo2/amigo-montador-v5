@@ -32,16 +32,10 @@ export default function AuthPage() {
       console.log('AuthPage: Usuário já está logado:', user);
       const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
       console.log('AuthPage: Redirecionando para:', redirectPath);
-      // Forçar o redirecionamento com location.href 
-      // em caso de falha com o hook useLocation do wouter
-      setTimeout(() => {
-        navigate(redirectPath);
-        if (window.location.pathname !== redirectPath) {
-          window.location.href = redirectPath;
-        }
-      }, 100);
+      // Forçar o redirecionamento diretamente com location.href para evitar problemas com rotas
+      window.location.href = redirectPath;
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const handleTabChange = (tab: 'login' | 'register') => {
     setActiveTab(tab);

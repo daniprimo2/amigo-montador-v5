@@ -57,10 +57,8 @@ export const LoginForm: React.FC = () => {
           const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
           console.log('Redirecionando para:', redirectPath);
           
-          // Usar setTimeout para garantir que o redirecionamento aconteça após o estado ser atualizado
-          setTimeout(() => {
-            navigate(redirectPath);
-          }, 100);
+          // Usar redirecionamento direto do navegador para garantir a navegação
+          window.location.href = redirectPath;
         },
       },
     );
