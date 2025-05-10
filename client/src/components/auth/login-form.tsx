@@ -52,8 +52,14 @@ export const LoginForm: React.FC = () => {
           });
           
           // Redirecionar com base no tipo de usuário
+          console.log('Usuário logado:', user);
           const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
-          navigate(redirectPath);
+          console.log('Redirecionando para:', redirectPath);
+          
+          // Usar setTimeout para garantir que o redirecionamento aconteça após o estado ser atualizado
+          setTimeout(() => {
+            navigate(redirectPath);
+          }, 100);
         },
       },
     );
