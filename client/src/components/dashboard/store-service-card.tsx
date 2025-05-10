@@ -1,5 +1,9 @@
 import React from 'react';
-import { CalendarIcon, DollarSign, ChevronRight } from 'lucide-react';
+import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ServiceProps {
   id: number;
@@ -9,11 +13,18 @@ interface ServiceProps {
   price: string;
   candidates: number;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  assembler?: {
+    id: number;
+    name: string;
+    userId: number;
+  };
 }
 
 interface StoreServiceCardProps {
   service: ServiceProps;
   onClick?: (id: number) => void;
+  onComplete?: (id: number) => void;
+  onRateClick?: (service: ServiceProps) => void;
 }
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -35,18 +46,70 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({ 
   service, 
-  onClick 
+  onClick,
+  onComplete,
+  onRateClick
 }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isCompleting, setIsCompleting] = React.useState(false);
+  
   const handleClick = () => {
     if (onClick) onClick(service.id);
   };
+  
+  const handleCompleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onComplete) {
+      try {
+        setIsCompleting(true);
+        
+        await apiRequest({
+          method: 'POST',
+          url: `/api/services/${service.id}/complete`,
+          data: {}
+        });
+        
+        toast({
+          title: 'Serviço finalizado com sucesso!',
+          description: 'Agora você pode avaliar o serviço.',
+        });
+        
+        // Invalidar queries relacionadas
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        
+        setIsCompleting(false);
+      } catch (error: any) {
+        toast({
+          title: 'Erro ao finalizar serviço',
+          description: error.response?.data?.message || 'Ocorreu um erro ao finalizar o serviço.',
+          variant: 'destructive'
+        });
+        setIsCompleting(false);
+      }
+    } else {
+      onComplete(service.id);
+    }
+  };
+  
+  const handleRateClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onRateClick) {
+      onRateClick(service);
+    }
+  };
 
   return (
-    <div className="p-4" onClick={handleClick}>
+    <div className="p-4 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors" onClick={handleClick}>
       <div className="flex justify-between items-start mb-2">
         <div>
           <h4 className="font-medium">{service.title}</h4>
           <p className="text-sm text-gray-500">{service.location}</p>
+          {service.assembler && (
+            <p className="text-xs text-gray-600 mt-1">
+              <span className="font-medium">Montador:</span> {service.assembler.name}
+            </p>
+          )}
         </div>
         <StatusBadge status={service.status} />
       </div>
@@ -59,12 +122,40 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           <DollarSign className="h-4 w-4 text-gray-400 mr-1" />
           <span className="text-sm text-gray-600">{service.price}</span>
         </div>
-        <div className="flex items-center">
-          <span className="text-sm text-primary font-medium">
-            {service.candidates} {service.candidates === 1 ? 'candidato' : 'candidatos'}
-          </span>
-          <ChevronRight className="h-4 w-4 text-primary ml-1" />
-        </div>
+        
+        {service.status === 'in-progress' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="ml-auto" 
+            onClick={handleCompleteClick}
+            disabled={isCompleting}
+          >
+            <CheckSquare className="h-4 w-4 mr-1" />
+            {isCompleting ? 'Finalizando...' : 'Finalizar'}
+          </Button>
+        )}
+        
+        {service.status === 'completed' && service.assembler && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="ml-auto text-yellow-600 border-yellow-300 hover:bg-yellow-50" 
+            onClick={handleRateClick}
+          >
+            <Star className="h-4 w-4 mr-1 fill-yellow-500" />
+            Avaliar
+          </Button>
+        )}
+        
+        {service.status !== 'in-progress' && service.status !== 'completed' && (
+          <div className="flex items-center">
+            <span className="text-sm text-primary font-medium">
+              {service.candidates} {service.candidates === 1 ? 'candidato' : 'candidatos'}
+            </span>
+            <ChevronRight className="h-4 w-4 text-primary ml-1" />
+          </div>
+        )}
       </div>
     </div>
   );
