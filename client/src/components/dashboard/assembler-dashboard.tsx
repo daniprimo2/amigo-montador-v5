@@ -153,43 +153,47 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Handle applying for a service
   const applyMutation = useMutation({
     mutationFn: async (serviceId: number) => {
-      const url = `/api/services/${serviceId}/apply`;
-      const response = await fetch(url, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
+      try {
+        console.log(`Enviando candidatura para serviço ID: ${serviceId}`);
+        const url = `/api/services/${serviceId}/apply`;
+        const response = await apiRequest({
+          method: "POST",
+          url
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Falha ao enviar candidatura");
         }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Falha ao enviar candidatura");
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Erro na candidatura:", error);
+        throw error; // Propagando o erro para o onError
       }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
       console.log("Candidatura enviada com sucesso:", data);
-      toast({
-        title: "Candidatura enviada",
-        description: "Sua candidatura foi enviada com sucesso!"
-      });
+      
       // Refresh services list
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      
+      // Sem toast aqui, pois já mostramos no componente
     },
     onError: (error: any) => {
       console.error("Erro completo ao candidatar-se:", error);
-      toast({
-        title: "Erro ao candidatar-se",
-        description: error.message || "Não foi possível enviar sua candidatura. Tente novamente.",
-        variant: "destructive"
-      });
+      // Sem toast aqui, pois já mostramos no componente
     }
   });
   
-  const handleApply = (serviceId: number) => {
-    applyMutation.mutate(serviceId);
+  const handleApply = async (serviceId: number) => {
+    try {
+      console.log(`AssemblerDashboard iniciando aplicação para serviço ${serviceId}`);
+      return await applyMutation.mutateAsync(serviceId);
+    } catch (error) {
+      console.error(`AssemblerDashboard erro ao aplicar para serviço ${serviceId}:`, error);
+      throw error; // Propagando o erro para o componente AvailableServiceCard
+    }
   };
   
   // Função para lidar com o clique no botão de avaliação

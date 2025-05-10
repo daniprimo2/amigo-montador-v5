@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Building, CalendarIcon, DollarSign, MapPin } from 'lucide-react';
+import { Building, CalendarIcon, MapPin, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ServiceProps {
   id: number;
@@ -22,8 +23,33 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   service, 
   onApply 
 }) => {
-  const handleApply = () => {
-    if (onApply) onApply(service.id);
+  const [isApplying, setIsApplying] = useState(false);
+  const { toast } = useToast();
+  
+  const handleApply = async () => {
+    if (!onApply) return;
+    
+    try {
+      setIsApplying(true);
+      console.log(`Enviando candidatura para serviço ID: ${service.id}`);
+      await onApply(service.id);
+      
+      toast({
+        title: "Candidatura enviada",
+        description: "Sua candidatura foi enviada com sucesso! Em breve o lojista entrará em contato.",
+        duration: 5000
+      });
+    } catch (error) {
+      console.error("Erro ao candidatar-se:", error);
+      toast({
+        title: "Erro ao enviar candidatura",
+        description: error instanceof Error ? error.message : "Falha ao enviar candidatura. Tente novamente.",
+        variant: "destructive",
+        duration: 5000
+      });
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
@@ -55,9 +81,15 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       </div>
       <Button 
         onClick={handleApply}
+        disabled={isApplying}
         className="w-full py-2 px-4 bg-primary text-white font-medium rounded-full shadow-sm hover:bg-opacity-90 transition"
       >
-        Candidatar-se
+        {isApplying ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Enviando...
+          </>
+        ) : 'Candidatar-se'}
       </Button>
     </div>
   );

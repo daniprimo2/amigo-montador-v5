@@ -380,37 +380,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Candidatar-se a um serviço (apenas montadores)
   app.post("/api/services/:id/apply", async (req, res) => {
     try {
+      console.log("Candidatura recebida para o serviço ID:", req.params.id);
+      
       if (!req.isAuthenticated()) {
+        console.log("Erro de candidatura: Usuário não autenticado");
         return res.status(401).json({ message: "Não autenticado" });
       }
 
+      console.log("Usuário autenticado:", req.user);
+      
       // Verificar se é montador
       if (req.user?.userType !== 'montador') {
+        console.log("Erro de candidatura: Usuário não é montador, é", req.user?.userType);
         return res.status(403).json({ message: "Apenas montadores podem se candidatar a serviços" });
       }
 
       const { id } = req.params;
       const serviceId = parseInt(id);
+      console.log("Processando candidatura para serviço ID:", serviceId);
 
       // Verificar se o serviço existe
       const service = await storage.getServiceById(serviceId);
       if (!service) {
+        console.log("Erro de candidatura: Serviço não encontrado ID:", serviceId);
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
+      
+      console.log("Serviço encontrado:", service.title, "- Status atual:", service.status);
 
       // Verificar se o serviço está aberto
       if (service.status !== 'open') {
+        console.log("Erro de candidatura: Serviço não está aberto. Status atual:", service.status);
         return res.status(400).json({ message: "Este serviço não está mais disponível" });
       }
 
       const assembler = await storage.getAssemblerByUserId(req.user.id);
       if (!assembler) {
+        console.log("Erro de candidatura: Montador não encontrado para userId:", req.user.id);
         return res.status(404).json({ message: "Montador não encontrado" });
       }
+      
+      console.log("Montador encontrado:", assembler.id);
 
       // Verificar se já se candidatou
       const existingApplication = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
       if (existingApplication) {
+        console.log("Erro de candidatura: Montador já se candidatou");
         return res.status(400).json({ message: "Você já se candidatou para este serviço" });
       }
 
@@ -421,10 +436,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'pending',
         createdAt: new Date()
       };
-
+      
+      console.log("Criando candidatura com dados:", applicationData);
       const newApplication = await storage.createApplication(applicationData);
+      console.log("Candidatura criada com sucesso:", newApplication);
       
       // Atualizar status do serviço para 'in-progress'
+      console.log("Atualizando status do serviço para 'in-progress'");
       await storage.updateServiceStatus(serviceId, 'in-progress');
       
       // Criar mensagem inicial para iniciar o chat
@@ -435,15 +453,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sentAt: new Date()
       };
       
+      console.log("Criando mensagem inicial do chat");
       const newMessage = await storage.createMessage(messageData);
+      console.log("Mensagem inicial criada:", newMessage);
       
       // Notificar o lojista sobre a nova candidatura
       if (global.notifyStore) {
+        console.log("Enviando notificação para a loja sobre nova candidatura");
         global.notifyStore(serviceId, req.user.id, 
           `${req.user.name} se candidatou ao serviço "${service.title}" e está esperando sua resposta.`
         );
       }
       
+      console.log("Candidatura concluída com sucesso");
       res.status(201).json({
         application: newApplication,
         message: "Candidatura enviada com sucesso. O status do serviço foi atualizado para 'Em andamento' e um chat foi iniciado."
