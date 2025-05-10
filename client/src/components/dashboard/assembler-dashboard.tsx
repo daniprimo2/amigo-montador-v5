@@ -20,8 +20,9 @@ interface ServiceData {
   description: string;
   location: string;
   date: string;
-  price: number;
-  type: string;
+  price: string; // price é uma string no banco de dados
+  type?: string;
+  materialType?: string;
   storeId: number;
   store?: {
     name: string;
@@ -38,9 +39,9 @@ const formatServiceForDisplay = (service: ServiceData) => {
     location: service.location,
     distance: '5 km', // This would be calculated based on user location
     date: new Date(service.date).toLocaleDateString('pt-BR'),
-    price: `R$ ${service.price.toFixed(2).replace('.', ',')}`,
+    price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
     store: service.store?.name || 'Loja não especificada',
-    type: service.type
+    type: service.materialType || service.type || 'Não especificado' // Garantir que nunca seja undefined
   };
 };
 
@@ -69,13 +70,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     mutationFn: async (serviceId: number) => {
       return await apiRequest(`/api/services/${serviceId}/apply`, {
         method: "POST"
-      });
+      } as RequestInit);
     },
     onSuccess: () => {
       toast({
         title: "Candidatura enviada",
-        description: "Sua candidatura foi enviada com sucesso!",
-        variant: "success"
+        description: "Sua candidatura foi enviada com sucesso!"
       });
       // Refresh services list
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
