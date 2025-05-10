@@ -12,14 +12,17 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<User>): Promise<User>;
   
   // Lojas
   getStoreByUserId(userId: number): Promise<Store | undefined>;
   createStore(store: InsertStore): Promise<Store>;
+  updateStore(id: number, storeData: Partial<Store>): Promise<Store>;
   
   // Montadores
   getAssemblerByUserId(userId: number): Promise<Assembler | undefined>;
   createAssembler(assembler: InsertAssembler): Promise<Assembler>;
+  updateAssembler(id: number, assemblerData: Partial<Assembler>): Promise<Assembler>;
   
   // Serviços
   getServiceById(id: number): Promise<Service | undefined>;
@@ -36,7 +39,7 @@ export interface IStorage {
   acceptApplication(id: number, serviceId: number): Promise<void>;
   
   // Sessão
-  sessionStore: session.SessionStore;
+  sessionStore: any; // session.SessionStore
 }
 
 export class DatabaseStorage implements IStorage {
@@ -66,6 +69,15 @@ export class DatabaseStorage implements IStorage {
       .values(userData)
       .returning();
     return user;
+  }
+
+  async updateUser(id: number, userData: Partial<User>): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
   
   // Lojas
