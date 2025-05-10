@@ -21,6 +21,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
   const [newService, setNewService] = useState({
     title: '',
     description: '',
@@ -31,6 +32,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     materialType: ''
   });
   const { toast } = useToast();
+  
+  // Escuta os eventos de mudança de aba do layout
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      setDashboardSection(tab);
+    };
+    
+    // Adiciona o listener para o evento personalizado
+    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    
+    // Remove o listener quando o componente for desmontado
+    return () => {
+      window.removeEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    };
+  }, []);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -143,8 +160,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     return true;
   });
 
-  return (
-    <div className="p-4">
+  // Renderiza diferentes seções com base na aba selecionada
+  const renderHomeSection = () => (
+    <>
       <div className="bg-white rounded-xl shadow-md p-4 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
@@ -178,7 +196,30 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       </div>
       
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Serviços</h3>
+        <h3 className="text-lg font-semibold">Serviços Recentes</h3>
+        <Button 
+          variant="default" 
+          className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium"
+          onClick={() => setIsNewServiceOpen(true)}
+        >
+          <Plus className="h-4 w-4" /> Novo Serviço
+        </Button>
+      </div>
+      
+      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+        <div className="divide-y">
+          {allServices.slice(0, 3).map(service => (
+            <StoreServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  const renderServicesSection = () => (
+    <>
+      <div className="flex justify-between items-center mb-4 mt-2">
+        <h3 className="text-lg font-semibold">Todos os Serviços</h3>
         <Button 
           variant="default" 
           className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium"
@@ -231,14 +272,50 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           ))}
         </div>
       </div>
-      
-      <h3 className="text-lg font-semibold mb-4">Agenda</h3>
-      
+    </>
+  );
+
+  const renderChatSection = () => (
+    <div className="mt-2">
+      <h3 className="text-lg font-semibold mb-4">Mensagens</h3>
+      <div className="bg-white rounded-xl shadow-md p-6 text-center">
+        <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+        <h4 className="text-lg font-medium mb-2">Nenhuma mensagem disponível</h4>
+        <p className="text-gray-500 mb-4">Quando você tiver mensagens de montadores, elas aparecerão aqui.</p>
+      </div>
+    </div>
+  );
+
+  const renderCalendarSection = () => (
+    <div className="mt-2">
+      <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
       <ServiceCalendar 
         markedDates={['15', '18', '20']} 
         month="Junho" 
         year="2023" 
       />
+    </div>
+  );
+
+  // Renderiza a seção apropriada com base na aba selecionada
+  const renderDashboardContent = () => {
+    switch(dashboardSection) {
+      case 'home':
+        return renderHomeSection();
+      case 'services':
+        return renderServicesSection();
+      case 'chat':
+        return renderChatSection();
+      case 'calendar':
+        return renderCalendarSection();
+      default:
+        return renderHomeSection();
+    }
+  };
+
+  return (
+    <div className="p-4">
+      {renderDashboardContent()}
       
       {/* Modal de Novo Serviço */}
       <Dialog open={isNewServiceOpen} onOpenChange={setIsNewServiceOpen}>

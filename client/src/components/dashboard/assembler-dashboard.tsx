@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AvailableServiceCard from './available-service-card';
 import ServiceCalendar from './service-calendar';
@@ -50,6 +50,23 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
+  
+  // Escuta os eventos de mudança de aba do layout
+  useEffect(() => {
+    const handleTabChange = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      setDashboardSection(tab);
+    };
+    
+    // Adiciona o listener para o evento personalizado
+    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    
+    // Remove o listener quando o componente for desmontado
+    return () => {
+      window.removeEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    };
+  }, []);
   
   // Fetch available services
   const { data: services, isLoading, error } = useQuery({
@@ -98,8 +115,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     applyMutation.mutate(serviceId);
   };
 
-  return (
-    <div className="p-4">
+  // Renderiza diferentes seções com base na aba selecionada
+  const renderHomeSection = () => (
+    <>
       <div className="bg-white rounded-xl shadow-md p-4 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
@@ -123,7 +141,56 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
       </div>
       
+      <h3 className="text-lg font-semibold mb-4">Serviços Recentes</h3>
+      
       <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
+        <div className="divide-y">
+          {isLoading ? (
+            // Show loading skeletons
+            Array(2).fill(0).map((_, index) => (
+              <div key={index} className="p-4">
+                <Skeleton className="h-5 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-3" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-10 w-full rounded-full" />
+              </div>
+            ))
+          ) : error ? (
+            // Show error message
+            <div className="p-8 text-center text-red-500">
+              Erro ao carregar serviços. Por favor, tente novamente.
+            </div>
+          ) : filteredServices.length > 0 ? (
+            // Show services (limitado a 2 para a tela inicial)
+            filteredServices.slice(0, 2).map(service => (
+              <AvailableServiceCard 
+                key={service.id} 
+                service={service} 
+                onApply={handleApply}
+              />
+            ))
+          ) : (
+            // Show empty state
+            <div className="p-8 text-center text-gray-500">
+              Nenhum serviço disponível no momento.
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <h3 className="text-lg font-semibold mb-4">Próximos Serviços</h3>
+      
+      <ServiceCalendar 
+        markedDates={['13', '14']} 
+        month="Junho" 
+        year="2023" 
+      />
+    </>
+  );
+
+  const renderExploreSection = () => (
+    <>
+      <div className="dashboard-card bg-white rounded-xl shadow-md mb-4 mt-2">
         <div className="p-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Serviços Próximos</h3>
@@ -185,14 +252,50 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           )}
         </div>
       </div>
-      
-      <h3 className="text-lg font-semibold mb-4 mt-4">Minha Agenda</h3>
-      
+    </>
+  );
+
+  const renderChatSection = () => (
+    <div className="mt-2">
+      <h3 className="text-lg font-semibold mb-4">Mensagens</h3>
+      <div className="bg-white rounded-xl shadow-md p-6 text-center">
+        <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+        <h4 className="text-lg font-medium mb-2">Nenhuma mensagem disponível</h4>
+        <p className="text-gray-500 mb-4">Quando você tiver mensagens de lojas ou clientes, elas aparecerão aqui.</p>
+      </div>
+    </div>
+  );
+
+  const renderCalendarSection = () => (
+    <div className="mt-2">
+      <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
       <ServiceCalendar 
         markedDates={['13', '14']} 
         month="Junho" 
         year="2023" 
       />
+    </div>
+  );
+
+  // Renderiza a seção apropriada com base na aba selecionada
+  const renderDashboardContent = () => {
+    switch(dashboardSection) {
+      case 'home':
+        return renderHomeSection();
+      case 'explore':
+        return renderExploreSection();
+      case 'chat':
+        return renderChatSection();
+      case 'calendar':
+        return renderCalendarSection();
+      default:
+        return renderHomeSection();
+    }
+  };
+
+  return (
+    <div className="p-4">
+      {renderDashboardContent()}
     </div>
   );
 };
