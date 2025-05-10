@@ -160,7 +160,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Calculate service counts by status
   const serviceCounts = {
     available: filteredServices.length || 0,
-    inProgress: rawServices?.filter(s => s.status === 'in-progress').length || 0,
+    inProgress: activeServices?.length || 0, // Usar os serviços ativos do endpoint /api/services/active
     completed: rawServices?.filter(s => s.status === 'completed').length || 0
   };
   
