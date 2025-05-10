@@ -490,16 +490,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
   
   const renderChatSection = () => {
-    // Se um serviço estiver selecionado para chat, mostrar a interface de chat
-    if (selectedChatService !== null) {
-      return (
-        <ChatInterface 
-          serviceId={selectedChatService} 
-          onBack={() => setSelectedChatService(null)} 
-        />
-      );
-    }
-    
     return (
       <div className="mt-2">
         <h3 className="text-lg font-semibold mb-4">Conversas</h3>
@@ -587,6 +577,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
+    // Se houver um serviço selecionado para chat, mostra a interface de chat
+    // independente da seção atual do dashboard
+    if (selectedChatService !== null) {
+      return (
+        <ChatInterface 
+          serviceId={selectedChatService} 
+          onBack={() => setSelectedChatService(null)} 
+        />
+      );
+    }
+    
+    // Caso contrário, mostra a seção correspondente à aba selecionada
     switch(dashboardSection) {
       case 'home':
         return renderHomeSection();
