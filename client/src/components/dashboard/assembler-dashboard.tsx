@@ -9,6 +9,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useWebSocket } from '@/hooks/use-websocket';
+import { ChatInterface } from '@/components/chat/chat-interface';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;

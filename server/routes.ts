@@ -74,6 +74,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar serviços" });
     }
   });
+  
+  // Obter serviços ativos (em andamento) para um montador
+  app.get("/api/services/active", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      if (req.user?.userType !== 'montador') {
+        return res.status(403).json({ message: "Acesso permitido apenas para montadores" });
+      }
+
+      // Obter o assembler do usuário
+      const assembler = await storage.getAssemblerByUserId(req.user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Montador não encontrado" });
+      }
+
+      // Buscar as candidaturas aceitas do montador
+      const acceptedApplications = await db
+        .select()
+        .from(applications)
+        .where(and(
+          eq(applications.assemblerId, assembler.id),
+          eq(applications.status, 'accepted')
+        ));
+
+      // Se não há candidaturas aceitas, retornar array vazio
+      if (acceptedApplications.length === 0) {
+        return res.json([]);
+      }
+
+      // Extrair os IDs dos serviços
+      const serviceIds = acceptedApplications.map(app => app.serviceId);
+
+      // Buscar os serviços correspondentes
+      const servicesResult = await db
+        .select({
+          id: services.id,
+          title: services.title,
+          description: services.description,
+          location: services.location,
+          date: services.date,
+          price: services.price,
+          status: services.status,
+          storeId: services.storeId
+        })
+        .from(services)
+;
+      
+      // Filtrar para incluir apenas os serviços que estão na lista de IDs
+      const filteredServices = serviceIds.length > 0
+        ? servicesResult.filter(service => serviceIds.includes(service.id))
+        : [];
+
+      // Adicionar informações da loja a cada serviço
+      const enhancedServices = await Promise.all(servicesResult.map(async (service) => {
+        const storeResult = await db
+          .select({
+            id: stores.id,
+            name: stores.name
+          })
+          .from(stores)
+          .where(eq(stores.id, service.storeId))
+          .limit(1);
+
+        return {
+          ...service,
+          store: storeResult.length > 0 ? storeResult[0] : null
+        };
+      }));
+
+      res.json(enhancedServices);
+    } catch (error) {
+      console.error("Erro ao buscar serviços ativos:", error);
+      res.status(500).json({ message: "Erro ao buscar serviços ativos" });
+    }
+  });
 
   // Criar novo serviço (apenas lojistas)
   app.post("/api/services", async (req, res) => {
