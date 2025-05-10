@@ -29,8 +29,17 @@ export default function AuthPage() {
   // Redirecionar se o usuário já estiver logado
   React.useEffect(() => {
     if (user) {
+      console.log('AuthPage: Usuário já está logado:', user);
       const redirectPath = user.userType === 'lojista' ? '/lojista' : '/montador';
-      navigate(redirectPath);
+      console.log('AuthPage: Redirecionando para:', redirectPath);
+      // Forçar o redirecionamento com location.href 
+      // em caso de falha com o hook useLocation do wouter
+      setTimeout(() => {
+        navigate(redirectPath);
+        if (window.location.pathname !== redirectPath) {
+          window.location.href = redirectPath;
+        }
+      }, 100);
     }
   }, [user, navigate]);
 

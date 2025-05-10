@@ -49,7 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log('loginMutation sucesso, atualizando queryClient com usuário:', user);
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Disparar evento de login para outros componentes
+      window.dispatchEvent(new CustomEvent('auth:login-success', { detail: user }));
     },
     onError: (error: Error) => {
       toast({
@@ -66,7 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log('registerMutation sucesso, atualizando queryClient com usuário:', user);
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Disparar evento de registro para outros componentes
+      window.dispatchEvent(new CustomEvent('auth:register-success', { detail: user }));
     },
     onError: (error: Error) => {
       toast({
