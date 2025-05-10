@@ -416,6 +416,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     return true;
   });
 
+  // Função para lidar com o clique no botão de avaliação
+  const handleRateClick = (service: any) => {
+    setSelectedServiceForRating(service);
+    setIsRatingDialogOpen(true);
+  };
+
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
     <>
@@ -850,7 +856,29 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       <ProfileDialog 
         open={isProfileOpen} 
         onOpenChange={setIsProfileOpen} 
+        onLogout={onLogout}
       />
+      
+      {/* Modal de Avaliação */}
+      {selectedServiceForRating && (
+        <RatingDialog
+          open={isRatingDialogOpen}
+          onOpenChange={setIsRatingDialogOpen}
+          serviceId={selectedServiceForRating.id}
+          toUserId={selectedServiceForRating.assembler?.userId || 0}
+          toUserName={selectedServiceForRating.assembler?.name || 'Montador'}
+          serviceName={selectedServiceForRating.title}
+          onSuccess={() => {
+            // Atualizar listas de serviços após avaliação
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            // Notificar usuário sobre avaliação
+            toast({
+              title: 'Avaliação enviada',
+              description: 'Obrigado por avaliar o serviço realizado.',
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
