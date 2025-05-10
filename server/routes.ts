@@ -100,16 +100,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(applications)
         .where(eq(applications.assemblerId, assembler.id));
 
-      // Se não há candidaturas, retornar array vazio
-      if (allApplications.length === 0) {
-        console.log("Nenhuma candidatura encontrada para o montador");
-        return res.json([]);
-      }
-
       console.log(`Encontradas ${allApplications.length} candidaturas para o montador`);
 
-      // Extrair os IDs dos serviços
-      const serviceIds = allApplications.map(app => app.serviceId);
+      // Extrair os IDs dos serviços das candidaturas
+      const serviceIdsFromApplications = allApplications.map(app => app.serviceId);
+      
+      // Também buscar serviços onde o montador enviou mensagens
+      const messageServices = await db
+        .select({
+          serviceId: messages.serviceId
+        })
+        .from(messages)
+        .where(eq(messages.senderId, req.user.id));
+      
+      // Combinar IDs de serviços de candidaturas e mensagens (sem duplicatas)
+      const serviceIdsFromMessages = messageServices.map(msg => msg.serviceId);
+      
+      // Unir as duas listas e remover duplicatas
+      const allServiceIds: number[] = [];
+      
+      // Adicionar IDs de serviços das candidaturas
+      serviceIdsFromApplications.forEach(id => {
+        if (!allServiceIds.includes(id)) {
+          allServiceIds.push(id);
+        }
+      });
+      
+      // Adicionar IDs de serviços das mensagens
+      serviceIdsFromMessages.forEach(id => {
+        if (!allServiceIds.includes(id)) {
+          allServiceIds.push(id);
+        }
+      });
+      
+      // Se não há serviços, retornar array vazio
+      if (allServiceIds.length === 0) {
+        console.log("Nenhum serviço ativo encontrado para o montador");
+        return res.json([]);
+      }
+      
+      console.log(`Total de ${allServiceIds.length} serviços ativos (candidaturas + mensagens)`);
 
       // Buscar os serviços correspondentes
       const servicesResult = await db
@@ -126,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(services);
         
       // Filtrar para incluir apenas os serviços que estão na lista de IDs
-      const filteredServices = servicesResult.filter(service => serviceIds.includes(service.id));
+      const filteredServices = servicesResult.filter(service => allServiceIds.includes(service.id));
       
       console.log(`Encontrados ${filteredServices.length} serviços ativos para o montador`);
 
@@ -145,10 +175,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Buscar status da candidatura para este serviço
         const application = allApplications.find(app => app.serviceId === service.id);
         
+        // Verificar se existem mensagens para este serviço
+        const messageResult = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.serviceId, service.id))
+          .limit(1);
+          
+        const hasMessages = messageResult.length > 0;
+        
         return {
           ...service,
           store: storeResult.length > 0 ? storeResult[0] : null,
-          applicationStatus: application ? application.status : null
+          applicationStatus: application ? application.status : null,
+          hasMessages: hasMessages
         };
       }));
 
