@@ -116,9 +116,13 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
               <FormItem className="form-field">
                 <FormLabel>CPF</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
+                  <InputMask
+                    mask="999.999.999-99"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
                     placeholder="000.000.000-00"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -133,9 +137,13 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
               <FormItem className="form-field">
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
+                  <InputMask
+                    mask="(99) 99999-9999"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
                     placeholder="(00) 00000-0000"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
