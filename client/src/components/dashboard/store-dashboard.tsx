@@ -152,9 +152,45 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   }, [lastMessage, dashboardSection, queryClient, toast]);
   
+  // Função auxiliar para formatar valor como moeda brasileira
+  const formatAsBrazilianCurrency = (value: string): string => {
+    // Remove qualquer caractere não numérico, exceto pontos e vírgulas
+    let numericValue = value.replace(/[^\d,.]/g, '');
+    
+    // Converte vírgulas para pontos para poder fazer cálculos
+    numericValue = numericValue.replace(',', '.');
+    
+    // Verifica se é um número válido
+    const numberValue = parseFloat(numericValue);
+    if (isNaN(numberValue)) return 'R$ ';
+    
+    // Formata o número para o padrão brasileiro (com vírgula como separador decimal)
+    const formattedValue = numberValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    return formattedValue;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setNewService(prev => ({ ...prev, [name]: value }));
+    
+    // Se for o campo de preço, formatar como moeda brasileira
+    if (name === 'price') {
+      // Apenas limpa se o usuário apagou tudo
+      if (!value || value === 'R$ ') {
+        setNewService(prev => ({ ...prev, [name]: '' }));
+      } else {
+        const formattedValue = formatAsBrazilianCurrency(value);
+        setNewService(prev => ({ ...prev, [name]: formattedValue }));
+      }
+    } else {
+      // Para outros campos, mantém o comportamento original
+      setNewService(prev => ({ ...prev, [name]: value }));
+    }
     
     // Se o campo for CEP, remove caracteres não numéricos e valida quando tiver 8 dígitos
     if (name === 'cep') {
@@ -344,13 +380,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    // Validar formato de preço (aceita vírgula ou ponto como separador decimal)
-    const priceValue = newService.price.replace(/\s/g, '').replace("R$", "");
-    const priceRegex = /^[0-9]+([,.][0-9]{1,2})?$/;
-    if (!priceRegex.test(priceValue)) {
+    // Extrair o valor numérico do preço (já formatado como R$)
+    let priceValue = newService.price.replace(/[^\d,.]/g, '');
+    // Converte vírgula para ponto para processamento no backend
+    priceValue = priceValue.replace(',', '.');
+    
+    // Verifica se o preço é um número válido
+    if (isNaN(parseFloat(priceValue)) || parseFloat(priceValue) <= 0) {
       toast({
-        title: "Formato de valor inválido",
-        description: "Por favor, informe um valor no formato correto (ex: 500,00 ou 500.00).",
+        title: "Valor inválido",
+        description: "Por favor, informe um valor válido maior que zero.",
         variant: "destructive"
       });
       return;
