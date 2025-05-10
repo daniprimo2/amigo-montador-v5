@@ -169,7 +169,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao criar serviço');
+        // Passamos o objeto completo de erro para poder acessar campos adicionais como missingFields
+        const error = new Error(errorData.message || 'Erro ao criar serviço');
+        (error as any).response = errorData;
+        throw error;
       }
       
       return await response.json();
@@ -202,17 +205,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     onError: (error: any) => {
       // Tentar extrair informações mais detalhadas do erro
       let errorDescription = error.message || "Ocorreu um erro ao criar o serviço. Tente novamente.";
+      let errorTitle = "Erro ao criar serviço";
       
-      // Verificar se a mensagem contém informações sobre campos obrigatórios
-      if (error.message && error.message.includes("Campo obrigatório")) {
-        errorDescription = error.message;
+      // Verificar se temos os campos obrigatórios que estão faltando
+      if (error.response && error.response.missingFields) {
+        errorTitle = "Campos obrigatórios não preenchidos";
+        errorDescription = `Por favor, preencha os seguintes campos: ${error.response.missingFields.join(", ")}.`;
       }
       
       // Log do erro completo para depuração
       console.error("Erro completo ao criar serviço:", error);
       
       toast({
-        title: "Erro ao criar serviço",
+        title: errorTitle,
         description: errorDescription,
         variant: "destructive"
       });

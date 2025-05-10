@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (missingFields.length > 0) {
         return res.status(400).json({ 
-          message: `Campos obrigatórios não preenchidos: ${missingFields.join(", ")}`,
+          message: `Por favor, preencha os seguintes campos: ${missingFields.join(", ")}.`,
           missingFields
         });
       }
@@ -122,8 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         column === 'material_type' ? 'Material' : column;
         
         return res.status(400).json({ 
-          message: `Campo obrigatório não preenchido: ${fieldName}`,
-          field: column
+          message: `Por favor, preencha o campo: ${fieldName}.`,
+          field: column,
+          missingFields: [fieldName]
         });
       }
       
