@@ -90,23 +90,29 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const fetchProfileData = async () => {
     try {
       setIsLoading(true);
-      const response = await apiRequest<any>('/api/profile');
+      const response = await fetch('/api/profile');
+      
+      if (!response.ok) {
+        throw new Error('Falha ao buscar dados do perfil');
+      }
+      
+      const data = await response.json();
       
       // Atualizar formulário de dados do usuário
       userForm.reset({
-        name: response.name || '',
-        email: response.email || '',
-        phone: response.phone || '',
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
       });
       
       // Se for lojista, atualizar formulário da loja
-      if (user?.userType === 'lojista' && response.store) {
+      if (user?.userType === 'lojista' && data.store) {
         storeForm.reset({
-          name: response.store.name || '',
-          address: response.store.address || '',
-          city: response.store.city || '',
-          state: response.store.state || '',
-          phone: response.store.phone || '',
+          name: data.store.name || '',
+          address: data.store.address || '',
+          city: data.store.city || '',
+          state: data.store.state || '',
+          phone: data.store.phone || '',
         });
       }
     } catch (error) {
@@ -125,12 +131,19 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const onUserSubmit = async (data: UserFormValues) => {
     try {
       setIsLoading(true);
-      await apiRequest<any>('/api/profile', {
+      const response = await fetch('/api/profile', {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           user: data,
         }),
-      } as RequestInit);
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar dados pessoais');
+      }
       
       toast({
         title: 'Sucesso',
@@ -152,12 +165,19 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const onStoreSubmit = async (data: StoreFormValues) => {
     try {
       setIsLoading(true);
-      await apiRequest<any>('/api/profile', {
+      const response = await fetch('/api/profile', {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           store: data,
         }),
-      } as RequestInit);
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar dados da loja');
+      }
       
       toast({
         title: 'Sucesso',

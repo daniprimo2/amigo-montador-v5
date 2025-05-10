@@ -19,6 +19,7 @@ interface StoreDashboardProps {
 export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [newService, setNewService] = useState({
     title: '',
@@ -154,8 +155,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             className="text-primary text-sm font-medium hover:underline"
             onClick={(e) => {
               e.preventDefault();
-              // Ação ao clicar no botão de perfil
-              console.log("Ver perfil clicado");
+              setIsProfileOpen(true);
             }}
           >
             Ver Perfil
@@ -340,6 +340,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Modal de Perfil do Usuário */}
+      <ProfileDialog 
+        open={isProfileOpen} 
+        onOpenChange={setIsProfileOpen} 
+      />
     </div>
   );
 };
