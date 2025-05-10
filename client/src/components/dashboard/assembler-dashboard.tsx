@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi, Star, CheckCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AvailableServiceCard from './available-service-card';
+import CompletedServiceCard from './completed-service-card';
 import ServiceCalendar from './service-calendar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -10,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
+import { RatingDialog } from '@/components/rating/rating-dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
@@ -100,6 +103,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
   
   // Escuta os eventos de mudança de aba do layout
@@ -177,6 +182,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const handleApply = (serviceId: number) => {
     applyMutation.mutate(serviceId);
   };
+  
+  // Função para lidar com o clique no botão de avaliação
+  const handleRateClick = (service: any) => {
+    setSelectedServiceForRating(service);
+    setIsRatingDialogOpen(true);
+  };
 
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
@@ -204,42 +215,95 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
       </div>
       
-      <h3 className="text-lg font-semibold mb-4">Serviços Recentes</h3>
-      
-      <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
-        <div className="divide-y">
-          {isLoading ? (
-            // Show loading skeletons
-            Array(2).fill(0).map((_, index) => (
-              <div key={index} className="p-4">
-                <Skeleton className="h-5 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2 mb-3" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-10 w-full rounded-full" />
-              </div>
-            ))
-          ) : error ? (
-            // Show error message
-            <div className="p-8 text-center text-red-500">
-              Erro ao carregar serviços. Por favor, tente novamente.
+      <Tabs defaultValue="available" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="available">Serviços Disponíveis</TabsTrigger>
+          <TabsTrigger value="completed">Serviços Concluídos</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="available">
+          <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
+            <div className="divide-y">
+              {isLoading ? (
+                // Show loading skeletons
+                Array(2).fill(0).map((_, index) => (
+                  <div key={index} className="p-4">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-3" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-10 w-full rounded-full" />
+                  </div>
+                ))
+              ) : error ? (
+                // Show error message
+                <div className="p-8 text-center text-red-500">
+                  Erro ao carregar serviços. Por favor, tente novamente.
+                </div>
+              ) : filteredServices.length > 0 ? (
+                // Show services (limitado a 2 para a tela inicial)
+                filteredServices.slice(0, 3).map(service => (
+                  <AvailableServiceCard 
+                    key={service.id} 
+                    service={service} 
+                    onApply={handleApply}
+                  />
+                ))
+              ) : (
+                // Show empty state
+                <div className="p-8 text-center text-gray-500">
+                  Nenhum serviço disponível no momento.
+                </div>
+              )}
             </div>
-          ) : filteredServices.length > 0 ? (
-            // Show services (limitado a 2 para a tela inicial)
-            filteredServices.slice(0, 2).map(service => (
-              <AvailableServiceCard 
-                key={service.id} 
-                service={service} 
-                onApply={handleApply}
-              />
-            ))
-          ) : (
-            // Show empty state
-            <div className="p-8 text-center text-gray-500">
-              Nenhum serviço disponível no momento.
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="completed">
+          <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
+            <div className="divide-y">
+              {isLoading ? (
+                // Show loading skeletons
+                Array(2).fill(0).map((_, index) => (
+                  <div key={index} className="p-4">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2 mb-3" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                  </div>
+                ))
+              ) : error ? (
+                // Show error message
+                <div className="p-8 text-center text-red-500">
+                  Erro ao carregar serviços. Por favor, tente novamente.
+                </div>
+              ) : rawServices?.filter(s => s.status === 'completed').length > 0 ? (
+                // Show completed services
+                rawServices?.filter(s => s.status === 'completed').map(service => (
+                  <CompletedServiceCard 
+                    key={service.id} 
+                    service={{
+                      id: service.id,
+                      title: service.title,
+                      location: service.location || '',
+                      date: new Date(service.date).toLocaleDateString('pt-BR'),
+                      price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
+                      store: service.store?.name || 'Loja não especificada',
+                      type: service.materialType || service.type || 'Não especificado',
+                      rated: false // Isso teria que vir do backend
+                    }}
+                    onRateClick={handleRateClick}
+                  />
+                ))
+              ) : (
+                // Show empty state
+                <div className="p-8 text-center text-gray-500">
+                  <CheckCheck className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <p>Nenhum serviço concluído ainda.</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
       
       <h3 className="text-lg font-semibold mb-4">Próximos Serviços</h3>
       
@@ -449,6 +513,27 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   return (
     <div className="p-4">
       {renderDashboardContent()}
+      
+      {/* Diálogo de Avaliação */}
+      {selectedServiceForRating && (
+        <RatingDialog
+          open={isRatingDialogOpen}
+          onOpenChange={setIsRatingDialogOpen}
+          serviceId={selectedServiceForRating.id}
+          toUserId={selectedServiceForRating.store?.userId || 0}
+          toUserName={selectedServiceForRating.store?.name || 'Loja'}
+          serviceName={selectedServiceForRating.title}
+          onSuccess={() => {
+            // Atualizar listas de serviços após avaliação
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            // Notificar usuário sobre avaliação
+            toast({
+              title: 'Avaliação enviada com sucesso',
+              description: 'Obrigado por avaliar este serviço!'
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
