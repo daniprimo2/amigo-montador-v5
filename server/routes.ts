@@ -64,6 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Log do corpo da requisição para diagnóstico
       console.log("Corpo da requisição recebido:", req.body);
+      console.log("Tipo do conteúdo:", req.headers['content-type']);
       
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });

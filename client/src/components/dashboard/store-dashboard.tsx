@@ -159,34 +159,20 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     status: string;
   }
 
-  // Mutation para criar um serviço
+  // Mutation para criar um serviço - simplificado para JSON
   const createServiceMutation = useMutation({
-    mutationFn: async (serviceData: ServiceFormData) => {
-      const formData = new FormData();
+    mutationFn: async (serviceData: any) => {
+      // Log detalhado dos dados a serem enviados
+      console.log("Enviando dados para a API:", serviceData);
       
-      // Adicionar campos de texto ao FormData, garantindo que não enviamos nulls
-      Object.keys(serviceData).forEach(key => {
-        // Só adiciona ao FormData se o valor não for null ou undefined
-        if (serviceData[key] !== null && serviceData[key] !== undefined) {
-          formData.append(key, serviceData[key]);
-          console.log(`Adicionado ao FormData: ${key}=${serviceData[key]}`);
-        } else {
-          console.log(`Campo ${key} não adicionado ao FormData pois é null/undefined`);
-        }
-      });
-      
-      // Adicionar arquivo do projeto se existir
-      if (projectFile && projectFile.length > 0) {
-        formData.append('projectFile', projectFile[0]);
-        console.log("Arquivo de projeto adicionado ao FormData");
-      }
-      
-      // Enviar para a API
-      console.log("Enviando FormData para o servidor...");
+      // Enviar os dados diretamente como JSON
       const response = await fetch('/api/services', {
         method: 'POST',
         credentials: 'include',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(serviceData)
       });
       
       if (!response.ok) {
@@ -304,6 +290,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
+    // Temporariamente desabilitar a validação de arquivo para testar o formulário
+    // Depois implementaremos upload de arquivo via outra abordagem
+    
+    /* Código comentado temporariamente para teste
     // Verifica se o arquivo PDF foi carregado
     if (!projectFile || projectFile.length === 0) {
       toast({
@@ -323,11 +313,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       });
       return;
     }
+    */
     
     // Utilizando a interface ServiceFormData definida acima
     
-    // Formatar os dados para a API
-    const serviceData: ServiceFormData = {
+    // Formatar os dados para a API de forma mais simples e direta
+    const serviceData = {
       title: newService.title.trim(),
       description: newService.description.trim(),
       location: newService.location.trim(),
@@ -338,13 +329,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       materialType: newService.materialType.trim(),
       status: 'open' // Garantir que o serviço seja criado com status 'open'
     };
-    
-    // Verificar se algum campo obrigatório tem string vazia
-    Object.entries(serviceData).forEach(([key, value]) => {
-      if (value === "") {
-        serviceData[key] = null; // Converter strings vazias para null
-      }
-    });
     
     // Adicionar logs detalhados para depuração
     console.log("Dados do serviço antes do envio:", serviceData);
