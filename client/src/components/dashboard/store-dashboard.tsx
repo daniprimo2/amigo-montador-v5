@@ -921,18 +921,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 />
                 <p className="text-xs text-gray-500">Digite apenas números (sem pontos ou vírgulas)</p>
               </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="type" className="text-sm font-medium">Tipo de Móvel</Label>
-                <Input 
-                  id="type" 
-                  name="type" 
-                  placeholder="Ex: Cozinha, Guarda-roupa" 
-                  value={newService.type}
-                  onChange={handleInputChange}
-                  className="w-full"
-                />
-              </div>
             </div>
             
             <div className="grid gap-2">
