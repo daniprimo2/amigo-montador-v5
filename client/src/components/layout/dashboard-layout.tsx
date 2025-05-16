@@ -25,6 +25,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Monitorar mensagens recebidas via WebSocket
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
+      console.log('[DashboardLayout] Nova mensagem recebida via WebSocket', lastMessage);
+      
       // Se não estiver na aba de chat, marcar como mensagem não lida
       if (activeTab !== 'chat') {
         setHasUnreadMessage(true);
@@ -63,6 +65,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     window.dispatchEvent(event);
   };
 
+  // Componente para o botão de chat com indicador de notificação
+  const ChatButton = () => (
+    <button 
+      onClick={() => handleTabChange('chat')}
+      className={`flex flex-col items-center py-1 ${activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}`}
+    >
+      <div className="relative">
+        <MessageSquare className="h-5 w-5" />
+        {hasUnreadMessage && (
+          <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
+        )}
+      </div>
+      <span className="text-xs mt-1">Chat</span>
+    </button>
+  );
+
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
@@ -81,13 +99,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <List className="h-5 w-5" />
             <span className="text-xs mt-1">Serviços</span>
           </button>
-          <button 
-            onClick={() => handleTabChange('chat')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}`}
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span className="text-xs mt-1">Chat</span>
-          </button>
+          <ChatButton />
           <button 
             onClick={() => handleTabChange('calendar')}
             className={`flex flex-col items-center py-1 ${activeTab === 'calendar' ? 'text-primary' : 'text-gray-500'}`}
@@ -114,13 +126,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Map className="h-5 w-5" />
             <span className="text-xs mt-1">Explorar</span>
           </button>
-          <button 
-            onClick={() => handleTabChange('chat')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}`}
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span className="text-xs mt-1">Chat</span>
-          </button>
+          <ChatButton />
           <button 
             onClick={() => handleTabChange('calendar')}
             className={`flex flex-col items-center py-1 ${activeTab === 'calendar' ? 'text-primary' : 'text-gray-500'}`}
@@ -141,8 +147,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Logo size="sm" className="text-white" />
           </div>
           <div className="flex items-center space-x-4">
-            <button className="text-white">
+            <button className="text-white relative">
               <Bell className="h-5 w-5" />
+              {hasUnreadMessage && (
+                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
+              )}
             </button>
             <button 
               onClick={handleLogout}
