@@ -82,7 +82,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
             render={() => (
               <FormItem className="form-field">
                 <FormLabel>Material</FormLabel>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2 p-3 border rounded-md">
                   <div className="flex items-center">
                     <Checkbox
                       id="plano-corte-montador"
@@ -94,7 +94,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
                         form.setValue('specialties', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="plano-corte-montador" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="plano-corte-montador" className="ml-2 font-medium text-sm">
                       Plano de corte
                     </label>
                   </div>
@@ -109,7 +109,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
                         form.setValue('specialties', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="marcenaria-montador" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="marcenaria-montador" className="ml-2 font-medium text-sm">
                       Marcenaria
                     </label>
                   </div>
@@ -124,7 +124,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
                         form.setValue('specialties', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="fabrica-montador" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="fabrica-montador" className="ml-2 font-medium text-sm">
                       Fábrica
                     </label>
                   </div>

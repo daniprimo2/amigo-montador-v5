@@ -375,7 +375,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
             render={() => (
               <FormItem className="form-field">
                 <FormLabel>Material</FormLabel>
-                <div className="space-y-2">
+                <div className="flex flex-col gap-2 p-3 border rounded-md">
                   <div className="flex items-center">
                     <Checkbox
                       id="plano-corte"
@@ -387,7 +387,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="plano-corte" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="plano-corte" className="ml-2 font-medium text-sm">
                       Plano de corte
                     </label>
                   </div>
@@ -402,7 +402,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="marcenaria" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="marcenaria" className="ml-2 font-medium text-sm">
                       Marcenaria
                     </label>
                   </div>
@@ -417,7 +417,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
-                    <label htmlFor="fabrica" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="fabrica" className="ml-2 font-medium text-sm">
                       Fábrica
                     </label>
                   </div>
