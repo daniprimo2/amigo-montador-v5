@@ -1,8 +1,9 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Logo from '../logo/logo';
 import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useWebSocket } from '@/hooks/use-websocket';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,8 +16,28 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const { logoutMutation } = useAuth();
   const [, navigate] = useLocation();
+  const { lastMessage } = useWebSocket();
   // Define the tabs with a state to track which tab is active
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'calendar' | 'explore'>('home');
+  // Estado para controlar a notificação de mensagem não lida
+  const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
+  
+  // Monitorar mensagens recebidas via WebSocket
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'new_message') {
+      // Se não estiver na aba de chat, marcar como mensagem não lida
+      if (activeTab !== 'chat') {
+        setHasUnreadMessage(true);
+      }
+    }
+  }, [lastMessage, activeTab]);
+  
+  // Limpar indicador de mensagem não lida quando mudar para a aba de chat
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      setHasUnreadMessage(false);
+    }
+  }, [activeTab]);
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {

@@ -49,6 +49,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
   // Mutation para enviar mensagem
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      console.log(`[ChatInterface] Enviando mensagem para serviço ${serviceId}`);
+      
       const response = await fetch(`/api/services/${serviceId}/messages`, {
         method: 'POST',
         headers: {
@@ -59,20 +61,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao enviar mensagem');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao enviar mensagem');
       }
       
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log(`[ChatInterface] Mensagem enviada com sucesso:`, data);
+      
       // Limpar campo de mensagem e atualizar a lista
       setMessage('');
+      
+      // Invalidar a consulta para atualizar a lista de mensagens
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
+      
+      // Também invalidar as listas de serviços para atualizar contadores e status se necessário
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      
+      // Rolar para o final da conversa depois que a lista for atualizada
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error(`[ChatInterface] Erro ao enviar mensagem:`, error);
+      
       toast({
         title: 'Erro',
-        description: 'Não foi possível enviar a mensagem. Tente novamente.',
+        description: error instanceof Error 
+          ? error.message 
+          : 'Não foi possível enviar a mensagem. Tente novamente.',
         variant: 'destructive',
       });
     }
