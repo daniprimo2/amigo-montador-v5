@@ -196,13 +196,10 @@ export class DatabaseStorage implements IStorage {
         const assemblerSpecialties = assembler.specialties as string[];
         console.log(`Filtrando por especialidades do montador: ${assemblerSpecialties.join(', ')}`);
         
-        // Filtrar por especialidades do montador se ele tiver alguma definida
-        const filteredServices = enhancedServices.filter(service => 
-          service.materialType && assemblerSpecialties.includes(service.materialType)
-        );
-        
-        console.log(`Após filtro por especialidades: ${filteredServices.length} serviços correspondem`);
-        return filteredServices;
+        // Atualização: mostrar todos os serviços disponíveis para o montador, independente da especialidade
+        // Isso permite que o montador veja mais oportunidades de trabalho
+        console.log(`Retornando todos os serviços disponíveis (${enhancedServices.length}) para o montador`);
+        return enhancedServices;
       }
       
       console.log(`Nenhuma especialidade definida para o montador, retornando todos os serviços disponíveis (${enhancedServices.length})`);
