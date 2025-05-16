@@ -10,10 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import FileUpload from '../ui/file-upload';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
+import InputMask from 'react-input-mask';
 
 const storeStep2Schema = z.object({
   storeName: z.string().min(3, 'Nome da loja deve ter pelo menos 3 caracteres'),
+  zipCode: z.string().min(8, 'CEP inválido'),
   address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
+  neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
   city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'Selecione um estado'),
   storePhone: z.string().min(10, 'Telefone da loja inválido'),
@@ -42,12 +45,15 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [logoFiles, setLogoFiles] = useState<FileList | null>(null);
+  const [isSearchingZipCode, setIsSearchingZipCode] = useState(false);
 
   const form = useForm<StoreStep2Data>({
     resolver: zodResolver(storeStep2Schema),
     defaultValues: {
       storeName: '',
+      zipCode: '',
       address: '',
+      neighborhood: '',
       city: '',
       state: '',
       storePhone: '',
@@ -69,6 +75,8 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
       const userData = {
         ...step1Data,
         ...data,
+        zipCode: data.zipCode,
+        neighborhood: data.neighborhood,
         logoUrl,
         userType: 'lojista',
         username: step1Data.email,
@@ -97,6 +105,54 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
   const handleLogoChange = (files: FileList | null) => {
     setLogoFiles(files);
     form.setValue('logoFile', files);
+  };
+  
+  const searchZipCode = async (zipCode: string) => {
+    if (!zipCode || zipCode.length < 8) {
+      return;
+    }
+    
+    // Remove caracteres não numéricos do CEP
+    const cleanZipCode = zipCode.replace(/\D/g, '');
+    
+    if (cleanZipCode.length !== 8) {
+      return;
+    }
+    
+    try {
+      setIsSearchingZipCode(true);
+      const response = await fetch(`https://viacep.com.br/ws/${cleanZipCode}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        form.setValue('address', data.logradouro);
+        form.setValue('neighborhood', data.bairro);
+        form.setValue('city', data.localidade);
+        form.setValue('state', data.uf);
+        
+        // Notificar o usuário que o endereço foi preenchido
+        toast({
+          title: "Endereço encontrado",
+          description: "Os campos de endereço foram preenchidos automaticamente.",
+        });
+      } else {
+        // Notificar o usuário que o CEP não foi encontrado
+        toast({
+          title: "CEP não encontrado",
+          description: "Verifique o CEP informado ou preencha o endereço manualmente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast({
+        title: "Erro ao buscar CEP",
+        description: "Não foi possível consultar o CEP. Preencha o endereço manualmente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearchingZipCode(false);
+    }
   };
 
   return (
@@ -142,6 +198,41 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
           
           <FormField
             control={form.control}
+            name="zipCode"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>CEP</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <InputMask
+                      mask="99999-999"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        searchZipCode(e.target.value);
+                      }}
+                      placeholder="00000-000"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    />
+                  </FormControl>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => searchZipCode(field.value)}
+                    disabled={isSearchingZipCode || !field.value || field.value.replace(/\D/g, '').length < 8}
+                    className="w-auto min-w-24"
+                  >
+                    {isSearchingZipCode ? "Buscando..." : "Buscar CEP"}
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
             name="address"
             render={({ field }) => (
               <FormItem className="form-field">
@@ -149,7 +240,24 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Rua, número, bairro"
+                    placeholder="Rua, número"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="neighborhood"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>Bairro</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Seu bairro"
                   />
                 </FormControl>
                 <FormMessage />
