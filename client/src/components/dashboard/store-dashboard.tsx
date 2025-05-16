@@ -55,6 +55,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     description: '',
     cep: '',
     address: '',
+    addressNumber: '',
     location: '',
     startDate: '',
     endDate: '',
@@ -294,6 +295,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     description: string;
     location: string;
     address: string;
+    addressNumber: string;
     date: string;
     price: string;
     type: string;
@@ -339,6 +341,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         description: '',
         cep: '',
         address: '',
+        addressNumber: '',
         location: '',
         startDate: '',
         endDate: '',
@@ -384,6 +387,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     
     if (!newService.title) missingFields.push("Título do Serviço");
     if (!newService.cep) missingFields.push("CEP");
+    if (!newService.addressNumber) missingFields.push("Número do Endereço");
     if (!newService.location) missingFields.push("Cidade/UF");
     if (!newService.startDate) missingFields.push("Data de Início");
     if (!newService.endDate) missingFields.push("Data de Fim");
@@ -480,6 +484,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       description: newService.description.trim(),
       location: newService.location.trim(),
       address: newService.address.trim(),
+      addressNumber: newService.addressNumber.trim(),
       date: `${newService.startDate} - ${newService.endDate}`,
       price: priceValue,
       type: (newService.type ? newService.type.trim() : ""),
@@ -844,13 +849,25 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               <Input 
                 id="address" 
                 name="address" 
-                placeholder="Rua, número, bairro" 
+                placeholder="Rua, bairro" 
                 value={newService.address}
                 onChange={handleInputChange}
                 readOnly={!newService.cep}
                 className={`w-full ${!newService.cep ? "bg-gray-100" : ""}`}
               />
               <p className="text-xs text-gray-500">Preenchido automaticamente ao digitar o CEP</p>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="addressNumber" className="text-sm font-medium">Número do Endereço *</Label>
+              <Input 
+                id="addressNumber" 
+                name="addressNumber" 
+                placeholder="Ex: 123" 
+                value={newService.addressNumber}
+                onChange={handleInputChange}
+                className="w-full"
+              />
             </div>
 
             <div className="grid gap-2">
