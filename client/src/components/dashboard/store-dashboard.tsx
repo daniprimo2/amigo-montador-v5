@@ -939,11 +939,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               <Label htmlFor="projectFile" className="text-sm font-medium">Arquivo do Projeto (PDF) *</Label>
               <FileUpload
                 accept=".pdf"
-                multiple={false}
+                multiple={true}
                 label="Arquivo PDF do Projeto"
                 helpText="Apenas arquivos no formato PDF (máx. 10MB)"
                 onChange={setProjectFile}
                 required={true}
+                showAddMoreButton={true}
               />
             </div>
           </div>

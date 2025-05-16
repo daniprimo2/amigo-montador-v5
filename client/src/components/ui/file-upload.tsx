@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Plus, X } from 'lucide-react';
+import { Button } from './button';
 
 interface FileUploadProps {
   accept?: string;
@@ -9,6 +10,7 @@ interface FileUploadProps {
   onChange: (files: FileList | null) => void;
   className?: string;
   required?: boolean;
+  showAddMoreButton?: boolean;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -19,6 +21,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   onChange,
   className = '',
   required = false,
+  showAddMoreButton = false,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -58,6 +61,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     onChange(selectedFiles);
   };
 
+  const handleAddMore = () => {
+    inputRef.current?.click();
+  };
+
   return (
     <div className={className}>
       <div
@@ -85,6 +92,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           )}
         </div>
       </div>
+      
+      {showAddMoreButton && files && files.length > 0 && (
+        <div className="mt-2 flex justify-center">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleAddMore}
+            type="button"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Plus className="h-3 w-3" /> Adicionar mais PDFs
+          </Button>
+        </div>
+      )}
+      
       <input
         ref={inputRef}
         type="file"
