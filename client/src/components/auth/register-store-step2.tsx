@@ -16,6 +16,7 @@ const storeStep2Schema = z.object({
   storeName: z.string().min(3, 'Nome da loja deve ter pelo menos 3 caracteres'),
   zipCode: z.string().min(8, 'CEP inválido'),
   address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
+  addressNumber: z.string().min(1, 'Número é obrigatório'),
   neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
   city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'Selecione um estado'),
@@ -53,6 +54,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
       storeName: '',
       zipCode: '',
       address: '',
+      addressNumber: '',
       neighborhood: '',
       city: '',
       state: '',
@@ -231,22 +233,41 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
             )}
           />
           
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem className="form-field">
-                <FormLabel>Endereço</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Rua, número"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem className="form-field col-span-2">
+                  <FormLabel>Endereço</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Rua, Avenida, etc."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="addressNumber"
+              render={({ field }) => (
+                <FormItem className="form-field col-span-1">
+                  <FormLabel>Número</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="123"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           
           <FormField
             control={form.control}
