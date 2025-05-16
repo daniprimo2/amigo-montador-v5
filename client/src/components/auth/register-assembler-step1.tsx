@@ -8,12 +8,16 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import FileUpload from '../ui/file-upload';
 import InputMask from 'react-input-mask';
+import { useToast } from '@/hooks/use-toast';
 
 const assemblerStep1Schema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cpf: z.string().min(11, 'CPF inválido'),
   phone: z.string().min(10, 'Telefone inválido'),
+  zipCode: z.string().min(8, 'CEP inválido'),
   address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
+  addressNumber: z.string().min(1, 'Número é obrigatório'),
+  neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
   city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'Selecione um estado'),
   email: z.string().email('Email inválido'),
@@ -37,6 +41,8 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
   defaultValues = {} 
 }) => {
   const [profileFiles, setProfileFiles] = useState<FileList | null>(null);
+  const [isSearchingZipCode, setIsSearchingZipCode] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<AssemblerStep1Data>({
     resolver: zodResolver(assemblerStep1Schema),
@@ -44,7 +50,10 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
       name: '',
       cpf: '',
       phone: '',
+      zipCode: '',
       address: '',
+      addressNumber: '',
+      neighborhood: '',
       city: '',
       state: '',
       email: '',
@@ -55,9 +64,10 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
   });
 
   const onSubmit = (data: AssemblerStep1Data) => {
-    // Adicionar arquivo se presente
+    // Adicionar arquivo se presente e montar o endereço completo
     const formData = {
       ...data,
+      fullAddress: `${data.address}, ${data.addressNumber} - ${data.neighborhood}`,
       profilePicture: profileFiles,
     };
     onNext(formData);
@@ -66,6 +76,54 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
   const handleProfileChange = (files: FileList | null) => {
     setProfileFiles(files);
     form.setValue('profilePicture', files);
+  };
+  
+  const searchZipCode = async (zipCode: string) => {
+    if (!zipCode || zipCode.length < 8) {
+      return;
+    }
+    
+    // Remove caracteres não numéricos do CEP
+    const cleanZipCode = zipCode.replace(/\D/g, '');
+    
+    if (cleanZipCode.length !== 8) {
+      return;
+    }
+    
+    try {
+      setIsSearchingZipCode(true);
+      const response = await fetch(`https://viacep.com.br/ws/${cleanZipCode}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        form.setValue('address', data.logradouro);
+        form.setValue('neighborhood', data.bairro);
+        form.setValue('city', data.localidade);
+        form.setValue('state', data.uf);
+        
+        // Notificar o usuário que o endereço foi preenchido
+        toast({
+          title: "Endereço encontrado",
+          description: "Os campos de endereço foram preenchidos automaticamente.",
+        });
+      } else {
+        // Notificar o usuário que o CEP não foi encontrado
+        toast({
+          title: "CEP não encontrado",
+          description: "Verifique o CEP informado ou preencha o endereço manualmente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast({
+        title: "Erro ao buscar CEP",
+        description: "Não foi possível consultar o CEP. Preencha o endereço manualmente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearchingZipCode(false);
+    }
   };
 
   return (
@@ -153,14 +211,85 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
           
           <FormField
             control={form.control}
-            name="address"
+            name="zipCode"
             render={({ field }) => (
               <FormItem className="form-field">
-                <FormLabel>Endereço</FormLabel>
+                <FormLabel>CEP</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <InputMask
+                      mask="99999-999"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        searchZipCode(e.target.value);
+                      }}
+                      placeholder="00000-000"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    />
+                  </FormControl>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => searchZipCode(field.value)}
+                    disabled={isSearchingZipCode || !field.value || field.value.replace(/\D/g, '').length < 8}
+                    className="w-auto min-w-24"
+                  >
+                    {isSearchingZipCode ? "Buscando..." : "Buscar CEP"}
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem className="form-field col-span-2">
+                  <FormLabel>Endereço</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Rua, Avenida, etc."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="addressNumber"
+              render={({ field }) => (
+                <FormItem className="form-field col-span-1">
+                  <FormLabel>Número</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="123"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="neighborhood"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>Bairro</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Rua, número, bairro"
+                    placeholder="Seu bairro"
                   />
                 </FormControl>
                 <FormMessage />
