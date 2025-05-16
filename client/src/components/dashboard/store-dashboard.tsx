@@ -126,14 +126,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           });
         }
       } else if (lastMessage.type === 'new_message') {
-        // Atualizar a lista de mensagens
-        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
         
-        // Redirecionar automaticamente para o chat se tiver serviceId
+        // Atualizar as listas relevantes para refletir nova mensagem
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+        
+        // Invalidar a lista de mensagens específica se houver serviceId
         if (lastMessage.serviceId) {
+          queryClient.invalidateQueries({ 
+            queryKey: [`/api/services/${lastMessage.serviceId}/messages`] 
+          });
+          
           // Definir o serviço selecionado para o chat
           setSelectedChatService(lastMessage.serviceId);
-          // Mudar para a seção de chat
+          
+          // Mudar para a seção de chat e exibir notificação
           setDashboardSection('chat');
           
           toast({

@@ -550,18 +550,25 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Reagir a novas mensagens recebidas via WebSocket
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
-      // Notificação já foi exibida pelo hook do WebSocket, então 
-      // só precisamos atualizar as consultas
+      console.log("[AssemblerDashboard] Nova mensagem recebida via WebSocket", lastMessage);
+      
+      // Atualizar as listas relevantes para refletir nova mensagem
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
       
-      // Redirecionar automaticamente para o chat se tiver serviceId
+      // Invalidar a lista de mensagens específica se houver serviceId
       if (lastMessage.serviceId) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/services/${lastMessage.serviceId}/messages`] 
+        });
+        
         // Definir o serviço selecionado para o chat
         setSelectedChatService(lastMessage.serviceId);
+        
         // Mudar para a seção de chat
         setDashboardSection('chat');
         
+        // Exibir notificação sonora ou visual para o usuário
         toast({
           title: "Nova mensagem recebida",
           description: "Chat aberto automaticamente",
