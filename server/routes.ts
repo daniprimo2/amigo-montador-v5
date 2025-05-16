@@ -925,6 +925,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Marcar mensagens como lidas
+  app.post("/api/services/:id/messages/read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se é o lojista dono do serviço ou o montador candidato
+      let hasAccess = false;
+      
+      if (req.user?.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(req.user.id);
+        if (store && store.id === service.storeId) {
+          hasAccess = true;
+        }
+      } else if (req.user?.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        if (assembler) {
+          // Verificar se o montador tem uma candidatura para esse serviço
+          const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+          if (application) {
+            hasAccess = true;
+          }
+        }
+      }
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Não autorizado a acessar este chat" });
+      }
+
+      // Em uma implementação completa, aqui marcaríamos as mensagens como lidas em uma tabela separada
+      // Para a demonstração, apenas logamos a ação e retornamos sucesso
+      console.log(`Usuário ${req.user.id} marcou as mensagens do serviço ${serviceId} como lidas`);
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Erro ao marcar mensagens como lidas:", error);
+      res.status(500).json({ message: "Erro ao marcar mensagens como lidas" });
+    }
+  });
+  
   // Enviar mensagem em um serviço
   app.post("/api/services/:id/messages", async (req, res) => {
     try {
