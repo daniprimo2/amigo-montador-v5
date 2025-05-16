@@ -16,6 +16,20 @@ type WebSocketMessage = {
   timestamp?: string;
 };
 
+// Função para tocar som de notificação
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio('/notification.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(error => {
+      // Alguns navegadores bloqueiam a reprodução automática
+      console.log('Erro ao reproduzir som:', error);
+    });
+  } catch (error) {
+    console.error('Erro ao criar objeto de áudio:', error);
+  }
+};
+
 export function useWebSocket() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -86,14 +100,20 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
+          // Tocar som de notificação
+          playNotificationSound();
+          
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
           queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
           
+          // Mostrar notificação em estilo destacado
           toast({
-            title: 'Nova candidatura',
+            title: '🔔 Nova candidatura',
             description: data.message,
-            duration: 5000
+            duration: 8000,
+            variant: 'default',
+            className: 'bg-blue-100 border-blue-500 border-2'
           });
           
           // Importante: debugar para verificar se isto está sendo executado
@@ -106,6 +126,9 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
+          // Tocar som de notificação
+          playNotificationSound();
+          
           // Invalidar consultas para atualizar mensagens
           if (data.serviceId) {
             queryClient.invalidateQueries({ queryKey: [`/api/services/${data.serviceId}/messages`] });
@@ -113,10 +136,13 @@ export function useWebSocket() {
             queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
           }
           
+          // Mostrar notificação visível e com ícone
           toast({
-            title: 'Nova mensagem',
+            title: '💬 Nova mensagem recebida!',
             description: data.message,
-            duration: 5000
+            duration: 8000,
+            variant: 'default',
+            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
           });
           
           debugLogger('WebSocket', 'Notificação de nova mensagem processada com sucesso', {
@@ -128,13 +154,19 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
+          // Tocar som de notificação
+          playNotificationSound();
+          
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
           
+          // Mostrar notificação com estilo personalizado
           toast({
-            title: 'Candidatura aceita!',
+            title: '✅ Candidatura aceita!',
             description: data.message,
-            duration: 5000
+            duration: 8000,
+            variant: 'default',
+            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
           });
           
           debugLogger('WebSocket', 'Notificação de candidatura aceita processada com sucesso', {
