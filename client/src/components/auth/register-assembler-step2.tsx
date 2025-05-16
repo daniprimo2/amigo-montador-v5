@@ -81,23 +81,8 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
             name="specialties"
             render={() => (
               <FormItem className="form-field">
-                <FormLabel>Especialidade</FormLabel>
+                <FormLabel>Material</FormLabel>
                 <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="marcenaria-montador"
-                      onCheckedChange={(checked) => {
-                        const current = form.getValues().specialties || [];
-                        const updated = checked
-                          ? [...current, 'marcenaria']
-                          : current.filter(type => type !== 'marcenaria');
-                        form.setValue('specialties', updated, { shouldValidate: true });
-                      }}
-                    />
-                    <label htmlFor="marcenaria-montador" className="ml-2 block text-sm text-gray-700">
-                      Marcenaria
-                    </label>
-                  </div>
                   <div className="flex items-center">
                     <Checkbox
                       id="plano-corte-montador"
@@ -111,6 +96,21 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
                     />
                     <label htmlFor="plano-corte-montador" className="ml-2 block text-sm text-gray-700">
                       Plano de corte
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="marcenaria-montador"
+                      onCheckedChange={(checked) => {
+                        const current = form.getValues().specialties || [];
+                        const updated = checked
+                          ? [...current, 'marcenaria']
+                          : current.filter(type => type !== 'marcenaria');
+                        form.setValue('specialties', updated, { shouldValidate: true });
+                      }}
+                    />
+                    <label htmlFor="marcenaria-montador" className="ml-2 block text-sm text-gray-700">
+                      Marcenaria
                     </label>
                   </div>
                   <div className="flex items-center">

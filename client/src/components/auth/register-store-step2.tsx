@@ -374,23 +374,8 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
             name="materialTypes"
             render={() => (
               <FormItem className="form-field">
-                <FormLabel>Tipo de Material</FormLabel>
+                <FormLabel>Material</FormLabel>
                 <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="marcenaria"
-                      onCheckedChange={(checked) => {
-                        const current = form.getValues().materialTypes || [];
-                        const updated = checked
-                          ? [...current, 'marcenaria']
-                          : current.filter(type => type !== 'marcenaria');
-                        form.setValue('materialTypes', updated, { shouldValidate: true });
-                      }}
-                    />
-                    <label htmlFor="marcenaria" className="ml-2 block text-sm text-gray-700">
-                      Marcenaria
-                    </label>
-                  </div>
                   <div className="flex items-center">
                     <Checkbox
                       id="plano-corte"
@@ -404,6 +389,21 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                     />
                     <label htmlFor="plano-corte" className="ml-2 block text-sm text-gray-700">
                       Plano de corte
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="marcenaria"
+                      onCheckedChange={(checked) => {
+                        const current = form.getValues().materialTypes || [];
+                        const updated = checked
+                          ? [...current, 'marcenaria']
+                          : current.filter(type => type !== 'marcenaria');
+                        form.setValue('materialTypes', updated, { shouldValidate: true });
+                      }}
+                    />
+                    <label htmlFor="marcenaria" className="ml-2 block text-sm text-gray-700">
+                      Marcenaria
                     </label>
                   </div>
                   <div className="flex items-center">
