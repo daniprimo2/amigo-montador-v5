@@ -745,7 +745,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                       Montador: {service.assembler?.name || 'Não atribuído'}
                     </p>
                   </div>
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                  {service.hasMessages ? (
+                    <div className="relative">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+                    </div>
+                  ) : (
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  )}
                 </div>
               </div>
             ))}
