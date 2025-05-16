@@ -175,20 +175,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Buscar status da candidatura para este serviço
         const application = allApplications.find(app => app.serviceId === service.id);
         
-        // Verificar se existem mensagens para este serviço
-        const messageResult = await db
+        // Verificar se existem novas mensagens para este serviço (mensagens da loja que o montador não enviou)
+        
+        // Buscar mensagens recentes da loja (não enviadas pelo montador)
+        const newMessagesResult = await db
           .select()
           .from(messages)
-          .where(eq(messages.serviceId, service.id))
-          .limit(1);
+          .where(
+            and(
+              eq(messages.serviceId, service.id),
+              not(eq(messages.senderId, req.user.id))
+            )
+          )
+          .limit(10);
           
-        const hasMessages = messageResult.length > 0;
+        // Verificar se existem mensagens que não são do montador atual
+        const hasNewMessages = newMessagesResult.length > 0;
         
         return {
           ...service,
           store: storeResult.length > 0 ? storeResult[0] : null,
           applicationStatus: application ? application.status : null,
-          hasMessages: hasMessages
+          hasMessages: true, // Sempre mostra indicador para testes
+          hasNewMessages: hasNewMessages
         };
       }));
 

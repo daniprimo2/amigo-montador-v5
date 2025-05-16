@@ -102,6 +102,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
+  // Marcar mensagens como lidas quando o chat for aberto
+  useEffect(() => {
+    // Função para marcar mensagens como lidas
+    const markMessagesAsRead = async () => {
+      try {
+        if (serviceId) {
+          await fetch(`/api/services/${serviceId}/messages/read`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          // Atualizar as listas para remover indicadores de novas mensagens
+          queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+          console.log(`[ChatInterface] Mensagens do serviço ${serviceId} marcadas como lidas`);
+        }
+      } catch (error) {
+        console.error('Erro ao marcar mensagens como lidas:', error);
+      }
+    };
+    
+    // Chamar a função quando o componente for montado
+    markMessagesAsRead();
+  }, [serviceId, queryClient]);
+  
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     

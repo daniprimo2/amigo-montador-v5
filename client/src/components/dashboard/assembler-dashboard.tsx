@@ -331,7 +331,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
                           Em Andamento
                         </span>
-                        {service.hasMessages ? (
+                        {service.hasNewMessages ? (
                           <div className="relative">
                             <MessageSquare className="h-5 w-5 text-primary" />
                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
