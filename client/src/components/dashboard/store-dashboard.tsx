@@ -60,7 +60,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     startDate: '',
     endDate: '',
     price: '',
-    type: '',
     materialType: ''
   });
   const [projectFile, setProjectFile] = useState<FileList | null>(null);
@@ -298,7 +297,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     addressNumber: string;
     date: string;
     price: string;
-    type: string;
     materialType: string;
     status: string;
   }
@@ -346,7 +344,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         startDate: '',
         endDate: '',
         price: '',
-        type: '',
         materialType: ''
       });
       setProjectFile(null);
@@ -487,7 +484,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       addressNumber: newService.addressNumber.trim(),
       date: `${newService.startDate} - ${newService.endDate}`,
       price: priceValue,
-      type: (newService.type ? newService.type.trim() : ""),
+
       materialType: newService.materialType.trim(),
       status: 'open' // Garantir que o serviço seja criado com status 'open'
     };
