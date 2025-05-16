@@ -106,10 +106,22 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
+          // Invalidar consultas para atualizar mensagens
+          if (data.serviceId) {
+            queryClient.invalidateQueries({ queryKey: [`/api/services/${data.serviceId}/messages`] });
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+          }
+          
           toast({
             title: 'Nova mensagem',
             description: data.message,
             duration: 5000
+          });
+          
+          debugLogger('WebSocket', 'Notificação de nova mensagem processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
           });
         } else if (data.type === 'application_accepted') {
           debugLogger('WebSocket', 'Processando notificação de candidatura aceita', {

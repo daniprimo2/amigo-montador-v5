@@ -1089,17 +1089,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Função para enviar notificação de nova mensagem
   global.notifyNewMessage = async (serviceId: number, senderId: number) => {
     try {
+      console.log(`[notifyNewMessage] Iniciando envio de notificação: serviço ${serviceId}, remetente ${senderId}`);
+      
       // Obter o serviço
       const service = await storage.getServiceById(serviceId);
-      if (!service) return;
+      if (!service) {
+        console.error(`[notifyNewMessage] Serviço ${serviceId} não encontrado`);
+        return;
+      }
       
       // Obter o remetente
       const sender = await storage.getUser(senderId);
-      if (!sender) return;
+      if (!sender) {
+        console.error(`[notifyNewMessage] Usuário remetente ${senderId} não encontrado`);
+        return;
+      }
+      
+      console.log(`[notifyNewMessage] Remetente: ${sender.name} (${sender.userType})`);
       
       // Obter a loja
       const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
-      if (!storeResult.length) return;
+      if (!storeResult.length) {
+        console.error(`[notifyNewMessage] Loja do serviço (storeId: ${service.storeId}) não encontrada`);
+        return;
+      }
+      
+      const storeUserId = storeResult[0].userId;
+      console.log(`[notifyNewMessage] UserId do lojista: ${storeUserId}`);
       
       // Obter as candidaturas aceitas para este serviço
       const acceptedApplications = await db.select()
@@ -1109,40 +1125,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(applications.status, 'accepted')
         ));
       
-      if (acceptedApplications.length === 0) return;
+      console.log(`[notifyNewMessage] Encontradas ${acceptedApplications.length} candidaturas aceitas para o serviço`);
       
-      const assembler = await storage.getAssemblerByUserId(sender.id);
+      if (acceptedApplications.length === 0) {
+        console.log(`[notifyNewMessage] Nenhuma candidatura aceita para o serviço ${serviceId}, não notificando`);
+        return;
+      }
+      
+      // Montador relacionado ao serviço
+      let assemblerUserId = null;
+      
+      for (const app of acceptedApplications) {
+        const assemblerDataResult = await db
+          .select()
+          .from(assemblers)
+          .where(eq(assemblers.id, app.assemblerId));
+        
+        if (assemblerDataResult.length > 0) {
+          assemblerUserId = assemblerDataResult[0].userId;
+          console.log(`[notifyNewMessage] UserId do montador: ${assemblerUserId}`);
+          break;
+        }
+      }
+      
+      if (!assemblerUserId) {
+        console.error(`[notifyNewMessage] Não foi possível encontrar o montador relacionado`);
+        return;
+      }
       
       // Determinar para quem enviar a notificação
       if (sender.userType === 'lojista') {
         // Notificar o montador
-        for (const app of acceptedApplications) {
-          const assemblerDataResult = await db
-            .select()
-            .from(assemblers)
-            .where(eq(assemblers.id, app.assemblerId));
-          
-          if (assemblerDataResult.length > 0) {
-            // Enviar notificação para o montador
-            sendNotification(assemblerDataResult[0].userId, {
-              type: 'new_message',
-              serviceId,
-              message: `Nova mensagem da loja no serviço "${service.title}"`,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-      } else if (sender.userType === 'montador' && assembler) {
+        console.log(`[notifyNewMessage] Enviando notificação para o montador (userId: ${assemblerUserId})`);
+        
+        const notificationSent = sendNotification(assemblerUserId, {
+          type: 'new_message',
+          serviceId,
+          message: `Nova mensagem da loja no serviço "${service.title}"`,
+          timestamp: new Date().toISOString()
+        });
+        
+        console.log(`[notifyNewMessage] Notificação para montador ${notificationSent ? 'enviada' : 'falhou'}`);
+      } else if (sender.userType === 'montador') {
         // Notificar o lojista
-        sendNotification(storeResult[0].userId, {
+        console.log(`[notifyNewMessage] Enviando notificação para o lojista (userId: ${storeUserId})`);
+        
+        const notificationSent = sendNotification(storeUserId, {
           type: 'new_message',
           serviceId,
           message: `Nova mensagem do montador ${sender.name} no serviço "${service.title}"`,
           timestamp: new Date().toISOString()
         });
+        
+        console.log(`[notifyNewMessage] Notificação para lojista ${notificationSent ? 'enviada' : 'falhou'}`);
       }
     } catch (error) {
-      console.error('Erro ao enviar notificação de nova mensagem:', error);
+      console.error('[notifyNewMessage] Erro ao enviar notificação de nova mensagem:', error);
     }
   };
   
