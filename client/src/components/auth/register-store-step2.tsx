@@ -82,6 +82,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
         logoUrl,
         userType: 'lojista',
         username: step1Data.email,
+        email: step1Data.email, // Adicionando campo email requerido pelo backend
       };
 
       // Registrar no backend

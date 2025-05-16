@@ -88,6 +88,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         termsAgreed: data.termsAgreed,
         userType: 'montador',
         username: step1Data.email,
+        email: step1Data.email, // Adicionando campo email requerido pelo backend
       };
 
       // Registrar no backend
