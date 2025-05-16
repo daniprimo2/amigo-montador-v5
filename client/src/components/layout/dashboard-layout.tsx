@@ -147,7 +147,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Logo size="sm" className="text-white" />
           </div>
           <div className="flex items-center space-x-4">
-            <button className="text-white relative">
+            <button 
+              className="text-white relative"
+              onClick={() => handleTabChange('chat')} 
+              title="Ir para o chat"
+            >
               <Bell className="h-5 w-5" />
               {hasUnreadMessage && (
                 <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
