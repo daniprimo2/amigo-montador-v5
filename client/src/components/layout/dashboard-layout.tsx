@@ -74,7 +74,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="relative">
         <MessageSquare className="h-5 w-5" />
         {hasUnreadMessage && (
-          <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
         )}
       </div>
       <span className="text-xs mt-1">Chat</span>
@@ -154,7 +154,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             >
               <Bell className="h-5 w-5" />
               {hasUnreadMessage && (
-                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3"></span>
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
               )}
             </button>
             <button 
