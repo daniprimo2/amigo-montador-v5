@@ -732,6 +732,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Obter perfil de um usuário específico (para o chat)
+  app.get("/api/users/:userId/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
+      // Buscar usuário pelo ID
+      const userResult = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+        
+      if (userResult.length === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      const user = userResult[0];
+      const userType = user.userType;
+      
+      // Remover a senha dos dados retornados
+      const { password, ...userDataWithoutPassword } = user;
+      let profileData = { ...userDataWithoutPassword };
+      
+      // Adicionar dados específicos com base no tipo de usuário
+      if (userType === 'lojista') {
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          profileData.store = store;
+        }
+      } else if (userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          profileData.assembler = assembler;
+        }
+      }
+      
+      res.json(profileData);
+    } catch (error) {
+      console.error("Erro ao buscar perfil do usuário:", error);
+      res.status(500).json({ message: "Erro ao buscar perfil do usuário" });
+    }
+  });
+  
   // Atualizar perfil do usuário
   app.patch("/api/profile", async (req, res) => {
     try {
