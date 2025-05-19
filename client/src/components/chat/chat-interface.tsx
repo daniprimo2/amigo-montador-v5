@@ -5,10 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
 
 interface ChatInterfaceProps {
   serviceId: number;
@@ -27,12 +34,36 @@ interface Message {
   };
 }
 
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  userType: string;
+  store?: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+  };
+  assembler?: {
+    specialties: string[];
+    experience: string;
+    description: string;
+    availability: string;
+  };
+}
+
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Buscar mensagens do chat
@@ -129,6 +160,49 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
     markMessagesAsRead();
   }, [serviceId, queryClient]);
   
+  // Buscar perfil do usuário selecionado
+  const fetchUserProfile = async (userId: number) => {
+    if (userId === user?.id) {
+      // Se for o próprio usuário, não precisamos buscar do servidor
+      setUserProfile({
+        id: user.id,
+        name: user.name,
+        email: user.email || '',
+        phone: user.phone || '',
+        userType: user.userType
+      });
+      return;
+    }
+    
+    try {
+      setIsLoadingProfile(true);
+      const response = await fetch(`/api/users/${userId}/profile`);
+      
+      if (!response.ok) {
+        throw new Error('Falha ao buscar perfil do usuário');
+      }
+      
+      const data = await response.json();
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar o perfil do usuário. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+  
+  // Abrir diálogo de perfil
+  const handleOpenProfile = (userId: number) => {
+    setSelectedUserId(userId);
+    fetchUserProfile(userId);
+    setIsProfileDialogOpen(true);
+  };
+  
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -211,7 +285,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
                       isCurrentUser ? 'bg-primary text-white' : 'bg-white shadow-sm'
                     }`}
                   >
-                    <div className="text-xs font-medium mb-1">
+                    <div 
+                      className={`text-xs font-medium mb-1 ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
+                      onClick={() => !isCurrentUser && handleOpenProfile(msg.senderId)}
+                    >
                       {isCurrentUser ? 'Você' : msg.sender?.name || 'Usuário'}
                     </div>
                     <div className="break-words whitespace-pre-wrap">{msg.content}</div>
@@ -267,6 +344,102 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
           amount={service?.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
         />
       )}
+      
+      {/* Modal de perfil do usuário */}
+      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Perfil do Usuário</DialogTitle>
+            <DialogDescription>
+              Informações de contato e detalhes do usuário
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-4">
+            {isLoadingProfile ? (
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-5 w-3/4" />
+              </div>
+            ) : userProfile ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-12 w-12 text-primary" />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Nome</h3>
+                    <p className="text-base">{userProfile.name}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                    <p className="text-base">{userProfile.email || "-"}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                    <p className="text-base">{userProfile.phone || "-"}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Tipo de Usuário</h3>
+                    <p className="text-base capitalize">{userProfile.userType === 'lojista' ? 'Lojista' : 'Montador'}</p>
+                  </div>
+                  
+                  {userProfile.userType === 'lojista' && userProfile.store && (
+                    <>
+                      <div className="pt-2 border-t">
+                        <h3 className="text-sm font-medium text-gray-500">Nome da Loja</h3>
+                        <p className="text-base">{userProfile.store.name}</p>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Endereço</h3>
+                        <p className="text-base">
+                          {userProfile.store.address}, {userProfile.store.city} - {userProfile.store.state}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {userProfile.userType === 'montador' && userProfile.assembler && (
+                    <>
+                      <div className="pt-2 border-t">
+                        <h3 className="text-sm font-medium text-gray-500">Especialidades</h3>
+                        <p className="text-base">
+                          {userProfile.assembler.specialties.join(', ')}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Experiência</h3>
+                        <p className="text-base">{userProfile.assembler.experience}</p>
+                      </div>
+                      
+                      {userProfile.assembler.description && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
+                          <p className="text-base">{userProfile.assembler.description}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500">Não foi possível carregar as informações do usuário.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
