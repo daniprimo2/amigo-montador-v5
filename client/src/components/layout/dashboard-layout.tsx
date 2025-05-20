@@ -76,13 +76,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'calendar' | 'explore') => {
     setActiveTab(tab);
     
-    // Navigate back to the appropriate dashboard page if on a different route
-    if (userType === 'lojista') {
-      navigate('/lojista');
-    } else {
-      navigate('/montador');
-    }
-
+    // Não navega para outra rota, apenas emite o evento para mudar a aba
+    // Isso garante que o estado do componente filho (incluindo o chat) seja preservado
+    
     // We'll pass the active tab to child components through a custom event
     const event = new CustomEvent('dashboard-tab-change', { detail: { tab } });
     window.dispatchEvent(event);

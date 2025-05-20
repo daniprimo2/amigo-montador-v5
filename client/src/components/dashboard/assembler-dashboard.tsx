@@ -193,7 +193,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         setIsRatingDialogOpen(true);
         
         // Mudar para a seção de serviços concluídos
-        setActiveTab('completed');
+        setDashboardSection('home');
       }
     };
     
