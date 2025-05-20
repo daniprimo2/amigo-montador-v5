@@ -130,10 +130,18 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         description: 'O serviço foi removido permanentemente.',
       });
       
-      // Invalidar todas as queries relacionadas a serviços
-      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-pending-applications'] });
+      // Força a invalidação das queries para garantir atualização da interface
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-pending-applications'] })
+      ]);
+      
+      // Adiciona um pequeno delay para garantir que o React tenha tempo de processar a atualização
+      setTimeout(() => {
+        // Força uma nova busca (refetch) para garantir que os dados estejam atualizados
+        queryClient.refetchQueries({ queryKey: ['/api/services'] });
+      }, 100);
       
       setIsDeleting(false);
       setDeleteDialogOpen(false);
