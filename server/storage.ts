@@ -16,6 +16,7 @@ export interface IStorage {
   
   // Lojas
   getStoreByUserId(userId: number): Promise<Store | undefined>;
+  getStore(id: number): Promise<Store | undefined>;
   createStore(store: InsertStore): Promise<Store>;
   updateStore(id: number, storeData: Partial<Store>): Promise<Store>;
   
@@ -100,6 +101,11 @@ export class DatabaseStorage implements IStorage {
   // Lojas
   async getStoreByUserId(userId: number): Promise<Store | undefined> {
     const [store] = await db.select().from(stores).where(eq(stores.userId, userId));
+    return store;
+  }
+  
+  async getStore(id: number): Promise<Store | undefined> {
+    const [store] = await db.select().from(stores).where(eq(stores.id, id));
     return store;
   }
 

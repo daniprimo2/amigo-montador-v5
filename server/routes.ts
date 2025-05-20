@@ -592,6 +592,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newMessage = await storage.createMessage(messageData);
       console.log("Mensagem inicial criada:", newMessage);
       
+      // Buscar o ID do usuário lojista dono do serviço
+      const serviceStore = await storage.getStore(service.storeId);
+      if (serviceStore && serviceStore.userId) {
+        // Enviar notificação WebSocket para o lojista
+        sendNotification(serviceStore.userId, {
+          type: 'new_message',
+          serviceId,
+          message: `Nova candidatura de ${req.user.name} para o serviço "${service.title}"`,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`Notificação WebSocket enviada para o lojista ID: ${serviceStore.userId}`);
+      }
+      
       // Notificar o lojista sobre a nova candidatura
       if (global.notifyStore) {
         console.log("Enviando notificação para a loja sobre nova candidatura");
