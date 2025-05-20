@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign, User, Play, Loader2 } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
@@ -464,16 +464,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   </div>
                   
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                    <p className="text-base">{userProfile.email || "-"}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
-                    <p className="text-base">{userProfile.phone || "-"}</p>
-                  </div>
-                  
-                  <div>
                     <h3 className="text-sm font-medium text-gray-500">Tipo de Usuário</h3>
                     <p className="text-base capitalize">{userProfile.userType === 'lojista' ? 'Lojista' : 'Montador'}</p>
                   </div>
@@ -484,11 +474,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                         <h3 className="text-sm font-medium text-gray-500">Nome da Loja</h3>
                         <p className="text-base">{userProfile.store.name}</p>
                       </div>
-                      
+
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500">Endereço</h3>
+                        <h3 className="text-sm font-medium text-gray-500">Localidade</h3>
                         <p className="text-base">
-                          {userProfile.store.address}, {userProfile.store.city} - {userProfile.store.state}
+                          {userProfile.store.city} - {userProfile.store.state}
                         </p>
                       </div>
                     </>
@@ -504,16 +494,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                       </div>
                       
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500">Experiência</h3>
-                        <p className="text-base">{userProfile.assembler.experience}</p>
+                        <h3 className="text-sm font-medium text-gray-500">Avaliação</h3>
+                        <p className="text-base flex items-center">
+                          {userProfile.assembler.rating || 0}
+                          <Star className="h-4 w-4 text-yellow-500 ml-1" />
+                        </p>
                       </div>
-                      
-                      {userProfile.assembler.description && (
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
-                          <p className="text-base">{userProfile.assembler.description}</p>
-                        </div>
-                      )}
                     </>
                   )}
                 </div>
