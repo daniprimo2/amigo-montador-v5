@@ -22,7 +22,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Estado para controlar a notificação de mensagem não lida
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
   
-  // Monitorar mensagens recebidas via WebSocket
+  // Monitorar mensagens recebidas via WebSocket (através do hook)
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log('[DashboardLayout] Nova mensagem recebida via WebSocket', lastMessage);
@@ -33,6 +33,29 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
     }
   }, [lastMessage, activeTab]);
+  
+  // Ouvir eventos de notificação diretamente disparados pelo WebSocket
+  useEffect(() => {
+    const handleNotification = (event: any) => {
+      const { type, data } = event.detail;
+      console.log('[DashboardLayout] Notificação recebida via evento:', type, data);
+      
+      if (type === 'new_message' || type === 'new_application') {
+        // Se não estiver na aba de chat, marcar como mensagem não lida
+        if (activeTab !== 'chat') {
+          setHasUnreadMessage(true);
+        }
+      }
+    };
+    
+    // Adicionar ouvinte de evento
+    window.addEventListener('new-notification', handleNotification);
+    
+    // Remover ouvinte ao desmontar
+    return () => {
+      window.removeEventListener('new-notification', handleNotification);
+    };
+  }, [activeTab]);
   
   // Limpar indicador de mensagem não lida quando mudar para a aba de chat
   useEffect(() => {

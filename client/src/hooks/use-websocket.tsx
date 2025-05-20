@@ -92,8 +92,15 @@ export function useWebSocket() {
         const data = JSON.parse(event.data) as WebSocketMessage;
         debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
         
-        // Atualizar último estado da mensagem
+        // Atualizar último estado da mensagem e enviar evento de notificação
         setLastMessage(data);
+        
+        // Disparar evento global para qualquer componente que precise reagir a novas mensagens
+        // (incluindo o indicador de notificação no Bell)
+        const notificationEvent = new CustomEvent('new-notification', { 
+          detail: { type: data.type, data } 
+        });
+        window.dispatchEvent(notificationEvent);
         
         // Mostrar notificação toast e invalidar queries necessárias
         if (data.type === 'new_application') {
