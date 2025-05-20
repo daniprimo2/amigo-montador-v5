@@ -1482,5 +1482,167 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Rotas para gerenciamento de informações bancárias
+  
+  // Obter contas bancárias do usuário logado
+  app.get("/api/bank-accounts", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const bankAccounts = await storage.getBankAccountsByUserId(req.user.id);
+      res.json(bankAccounts);
+    } catch (error) {
+      console.error("Erro ao buscar contas bancárias:", error);
+      res.status(500).json({ message: "Erro ao buscar contas bancárias" });
+    }
+  });
+  
+  // Obter uma conta bancária específica
+  app.get("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const bankAccountId = parseInt(req.params.id);
+      if (isNaN(bankAccountId)) {
+        return res.status(400).json({ message: "ID de conta bancária inválido" });
+      }
+
+      const bankAccount = await storage.getBankAccountById(bankAccountId);
+      
+      if (!bankAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+      
+      // Verificar se a conta bancária pertence ao usuário logado
+      if (bankAccount.userId !== req.user.id) {
+        return res.status(403).json({ message: "Você não tem permissão para acessar esta conta bancária" });
+      }
+      
+      res.json(bankAccount);
+    } catch (error) {
+      console.error("Erro ao buscar conta bancária:", error);
+      res.status(500).json({ message: "Erro ao buscar conta bancária" });
+    }
+  });
+  
+  // Criar uma nova conta bancária
+  app.post("/api/bank-accounts", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const bankAccountData: InsertBankAccount = {
+        userId: req.user.id,
+        bankName: req.body.bankName,
+        accountType: req.body.accountType,
+        accountNumber: req.body.accountNumber,
+        agency: req.body.agency,
+        holderName: req.body.holderName,
+        holderDocumentType: req.body.holderDocumentType,
+        holderDocumentNumber: req.body.holderDocumentNumber,
+        pixKey: req.body.pixKey,
+        pixKeyType: req.body.pixKeyType
+      };
+      
+      const newBankAccount = await storage.createBankAccount(bankAccountData);
+      res.status(201).json(newBankAccount);
+    } catch (error) {
+      console.error("Erro ao criar conta bancária:", error);
+      res.status(500).json({ message: "Erro ao criar conta bancária" });
+    }
+  });
+  
+  // Atualizar uma conta bancária existente
+  app.patch("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const bankAccountId = parseInt(req.params.id);
+      if (isNaN(bankAccountId)) {
+        return res.status(400).json({ message: "ID de conta bancária inválido" });
+      }
+
+      const bankAccount = await storage.getBankAccountById(bankAccountId);
+      
+      if (!bankAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+      
+      // Verificar se a conta bancária pertence ao usuário logado
+      if (bankAccount.userId !== req.user.id) {
+        return res.status(403).json({ message: "Você não tem permissão para atualizar esta conta bancária" });
+      }
+      
+      // Campos que podem ser atualizados
+      const allowedFields = [
+        'bankName',
+        'accountType',
+        'accountNumber',
+        'agency',
+        'holderName',
+        'holderDocumentType',
+        'holderDocumentNumber',
+        'pixKey',
+        'pixKeyType'
+      ];
+      
+      const updateData: Partial<BankAccount> = {};
+      
+      allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          updateData[field as keyof BankAccount] = req.body[field];
+        }
+      });
+      
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "Nenhum campo válido para atualização" });
+      }
+      
+      const updatedBankAccount = await storage.updateBankAccount(bankAccountId, updateData);
+      res.json(updatedBankAccount);
+    } catch (error) {
+      console.error("Erro ao atualizar conta bancária:", error);
+      res.status(500).json({ message: "Erro ao atualizar conta bancária" });
+    }
+  });
+  
+  // Excluir uma conta bancária
+  app.delete("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const bankAccountId = parseInt(req.params.id);
+      if (isNaN(bankAccountId)) {
+        return res.status(400).json({ message: "ID de conta bancária inválido" });
+      }
+
+      const bankAccount = await storage.getBankAccountById(bankAccountId);
+      
+      if (!bankAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+      
+      // Verificar se a conta bancária pertence ao usuário logado
+      if (bankAccount.userId !== req.user.id) {
+        return res.status(403).json({ message: "Você não tem permissão para excluir esta conta bancária" });
+      }
+      
+      await storage.deleteBankAccount(bankAccountId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Erro ao excluir conta bancária:", error);
+      res.status(500).json({ message: "Erro ao excluir conta bancária" });
+    }
+  });
+  
   return httpServer;
 }

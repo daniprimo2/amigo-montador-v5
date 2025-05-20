@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+import { BankAccountDialog } from '../banking/bank-account-dialog';
 
 const userSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -230,11 +231,12 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             onValueChange={setActiveTab}
             className="mt-4"
           >
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
               {user?.userType === 'lojista' && (
                 <TabsTrigger value="dados-loja">Dados da Loja</TabsTrigger>
               )}
+              <TabsTrigger value="dados-bancarios">Dados Bancários</TabsTrigger>
             </TabsList>
             
             {/* Formulário de dados pessoais */}
@@ -380,6 +382,16 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 </Form>
               </TabsContent>
             )}
+
+            {/* Seção de informações bancárias */}
+            <TabsContent value="dados-bancarios" className="mt-4">
+              {user && (
+                <BankAccountDialog 
+                  userId={user.id} 
+                  userType={user.userType as 'lojista' | 'montador'} 
+                />
+              )}
+            </TabsContent>
           </Tabs>
         )}
       </DialogContent>
