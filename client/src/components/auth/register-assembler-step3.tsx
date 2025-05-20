@@ -5,10 +5,13 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FileUpload from '../ui/file-upload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
+import { bankAccountSchema } from '@/lib/bank-account-schema';
 
 const assemblerStep3Schema = z.object({
   identityFront: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
@@ -21,6 +24,16 @@ const assemblerStep3Schema = z.object({
     message: "Upload obrigatório do comprovante de residência"
   }),
   certificates: z.any().optional(),
+  // Dados bancários
+  bankName: bankAccountSchema.shape.bankName,
+  accountType: bankAccountSchema.shape.accountType,
+  accountNumber: bankAccountSchema.shape.accountNumber,
+  agency: bankAccountSchema.shape.agency,
+  holderName: bankAccountSchema.shape.holderName,
+  holderDocumentType: bankAccountSchema.shape.holderDocumentType,
+  holderDocumentNumber: bankAccountSchema.shape.holderDocumentNumber,
+  pixKey: bankAccountSchema.shape.pixKey,
+  pixKeyType: bankAccountSchema.shape.pixKeyType,
   termsAgreed: z.boolean().refine(val => val === true, {
     message: "Você deve concordar com os termos de serviço",
   }),
@@ -55,6 +68,16 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
     resolver: zodResolver(assemblerStep3Schema),
     defaultValues: {
       termsAgreed: false,
+      // Dados bancários
+      bankName: '',
+      accountType: 'corrente',
+      accountNumber: '',
+      agency: '',
+      holderName: '',
+      holderDocumentType: 'cpf',
+      holderDocumentNumber: '',
+      pixKey: '',
+      pixKeyType: undefined,
       ...defaultValues,
     },
   });
@@ -86,6 +109,16 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         ...step2Data,
         documents: documentUrls,
         termsAgreed: data.termsAgreed,
+        // Dados bancários
+        bankName: data.bankName,
+        accountType: data.accountType,
+        accountNumber: data.accountNumber,
+        agency: data.agency,
+        holderName: data.holderName,
+        holderDocumentType: data.holderDocumentType,
+        holderDocumentNumber: data.holderDocumentNumber,
+        pixKey: data.pixKey,
+        pixKeyType: data.pixKeyType,
         userType: 'montador',
         username: step1Data.email,
         email: step1Data.email, // Adicionando campo email requerido pelo backend
@@ -191,11 +224,193 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
             />
           </div>
           
+          <h3 className="text-lg font-semibold mt-8 mb-4">Informações Bancárias</h3>
+          <p className="text-sm text-gray-500 mb-6">Preencha os dados da sua conta bancária para receber pagamentos.</p>
+          
+          <FormField
+            control={form.control}
+            name="bankName"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>Nome do Banco</FormLabel>
+                <FormControl>
+                  <Input placeholder="Exemplo: Banco do Brasil" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Conta</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="corrente">Conta Corrente</SelectItem>
+                      <SelectItem value="poupança">Conta Poupança</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="agency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Agência</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Exemplo: 1234" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número da Conta</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Exemplo: 12345-6" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="holderName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Titular</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome completo do titular" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="holderDocumentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Documento</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="holderDocumentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do Documento</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="pixKeyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Chave PIX (opcional)</FormLabel>
+                  <Select
+                    value={field.value || ''}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="telefone">Telefone</SelectItem>
+                      <SelectItem value="aleatória">Chave Aleatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
+              <FormField
+                control={form.control}
+                name="pixKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Chave PIX</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={`Digite sua chave ${form.watch('pixKeyType')}`} 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+          
           <FormField
             control={form.control}
             name="termsAgreed"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
                 <FormControl>
                   <Checkbox
                     checked={field.value}

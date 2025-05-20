@@ -102,6 +102,16 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
         zipCode: data.zipCode,
         neighborhood: data.neighborhood,
         logoUrl,
+        // Dados bancários
+        bankName: data.bankName,
+        accountType: data.accountType,
+        accountNumber: data.accountNumber,
+        agency: data.agency,
+        holderName: data.holderName,
+        holderDocumentType: data.holderDocumentType,
+        holderDocumentNumber: data.holderDocumentNumber,
+        pixKey: data.pixKey,
+        pixKeyType: data.pixKeyType,
         userType: 'lojista',
         username: step1Data.email,
         email: step1Data.email, // Adicionando campo email requerido pelo backend
@@ -465,7 +475,189 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
             )}
           </div>
           
-          <div className="flex gap-4">
+          <h3 className="text-lg font-semibold mt-8 mb-4">Informações Bancárias</h3>
+          <p className="text-sm text-gray-500 mb-6">Preencha os dados da sua conta bancária para receber pagamentos.</p>
+          
+          <FormField
+            control={form.control}
+            name="bankName"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>Nome do Banco</FormLabel>
+                <FormControl>
+                  <Input placeholder="Exemplo: Banco do Brasil" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Conta</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="corrente">Conta Corrente</SelectItem>
+                      <SelectItem value="poupança">Conta Poupança</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="agency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Agência</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Exemplo: 1234" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número da Conta</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Exemplo: 12345-6" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="holderName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Titular</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome completo do titular" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="holderDocumentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Documento</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="holderDocumentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do Documento</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="pixKeyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Chave PIX (opcional)</FormLabel>
+                  <Select
+                    value={field.value || ''}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="telefone">Telefone</SelectItem>
+                      <SelectItem value="aleatória">Chave Aleatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
+              <FormField
+                control={form.control}
+                name="pixKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Chave PIX</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={`Digite sua chave ${form.watch('pixKeyType')}`} 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+          
+          <div className="flex gap-4 mt-8">
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               Voltar
             </Button>
