@@ -92,6 +92,22 @@ export const ratings = pgTable("ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Informações bancárias
+export const bankAccounts = pgTable("bank_accounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  bankName: text("bank_name").notNull(),
+  accountType: text("account_type").notNull(), // 'corrente' ou 'poupança'
+  accountNumber: text("account_number").notNull(),
+  agency: text("agency").notNull(),
+  holderName: text("holder_name").notNull(),
+  holderDocumentType: text("holder_document_type").notNull(), // 'cpf' ou 'cnpj'
+  holderDocumentNumber: text("holder_document_number").notNull(),
+  pixKey: text("pix_key"),
+  pixKeyType: text("pix_key_type"), // 'cpf', 'cnpj', 'email', 'telefone', 'aleatória'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schemas de inserção
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -109,6 +125,7 @@ export const insertServiceSchema = createInsertSchema(services);
 export const insertApplicationSchema = createInsertSchema(applications);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertRatingSchema = createInsertSchema(ratings);
+export const insertBankAccountSchema = createInsertSchema(bankAccounts);
 
 // Tipos de inserção
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -118,6 +135,7 @@ export type InsertService = z.infer<typeof insertServiceSchema>;
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
+export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;
 
 // Tipos de seleção
 export type User = typeof users.$inferSelect;
@@ -127,3 +145,4 @@ export type Service = typeof services.$inferSelect;
 export type Application = typeof applications.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
+export type BankAccount = typeof bankAccounts.$inferSelect;
