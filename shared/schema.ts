@@ -76,7 +76,6 @@ export const applications = pgTable("applications", {
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   serviceId: integer("service_id").notNull().references(() => services.id),
-  applicationId: integer("application_id").references(() => applications.id),
   senderId: integer("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   sentAt: timestamp("sent_at").defaultNow(),

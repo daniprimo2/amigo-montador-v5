@@ -19,6 +19,7 @@ import {
 
 interface ChatInterfaceProps {
   serviceId: number;
+  assemblerId?: number; // ID do montador específico para o chat (usado quando o lojista seleciona um chat específico)
   onBack: () => void;
 }
 
@@ -54,7 +55,7 @@ interface UserProfile {
   };
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assemblerId, onBack }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -121,7 +122,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
   
   // Buscar mensagens do chat
   const { data: messages = [], isLoading } = useQuery<Message[]>({
-    queryKey: [`/api/services/${serviceId}/messages`],
+    queryKey: [`/api/services/${serviceId}/messages`, assemblerId], // Incluir assemblerId na query key
+    queryFn: async () => {
+      // Construir URL com ou sem o parâmetro assemblerId
+      const url = assemblerId 
+        ? `/api/services/${serviceId}/messages?assemblerId=${assemblerId}`
+        : `/api/services/${serviceId}/messages`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Erro ao buscar mensagens');
+      }
+      return response.json();
+    },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
   });
   
