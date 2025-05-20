@@ -173,12 +173,38 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       setDashboardSection(tab);
     };
     
-    // Adiciona o listener para o evento personalizado
-    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    // Listener para evento de abrir avaliação
+    const handleOpenRatingDialog = (event: CustomEvent) => {
+      const { serviceId, serviceData } = event.detail;
+      
+      if (serviceData && serviceData.storeData) {
+        // Configurar dados para avaliação da loja pelo montador
+        setSelectedServiceForRating({
+          id: serviceData.id,
+          title: serviceData.title,
+          store: {
+            id: serviceData.storeData.id,
+            userId: serviceData.storeData.userId,
+            name: serviceData.storeData.name
+          }
+        });
+        
+        // Abrir diálogo de avaliação automaticamente
+        setIsRatingDialogOpen(true);
+        
+        // Mudar para a seção de serviços concluídos
+        setActiveTab('completed');
+      }
+    };
     
-    // Remove o listener quando o componente for desmontado
+    // Adiciona os listeners para os eventos personalizados
+    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    window.addEventListener('open-rating-dialog', handleOpenRatingDialog as EventListener);
+    
+    // Remove os listeners quando o componente for desmontado
     return () => {
       window.removeEventListener('dashboard-tab-change', handleTabChange as EventListener);
+      window.removeEventListener('open-rating-dialog', handleOpenRatingDialog as EventListener);
     };
   }, []);
   

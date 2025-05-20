@@ -121,12 +121,39 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       setDashboardSection(tab);
     };
     
-    // Adiciona o listener para o evento personalizado
-    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    // Listener para evento de abrir avaliação
+    const handleOpenRatingDialog = (event: CustomEvent) => {
+      const { serviceId, serviceData } = event.detail;
+      
+      if (serviceData && serviceData.assemblerData) {
+        // Configurar dados para avaliação do montador pelo lojista
+        setSelectedServiceForRating({
+          id: serviceData.id,
+          title: serviceData.title,
+          assembler: {
+            id: serviceData.assemblerData.id,
+            userId: serviceData.assemblerData.userId,
+            name: serviceData.assemblerData.name
+          }
+        });
+        
+        // Abrir diálogo de avaliação automaticamente
+        setIsRatingDialogOpen(true);
+        
+        // Mudar para a aba de serviços concluídos
+        setActiveTab('completed');
+        setDashboardSection('services');
+      }
+    };
     
-    // Remove o listener quando o componente for desmontado
+    // Adiciona os listeners para os eventos personalizados
+    window.addEventListener('dashboard-tab-change', handleTabChange as EventListener);
+    window.addEventListener('open-rating-dialog', handleOpenRatingDialog as EventListener);
+    
+    // Remove os listeners quando o componente for desmontado
     return () => {
       window.removeEventListener('dashboard-tab-change', handleTabChange as EventListener);
+      window.removeEventListener('open-rating-dialog', handleOpenRatingDialog as EventListener);
     };
   }, []);
   

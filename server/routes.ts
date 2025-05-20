@@ -1718,13 +1718,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const assembler = await storage.getAssemblerById(assemblerId);
         
         if (assembler) {
-          // Notificar o montador via WebSocket
-          sendNotification(assembler.userId, {
-            type: 'service_completed',
-            serviceId,
-            message: `O serviço "${service.title}" foi finalizado. Aguardando avaliação.`,
-            timestamp: new Date().toISOString()
-          });
+          // Preparar dados do serviço para enviar na notificação
+          const assemblerUser = await storage.getUser(assembler.userId);
+          
+          if (assemblerUser && store) {
+            const serviceInfo = {
+              id: service.id,
+              title: service.title,
+              storeData: {
+                id: store.id,
+                userId: store.userId,
+                name: req.user!.name
+              },
+              assemblerData: {
+                id: assemblerId,
+                userId: assembler.userId,
+                name: assemblerUser.name
+              }
+            };
+            
+            // Notificar o lojista (usuário atual)
+            sendNotification(Number(req.user!.id), {
+              type: 'service_completed',
+              serviceId,
+              message: `O serviço "${service.title}" foi finalizado. Por favor, avalie o montador.`,
+              serviceData: serviceInfo,
+              timestamp: new Date().toISOString()
+            });
+            
+            // Notificar o montador
+            sendNotification(Number(assembler.userId), {
+              type: 'service_completed',
+              serviceId,
+              message: `O serviço "${service.title}" foi finalizado. Por favor, avalie a loja.`,
+              serviceData: serviceInfo,
+              timestamp: new Date().toISOString()
+            });
+            
+            console.log(`Notificações de avaliação enviadas para loja (${req.user!.id}) e montador (${assembler.userId})`);
+          }
         }
       }
       
