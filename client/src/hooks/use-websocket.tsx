@@ -10,10 +10,11 @@ const debugLogger = (context: string, message: string, data?: any) => {
 };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted';
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed';
   message: string;
   serviceId?: number;
   timestamp?: string;
+  serviceData?: any; // Para carregar informações do serviço quando necessário
 };
 
 // Função para tocar som de notificação
@@ -170,6 +171,43 @@ export function useWebSocket() {
           });
           
           debugLogger('WebSocket', 'Notificação de candidatura aceita processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
+          });
+        } else if (data.type === 'service_completed') {
+          debugLogger('WebSocket', 'Processando notificação de serviço finalizado', {
+            serviceId: data.serviceId,
+            serviceData: data.serviceData
+          });
+          
+          // Tocar som de notificação
+          playNotificationSound();
+          
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          
+          // Disparar evento para abrir tela de avaliação
+          if (data.serviceId && data.serviceData) {
+            // Criar e disparar evento personalizado para abertura do diálogo de avaliação
+            const ratingEvent = new CustomEvent('open-rating-dialog', { 
+              detail: { 
+                serviceId: data.serviceId,
+                serviceData: data.serviceData
+              } 
+            });
+            window.dispatchEvent(ratingEvent);
+          }
+          
+          // Mostrar notificação com estilo personalizado
+          toast({
+            title: '🌟 Serviço finalizado!',
+            description: 'Por favor, avalie sua experiência.',
+            duration: 10000,
+            variant: 'default',
+            className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+          });
+          
+          debugLogger('WebSocket', 'Notificação de serviço finalizado processada com sucesso', {
             message: data.message,
             serviceId: data.serviceId
           });

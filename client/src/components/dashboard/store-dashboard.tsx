@@ -189,6 +189,37 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             duration: 5000
           });
         }
+      } else if (lastMessage.type === 'service_completed') {
+        console.log("[StoreDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
+        
+        // Atualizar todas as listas de serviços
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        
+        // Se houver dados do serviço, abrir diálogo de avaliação
+        if (lastMessage.serviceId && lastMessage.serviceData) {
+          const service = lastMessage.serviceData;
+          const assemblerData = service.assemblerData;
+          
+          if (assemblerData) {
+            // Configurar dados para avaliação do montador pelo lojista
+            setSelectedServiceForRating({
+              id: service.id,
+              title: service.title,
+              assembler: {
+                id: assemblerData.id,
+                userId: assemblerData.userId,
+                name: assemblerData.name
+              }
+            });
+            
+            // Abrir diálogo de avaliação automaticamente
+            setIsRatingDialogOpen(true);
+            
+            // Mudar para a aba de serviços concluídos para mostrar o contexto
+            setActiveTab('completed');
+            setDashboardSection('services');
+          }
+        }
       }
     }
   }, [lastMessage, dashboardSection, queryClient, toast]);
