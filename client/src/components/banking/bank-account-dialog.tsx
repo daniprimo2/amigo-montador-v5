@@ -448,7 +448,7 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Nenhuma</SelectItem>
+                          <SelectItem value="nenhuma">Nenhuma</SelectItem>
                           <SelectItem value="cpf">CPF</SelectItem>
                           <SelectItem value="cnpj">CNPJ</SelectItem>
                           <SelectItem value="email">E-mail</SelectItem>
@@ -461,7 +461,7 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                   )}
                 />
                 
-                {form.watch('pixKeyType') && (
+                {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
                   <FormField
                     control={form.control}
                     name="pixKey"
