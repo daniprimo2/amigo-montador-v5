@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (serviceStore && serviceStore.userId) {
         // Enviar notificação WebSocket para o lojista
         sendNotification(serviceStore.userId, {
-          type: 'new_message',
+          type: 'new_application',
           serviceId,
           message: `Nova candidatura de ${req.user.name} para o serviço "${service.title}"`,
           timestamp: new Date().toISOString()
@@ -1161,15 +1161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }));
   });
   
-  // Função para enviar notificação para um usuário
-  const sendNotification = (userId: number, data: any) => {
-    const client = clients.get(userId);
-    if (client && client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(data));
-      return true;
-    }
-    return false;
-  };
+  // (Antiga segunda função removida)
   
   // Função para enviar notificação para o lojista quando um montador se candidatar
   global.notifyStore = async (serviceId: number, montadorId: number, mensagem: string) => {
