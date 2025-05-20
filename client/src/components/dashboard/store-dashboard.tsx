@@ -741,7 +741,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     
     return (
       <div className="mt-2">
-        <h3 className="text-lg font-semibold mb-4">Conversas por Montador</h3>
+        <h3 className="text-lg font-semibold mb-4">Conversas por Serviço</h3>
         
         {isLoadingActiveServices ? (
           <div className="space-y-3">
@@ -752,48 +752,37 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               </div>
             ))}
           </div>
-        ) : assemblerChatGroups.length > 0 ? (
-          <div className="space-y-6">
-            {assemblerChatGroups.map((assembler) => (
-              <div key={assembler.id} className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
-                    <h4 className="font-medium">{assembler.name}</h4>
-                  </div>
-                  {assembler.hasNewMessages && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                      Nova mensagem
-                    </span>
-                  )}
-                </div>
-                <div className="divide-y">
-                  {assembler.services.map((service: any) => (
-                    <div 
-                      key={service.id} 
-                      className="p-4 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => setSelectedChatService(service.id)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">{service.title}</h4>
-                          <p className="text-sm text-gray-500">
-                            {service.status === 'open' ? 'Aguardando início' : 
-                             service.status === 'in-progress' ? 'Em andamento' : 
-                             service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
-                          </p>
-                        </div>
-                        {service.hasNewMessages ? (
-                          <div className="relative">
-                            <MessageSquare className="h-5 w-5 text-primary" />
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
-                          </div>
-                        ) : (
-                          <MessageSquare className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
+        ) : servicesWithChat.length > 0 ? (
+          <div className="space-y-4">
+            {servicesWithChat.map((service) => (
+              <div 
+                key={service.id} 
+                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => setSelectedChatService(service.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{service.title}</h4>
+                    <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>Montador: {service.assemblerName}</span>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {service.status === 'open' ? 'Aguardando início' : 
+                         service.status === 'in-progress' ? 'Em andamento' : 
+                         service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                  {service.hasNewMessages ? (
+                    <div className="relative ml-3">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+                    </div>
+                  ) : (
+                    <MessageSquare className="h-5 w-5 text-gray-400 ml-3" />
+                  )}
                 </div>
               </div>
             ))}
