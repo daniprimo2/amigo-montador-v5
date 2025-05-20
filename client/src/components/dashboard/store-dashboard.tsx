@@ -707,46 +707,25 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   });
   
   // Organizar serviços por montador
-  const assemblerChatGroups = React.useMemo(() => {
+  // Transformar os serviços ativos diretamente em uma lista para mostrar na interface
+  // sem agrupamento por montador, cada serviço terá seu próprio chat
+  const servicesWithChat = React.useMemo(() => {
     if (!activeServices) return [];
     
-    // Criar um mapa para agrupar serviços por montador
-    const assemblerMap = new Map<number, { 
-      id: number, 
-      name: string, 
-      services: Array<any>,
-      hasNewMessages: boolean 
-    }>();
-    
-    activeServices.forEach((service: any) => {
+    return activeServices.map((service: any) => {
       // Verificar se o serviço tem um montador atribuído
       if (service.assembler && service.assembler.id) {
-        const assemblerId = service.assembler.id;
-        
-        // Se o montador já existe no mapa, adicionar o serviço à sua lista
-        if (assemblerMap.has(assemblerId)) {
-          const assemblerData = assemblerMap.get(assemblerId);
-          if (assemblerData) {
-            assemblerData.services.push(service);
-            // Atualizar flag de novas mensagens se qualquer serviço tiver mensagens novas
-            if (service.hasNewMessages) {
-              assemblerData.hasNewMessages = true;
-            }
-          }
-        } else {
-          // Se o montador não existe, criar uma nova entrada
-          assemblerMap.set(assemblerId, {
-            id: assemblerId,
-            name: service.assembler.name,
-            services: [service],
-            hasNewMessages: service.hasNewMessages || false
-          });
-        }
+        return {
+          id: service.id,
+          title: service.title,
+          status: service.status,
+          assemblerName: service.assembler.name, 
+          assemblerId: service.assembler.id,
+          hasNewMessages: service.hasNewMessages || false
+        };
       }
-    });
-    
-    // Converter o mapa em array para renderização
-    return Array.from(assemblerMap.values());
+      return null;
+    }).filter(Boolean); // Remover itens null
   }, [activeServices]);
 
   const renderChatSection = () => {
