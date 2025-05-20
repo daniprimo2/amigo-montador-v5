@@ -312,7 +312,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
                 {startServiceMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 rotate-180" />
                 )}
                 Em Andamento
               </Button>
