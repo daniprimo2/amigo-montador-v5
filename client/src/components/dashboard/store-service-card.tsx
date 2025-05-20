@@ -227,16 +227,14 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Tem certeza que deseja excluir este serviço?</AlertDialogTitle>
             <AlertDialogDescription>
-              <div className="flex flex-col space-y-2">
-                <p>Esta ação não pode ser desfeita. O serviço será excluído permanentemente.</p>
-                <div className="bg-amber-50 p-2 rounded-md border border-amber-200 flex items-start mt-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800">
-                    Apenas serviços em aberto podem ser excluídos. Serviços em andamento ou finalizados não podem ser removidos.
-                  </p>
-                </div>
-              </div>
+              Esta ação não pode ser desfeita. O serviço será excluído permanentemente.
             </AlertDialogDescription>
+            <div className="mt-4 bg-amber-50 p-2 rounded-md border border-amber-200 flex items-start">
+              <AlertTriangle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
+              <span className="text-sm text-amber-800">
+                Apenas serviços em aberto podem ser excluídos. Serviços em andamento ou finalizados não podem ser removidos.
+              </span>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

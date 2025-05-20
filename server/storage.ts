@@ -309,10 +309,37 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`Não é possível excluir um serviço que está ${service.status === 'in-progress' ? 'em andamento' : 'concluído'}`);
     }
     
-    // Deletar o serviço
-    await db
-      .delete(services)
-      .where(eq(services.id, id));
+    try {
+      // Excluir candidaturas associadas ao serviço
+      const deleteApplicationsResult = await db
+        .delete(applications)
+        .where(eq(applications.serviceId, id));
+      console.log(`Candidaturas excluídas para o serviço ${id}`);
+      
+      // Excluir mensagens associadas ao serviço
+      const deleteMessagesResult = await db
+        .delete(messages)
+        .where(eq(messages.serviceId, id));
+      console.log(`Mensagens excluídas para o serviço ${id}`);
+      
+      // Exclusão de avaliações relacionadas a este serviço, se houver
+      const deleteRatingsResult = await db
+        .delete(ratings)
+        .where(eq(ratings.serviceId, id));
+      console.log(`Avaliações excluídas para o serviço ${id}`);
+        
+      // Finalmente, excluir o serviço
+      const deleteServiceResult = await db
+        .delete(services)
+        .where(eq(services.id, id));
+        
+      console.log(`Serviço ID ${id} excluído com sucesso junto com seus relacionamentos`);
+    } catch (error) {
+      console.error(`Erro ao excluir serviço ID ${id}:`, error);
+      // Usando casting para acessar a propriedade message do erro
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      throw new Error(`Erro ao excluir serviço: ${errorMessage}`);
+    }
   }
   
   // Candidaturas
