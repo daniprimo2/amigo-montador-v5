@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, not, isNotNull } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, users, ratings, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating } from "@shared/schema";
+import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 
 // Declarar as funções globais de notificação

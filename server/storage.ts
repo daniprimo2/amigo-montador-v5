@@ -333,6 +333,46 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return rating;
   }
+
+  // Informações bancárias
+  async getBankAccountsByUserId(userId: number): Promise<BankAccount[]> {
+    return await db
+      .select()
+      .from(bankAccounts)
+      .where(eq(bankAccounts.userId, userId))
+      .orderBy(desc(bankAccounts.createdAt));
+  }
+
+  async getBankAccountById(id: number): Promise<BankAccount | undefined> {
+    const [bankAccount] = await db
+      .select()
+      .from(bankAccounts)
+      .where(eq(bankAccounts.id, id));
+    return bankAccount;
+  }
+
+  async createBankAccount(bankAccountData: InsertBankAccount): Promise<BankAccount> {
+    const [bankAccount] = await db
+      .insert(bankAccounts)
+      .values(bankAccountData)
+      .returning();
+    return bankAccount;
+  }
+
+  async updateBankAccount(id: number, bankAccountData: Partial<BankAccount>): Promise<BankAccount> {
+    const [updatedBankAccount] = await db
+      .update(bankAccounts)
+      .set(bankAccountData)
+      .where(eq(bankAccounts.id, id))
+      .returning();
+    return updatedBankAccount;
+  }
+
+  async deleteBankAccount(id: number): Promise<void> {
+    await db
+      .delete(bankAccounts)
+      .where(eq(bankAccounts.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();
