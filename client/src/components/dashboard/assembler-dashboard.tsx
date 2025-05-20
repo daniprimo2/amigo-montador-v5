@@ -205,10 +205,31 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     onSuccess: (data) => {
       console.log("Candidatura enviada com sucesso:", data);
       
+      // Extrair o ID do serviço da resposta
+      const serviceId = data.application?.serviceId;
+      console.log(`Candidatura aceita para serviço ID: ${serviceId}`);
+      
       // Refresh services list
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
       
-      // Sem toast aqui, pois já mostramos no componente
+      // Atualizar o estado para abrir o chat automaticamente
+      if (serviceId) {
+        // Esperar um momento para a UI atualizar
+        setTimeout(() => {
+          // Definir o serviço selecionado para o chat
+          setSelectedChatService(serviceId);
+          
+          // Mudar para a seção de chat
+          setDashboardSection('chat');
+          
+          toast({
+            title: "Candidatura enviada",
+            description: "Chat aberto automaticamente para comunicação com a loja",
+            duration: 5000
+          });
+        }, 500);
+      }
     },
     onError: (error: any) => {
       console.error("Erro completo ao candidatar-se:", error);
