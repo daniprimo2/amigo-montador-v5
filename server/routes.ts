@@ -718,11 +718,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .limit(1);
           
         if (assemblerApp.length > 0) {
-          // Notificar a loja e o montador sobre a finalização
-          const notifyMessage = "Serviço finalizado com sucesso! Pagamento confirmado.";
+          // Buscar dados completos do serviço com detalhes da loja e montador para enviar nas notificações
+          const serviceData = await storage.getServiceById(serviceId);
+          const assemblerId = assemblerApp[0].assemblerId;
+          const assemblerData = await storage.getAssemblerById(assemblerId);
+          const storeData = await storage.getStore(serviceData.storeId);
           
-          if (global.notifyStore) {
-            await global.notifyStore(serviceId, assemblerApp[0].assemblerId, notifyMessage);
+          // Buscar usuários para obter IDs para as notificações WebSocket
+          const assemblerUser = assemblerData ? await storage.getUser(assemblerData.userId) : null;
+          const storeUser = storeData ? await storage.getUser(storeData.userId) : null;
+          
+          if (assemblerUser && storeUser && serviceData) {
+            // Preparar dados do serviço para enviar na notificação
+            const serviceInfo = {
+              id: serviceData.id,
+              title: serviceData.title,
+              storeData: {
+                id: storeData.id, 
+                userId: storeData.userId,
+                name: storeUser.name
+              },
+              assemblerData: {
+                id: assemblerId,
+                userId: assemblerData.userId,
+                name: assemblerUser.name
+              }
+            };
+            
+            // Notificar a loja sobre finalização e avaliação
+            const notifyMessage = "Serviço finalizado com sucesso! Por favor, avalie o montador.";
+            
+            // Enviar para a loja
+            const storeWs = clients.get(storeUser.id.toString());
+            if (storeWs) {
+              storeWs.send(JSON.stringify({
+                type: 'service_completed',
+                message: notifyMessage,
+                serviceId: serviceData.id,
+                serviceData: serviceInfo,
+                timestamp: new Date().toISOString()
+              }));
+            }
+            
+            // Enviar para o montador
+            const assemblerWs = clients.get(assemblerUser.id.toString());
+            if (assemblerWs) {
+              assemblerWs.send(JSON.stringify({
+                type: 'service_completed',
+                message: "Serviço finalizado com sucesso! Por favor, avalie a loja.",
+                serviceId: serviceData.id,
+                serviceData: serviceInfo,
+                timestamp: new Date().toISOString()
+              }));
+            }
+            
+            console.log(`Notificações de avaliação enviadas para loja (${storeUser.id}) e montador (${assemblerUser.id})`);
           }
         }
       } catch (notifyError) {

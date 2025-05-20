@@ -113,16 +113,58 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Reagir a mensagens de WebSocket
   useEffect(() => {
-    if (lastMessage && lastMessage.type === 'application_accepted') {
-      // Isso poderia mudar automaticamente para a seção de chat
+    if (!lastMessage) return;
+    
+    if (lastMessage.type === 'application_accepted') {
+      // Isso muda automaticamente para a seção de chat
       setDashboardSection('chat');
       
       console.log("[AssemblerDashboard] Candidatura aceita! Atualizando interface...");
       
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    } 
+    else if (lastMessage.type === 'service_completed') {
+      console.log("[AssemblerDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
+      
+      // Atualizar todas as listas de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      
+      // Se houver dados do serviço, abrir diálogo de avaliação
+      if (lastMessage.serviceId && lastMessage.serviceData) {
+        const service = lastMessage.serviceData;
+        const storeData = service.storeData;
+        
+        if (storeData) {
+          // Configurar dados para avaliação da loja pelo montador
+          setSelectedServiceForRating({
+            id: service.id,
+            title: service.title,
+            store: {
+              id: storeData.id,
+              userId: storeData.userId,
+              name: storeData.name
+            }
+          });
+          
+          // Abrir diálogo de avaliação automaticamente
+          setIsRatingDialogOpen(true);
+          
+          // Mudar para a seção inicial e mostrar serviços concluídos para contexto
+          setDashboardSection('home');
+          
+          toast({
+            title: '🌟 Serviço finalizado!',
+            description: 'Por favor, avalie sua experiência com a loja.',
+            duration: 10000,
+            variant: 'default',
+            className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+          });
+        }
+      }
     }
-  }, [lastMessage, queryClient]);
+  }, [lastMessage, queryClient, toast]);
   
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {
