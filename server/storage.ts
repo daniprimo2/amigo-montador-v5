@@ -32,6 +32,7 @@ export interface IStorage {
   getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
   updateServiceStatus(id: number, status: string): Promise<Service>;
+  deleteService(id: number): Promise<void>;
   
   // Candidaturas
   getApplicationById(id: number): Promise<Application | undefined>;
@@ -294,6 +295,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(services.id, id))
       .returning();
     return updatedService;
+  }
+  
+  async deleteService(id: number): Promise<void> {
+    // Verificar se o serviço existe
+    const service = await this.getServiceById(id);
+    if (!service) {
+      throw new Error(`Serviço com ID ${id} não encontrado`);
+    }
+    
+    // Se o serviço estiver em andamento ou concluído, não permitir exclusão
+    if (service.status === 'in-progress' || service.status === 'completed') {
+      throw new Error(`Não é possível excluir um serviço que está ${service.status === 'in-progress' ? 'em andamento' : 'concluído'}`);
+    }
+    
+    // Deletar o serviço
+    await db
+      .delete(services)
+      .where(eq(services.id, id));
   }
   
   // Candidaturas

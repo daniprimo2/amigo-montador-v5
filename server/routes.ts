@@ -623,6 +623,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Excluir serviço (apenas lojistas)
+  app.delete("/api/services/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+      
+      // Verificar se é lojista
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem excluir serviços" });
+      }
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se o lojista é dono do serviço
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a excluir este serviço" });
+      }
+      
+      // Excluir serviço
+      await storage.deleteService(serviceId);
+      
+      res.status(200).json({ message: "Serviço excluído com sucesso" });
+    } catch (error: any) {
+      console.error("Erro ao excluir serviço:", error);
+      res.status(500).json({ message: error.message || "Erro ao excluir serviço" });
+    }
+  });
+  
   // Finalizar serviço e confirmar pagamento
   app.patch("/api/services/:id/complete", async (req, res) => {
     try {
