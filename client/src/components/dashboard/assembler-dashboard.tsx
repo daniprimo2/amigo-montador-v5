@@ -526,8 +526,20 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Estado para controlar qual serviço está selecionado para chat
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
-  // No dashboard do montador, não precisamos armazenar o ID do montador em um estado separado
-  // já que só exibimos as mensagens do próprio montador logado
+  
+  // Buscar o perfil completo do montador para obter o ID
+  const { data: profileData } = useQuery({
+    queryKey: ['/api/profile'],
+    queryFn: async () => {
+      if (!user || user.userType !== 'montador') return null;
+      const response = await fetch('/api/profile');
+      if (!response.ok) {
+        throw new Error('Falha ao buscar perfil do montador');
+      }
+      return response.json();
+    },
+    enabled: !!user && user.userType === 'montador'
+  });
   
   const renderChatSection = () => {
     return (
@@ -630,7 +642,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       return (
         <ChatInterface 
           serviceId={selectedChatService}
-          assemblerId={user?.assembler?.id} // Passa ID do montador atual 
+          assemblerId={assemblerData?.id} // Passa ID do montador atual obtido da consulta
           onBack={() => setSelectedChatService(null)} 
         />
       );
