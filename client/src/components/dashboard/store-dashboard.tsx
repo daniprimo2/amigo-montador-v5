@@ -108,6 +108,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     refetchOnWindowFocus: false
   });
   
+  // Buscar serviços com candidaturas pendentes
+  const servicesWithPendingApplicationsQuery = useQuery({
+    queryKey: ['/api/store/services/with-pending-applications'],
+    refetchOnWindowFocus: false
+  });
+  
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {
     const handleTabChange = (event: CustomEvent) => {
@@ -748,7 +754,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Combinar serviços ativos e com candidaturas pendentes para exibição na interface
   const servicesWithChat = React.useMemo(() => {
-    const result = [];
+    const result: Array<any> = [];
     
     // Adicionar serviços com candidaturas aceitas (em andamento)
     if (activeServices && activeServices.length > 0) {
