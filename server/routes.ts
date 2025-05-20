@@ -1111,6 +1111,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Armazenar conexões dos clientes
   const clients = new Map<number, WebSocket>();
   
+  // Função para enviar notificação via WebSocket
+  function sendNotification(userId: number, message: any): boolean {
+    const client = clients.get(userId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      try {
+        client.send(JSON.stringify(message));
+        console.log(`Notificação enviada para usuário ${userId}:`, message);
+        return true;
+      } catch (error) {
+        console.error(`Erro ao enviar notificação para usuário ${userId}:`, error);
+        return false;
+      }
+    } else {
+      console.log(`Usuário ${userId} não está conectado ou WebSocket não está aberto`);
+      return false;
+    }
+  }
+  
   wss.on('connection', (ws, request) => {
     console.log('Nova conexão WebSocket');
     
