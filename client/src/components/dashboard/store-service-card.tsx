@@ -148,7 +148,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </Button>
         )}
         
-        {service.status !== 'in-progress' && service.status !== 'completed' && (
+        {service.status === 'open' && (
           <div className="flex items-center">
             <span className="text-sm text-primary font-medium">
               {service.candidates} {service.candidates === 1 ? 'candidato' : 'candidatos'}
