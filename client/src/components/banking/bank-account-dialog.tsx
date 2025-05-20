@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -297,6 +297,9 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
             <DialogTitle>
               {isEditing ? 'Editar Conta Bancária' : 'Adicionar Conta Bancária'}
             </DialogTitle>
+            <DialogDescription>
+              {isEditing ? 'Atualize os dados da sua conta bancária.' : 'Preencha os dados da sua conta bancária para receber pagamentos.'}
+            </DialogDescription>
           </DialogHeader>
           
           <Form {...form}>
