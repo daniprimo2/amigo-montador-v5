@@ -526,6 +526,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Estado para controlar qual serviço está selecionado para chat
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
+  // No dashboard do montador, não precisamos armazenar o ID do montador em um estado separado
+  // já que só exibimos as mensagens do próprio montador logado
   
   const renderChatSection = () => {
     return (

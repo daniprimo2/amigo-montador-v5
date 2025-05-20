@@ -724,7 +724,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   );
 
   // Estado para o serviço de chat selecionado
+  // Estado para controlar qual serviço e montador estão selecionados para chat
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
+  const [selectedAssemblerId, setSelectedAssemblerId] = useState<number | undefined>(undefined);
   
   // Buscar serviços com candidaturas aceitas (em andamento)
   const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
@@ -806,8 +808,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (selectedChatService !== null) {
       return (
         <ChatInterface 
-          serviceId={selectedChatService} 
-          onBack={() => setSelectedChatService(null)} 
+          serviceId={selectedChatService}
+          assemblerId={selectedAssemblerId} 
+          onBack={() => {
+            setSelectedChatService(null);
+            setSelectedAssemblerId(undefined);
+          }} 
         />
       );
     }
@@ -846,7 +852,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                     <div 
                       key={`${service.id}-${service.assemblerId}`} 
                       className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors border-2 border-blue-400"
-                      onClick={() => setSelectedChatService(service.id)}
+                      onClick={() => {
+                        setSelectedChatService(service.id);
+                        setSelectedAssemblerId(service.assemblerId);
+                      }}
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex-1">
@@ -885,7 +894,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                     <div 
                       key={`${service.id}-${service.assemblerId}`} 
                       className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => setSelectedChatService(service.id)}
+                      onClick={() => {
+                        setSelectedChatService(service.id);
+                        setSelectedAssemblerId(service.assemblerId);
+                      }}
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex-1">
