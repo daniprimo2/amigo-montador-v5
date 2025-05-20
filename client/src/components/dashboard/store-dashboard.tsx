@@ -27,6 +27,7 @@ interface StoreDashboardProps {
 export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isNewServiceOpen, setIsNewServiceOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
@@ -37,43 +38,43 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Reagir a mensagens do WebSocket
   useEffect(() => {
-    if (lastMessage) {
-      console.log("[StoreDashboard] Nova mensagem recebida via WebSocket:", lastMessage);
+    if (!lastMessage) return;
+    
+    console.log("[StoreDashboard] Nova mensagem recebida via WebSocket:", lastMessage);
+    
+    if (lastMessage.type === 'new_application') {
+      console.log("[StoreDashboard] Nova candidatura recebida! Atualizando interface...", lastMessage);
       
-      if (lastMessage.type === 'new_application') {
-        console.log("[StoreDashboard] Nova candidatura recebida! Atualizando interface...", lastMessage);
+      // Invalidar queries manualmente para garantir atualização
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      
+      // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
+      if (lastMessage.serviceId) {
+        // Notificar o usuário com um toast
+        toast({
+          title: "Nova candidatura recebida!",
+          description: "Um montador se candidatou ao seu serviço. Verifique na seção de Chat.",
+          duration: 8000,
+          variant: "default",
+          className: "bg-blue-100 border-blue-500 border-2 font-medium"
+        });
         
-        // Invalidar queries manualmente para garantir atualização
-        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
-        
-        // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
-        if (lastMessage.serviceId) {
-          // Notificar o usuário com um toast
-          toast({
-            title: "Nova candidatura recebida!",
-            description: "Um montador se candidatou ao seu serviço. Verifique na seção de Chat.",
-            duration: 8000,
-            variant: "default",
-            className: "bg-blue-100 border-blue-500 border-2 font-medium"
-          });
-          
-          // Mudar para a seção de chat
-          setDashboardSection('chat');
-        }
-      } else if (lastMessage.type === 'new_message') {
-        console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-        
-        // Atualizar as listas relevantes 
-        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
-        
-        // Atualizar mensagens específicas do serviço se o ID estiver disponível
-        if (lastMessage.serviceId) {
-          queryClient.invalidateQueries({ 
-            queryKey: [`/api/services/${lastMessage.serviceId}/messages`] 
-          });
-        }
+        // Mudar para a seção de chat
+        setDashboardSection('chat');
+      }
+    } else if (lastMessage.type === 'new_message') {
+      console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
+      
+      // Atualizar as listas relevantes 
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      
+      // Atualizar mensagens específicas do serviço se o ID estiver disponível
+      if (lastMessage.serviceId) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/services/${lastMessage.serviceId}/messages`] 
+        });
       }
     }
   }, [lastMessage, queryClient, toast]);
@@ -94,7 +95,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [dateError, setDateError] = useState('');
   const [isValidatingCep, setIsValidatingCep] = useState(false);
   const [cepError, setCepError] = useState('');
-  const { toast } = useToast();
   
   // Buscar serviços da API
   const servicesQuery = useQuery({
