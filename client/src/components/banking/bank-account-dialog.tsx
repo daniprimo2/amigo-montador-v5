@@ -174,7 +174,7 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
       holderDocumentType: account.holderDocumentType as 'cpf' | 'cnpj',
       holderDocumentNumber: account.holderDocumentNumber,
       pixKey: account.pixKey || '',
-      pixKeyType: account.pixKeyType as any,
+      pixKeyType: account.pixKeyType ? account.pixKeyType as 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatória' : undefined,
     });
     setIsOpen(true);
   };
