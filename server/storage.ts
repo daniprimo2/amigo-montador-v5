@@ -175,51 +175,57 @@ export class DatabaseStorage implements IStorage {
     
     const servicesList = await query.orderBy(desc(services.createdAt));
     
-    // Para serviços em andamento (in-progress), buscar informações do montador associado
+    // Para todos os serviços, verificar se há um montador associado
     const enhancedServices = await Promise.all(servicesList.map(async (service) => {
-      if (service.status === 'in-progress') {
-        // Buscar as candidaturas aceitas para este serviço
-        const acceptedApplications = await db
-          .select()
-          .from(applications)
-          .where(
-            and(
-              eq(applications.serviceId, service.id),
-              eq(applications.status, 'accepted')
-            )
-          );
+      // Buscar candidaturas aceitas para este serviço (independente do status)
+      const acceptedApplications = await db
+        .select()
+        .from(applications)
+        .where(
+          and(
+            eq(applications.serviceId, service.id),
+            eq(applications.status, 'accepted')
+          )
+        );
+      
+      console.log(`[getServicesByStoreId] Serviço ID ${service.id} tem ${acceptedApplications.length} candidaturas aceitas`);
+      
+      // Se houver candidatura aceita, buscar dados do montador
+      if (acceptedApplications.length > 0) {
+        const assemblerId = acceptedApplications[0].assemblerId;
+        console.log(`[getServicesByStoreId] Buscando montador ID ${assemblerId}`);
         
-        // Se houver candidatura aceita, buscar dados do montador
-        if (acceptedApplications.length > 0) {
-          const assemblerId = acceptedApplications[0].assemblerId;
-          const assembler = await this.getAssemblerById(assemblerId);
+        const assembler = await this.getAssemblerById(assemblerId);
+        
+        if (assembler) {
+          console.log(`[getServicesByStoreId] Montador encontrado, user_id: ${assembler.userId}`);
           
-          if (assembler) {
-            // Buscar dados do usuário montador
-            const userResult = await db
-              .select({
-                id: users.id,
-                name: users.name
-              })
-              .from(users)
-              .where(eq(users.id, assembler.userId))
-              .limit(1);
+          // Buscar dados do usuário montador
+          const userResult = await db
+            .select({
+              id: users.id,
+              name: users.name
+            })
+            .from(users)
+            .where(eq(users.id, assembler.userId))
+            .limit(1);
+          
+          if (userResult.length > 0) {
+            console.log(`[getServicesByStoreId] Nome do montador: ${userResult[0].name}`);
             
-            if (userResult.length > 0) {
-              return {
-                ...service,
-                assembler: {
-                  id: assemblerId,
-                  name: userResult[0].name,
-                  userId: assembler.userId
-                }
-              };
-            }
+            return {
+              ...service,
+              assembler: {
+                id: assemblerId,
+                name: userResult[0].name,
+                userId: assembler.userId
+              }
+            };
           }
         }
       }
       
-      // Se não houver montador ou o serviço não estiver em andamento, retornar como está
+      // Se não houver montador associado, retornar como está
       return service;
     }));
     
