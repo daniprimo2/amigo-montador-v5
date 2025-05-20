@@ -577,9 +577,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newApplication = await storage.createApplication(applicationData);
       console.log("Candidatura criada com sucesso:", newApplication);
       
-      // Atualizar status do serviço para 'in-progress'
-      console.log("Atualizando status do serviço para 'in-progress'");
-      await storage.updateServiceStatus(serviceId, 'in-progress');
+      // Não atualizamos mais o status para 'in-progress' aqui
+      // O status será alterado quando o lojista clicar no botão "Em Andamento" no chat
       
       // Criar mensagem inicial para iniciar o chat
       const messageData = {

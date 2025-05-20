@@ -12,6 +12,7 @@ interface ServiceProps {
   price: string;
   store: string;
   type: string;
+  status?: string;
 }
 
 interface AvailableServiceCardProps {
@@ -97,7 +98,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       </div>
       <Button 
         onClick={handleApply}
-        disabled={isApplying}
+        disabled={isApplying || service.status === 'in-progress'}
         className="w-full py-2 px-4 bg-primary text-white font-medium rounded-full shadow-sm hover:bg-opacity-90 transition"
       >
         {isApplying ? (
@@ -105,7 +106,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Enviando...
           </>
-        ) : 'Candidatar-se'}
+        ) : service.status === 'in-progress' ? 
+          'Serviço em andamento' : 
+          'Candidatar-se'}
       </Button>
     </div>
   );

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign, User } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User, Play, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
@@ -65,6 +65,59 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, onBack 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Mutation para atualizar o status do serviço para "em andamento"
+  const startServiceMutation = useMutation({
+    mutationFn: async () => {
+      console.log(`[ChatInterface] Iniciando serviço ${serviceId} como "em andamento"`);
+      
+      const response = await fetch(`/api/services/${serviceId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'in-progress' }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao atualizar status do serviço');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      console.log(`[ChatInterface] Serviço iniciado com sucesso:`, data);
+      
+      toast({
+        title: 'Serviço iniciado',
+        description: 'O status do serviço foi alterado para "Em Andamento"',
+        duration: 3000,
+      });
+      
+      // Invalidar queries para atualizar a UI
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+    },
+    onError: (error) => {
+      console.error(`[ChatInterface] Erro ao iniciar serviço:`, error);
+      
+      toast({
+        title: 'Erro',
+        description: error instanceof Error 
+          ? error.message 
+          : 'Não foi possível iniciar o serviço. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Função para iniciar o serviço (mudar status para "em andamento")
+  const handleStartService = () => {
+    startServiceMutation.mutate();
+  };
   
   // Buscar mensagens do chat
   const { data: messages = [], isLoading } = useQuery<Message[]>({
