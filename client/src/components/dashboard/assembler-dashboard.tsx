@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { RatingDialog } from '@/components/rating/rating-dialog';
+import { ProfileDialog } from './profile-dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface AssemblerDashboardProps {
@@ -105,6 +106,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [searchTerm, setSearchTerm] = useState('');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
   
@@ -237,7 +239,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <h2 className="text-lg font-semibold">
             Olá, <span className="text-primary">{user?.name || 'Montador'}</span>
           </h2>
-          <button className="text-primary text-sm font-medium">Ver Perfil</button>
+          <button 
+            className="text-primary text-sm font-medium"
+            onClick={() => setIsProfileDialogOpen(true)}
+          >
+            Ver Perfil
+          </button>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
@@ -643,6 +650,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           }}
         />
       )}
+      
+      {/* Diálogo de Perfil */}
+      <ProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        onLogout={onLogout}
+      />
     </div>
   );
 };
