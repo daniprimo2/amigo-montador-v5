@@ -536,7 +536,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       if (!response.ok) {
         throw new Error('Falha ao buscar perfil do montador');
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Perfil do montador carregado:", data);
+      return data;
     },
     enabled: !!user && user.userType === 'montador'
   });
@@ -601,6 +603,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log("[AssemblerDashboard] Nova mensagem recebida via WebSocket", lastMessage);
+      console.log("[AssemblerDashboard] ID do montador do perfil:", profileData?.assembler?.id);
       
       // Atualizar as listas relevantes para refletir nova mensagem
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -636,13 +639,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
+    // Log para diagnosticar se estamos obtendo o ID do montador corretamente
+    console.log("Renderizando dashboard com perfil:", profileData);
+    
     // Se houver um serviço selecionado para chat, mostra a interface de chat
     // independente da seção atual do dashboard
     if (selectedChatService !== null) {
+      const assemblerId = profileData?.assembler?.id;
+      console.log(`Abrindo chat para serviço ${selectedChatService} com montador ID: ${assemblerId}`);
+      
       return (
         <ChatInterface 
           serviceId={selectedChatService}
-          assemblerId={assemblerData?.id} // Passa ID do montador atual obtido da consulta
+          assemblerId={assemblerId} // Passa ID do montador atual obtido do perfil
           onBack={() => setSelectedChatService(null)} 
         />
       );
