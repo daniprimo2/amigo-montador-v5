@@ -150,11 +150,11 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         
         {service.status === 'open' && (
           <div className="flex items-center">
-            <span className="text-sm text-primary font-medium bg-primary/10 px-3 py-1 rounded-full flex items-center">
-              <span className="mr-1">{service.candidates}</span>
-              {service.candidates === 1 ? 'candidatura' : 'candidaturas'}
+            <button className="text-sm text-primary font-medium bg-primary/10 px-3 py-1 rounded-full flex items-center hover:bg-primary/20 transition-colors">
+              <span className="mr-1 font-bold">{service.candidates}</span>
+              <span>{service.candidates === 1 ? 'candidatura' : 'candidaturas'}</span>
               <ChevronRight className="h-4 w-4 text-primary ml-1" />
-            </span>
+            </button>
           </div>
         )}
       </div>
