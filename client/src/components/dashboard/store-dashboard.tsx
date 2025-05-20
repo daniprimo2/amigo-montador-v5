@@ -133,6 +133,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         // Atualizar a lista de serviços para mostrar a nova candidatura
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-pending-applications'] });
         
         // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
         if (lastMessage.serviceId) {
@@ -141,23 +142,15 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           
           // Notificar o usuário com um toast
           toast({
-            title: "Nova candidatura recebida",
-            description: "Você pode visualizar na seção de Chat",
-            duration: 5000
+            title: "Nova candidatura recebida!",
+            description: "Um montador se candidatou ao seu serviço. Verifique na seção de Chat.",
+            duration: 8000,
+            variant: "default",
+            className: "bg-blue-100 border-blue-500 border-2 font-medium"
           });
           
-          // Se o usuário estiver na seção de Chat, não mudar automaticamente para evitar confusão
-          // O indicador visual já mostrará que há uma nova candidatura
-          if (dashboardSection !== 'chat') {
-            // Mudar para a seção de chat
-            setDashboardSection('chat');
-          }
-        } else if (dashboardSection !== 'services') {
-          toast({
-            title: "Nova candidatura recebida",
-            description: "Vá para a seção 'Serviços' para visualizar",
-            duration: 5000
-          });
+          // Mudar para a seção de chat imediatamente para mostrar a nova candidatura
+          setDashboardSection('chat');
         }
       } else if (lastMessage.type === 'new_message') {
         console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
@@ -727,41 +720,80 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Estado para o serviço de chat selecionado
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
   
-  // Buscar serviços com candidaturas aceitas
+  // Buscar serviços com candidaturas aceitas (em andamento)
   const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
     queryKey: ['/api/store/services/with-applications'],
     queryFn: async () => {
       const response = await fetch('/api/store/services/with-applications');
       if (!response.ok) {
-        throw new Error('Falha ao buscar serviços com candidaturas');
+        throw new Error('Falha ao buscar serviços com candidaturas aceitas');
       }
       return response.json();
     },
     enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
   });
   
-  // Organizar serviços por montador
-  // Transformar os serviços ativos diretamente em uma lista para mostrar na interface
-  // sem agrupamento por montador, cada serviço terá seu próprio chat
-  const servicesWithChat = React.useMemo(() => {
-    if (!activeServices) return [];
-    
-    return activeServices.map((service: any) => {
-      // Verificar se o serviço tem um montador atribuído
-      if (service.assembler && service.assembler.id) {
-        return {
-          id: service.id,
-          title: service.title,
-          status: service.status,
-          assemblerName: service.assembler.name, 
-          assemblerId: service.assembler.id,
-          hasNewMessages: service.hasNewMessages || false,
-          hasNewApplications: service.hasNewApplications || false
-        };
+  // Buscar serviços com candidaturas pendentes
+  const { data: pendingServices, isLoading: isLoadingPendingServices } = useQuery({
+    queryKey: ['/api/store/services/with-pending-applications'],
+    queryFn: async () => {
+      const response = await fetch('/api/store/services/with-pending-applications');
+      if (!response.ok) {
+        throw new Error('Falha ao buscar serviços com candidaturas pendentes');
       }
-      return null;
-    }).filter(Boolean); // Remover itens null
-  }, [activeServices]);
+      return response.json();
+    },
+    enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
+  });
+  
+  // Combinar serviços ativos e com candidaturas pendentes para exibição na interface
+  const servicesWithChat = React.useMemo(() => {
+    const result = [];
+    
+    // Adicionar serviços com candidaturas aceitas (em andamento)
+    if (activeServices && activeServices.length > 0) {
+      activeServices.forEach((service: any) => {
+        if (service.assembler && service.assembler.id) {
+          result.push({
+            id: service.id,
+            title: service.title,
+            status: service.status,
+            assemblerName: service.assembler.name,
+            assemblerId: service.assembler.id,
+            hasNewMessages: service.hasNewMessages || false,
+            hasNewApplications: false,
+            chatType: 'active' // Indica que é um chat com montador já aceito
+          });
+        }
+      });
+    }
+    
+    // Adicionar serviços com candidaturas pendentes
+    if (pendingServices && pendingServices.length > 0) {
+      pendingServices.forEach((service: any) => {
+        if (service.pendingApplications && service.pendingApplications.length > 0) {
+          // Para cada candidatura pendente, criar um item separado
+          service.pendingApplications.forEach((app: any) => {
+            if (app.assembler) {
+              result.push({
+                id: service.id,
+                title: service.title,
+                status: 'pending_application',
+                assemblerName: app.assembler.name,
+                assemblerId: app.assembler.id,
+                applicationId: app.id,
+                hasNewMessages: false,
+                hasNewApplications: true,
+                chatType: 'pending' // Indica que é um chat com candidatura pendente
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    return result;
+  }, [activeServices, pendingServices]);
 
   const renderChatSection = () => {
     // Se um serviço estiver selecionado para chat, mostrar a interface de chat
