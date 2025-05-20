@@ -106,18 +106,24 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
         
-        // Redirecionar automaticamente para a seção de chat se tiver serviceId
+        // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
         if (lastMessage.serviceId) {
-          // Definir o serviço selecionado para o chat
-          setSelectedChatService(lastMessage.serviceId);
-          // Mudar para a seção de chat
-          setDashboardSection('chat');
+          // Marcar serviço como tendo nova candidatura (isso será atualizado quando os dados forem buscados)
+          console.log(`Nova candidatura recebida para serviço ${lastMessage.serviceId}`);
           
+          // Notificar o usuário com um toast
           toast({
             title: "Nova candidatura recebida",
-            description: "Chat aberto automaticamente para negociação",
+            description: "Você pode visualizar na seção de Chat",
             duration: 5000
           });
+          
+          // Se o usuário estiver na seção de Chat, não mudar automaticamente para evitar confusão
+          // O indicador visual já mostrará que há uma nova candidatura
+          if (dashboardSection !== 'chat') {
+            // Mudar para a seção de chat
+            setDashboardSection('chat');
+          }
         } else if (dashboardSection !== 'services') {
           toast({
             title: "Nova candidatura recebida",
@@ -721,7 +727,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           status: service.status,
           assemblerName: service.assembler.name, 
           assemblerId: service.assembler.id,
-          hasNewMessages: service.hasNewMessages || false
+          hasNewMessages: service.hasNewMessages || false,
+          hasNewApplications: service.hasNewApplications || false
         };
       }
       return null;
@@ -757,12 +764,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             {servicesWithChat.map((service) => (
               <div 
                 key={service.id} 
-                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors ${service.hasNewApplications ? 'border-2 border-blue-400' : ''}`}
                 onClick={() => setSelectedChatService(service.id)}
               >
                 <div className="flex justify-between items-center">
                   <div className="flex-1">
-                    <h4 className="font-medium">{service.title}</h4>
+                    <div className="flex items-center">
+                      <h4 className="font-medium">{service.title}</h4>
+                      {service.hasNewApplications && (
+                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full animate-pulse">
+                          Nova candidatura
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
                       <p className="text-sm text-gray-500 flex items-center gap-1">
                         <User className="h-4 w-4" />
@@ -775,14 +789,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                       </p>
                     </div>
                   </div>
-                  {service.hasNewMessages ? (
-                    <div className="relative ml-3">
-                      <MessageSquare className="h-5 w-5 text-primary" />
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
-                    </div>
-                  ) : (
-                    <MessageSquare className="h-5 w-5 text-gray-400 ml-3" />
-                  )}
+                  <div className="flex items-center">
+                    {service.hasNewMessages ? (
+                      <div className="relative ml-3">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+                      </div>
+                    ) : (
+                      <MessageSquare className="h-5 w-5 text-gray-400 ml-3" />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
