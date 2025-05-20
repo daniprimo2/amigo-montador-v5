@@ -11,6 +11,8 @@ import FileUpload from '../ui/file-upload';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import InputMask from 'react-input-mask';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { bankAccountSchema } from '@/lib/bank-account-schema';
 
 const storeStep2Schema = z.object({
   storeName: z.string().min(3, 'Nome da loja deve ter pelo menos 3 caracteres'),
@@ -25,6 +27,16 @@ const storeStep2Schema = z.object({
   logoFile: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
     message: "Upload obrigatório do logotipo da loja"
   }),
+  // Dados bancários
+  bankName: bankAccountSchema.shape.bankName,
+  accountType: bankAccountSchema.shape.accountType,
+  accountNumber: bankAccountSchema.shape.accountNumber,
+  agency: bankAccountSchema.shape.agency,
+  holderName: bankAccountSchema.shape.holderName,
+  holderDocumentType: bankAccountSchema.shape.holderDocumentType,
+  holderDocumentNumber: bankAccountSchema.shape.holderDocumentNumber,
+  pixKey: bankAccountSchema.shape.pixKey,
+  pixKeyType: bankAccountSchema.shape.pixKeyType,
 });
 
 export type StoreStep2Data = z.infer<typeof storeStep2Schema>;
@@ -60,6 +72,16 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
       state: '',
       storePhone: '',
       materialTypes: [],
+      // Dados bancários
+      bankName: '',
+      accountType: 'corrente',
+      accountNumber: '',
+      agency: '',
+      holderName: '',
+      holderDocumentType: 'cpf',
+      holderDocumentNumber: '',
+      pixKey: '',
+      pixKeyType: undefined,
       ...defaultValues,
     },
   });
