@@ -812,11 +812,18 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       );
     }
     
+    // Dividir os serviços em duas categorias
+    const pendingApplications = servicesWithChat.filter(service => service.chatType === 'pending');
+    const activeChats = servicesWithChat.filter(service => service.chatType === 'active');
+    
+    // Estado de carregamento combinado
+    const isLoading = isLoadingActiveServices || isLoadingPendingServices;
+    
     return (
       <div className="mt-2">
-        <h3 className="text-lg font-semibold mb-4">Conversas por Serviço</h3>
+        <h3 className="text-lg font-semibold mb-4">Conversas e Candidaturas</h3>
         
-        {isLoadingActiveServices ? (
+        {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-xl shadow-md p-4">
@@ -826,54 +833,101 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             ))}
           </div>
         ) : servicesWithChat.length > 0 ? (
-          <div className="space-y-4">
-            {servicesWithChat.map((service) => (
-              <div 
-                key={service.id} 
-                className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors ${service.hasNewApplications ? 'border-2 border-blue-400' : ''}`}
-                onClick={() => setSelectedChatService(service.id)}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <h4 className="font-medium">{service.title}</h4>
-                      {service.hasNewApplications && (
-                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full animate-pulse">
-                          Nova candidatura
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>Montador: {service.assemblerName}</span>
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {service.status === 'open' ? 'Aguardando início' : 
-                         service.status === 'in-progress' ? 'Em andamento' : 
-                         service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    {service.hasNewMessages ? (
-                      <div className="relative ml-3">
-                        <MessageSquare className="h-5 w-5 text-primary" />
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+          <div className="space-y-6">
+            {/* Seção de candidaturas pendentes */}
+            {pendingApplications.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-md font-medium mb-3 text-blue-600 flex items-center">
+                  <span className="mr-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Nova</span>
+                  Candidaturas Pendentes
+                </h4>
+                <div className="space-y-3">
+                  {pendingApplications.map((service) => (
+                    <div 
+                      key={`${service.id}-${service.assemblerId}`} 
+                      className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors border-2 border-blue-400"
+                      onClick={() => setSelectedChatService(service.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full animate-pulse">
+                              Nova candidatura
+                            </span>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              <span>Montador: {service.assemblerName}</span>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Aguardando sua aprovação
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
                       </div>
-                    ) : (
-                      <MessageSquare className="h-5 w-5 text-gray-400 ml-3" />
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+            
+            {/* Seção de conversas ativas */}
+            {activeChats.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-3">Conversas Ativas</h4>
+                <div className="space-y-3">
+                  {activeChats.map((service) => (
+                    <div 
+                      key={`${service.id}-${service.assemblerId}`} 
+                      className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setSelectedChatService(service.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            {service.hasNewMessages && (
+                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                Nova mensagem
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              <span>Montador: {service.assemblerName}</span>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {service.status === 'open' ? 'Aguardando início' : 
+                               service.status === 'in-progress' ? 'Em andamento' : 
+                               service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          {service.hasNewMessages && (
+                            <span className="bg-red-500 h-3 w-3 rounded-full animate-pulse mr-2"></span>
+                          )}
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-            <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
-            <p className="text-gray-500 mb-4">Quando você tiver candidaturas aceitas para seus serviços, as conversas aparecerão aqui.</p>
+            <h4 className="text-lg font-medium mb-2">Nenhuma conversa ou candidatura disponível</h4>
+            <p className="text-gray-500 mb-4">Quando você receber candidaturas de montadores para seus serviços, elas aparecerão aqui.</p>
+            <p className="text-sm text-gray-400">Crie um serviço e aguarde candidaturas de montadores.</p>
           </div>
         )}
       </div>
