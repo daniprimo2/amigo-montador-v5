@@ -349,51 +349,49 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Mensagens
-  async getMessagesByServiceId(serviceId: number, assemblerId?: number): Promise<Message[]> {
-    // Se o assemblerId for fornecido, precisamos filtrar as mensagens relacionadas a este montador
-    // para implementar chats exclusivos entre lojista e montador
-    if (assemblerId) {
-      // Buscar mensagens onde:
-      // 1. O serviço é o especificado E
-      // 2. O remetente é o lojista (proprietário da loja) OU o usuário associado ao montador especificado
-      
-      // Primeiro, precisamos obter o usuário do montador
-      const assembler = await this.getAssemblerById(assemblerId);
-      if (!assembler) {
-        return [];
-      }
-      
-      // Depois, precisamos obter o usuário do lojista (dono da loja)
-      const service = await this.getServiceById(serviceId);
-      if (!service) {
-        return [];
-      }
-      
-      const store = await this.getStore(service.storeId);
-      if (!store) {
-        return [];
-      }
-      
-      // Agora podemos filtrar as mensagens que são apenas entre o lojista e este montador específico
-      return await db.select()
-        .from(messages)
-        .where(
-          and(
-            eq(messages.serviceId, serviceId),
-            or(
-              eq(messages.senderId, store.userId),
-              eq(messages.senderId, assembler.userId)
-            )
-          )
-        )
-        .orderBy(asc(messages.sentAt));
-    }
-    
-    // Se nenhum montador for especificado, retornamos todas as mensagens do serviço
-    // (este comportamento é mantido para compatibilidade, mas idealmente deveria ser usado apenas com assemblerId)
+  async getMessagesByServiceId(serviceId: number): Promise<Message[]> {
+    // Retornamos todas as mensagens do serviço
     return await db.select()
       .from(messages)
       .where(eq(messages.serviceId, serviceId))
+      .orderBy(asc(messages.sentAt));
+  }
+  
+  // Novo método para buscar mensagens entre um lojista e um montador específico
+  async getMessagesBetweenStoreAndAssembler(serviceId: number, assemblerId: number): Promise<Message[]> {
+    // Buscar mensagens onde:
+    // 1. O serviço é o especificado E
+    // 2. O remetente é o lojista (proprietário da loja) OU o usuário associado ao montador especificado
+    
+    // Primeiro, precisamos obter o usuário do montador
+    const assembler = await this.getAssemblerById(assemblerId);
+    if (!assembler) {
+      return [];
+    }
+    
+    // Depois, precisamos obter o usuário do lojista (dono da loja)
+    const service = await this.getServiceById(serviceId);
+    if (!service) {
+      return [];
+    }
+    
+    const store = await this.getStore(service.storeId);
+    if (!store) {
+      return [];
+    }
+    
+    // Agora podemos filtrar as mensagens que são apenas entre o lojista e este montador específico
+    return await db.select()
+      .from(messages)
+      .where(
+        and(
+          eq(messages.serviceId, serviceId),
+          or(
+            eq(messages.senderId, store.userId),
+            eq(messages.senderId, assembler.userId)
+          )
+        )
+      )
       .orderBy(asc(messages.sentAt));
   }
 

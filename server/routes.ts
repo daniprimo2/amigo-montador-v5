@@ -1139,6 +1139,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { id } = req.params;
       const serviceId = parseInt(id);
+      // Obter o ID do montador específico da query string (se fornecido)
+      const assemblerIdParam = req.query.assemblerId;
+      let assemblerId: number | undefined = undefined;
+      
+      if (assemblerIdParam && typeof assemblerIdParam === 'string') {
+        assemblerId = parseInt(assemblerIdParam);
+      }
 
       // Verificar se o serviço existe
       const service = await storage.getServiceById(serviceId);
@@ -1148,11 +1155,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verificar se é o lojista dono do serviço ou o montador candidato
       let hasAccess = false;
+      let userAssemblerId: number | undefined = undefined;
       
       if (req.user?.userType === 'lojista') {
         const store = await storage.getStoreByUserId(req.user.id);
         if (store && store.id === service.storeId) {
           hasAccess = true;
+          // Se não tiver um assemblerId específico na query, buscamos todas as mensagens
+          // (o lojista pode ver todas as mensagens de todos os montadores para este serviço)
         }
       } else if (req.user?.userType === 'montador') {
         const assembler = await storage.getAssemblerByUserId(req.user.id);
@@ -1161,6 +1171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
           if (application) {
             hasAccess = true;
+            userAssemblerId = assembler.id;
           }
         }
       }
@@ -1170,8 +1181,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Obter mensagens
-      const messages = await storage.getMessagesByServiceId(serviceId);
-      res.json(messages);
+      let messages;
+      
+      // Se for montador, sempre mostramos apenas as mensagens entre ele e o lojista
+      if (req.user?.userType === 'montador' && userAssemblerId) {
+        messages = await storage.getMessagesBetweenStoreAndAssembler(serviceId, userAssemblerId);
+      } 
+      // Se for lojista e um assemblerId específico foi fornecido, mostramos apenas as mensagens entre ele e este montador
+      else if (req.user?.userType === 'lojista' && assemblerId) {
+        messages = await storage.getMessagesBetweenStoreAndAssembler(serviceId, assemblerId);
+      }
+      // Caso contrário, mostramos todas as mensagens (apenas para o lojista)
+      else if (req.user?.userType === 'lojista') {
+        messages = await storage.getMessagesByServiceId(serviceId);
+      } else {
+        // Caso de fallback, não deve acontecer com a lógica acima
+        messages = [];
+      }
+      
+      // Enriquecer as mensagens com informações do remetente
+      const enhancedMessages = await Promise.all(messages.map(async (message) => {
+        const sender = await storage.getUser(message.senderId);
+        return {
+          ...message,
+          sender: sender ? {
+            name: sender.name,
+            userType: sender.userType
+          } : undefined
+        };
+      }));
+      
+      res.json(enhancedMessages);
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
       res.status(500).json({ message: "Erro ao buscar mensagens" });
