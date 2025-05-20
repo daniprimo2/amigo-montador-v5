@@ -48,7 +48,8 @@ const formatServiceForDisplay = (service: ServiceData) => {
     date: new Date(service.date).toLocaleDateString('pt-BR'),
     price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
     store: service.store?.name || 'Loja não especificada',
-    type: service.materialType || service.type || 'Não especificado' // Garantir que nunca seja undefined
+    type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
+    status: service.status // Passar o status do serviço para o componente
   };
 };
 
