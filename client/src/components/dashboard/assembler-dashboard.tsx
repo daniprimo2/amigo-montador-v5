@@ -629,7 +629,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     if (selectedChatService !== null) {
       return (
         <ChatInterface 
-          serviceId={selectedChatService} 
+          serviceId={selectedChatService}
+          assemblerId={user?.assembler?.id} // Passa ID do montador atual 
           onBack={() => setSelectedChatService(null)} 
         />
       );
