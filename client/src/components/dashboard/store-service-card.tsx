@@ -130,8 +130,10 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         description: 'O serviço foi removido permanentemente.',
       });
       
-      // Invalidar queries relacionadas
+      // Invalidar todas as queries relacionadas a serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-pending-applications'] });
       
       setIsDeleting(false);
       setDeleteDialogOpen(false);
