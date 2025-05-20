@@ -142,6 +142,7 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
       return apiRequest({
         url: `/api/bank-accounts/${id}`,
         method: 'DELETE',
+        data: undefined,
       });
     },
     onSuccess: () => {
