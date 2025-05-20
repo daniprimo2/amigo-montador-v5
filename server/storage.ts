@@ -165,16 +165,65 @@ export class DatabaseStorage implements IStorage {
     
     if (status) {
       // Aplicar filtro de status apenas se for fornecido
-      return await db.select()
+      query = db.select()
         .from(services)
         .where(and(
           eq(services.storeId, storeId),
           eq(services.status, status)
-        ))
-        .orderBy(desc(services.createdAt));
+        ));
     }
     
-    return await query.orderBy(desc(services.createdAt));
+    const servicesList = await query.orderBy(desc(services.createdAt));
+    
+    // Para serviços em andamento (in-progress), buscar informações do montador associado
+    const enhancedServices = await Promise.all(servicesList.map(async (service) => {
+      if (service.status === 'in-progress') {
+        // Buscar as candidaturas aceitas para este serviço
+        const acceptedApplications = await db
+          .select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, service.id),
+              eq(applications.status, 'accepted')
+            )
+          );
+        
+        // Se houver candidatura aceita, buscar dados do montador
+        if (acceptedApplications.length > 0) {
+          const assemblerId = acceptedApplications[0].assemblerId;
+          const assembler = await this.getAssemblerById(assemblerId);
+          
+          if (assembler) {
+            // Buscar dados do usuário montador
+            const userResult = await db
+              .select({
+                id: users.id,
+                name: users.name
+              })
+              .from(users)
+              .where(eq(users.id, assembler.userId))
+              .limit(1);
+            
+            if (userResult.length > 0) {
+              return {
+                ...service,
+                assembler: {
+                  id: assemblerId,
+                  name: userResult[0].name,
+                  userId: assembler.userId
+                }
+              };
+            }
+          }
+        }
+      }
+      
+      // Se não houver montador ou o serviço não estiver em andamento, retornar como está
+      return service;
+    }));
+    
+    return enhancedServices;
   }
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
