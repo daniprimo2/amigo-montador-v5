@@ -2069,7 +2069,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { id } = req.params;
       const serviceId = parseInt(id);
-      const { price, date, status } = req.body;
+      const { 
+        title, 
+        description, 
+        price, 
+        date, 
+        status, 
+        materialType 
+      } = req.body;
       
       // Verificar se o serviço existe
       const service = await storage.getServiceById(serviceId);
@@ -2083,15 +2090,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Não autorizado a modificar este serviço" });
       }
       
+      // Verificar se o serviço está em aberto
+      if (service.status !== 'open') {
+        return res.status(400).json({ 
+          message: "Apenas serviços com status 'Em Aberto' podem ser editados" 
+        });
+      }
+      
       // Preparar dados para atualização
       const updateData: Partial<Service> = {};
       
+      if (title !== undefined) {
+        updateData.title = title;
+      }
+      
+      if (description !== undefined) {
+        updateData.description = description;
+      }
+      
       if (price !== undefined) {
-        updateData.price = price;
+        updateData.price = price.toString();
       }
       
       if (date !== undefined) {
         updateData.date = date;
+      }
+      
+      if (materialType !== undefined) {
+        updateData.materialType = materialType;
       }
       
       if (status !== undefined) {
@@ -2109,6 +2135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Atualizar serviço
       const updatedService = await storage.updateService(serviceId, updateData);
+      
+      // Log para depuração
+      console.log(`Serviço ${serviceId} atualizado por ${req.user.name} (${req.user.id}):`, updateData);
       
       // Notificar montador se serviço for iniciado (status = in-progress)
       if (status === 'in-progress') {

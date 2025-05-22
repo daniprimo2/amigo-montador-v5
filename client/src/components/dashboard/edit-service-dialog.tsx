@@ -9,24 +9,24 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
-interface ServiceProps {
+interface EditableServiceProps {
   id: number;
   title: string;
-  description: string;
+  description?: string;
   location: string;
   date: string;
   price: string;
-  materialType: string;
-  cep: string;
-  address: string;
-  addressNumber: string;
+  materialType?: string;
+  cep?: string;
+  address?: string;
+  addressNumber?: string;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
 }
 
 interface EditServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  service: ServiceProps;
+  service: EditableServiceProps;
 }
 
 export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({

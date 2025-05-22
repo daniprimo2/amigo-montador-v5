@@ -297,6 +297,27 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Diálogo de edição de serviço */}
+      {editDialogOpen && (
+        <EditServiceDialog
+          isOpen={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          service={{
+            id: service.id,
+            title: service.title,
+            description: service.description,
+            location: service.location,
+            date: service.date,
+            price: service.price,
+            materialType: service.materialType,
+            cep: service.cep,
+            address: service.address,
+            addressNumber: service.addressNumber,
+            status: service.status
+          }}
+        />
+      )}
     </>
   );
 };
