@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User } from 'lucide-react';
+import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
@@ -1003,9 +1003,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       );
     }
     
-    // Dividir os serviços em duas categorias
+    // Dividir os serviços em três categorias
     const pendingApplications = servicesWithChat.filter(service => service.chatType === 'pending');
-    const activeChats = servicesWithChat.filter(service => service.chatType === 'active');
+    const activeChats = servicesWithChat.filter(service => service.chatType === 'active' && service.status !== 'completed');
+    const completedChats = servicesWithChat.filter(service => service.chatType === 'active' && service.status === 'completed');
     
     // Estado de carregamento combinado
     const isLoading = isLoadingActiveServices || isLoadingPendingServices;
@@ -1110,6 +1111,49 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                           {service.hasNewMessages && (
                             <span className="bg-red-500 h-3 w-3 rounded-full animate-pulse mr-2"></span>
                           )}
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Seção de conversas finalizadas */}
+            {completedChats.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-3 text-gray-600">Conversas Finalizadas</h4>
+                <div className="space-y-3">
+                  {completedChats.map((service) => (
+                    <div 
+                      key={`${service.id}-${service.assemblerId}`} 
+                      className="bg-gray-50 rounded-xl shadow-sm p-4 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
+                      onClick={() => {
+                        setSelectedChatService(service.id);
+                        setSelectedAssemblerId(service.assemblerId);
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              Finalizado
+                            </span>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              <span>Montador: {service.assemblerName}</span>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Serviço concluído
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCheck className="h-5 w-5 text-green-500 mr-1" />
                           <ChevronRight className="h-5 w-5 text-gray-400" />
                         </div>
                       </div>
