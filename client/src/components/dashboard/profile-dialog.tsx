@@ -123,9 +123,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         setProfilePhoto(null);
       }
       
-      // Se for montador, obter a avaliação
+      // Obter a avaliação tanto para montador quanto para lojista
       if (user?.userType === 'montador' && data.assembler) {
         setUserRating(data.assembler.rating || 0);
+      } else if (user?.userType === 'lojista') {
+        setUserRating(data.rating || 0);
       }
       
       // Se for lojista, atualizar formulário da loja e verificar logo
