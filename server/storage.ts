@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, stores, type Store, type InsertStore, assemblers, type Assembler, type InsertAssembler, services, type Service, type InsertService, applications, type Application, type InsertApplication, messages, type Message, type InsertMessage, ratings, type Rating, type InsertRating, bankAccounts, type BankAccount, type InsertBankAccount } from "@shared/schema";
+import { users, type User, type InsertUser, stores, type Store, type InsertStore, assemblers, type Assembler, type InsertAssembler, services, type Service, type InsertService, applications, type Application, type InsertApplication, messages, type Message, type InsertMessage, messageReads, type MessageRead, type InsertMessageRead, ratings, type Rating, type InsertRating, bankAccounts, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, not, desc, asc, or, gt, lt, inArray } from "drizzle-orm";
 import session from "express-session";

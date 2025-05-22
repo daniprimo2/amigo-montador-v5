@@ -1344,8 +1344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Não autorizado a acessar este chat" });
       }
 
-      // Em uma implementação completa, aqui marcaríamos as mensagens como lidas em uma tabela separada
-      // Para a demonstração, apenas logamos a ação e retornamos sucesso
+      // Marcar todas as mensagens como lidas para este usuário
+      await storage.markMessagesAsRead(serviceId, req.user.id);
       console.log(`Usuário ${req.user.id} marcou as mensagens do serviço ${serviceId} como lidas`);
       
       res.status(200).json({ success: true });
