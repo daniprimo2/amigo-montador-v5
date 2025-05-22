@@ -101,12 +101,26 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(value) => {
+      // Impedir que o usuário feche o diálogo se não tiver avaliado ainda
+      if (!value && form.getValues().rating === 0) {
+        toast({
+          title: "Avaliação obrigatória",
+          description: "É necessário avaliar o serviço antes de continuar.",
+          variant: "destructive"
+        });
+        return;
+      }
+      onOpenChange(value);
+    }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Avalie o serviço</DialogTitle>
           <DialogDescription>
             Como você avalia {toUserName} pelo serviço "{serviceName}"?
+            <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm">
+              <span className="font-semibold">Atenção:</span> A avaliação é obrigatória para continuar usando o aplicativo.
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -117,7 +131,9 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
               name="rating"
               render={({ field }) => (
                 <FormItem className="flex flex-col items-center space-y-4">
-                  <FormLabel className="text-center font-semibold">Sua avaliação</FormLabel>
+                  <FormLabel className="text-center font-semibold">
+                    Sua avaliação <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <RatingStars
                       rating={field.value}
@@ -126,6 +142,9 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
                       onRatingChange={(value) => field.onChange(value)}
                     />
                   </FormControl>
+                  {form.getValues().rating === 0 && (
+                    <p className="text-red-500 text-sm">Selecione de 1 a 5 estrelas</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -151,12 +170,10 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting || form.getValues().rating === 0}
+                className="w-full"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar avaliação'}
               </Button>
