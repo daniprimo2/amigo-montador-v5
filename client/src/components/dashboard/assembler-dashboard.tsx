@@ -487,17 +487,43 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             </div>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">{serviceCounts.available}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div 
+            className={`rounded-lg p-3 text-center transition-all duration-300 ${
+              serviceCounts.available > 0 
+                ? 'bg-blue-50 border border-blue-200 shadow-sm hover:shadow' 
+                : 'bg-gray-100'
+            }`}
+            onClick={() => serviceCounts.available > 0 && setDashboardSection('explore')}
+          >
+            <div className={`font-bold text-xl ${serviceCounts.available > 0 ? 'text-blue-600' : 'text-primary'}`}>
+              {serviceCounts.available}
+            </div>
             <div className="text-xs text-gray-500">Disponíveis</div>
           </div>
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">{serviceCounts.inProgress}</div>
+          <div 
+            className={`rounded-lg p-3 text-center transition-all duration-300 ${
+              serviceCounts.inProgress > 0 
+                ? 'bg-amber-50 border border-amber-200 shadow-sm hover:shadow' 
+                : 'bg-gray-100'
+            }`}
+            onClick={() => serviceCounts.inProgress > 0 && setDashboardSection('chat')}
+          >
+            <div className={`font-bold text-xl ${serviceCounts.inProgress > 0 ? 'text-amber-600' : 'text-primary'}`}>
+              {serviceCounts.inProgress}
+            </div>
             <div className="text-xs text-gray-500">Em Andamento</div>
           </div>
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">{serviceCounts.completed}</div>
+          <div 
+            className={`rounded-lg p-3 text-center transition-all duration-300 ${
+              serviceCounts.completed > 0 
+                ? 'bg-green-50 border border-green-200 shadow-sm hover:shadow' 
+                : 'bg-gray-100'
+            }`}
+          >
+            <div className={`font-bold text-xl ${serviceCounts.completed > 0 ? 'text-green-600' : 'text-primary'}`}>
+              {serviceCounts.completed}
+            </div>
             <div className="text-xs text-gray-500">Finalizados</div>
           </div>
         </div>
