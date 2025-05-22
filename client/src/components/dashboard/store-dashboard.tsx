@@ -782,7 +782,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           ) : (
             // Lista de serviços
             services.map(service => (
-              <StoreServiceCard key={service.id} service={service} />
+              <StoreServiceCard 
+                key={service.id} 
+                service={service} 
+                onRateClick={(serviceToRate) => {
+                  // Configurar o serviço para avaliação
+                  if (serviceToRate.assembler) {
+                    setSelectedServiceForRating({
+                      id: serviceToRate.id,
+                      title: serviceToRate.title,
+                      assembler: serviceToRate.assembler
+                    });
+                    // Abrir o diálogo de avaliação
+                    setIsRatingDialogOpen(true);
+                  }
+                }}
+              />
             ))
           )}
         </div>
