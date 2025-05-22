@@ -174,7 +174,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         <div className="flex justify-between items-center mt-3">
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
-            <span className="text-sm text-gray-600">{service.date}</span>
+            <span className="text-sm text-gray-600">
+              {service.date ? new Date(service.date).toLocaleDateString('pt-BR') : ''}
+            </span>
           </div>
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 text-gray-400 mr-1" />
