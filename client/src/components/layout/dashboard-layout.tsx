@@ -219,9 +219,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               )}
             </button>
             <button 
-              onClick={() => userType === 'lojista' ? window.dispatchEvent(new CustomEvent('open-profile-dialog')) : handleLogout()}
+              onClick={handleLogout}
               className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
-              title={userType === 'lojista' ? "Editar perfil e logo" : "Sair"}
+              title="Sair"
             >
               {userType === 'lojista' && profilePhotoUrl ? (
                 <img 
@@ -236,7 +236,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   }}
                 />
               ) : (
-                userType === 'lojista' ? <User className="h-5 w-5 text-primary" /> : <LogOut className="h-5 w-5 text-gray-600" />
+                <LogOut className="h-5 w-5 text-gray-600" />
               )}
             </button>
           </div>

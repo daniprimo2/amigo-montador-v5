@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, not, isNotNull } from "drizzle-orm";
+import { eq, and, not, isNotNull, or } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
