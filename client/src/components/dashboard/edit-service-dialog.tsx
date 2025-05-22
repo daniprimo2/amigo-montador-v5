@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, PencilIcon } from 'lucide-react';
+import { Loader2, PencilIcon, FileText, Upload, Download, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -21,6 +21,10 @@ interface EditableServiceProps {
   address?: string;
   addressNumber?: string;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  projectFiles?: Array<{
+    name: string;
+    path: string;
+  }>;
 }
 
 interface EditServiceDialogProps {
@@ -36,6 +40,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editedService, setEditedService] = useState({
     title: service.title,
@@ -46,6 +51,12 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
     endDate: '',
   });
   const [dateError, setDateError] = useState<string | null>(null);
+  const [projectFiles, setProjectFiles] = useState<Array<{name: string, path: string}>>(
+    service.projectFiles || []
+  );
+  const [newFiles, setNewFiles] = useState<FileList | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
 
   // Extrair e formatar datas do período do serviço
   useEffect(() => {
@@ -129,6 +140,27 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
       setEditedService(prev => ({ ...prev, price: '' }));
     }
   };
+  
+  // Gerenciamento de arquivos
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setNewFiles(e.target.files);
+    }
+  };
+  
+  const handleFileDelete = (filePath: string) => {
+    // Marcar o arquivo para exclusão quando o formulário for enviado
+    setFilesToDelete(prev => [...prev, filePath]);
+    
+    // Remover da lista de visualização
+    setProjectFiles(prev => prev.filter(file => file.path !== filePath));
+  };
+  
+  const handleUploadButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   // Função para extrair o valor numérico do preço formatado
   const extractNumericValue = (formattedPrice: string): number => {
@@ -168,15 +200,53 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
         description: editedService.description,
         date: `${formattedStartDate} - ${formattedEndDate}`,
         price: extractNumericValue(editedService.price),
-        materialType: editedService.materialType
+        materialType: editedService.materialType,
+        filesToDelete: filesToDelete
       };
       
-      // Enviar para a API
-      await apiRequest({
-        method: 'PATCH',
-        url: `/api/services/${service.id}`,
-        data: serviceData
-      });
+      let response;
+      
+      // Se temos novos arquivos, enviamos com FormData
+      if (newFiles && newFiles.length > 0) {
+        // Criar form data para envio de arquivos
+        const formData = new FormData();
+        
+        // Adicionar dados do serviço
+        formData.append('title', editedService.title);
+        formData.append('description', editedService.description || '');
+        formData.append('date', `${formattedStartDate} - ${formattedEndDate}`);
+        formData.append('price', extractNumericValue(editedService.price).toString());
+        formData.append('materialType', editedService.materialType || '');
+        
+        // Adicionar lista de arquivos para excluir
+        if (filesToDelete.length > 0) {
+          formData.append('filesToDelete', JSON.stringify(filesToDelete));
+        }
+        
+        // Adicionar novos arquivos
+        for (let i = 0; i < newFiles.length; i++) {
+          formData.append('files', newFiles[i]);
+        }
+        
+        // Enviar dados com arquivos
+        response = await fetch(`/api/services/${service.id}/update-with-files`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao atualizar serviço');
+        }
+      } else {
+        // Sem novos arquivos, usar API request normal
+        response = await apiRequest({
+          method: 'PATCH',
+          url: `/api/services/${service.id}`,
+          data: serviceData
+        });
+      }
       
       // Atualizar os dados em cache
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -192,7 +262,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
       console.error("Erro ao atualizar serviço:", error);
       toast({
         title: "Erro ao atualizar serviço",
-        description: error.response?.data?.message || "Ocorreu um erro ao atualizar o serviço.",
+        description: error.response?.data?.message || error.message || "Ocorreu um erro ao atualizar o serviço.",
         variant: "destructive"
       });
     } finally {
@@ -202,9 +272,12 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-xl">Editar Serviço</DialogTitle>
+          <DialogDescription>
+            Edite as informações do serviço e gerencie os arquivos anexados.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="py-4 grid gap-4">
@@ -285,6 +358,91 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 onChange={handleInputChange}
                 className="w-full"
               />
+            </div>
+          </div>
+          
+          {/* Seção de gerenciamento de arquivos */}
+          <div className="mt-2">
+            <Label className="text-sm font-medium">Arquivos do Projeto</Label>
+            
+            {/* Arquivos existentes */}
+            {projectFiles.length > 0 ? (
+              <div className="space-y-2 max-h-[180px] overflow-y-auto p-1 mt-2 border rounded-md bg-gray-50">
+                {projectFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2.5 border rounded-md bg-white">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-sm font-medium truncate">{file.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <a 
+                        href={file.path} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Visualizar PDF"
+                      >
+                        <FileText className="h-4 w-4 text-gray-600" />
+                      </a>
+                      <a 
+                        href={file.path} 
+                        download
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Baixar PDF"
+                      >
+                        <Download className="h-4 w-4 text-gray-600" />
+                      </a>
+                      <button
+                        onClick={() => handleFileDelete(file.path)}
+                        className="p-1.5 hover:bg-red-50 text-red-500 rounded-full transition-colors"
+                        title="Excluir PDF"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 italic mt-2">Nenhum arquivo disponível para este serviço.</p>
+            )}
+            
+            {/* Upload de novos arquivos */}
+            <div className="mt-4">
+              <Label htmlFor="file-upload" className="text-sm font-medium">Adicionar Novos Arquivos</Label>
+              <div className="mt-2">
+                <input
+                  type="file"
+                  id="file-upload"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".pdf"
+                  multiple
+                  className="sr-only"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUploadButtonClick}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Selecionar Arquivos PDF
+                </Button>
+                {newFiles && newFiles.length > 0 && (
+                  <div className="mt-2 p-2 bg-gray-50 border rounded-md">
+                    <p className="text-sm font-medium">Arquivos selecionados:</p>
+                    <ul className="mt-1 space-y-1">
+                      {Array.from(newFiles).map((file, index) => (
+                        <li key={index} className="text-sm text-gray-700 flex items-center">
+                          <FileText className="h-4 w-4 mr-1.5 text-primary" />
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
