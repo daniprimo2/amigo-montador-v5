@@ -97,7 +97,12 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </div>
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-            <span>{service.date}</span>
+            <span>{
+              // Extract just the start date from the combined "startDate - endDate" string
+              service.date.includes('-') 
+                ? service.date.split('-')[0].trim() 
+                : service.date
+            }</span>
           </div>
         </div>
       </div>
