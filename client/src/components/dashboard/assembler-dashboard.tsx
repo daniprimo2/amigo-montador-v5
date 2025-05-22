@@ -320,6 +320,15 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const handleRateClick = (service: any) => {
     setSelectedServiceForRating(service);
     setIsRatingDialogOpen(true);
+    
+    // Mostrar notificação sobre a avaliação obrigatória
+    toast({
+      title: '🌟 Avaliação Necessária',
+      description: 'É necessário avaliar este serviço antes de continuar usando o aplicativo.',
+      duration: 8000,
+      variant: 'destructive',
+      className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+    });
   };
 
   // Renderiza diferentes seções com base na aba selecionada

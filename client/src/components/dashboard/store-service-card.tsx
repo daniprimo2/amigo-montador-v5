@@ -84,7 +84,10 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         
         toast({
           title: 'Serviço finalizado com sucesso!',
-          description: 'Agora você pode avaliar o serviço.',
+          description: 'É necessário avaliar o serviço para continuar. Uma tela de avaliação será aberta automaticamente.',
+          duration: 8000,
+          variant: 'default',
+          className: 'bg-yellow-100 border-yellow-500 border-2 font-medium'
         });
         
         // Invalidar queries relacionadas

@@ -55,21 +55,26 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
       </div>
       
       {!service.rated && (
-        <Button 
-          onClick={handleRateClick}
-          size="sm" 
-          variant="outline" 
-          className="ml-auto text-yellow-600 border-yellow-300 hover:bg-yellow-50"
-        >
-          <Star className="h-4 w-4 mr-1 fill-yellow-500" />
-          Avaliar Loja
-        </Button>
+        <div className="flex flex-col space-y-2">
+          <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm mb-2">
+            <span className="font-semibold">⚠️ Avaliação Pendente:</span> É necessário avaliar este serviço.
+          </div>
+          <Button 
+            onClick={handleRateClick}
+            size="sm" 
+            variant="default" 
+            className="w-full flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white"
+          >
+            <Star className="h-4 w-4 mr-1 fill-white" />
+            Avaliar Agora
+          </Button>
+        </div>
       )}
       
       {service.rated && (
         <div className="text-sm text-green-600 font-medium flex items-center">
           <Star className="h-4 w-4 mr-1 fill-green-500" />
-          Avaliado
+          Avaliado com Sucesso
         </div>
       )}
     </div>
