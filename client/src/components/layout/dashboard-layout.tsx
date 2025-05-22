@@ -174,30 +174,32 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [storeLogoUrl, setStoreLogoUrl] = useState<string | null>(null);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
 
-  // Fetch store logo and profile photo on mount if user is lojista
+  // Fetch store logo and profile photo on mount for any user type
   useEffect(() => {
-    const fetchStoreData = async () => {
-      if (user?.userType === 'lojista') {
-        try {
-          const response = await fetch('/api/profile');
-          if (response.ok) {
-            const data = await response.json();
-            if (data.store?.logoUrl) {
-              setStoreLogoUrl(data.store.logoUrl);
-            }
-            
-            // Set profile photo URL if available
-            if (user.profileData && typeof user.profileData === 'object' && 'photoUrl' in user.profileData) {
-              setProfilePhotoUrl(user.profileData.photoUrl as string);
-            }
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Set store logo if user is lojista
+          if (user?.userType === 'lojista' && data.store?.logoUrl) {
+            setStoreLogoUrl(data.store.logoUrl);
           }
-        } catch (error) {
-          console.error('Erro ao carregar dados da loja:', error);
+          
+          // Set profile photo URL if available for any user type
+          if (user?.profileData && typeof user.profileData === 'object' && 'photoUrl' in user.profileData) {
+            setProfilePhotoUrl(user.profileData.photoUrl as string);
+          }
         }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
       }
     };
 
-    fetchStoreData();
+    if (user) {
+      fetchUserData();
+    }
   }, [user]);
 
   return (
@@ -223,7 +225,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
               title="Sair"
             >
-              {userType === 'lojista' && profilePhotoUrl ? (
+              {profilePhotoUrl ? (
                 <img 
                   src={profilePhotoUrl} 
                   alt="Foto de perfil" 
