@@ -52,6 +52,7 @@ interface UserProfile {
     experience: string;
     description: string;
     availability: string;
+    rating?: number;
   };
 }
 
@@ -451,10 +452,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               </div>
             ) : userProfile ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center mb-4">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                     <User className="h-12 w-12 text-primary" />
                   </div>
+                  
+                  {/* Exibir avaliação logo após a foto de perfil para montadores */}
+                  {userProfile.userType === 'montador' && userProfile.assembler && (
+                    <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
+                      <span className="font-medium text-yellow-700">{userProfile.assembler.rating || 0}</span>
+                      <Star className="h-4 w-4 text-yellow-500 ml-1" />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3">
@@ -490,14 +499,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                         <h3 className="text-sm font-medium text-gray-500">Especialidades</h3>
                         <p className="text-base">
                           {userProfile.assembler.specialties.join(', ')}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Avaliação</h3>
-                        <p className="text-base flex items-center">
-                          {userProfile.assembler.rating || 0}
-                          <Star className="h-4 w-4 text-yellow-500 ml-1" />
                         </p>
                       </div>
                     </>
