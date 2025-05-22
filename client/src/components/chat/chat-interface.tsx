@@ -458,7 +458,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   </div>
                   
                   {/* Exibir avaliação logo após a foto de perfil para montadores */}
-                  {userProfile.userType === 'montador' && userProfile.assembler && (
+                  {userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler && (
                     <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
                       <span className="font-medium text-yellow-700">{userProfile.assembler.rating || 0}</span>
                       <Star className="h-4 w-4 text-yellow-500 ml-1" />
