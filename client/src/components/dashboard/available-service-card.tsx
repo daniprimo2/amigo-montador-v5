@@ -118,26 +118,10 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </div>
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-            <span>{
-              // Extract and format just the start date from the combined "startDate - endDate" string
-              service.date.includes('-') 
-                ? (() => {
-                    const startDateStr = service.date.split('-')[0].trim();
-                    try {
-                      // If it's already a formatted date like "DD/MM/YYYY", return it as is
-                      if (startDateStr.includes('/')) {
-                        return startDateStr;
-                      }
-                      // Otherwise, format the ISO date string
-                      const startDate = new Date(startDateStr);
-                      return startDate.toLocaleDateString('pt-BR');
-                    } catch {
-                      // Fallback to the original string if there's an error parsing the date
-                      return startDateStr;
-                    }
-                  })()
-                : service.date
-            }</span>
+            <span>
+              {/* Exibe a data de início do serviço conforme informada pelo Lojista */}
+              {service.date}
+            </span>
           </div>
         </div>
       </div>
