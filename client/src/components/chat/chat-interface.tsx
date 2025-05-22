@@ -9,6 +9,7 @@ import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star } from 'lucide-r
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
+import { HireAssemblerDialog } from '@/components/payment/hire-assembler-dialog';
 import { 
   Dialog,
   DialogContent,
@@ -62,6 +63,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isHireDialogOpen, setIsHireDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
