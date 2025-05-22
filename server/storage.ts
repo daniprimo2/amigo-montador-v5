@@ -32,6 +32,7 @@ export interface IStorage {
   getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
   updateServiceStatus(id: number, status: string): Promise<Service>;
+  updateService(id: number, serviceData: Partial<Service>): Promise<Service>;
   deleteService(id: number): Promise<void>;
   
   // Candidaturas
