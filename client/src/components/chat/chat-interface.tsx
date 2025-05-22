@@ -315,22 +315,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
-            {service?.status !== 'in-progress' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
-                onClick={handleStartService}
-                disabled={startServiceMutation.isPending}
-              >
-                {startServiceMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowLeft className="h-4 w-4 rotate-180" />
-                )}
-                Em Andamento
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
