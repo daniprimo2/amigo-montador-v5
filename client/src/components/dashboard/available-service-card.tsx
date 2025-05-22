@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Building, CalendarIcon, MapPin, Loader2, FileText, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ServiceDetailsDialog } from './service-details-dialog';
 
-interface ServiceProps {
+export interface ServiceProps {
   id: number;
   title: string;
   location: string;
@@ -14,6 +15,7 @@ interface ServiceProps {
   store: string;
   type: string;
   status?: string;
+  description?: string;
   projectFiles?: Array<{
     name: string;
     path: string;
@@ -33,8 +35,17 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
 }) => {
   const [isApplying, setIsApplying] = useState(false);
   const [isFilesDialogOpen, setIsFilesDialogOpen] = useState(false);
+  const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  const handleViewServiceDetails = () => {
+    setIsServiceDetailsOpen(true);
+  };
+  
+  const handleCloseServiceDetails = () => {
+    setIsServiceDetailsOpen(false);
+  };
   
   const handleApply = async () => {
     if (!onApply) return;
@@ -48,6 +59,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       
       const response = await onApply(service.id);
       console.log(`[AvailableServiceCard] Resposta da candidatura:`, response);
+      
+      // Fechar o diálogo de detalhes após o envio bem-sucedido
+      setIsServiceDetailsOpen(false);
       
       toast({
         title: "Candidatura enviada",
@@ -142,19 +156,23 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       )}
       
       <Button 
-        onClick={handleApply}
-        disabled={isApplying || service.status === 'in-progress' || hasApplied}
+        onClick={handleViewServiceDetails}
+        disabled={service.status === 'in-progress' || hasApplied}
         className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${hasApplied ? 'bg-amber-500 hover:bg-amber-600' : 'bg-primary hover:bg-opacity-90'} text-white`}
       >
-        {isApplying ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Enviando...
-          </>
-        ) : service.status === 'in-progress' ? 
+        {service.status === 'in-progress' ? 
           'Serviço em andamento' : 
-          hasApplied ? 'Em andamento' : 'Candidatar-se'}
+          hasApplied ? 'Em andamento' : 'Ver detalhes do serviço'}
       </Button>
+      
+      {/* Diálogo para detalhes do serviço e candidatura */}
+      <ServiceDetailsDialog 
+        isOpen={isServiceDetailsOpen}
+        onClose={handleCloseServiceDetails}
+        service={service}
+        onApply={handleApply}
+        isApplying={isApplying}
+      />
       
       {/* Diálogo para visualizar arquivos PDF */}
       <Dialog open={isFilesDialogOpen} onOpenChange={setIsFilesDialogOpen}>
