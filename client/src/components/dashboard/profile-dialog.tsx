@@ -65,6 +65,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const logoFileInputRef = useRef<HTMLInputElement | null>(null);
   
   // Dados do usuário
   const userForm = useForm<UserFormValues>({
@@ -190,13 +191,18 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     }
   };
   
-  // Abrir seletor de arquivo
+  // Abrir seletor de arquivo para foto de perfil
   const handlePhotoUploadClick = () => {
     fileInputRef.current?.click();
   };
   
+  // Abrir seletor de arquivo para logo da loja
+  const handleLogoUploadClick = () => {
+    logoFileInputRef.current?.click();
+  };
+  
   // Processar upload de foto
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, uploadType = 'profile-photo') => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -224,13 +230,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       const formData = new FormData();
       formData.append('photo', file);
       
-      // Determinar se estamos no tab de dados pessoais ou dados da loja
-      const isStoreLogoUpload = activeTab === 'dados-loja';
-      if (isStoreLogoUpload) {
-        formData.append('type', 'store-logo');
-      } else {
-        formData.append('type', 'profile-photo');
-      }
+      // Usar o tipo de upload explícito passado para a função
+      const isStoreLogoUpload = uploadType === 'store-logo';
+      formData.append('type', uploadType);
+      
+      console.log(`Enviando imagem como: ${uploadType}`);
       
       const response = await fetch('/api/profile/photo', {
         method: 'POST',
@@ -258,7 +262,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       }
     } catch (error) {
       console.error('Erro ao enviar imagem:', error);
-      const errorMessage = activeTab === 'dados-loja' 
+      const errorMessage = isStoreLogoUpload
         ? 'Ocorreu um erro ao enviar o logo da loja' 
         : 'Ocorreu um erro ao enviar a foto de perfil';
       
@@ -270,8 +274,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     } finally {
       setIsLoading(false);
       // Limpar o input para permitir selecionar o mesmo arquivo novamente
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      const inputRef = uploadType === 'store-logo' ? logoFileInputRef : fileInputRef;
+      if (inputRef.current) {
+        inputRef.current.value = '';
       }
     }
   };
@@ -411,7 +416,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 <input 
                   type="file" 
                   ref={fileInputRef}
-                  onChange={handlePhotoChange}
+                  onChange={(e) => handlePhotoChange(e)}
                   accept="image/*" 
                   className="hidden" 
                 />
@@ -509,13 +514,22 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   {/* Botão para upload do logo */}
                   <Button 
                     type="button"
-                    onClick={handlePhotoUploadClick}
+                    onClick={handleLogoUploadClick}
                     className="mt-2 flex items-center gap-2"
                     size="sm"
                   >
                     <Upload className="h-4 w-4" />
                     Alterar logo da loja
                   </Button>
+                  
+                  {/* Input oculto para upload do logo */}
+                  <input 
+                    type="file" 
+                    ref={logoFileInputRef}
+                    onChange={(e) => handlePhotoChange(e, 'store-logo')}
+                    accept="image/*" 
+                    className="hidden" 
+                  />
                 </div>
               
                 <Form {...storeForm}>
