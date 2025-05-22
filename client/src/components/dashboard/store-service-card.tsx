@@ -76,7 +76,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
       try {
         setIsCompleting(true);
         
-        await apiRequest({
+        const response = await apiRequest({
           method: 'POST',
           url: `/api/services/${service.id}/complete`,
           data: {}
@@ -94,6 +94,27 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         
         setIsCompleting(false);
+        
+        // Após completar o serviço com sucesso, disparar um evento personalizado
+        // para abrir o diálogo de avaliação automaticamente
+        if (response.service && service.assembler) {
+          // Cria e dispara um evento customizado para abrir o diálogo de avaliação
+          const event = new CustomEvent('open-rating-dialog', {
+            detail: {
+              serviceId: service.id,
+              serviceData: {
+                id: service.id,
+                title: service.title,
+                assemblerData: {
+                  id: service.assembler.id,
+                  userId: service.assembler.userId,
+                  name: service.assembler.name
+                }
+              }
+            }
+          });
+          window.dispatchEvent(event);
+        }
       } catch (error: any) {
         toast({
           title: 'Erro ao finalizar serviço',
