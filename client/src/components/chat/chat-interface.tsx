@@ -338,7 +338,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               onClick={() => setIsPaymentDialogOpen(true)}
             >
               <DollarSign className="h-4 w-4" />
-              Finalizar
+              Contratar Montador
             </Button>
           </div>
         )}
