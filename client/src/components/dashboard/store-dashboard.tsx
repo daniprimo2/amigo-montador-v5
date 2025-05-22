@@ -859,12 +859,33 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               <StoreServiceCard 
                 key={service.id} 
                 service={service} 
-                onClick={(serviceId) => {
+                onClick={async (serviceId) => {
                   // Se o serviço estiver em andamento, redirecionar para o chat
                   if (service.status === 'in-progress' && service.assembler) {
+                    console.log(`Redirecionando para chat do serviço ${serviceId} com montador ${service.assembler.id}`);
+                    
+                    // Garantir que os dados estejam carregados antes de mudar para a seção de chat
+                    if (!activeServices) {
+                      await queryClient.prefetchQuery({
+                        queryKey: ['/api/store/services/with-applications'],
+                        queryFn: async () => {
+                          const response = await fetch('/api/store/services/with-applications');
+                          if (!response.ok) {
+                            throw new Error('Falha ao buscar serviços com candidaturas aceitas');
+                          }
+                          return response.json();
+                        }
+                      });
+                    }
+                    
+                    // Atualizar os estados para abrir o chat corretamente
                     setSelectedChatService(serviceId);
                     setSelectedAssemblerId(service.assembler.id);
-                    setDashboardSection('chat');
+                    
+                    // Mudar para a seção de chat após garantir que os estados foram atualizados
+                    setTimeout(() => {
+                      setDashboardSection('chat');
+                    }, 100);
                   }
                 }}
                 onRateClick={(serviceToRate) => {
