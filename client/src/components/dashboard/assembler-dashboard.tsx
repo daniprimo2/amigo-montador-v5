@@ -335,16 +335,39 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const renderHomeSection = () => (
     <>
       <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">
-            Olá, <span className="text-primary">{user?.name || 'Montador'}</span>
-          </h2>
-          <button 
-            className="text-primary text-sm font-medium"
-            onClick={() => setIsProfileDialogOpen(true)}
-          >
-            Ver Perfil
-          </button>
+        <div className="flex flex-col mb-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              Olá, <span className="text-primary">{user?.name || 'Montador'}</span>
+            </h2>
+            <button 
+              className="text-primary text-sm font-medium"
+              onClick={() => setIsProfileDialogOpen(true)}
+            >
+              Ver Perfil
+            </button>
+          </div>
+          
+          {/* Exibir avaliação média do montador */}
+          {user?.assembler && 'rating' in user.assembler && (
+            <div className="flex items-center mt-1">
+              <div className="flex items-center text-yellow-500">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-4 w-4 ${
+                      star <= (user.assembler?.rating || 0)
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm ml-2 text-gray-600">
+                {user.assembler?.rating ? user.assembler.rating.toFixed(1) : '0.0'} Avaliação média
+              </span>
+            </div>
+          )}
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">

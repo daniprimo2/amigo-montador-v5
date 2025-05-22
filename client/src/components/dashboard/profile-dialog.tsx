@@ -24,9 +24,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, User, Camera, Upload } from 'lucide-react';
+import { Loader2, User, Camera, Upload, Star } from 'lucide-react';
 import { BankAccountDialog } from '../banking/bank-account-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { RatingStars } from '@/components/rating/rating-stars';
 
 const userSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -62,6 +63,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [activeTab, setActiveTab] = useState('dados-pessoais');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [userRating, setUserRating] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   // Dados do usuário
@@ -104,6 +106,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       }
       
       const data = await response.json();
+      console.log("Perfil do usuário carregado:", data);
       
       // Atualizar formulário de dados do usuário
       userForm.reset({
@@ -117,6 +120,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         setProfilePhoto(data.profileData.photoUrl);
       } else {
         setProfilePhoto(null);
+      }
+      
+      // Se for montador, obter a avaliação
+      if (user?.userType === 'montador' && data.assembler) {
+        setUserRating(data.assembler.rating || 0);
       }
       
       // Se for lojista, atualizar formulário da loja e verificar logo
@@ -356,6 +364,17 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 </div>
                 
                 <p className="text-sm text-gray-500 mb-2">Foto de perfil</p>
+                
+                {/* Exibir avaliação para montadores */}
+                {user?.userType === 'montador' && (
+                  <div className="flex flex-col items-center mb-2">
+                    <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+                      <RatingStars rating={userRating} size="sm" />
+                      <span className="font-medium text-yellow-700">{userRating.toFixed(1)}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Avaliação média</p>
+                  </div>
+                )}
                 
                 {/* Botão para upload mais visível e claro */}
                 <Button 
