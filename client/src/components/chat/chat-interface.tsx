@@ -287,6 +287,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     markMessagesAsRead();
   }, [serviceId, queryClient]);
   
+  // Notificação sobre a preservação do histórico completo do chat
+  useEffect(() => {
+    // Mostrar notificação apenas na primeira montagem do componente
+    toast({
+      title: "Histórico completo preservado",
+      description: "Nenhuma mensagem poderá ser excluída do chat, garantindo a preservação completa do histórico de conversas",
+      duration: 5000,
+    });
+  }, [toast]);
+  
   // Buscar perfil do usuário selecionado
   const fetchUserProfile = async (userId: number) => {
     if (userId === user?.id) {
@@ -424,37 +434,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                         {isCurrentUser ? 'Você' : msg.sender?.name || 'Usuário'}
                       </div>
                       
-                      {/* Botão de excluir - apenas para mensagens do usuário atual */}
-                      {isCurrentUser && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (service?.status === 'completed') {
-                              toast({
-                                title: 'Não é possível excluir',
-                                description: 'Mensagens relacionadas a serviços concluídos não podem ser apagadas',
-                                variant: 'destructive',
-                              });
-                            } else {
-                              deleteMessageMutation.mutate(msg.id);
-                            }
-                          }}
-                          disabled={service?.status === 'completed' || deleteMessageMutation.isPending}
-                          className={`ml-2 p-1 rounded-full -mt-1 -mr-1 ${service?.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-white/70 hover:bg-white/20 hover:text-white'}`}
-                          title={service?.status === 'completed' ? 'Mensagens de serviços concluídos não podem ser excluídas' : 'Excluir mensagem'}
-                        >
-                          {service?.status === 'completed' ? (
-                            <div className="flex items-center text-[10px]">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              <span>Bloqueado</span>
-                            </div>
-                          ) : deleteMessageMutation.isPending ? (
-                            <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
+                      {/* Removido botão de excluir para preservar histórico completo do chat */}
                     </div>
                     <div className="break-words whitespace-pre-wrap">{msg.content}</div>
                     <div className={`text-xs mt-1 text-right ${isCurrentUser ? 'text-white/70' : 'text-gray-500'}`}>
