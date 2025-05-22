@@ -391,17 +391,27 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 <p className="text-sm text-gray-500 mb-2">Foto de perfil</p>
                 
                 {/* Exibir avaliação para montadores e lojistas */}
-                {(user?.userType === 'montador' || user?.userType === 'lojista') && userRating > 0 && (
+                {(user?.userType === 'montador' || user?.userType === 'lojista') && (
                   <div className="flex flex-col items-center mb-2">
-                    <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
-                      <RatingStars rating={userRating} size="sm" />
-                      <span className="font-medium text-yellow-700">{userRating.toFixed(1)}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {user?.userType === 'lojista' 
-                        ? 'Avaliação dos montadores' 
-                        : 'Avaliação média'}
-                    </p>
+                    {userRating > 0 ? (
+                      <>
+                        <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+                          <RatingStars rating={userRating} size="sm" />
+                          <span className="font-medium text-yellow-700">{userRating.toFixed(1)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {user?.userType === 'lojista' 
+                            ? 'Avaliação dos montadores' 
+                            : 'Avaliação média'}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-500 rounded-full px-3 py-1 bg-gray-50">
+                        {user?.userType === 'lojista' 
+                          ? 'Ainda sem avaliações de montadores' 
+                          : 'Ainda sem avaliações'}
+                      </p>
+                    )}
                   </div>
                 )}
                 
