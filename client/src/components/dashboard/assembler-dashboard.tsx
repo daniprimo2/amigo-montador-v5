@@ -651,7 +651,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <TabsContent value="completed">
           <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
             <div className="divide-y">
-              {isLoading ? (
+              {isLoading || isLoadingActiveServices ? (
                 // Show loading skeletons
                 Array(2).fill(0).map((_, index) => (
                   <div key={index} className="p-4">
@@ -665,24 +665,55 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-red-500">
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
-              ) : (rawServices && rawServices.filter(s => s.status === 'completed').length > 0) ? (
-                // Show completed services
-                rawServices.filter(s => s.status === 'completed').map(service => (
-                  <CompletedServiceCard 
-                    key={service.id} 
-                    service={{
-                      id: service.id,
-                      title: service.title,
-                      location: service.location || '',
-                      date: new Date(service.date).toLocaleDateString('pt-BR'),
-                      price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
-                      store: service.store?.name || 'Loja não especificada',
-                      type: service.materialType || service.type || 'Não especificado',
-                      rated: false // Isso teria que vir do backend
-                    }}
-                    onRateClick={handleRateClick}
-                  />
-                ))
+              ) : ((rawServices && rawServices.filter(s => s.status === 'completed').length > 0) || (activeServices && activeServices.filter((s: any) => s.status === 'completed').length > 0)) ? (
+                // Show completed services from both sources
+                <>
+                  {/* Show completed services from rawServices */}
+                  {rawServices && rawServices.filter(s => s.status === 'completed').map(service => (
+                    <CompletedServiceCard 
+                      key={`raw-${service.id}`} 
+                      service={{
+                        id: service.id,
+                        title: service.title,
+                        location: service.location || '',
+                        date: new Date(service.date).toLocaleDateString('pt-BR'),
+                        price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
+                        store: service.store?.name || 'Loja não especificada',
+                        type: service.materialType || service.type || 'Não especificado',
+                        rated: false // Será atualizado pelo backend
+                      }}
+                      onRateClick={handleRateClick}
+                    />
+                  ))}
+                  
+                  {/* Show completed chat services */}
+                  {activeServices && activeServices.filter((s: any) => s.status === 'completed').map((service: any) => (
+                    <div 
+                      key={`chat-${service.id}`} 
+                      className="p-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                      onClick={() => setSelectedChatService(service.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              Finalizado
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Loja: {service.store?.name || 'Não especificada'}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400">
+                            <path d="m9 18 6-6-6-6"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
               ) : (
                 // Show empty state
                 <div className="p-8 text-center text-gray-500">
@@ -805,9 +836,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Separar os serviços ativos em 'em andamento' e 'finalizados'
+    // Mostrar apenas serviços em andamento na aba de Chat, os finalizados vão para a aba Finalizados
     const activeChats = activeServices ? activeServices.filter((service: any) => service.status === 'in-progress') : [];
-    const completedChats = activeServices ? activeServices.filter((service: any) => service.status === 'completed') : [];
     
     return (
       <div className="mt-2">
@@ -822,7 +852,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               </div>
             ))}
           </div>
-        ) : (activeChats.length === 0 && completedChats.length === 0) ? (
+        ) : (activeChats.length === 0) ? (
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
@@ -863,40 +893,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               </div>
             )}
             
-            {/* Seção de conversas finalizadas */}
-            {completedChats.length > 0 && (
-              <div>
-                <h4 className="text-md font-medium mb-3 text-gray-600">Conversas Finalizadas</h4>
-                <div className="space-y-3">
-                  {completedChats.map((service: any) => (
-                    <div 
-                      key={service.id} 
-                      className="bg-gray-50 rounded-xl shadow-sm p-4 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
-                      onClick={() => setSelectedChatService(service.id)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{service.title}</h4>
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              Finalizado
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            Loja: {service.store?.name || 'Não especificada'}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400">
-                            <path d="m9 18 6-6-6-6"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Removido a seção de conversas finalizadas - movidas para a aba "Finalizados" */}
           </div>
         )}
       </div>
