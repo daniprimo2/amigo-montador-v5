@@ -363,8 +363,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Calculate service counts by status
   const serviceCounts = {
     available: filteredServices.length || 0,
-    inProgress: activeServices?.filter(s => s.status === 'in-progress').length || 0,
-    completed: rawServices?.filter(s => s.status === 'completed').length || 0
+    inProgress: activeServices?.filter((s: any) => s.status === 'in-progress').length || 0,
+    // Soma serviços completos de rawServices + activeServices
+    completed: (rawServices?.filter(s => s.status === 'completed').length || 0) + 
+               (activeServices?.filter((s: any) => s.status === 'completed').length || 0)
   };
   
   // Handle applying for a service
