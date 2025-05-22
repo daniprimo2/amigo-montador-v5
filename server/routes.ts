@@ -2170,6 +2170,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Atualizar serviço com arquivos (upload de PDFs e exclusão de arquivos existentes)
+  app.post("/api/services/:id/update-with-files", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se é o lojista dono do serviço
+      const store = await storage.getStoreByUserId(req.user!.id);
+      if (req.user?.userType !== 'lojista' || !store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a modificar este serviço" });
+      }
+      
+      // Verificar se o serviço está em aberto
+      if (service.status !== 'open') {
+        return res.status(400).json({ 
+          message: "Apenas serviços com status 'Em Aberto' podem ser editados" 
+        });
+      }
+      
+      // Preparar dados para atualização
+      const updateData: Partial<Service> = {};
+      
+      // Extrair dados básicos do serviço
+      const { title, description, date, price, materialType } = req.body;
+      
+      if (title) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      if (date) updateData.date = date;
+      if (price) updateData.price = price.toString();
+      if (materialType) updateData.materialType = materialType;
+      
+      // Tratar exclusão de arquivos
+      let filesToDelete: string[] = [];
+      if (req.body.filesToDelete) {
+        try {
+          filesToDelete = JSON.parse(req.body.filesToDelete);
+        } catch (e) {
+          console.error("Erro ao processar lista de arquivos para exclusão:", e);
+        }
+      }
+      
+      // Arquivos existentes que não serão excluídos
+      let currentProjectFiles = Array.isArray(service.projectFiles) 
+        ? service.projectFiles.filter((file: any) => !filesToDelete.includes(file.path))
+        : [];
+      
+      // Processar novos arquivos enviados
+      const uploadedFiles = [];
+      
+      if (req.files) {
+        // Tratamento para arquivos únicos e múltiplos
+        const files = req.files.files ? 
+          (Array.isArray(req.files.files) ? req.files.files : [req.files.files]) : 
+          [];
+        
+        for (const file of files) {
+          // Verificar se é um PDF
+          if (!file.mimetype.includes('pdf')) {
+            return res.status(400).json({ 
+              message: `O arquivo "${file.name}" não é um PDF válido` 
+            });
+          }
+          
+          // Verificar tamanho (máximo 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            return res.status(400).json({ 
+              message: `O arquivo "${file.name}" excede o tamanho máximo permitido de 10MB` 
+            });
+          }
+          
+          // Gerar nome de arquivo único com timestamp
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(2, 8);
+          const fileName = `${timestamp}-${randomId}-${file.name}`;
+          
+          // Criar diretório se não existir
+          const uploadDir = './uploads/projects';
+          if (!fs.existsSync('./uploads')) {
+            fs.mkdirSync('./uploads');
+          }
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+          }
+          
+          // Caminho completo para o arquivo
+          const uploadPath = `${uploadDir}/${fileName}`;
+          
+          // Mover arquivo para o diretório
+          await file.mv(uploadPath);
+          
+          // Adicionar à lista de arquivos
+          uploadedFiles.push({
+            name: file.name,
+            path: `/uploads/projects/${fileName}`
+          });
+        }
+      }
+      
+      // Excluir arquivos físicos do sistema de arquivos
+      for (const filePath of filesToDelete) {
+        try {
+          // Obter apenas o nome do arquivo do caminho
+          const fileName = filePath.split('/').pop();
+          if (fileName) {
+            const fullPath = `./uploads/projects/${fileName}`;
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+              console.log(`Arquivo excluído: ${fullPath}`);
+            }
+          }
+        } catch (e) {
+          console.error(`Erro ao excluir arquivo ${filePath}:`, e);
+          // Continuar mesmo se a exclusão de arquivo falhar
+        }
+      }
+      
+      // Combinar arquivos existentes com novos arquivos
+      const allProjectFiles = [...currentProjectFiles, ...uploadedFiles];
+      
+      // Adicionar os arquivos ao objeto de atualização
+      updateData.projectFiles = allProjectFiles;
+      
+      // Atualizar o serviço no banco de dados
+      const updatedService = await storage.updateService(serviceId, updateData);
+      
+      // Log para depuração
+      console.log(`Serviço ${serviceId} atualizado com arquivos por ${req.user.name} (${req.user.id}):`, {
+        novosArquivos: uploadedFiles.length,
+        arquivosExcluidos: filesToDelete.length,
+        totalArquivos: allProjectFiles.length
+      });
+      
+      res.status(200).json({
+        ...updatedService,
+        projectFiles: allProjectFiles
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar serviço com arquivos:", error);
+      res.status(500).json({ message: "Erro ao atualizar serviço com arquivos" });
+    }
+  });
+
   // Rota para finalizar serviço
   app.post("/api/services/:id/complete", async (req, res) => {
     try {
