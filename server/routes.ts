@@ -170,10 +170,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(services);
         
-      // Filtrar para incluir apenas os serviços que estão na lista de IDs
-      const filteredServices = servicesResult.filter(service => allServiceIds.includes(service.id));
+      // Filtrar para incluir apenas os serviços que estão na lista de IDs E não estão com status 'completed'
+      const filteredServices = servicesResult.filter(service => 
+        allServiceIds.includes(service.id) && service.status !== 'completed'
+      );
       
-      console.log(`Encontrados ${filteredServices.length} serviços ativos para o montador`);
+      console.log(`Encontrados ${filteredServices.length} serviços ativos para o montador (excluindo concluídos)`);
 
       // Adicionar informações da loja e status da candidatura a cada serviço
       const enhancedServices = await Promise.all(filteredServices.map(async (service) => {
