@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -81,6 +81,17 @@ export const messages = pgTable("messages", {
   sentAt: timestamp("sent_at").defaultNow(),
 });
 
+// Controle de mensagens lidas
+export const messageReads = pgTable("message_reads", {
+  messageId: integer("message_id").notNull().references(() => messages.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  readAt: timestamp("read_at").defaultNow(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.messageId, table.userId] }),
+  };
+});
+
 // Avaliações
 export const ratings = pgTable("ratings", {
   id: serial("id").primaryKey(),
@@ -124,6 +135,7 @@ export const insertAssemblerSchema = createInsertSchema(assemblers);
 export const insertServiceSchema = createInsertSchema(services);
 export const insertApplicationSchema = createInsertSchema(applications);
 export const insertMessageSchema = createInsertSchema(messages);
+export const insertMessageReadSchema = createInsertSchema(messageReads);
 export const insertRatingSchema = createInsertSchema(ratings);
 export const insertBankAccountSchema = createInsertSchema(bankAccounts);
 
@@ -134,6 +146,7 @@ export type InsertAssembler = z.infer<typeof insertAssemblerSchema>;
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertMessageRead = z.infer<typeof insertMessageReadSchema>;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
 export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;
 
@@ -144,5 +157,6 @@ export type Assembler = typeof assemblers.$inferSelect;
 export type Service = typeof services.$inferSelect;
 export type Application = typeof applications.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type MessageRead = typeof messageReads.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type BankAccount = typeof bankAccounts.$inferSelect;

@@ -44,6 +44,9 @@ export interface IStorage {
   // Mensagens
   getMessagesByServiceId(serviceId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(serviceId: number, userId: number): Promise<void>;
+  getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number>;
+  hasUnreadMessages(serviceId: number, userId: number): Promise<boolean>;
   
   // Avaliações
   getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined>;
@@ -456,6 +459,81 @@ export class DatabaseStorage implements IStorage {
       .values(messageData)
       .returning();
     return message;
+  }
+  
+  async markMessagesAsRead(serviceId: number, userId: number): Promise<void> {
+    // 1. Encontrar todas as mensagens do serviço que não foram lidas pelo usuário
+    const serviceMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.serviceId, serviceId));
+      
+    // Apenas marcar as mensagens que não foram enviadas pelo próprio usuário
+    const otherUserMessages = serviceMessages.filter(msg => msg.senderId !== userId);
+    
+    // Para cada mensagem não lida, marcar como lida
+    for (const msg of otherUserMessages) {
+      // Verificar se já está marcada como lida
+      const existingRead = await db
+        .select()
+        .from(messageReads)
+        .where(
+          and(
+            eq(messageReads.messageId, msg.id),
+            eq(messageReads.userId, userId)
+          )
+        );
+      
+      // Se não estiver marcada como lida, criar o registro
+      if (existingRead.length === 0) {
+        await db
+          .insert(messageReads)
+          .values({
+            messageId: msg.id,
+            userId: userId,
+            readAt: new Date()
+          });
+      }
+    }
+  }
+  
+  async getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number> {
+    // 1. Buscar todas as mensagens do serviço
+    const allMessages = await db
+      .select()
+      .from(messages)
+      .where(
+        and(
+          eq(messages.serviceId, serviceId),
+          not(eq(messages.senderId, userId)) // Apenas mensagens não enviadas pelo usuário
+        )
+      );
+    
+    // 2. Para cada mensagem, verificar se está marcada como lida
+    let unreadCount = 0;
+    
+    for (const msg of allMessages) {
+      const readRecord = await db
+        .select()
+        .from(messageReads)
+        .where(
+          and(
+            eq(messageReads.messageId, msg.id),
+            eq(messageReads.userId, userId)
+          )
+        );
+      
+      if (readRecord.length === 0) {
+        unreadCount++;
+      }
+    }
+    
+    return unreadCount;
+  }
+  
+  async hasUnreadMessages(serviceId: number, userId: number): Promise<boolean> {
+    const unreadCount = await this.getUnreadMessageCountForService(serviceId, userId);
+    return unreadCount > 0;
   }
   
   // Avaliações
