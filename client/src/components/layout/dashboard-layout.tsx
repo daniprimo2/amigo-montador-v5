@@ -172,8 +172,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Get user data including store for lojista
   const { user } = useAuth();
   const [storeLogoUrl, setStoreLogoUrl] = useState<string | null>(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
 
-  // Fetch store logo on mount if user is lojista
+  // Fetch store logo and profile photo on mount if user is lojista
   useEffect(() => {
     const fetchStoreData = async () => {
       if (user?.userType === 'lojista') {
@@ -183,6 +184,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             const data = await response.json();
             if (data.store?.logoUrl) {
               setStoreLogoUrl(data.store.logoUrl);
+            }
+            
+            // Set profile photo URL if available
+            if (user.profileData && typeof user.profileData === 'object' && 'photoUrl' in user.profileData) {
+              setProfilePhotoUrl(user.profileData.photoUrl as string);
             }
           }
         } catch (error) {
@@ -235,7 +241,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
               title={userType === 'lojista' ? "Editar perfil e logo" : "Sair"}
             >
-              {userType === 'lojista' ? <User className="h-5 w-5 text-primary" /> : <LogOut className="h-5 w-5 text-gray-600" />}
+              {userType === 'lojista' && profilePhotoUrl ? (
+                <img 
+                  src={profilePhotoUrl} 
+                  alt="Foto de perfil" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    // Fallback to icon if image fails to load
+                    setProfilePhotoUrl(null);
+                  }}
+                />
+              ) : (
+                userType === 'lojista' ? <User className="h-5 w-5 text-primary" /> : <LogOut className="h-5 w-5 text-gray-600" />
+              )}
             </button>
           </div>
         </div>
