@@ -36,6 +36,7 @@ interface ServiceData {
   };
   status: string;
   createdAt: string;
+  completedAt?: string; // Data de finalização do serviço
 }
 
 // Format data for display in the UI
@@ -682,38 +683,32 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
                         store: service.store?.name || 'Loja não especificada',
                         type: service.materialType || service.type || 'Não especificado',
+                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
                         rated: false // Será atualizado pelo backend
                       }}
                       onRateClick={handleRateClick}
+                      onChatClick={(serviceId) => setSelectedChatService(serviceId)}
                     />
                   ))}
                   
                   {/* Show completed chat services */}
                   {activeServices && activeServices.filter((s: any) => s.status === 'completed').map((service: any) => (
-                    <div 
-                      key={`chat-${service.id}`} 
-                      className="p-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                      onClick={() => setSelectedChatService(service.id)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{service.title}</h4>
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              Finalizado
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            Loja: {service.store?.name || 'Não especificada'}
-                          </p>
-                        </div>
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400">
-                            <path d="m9 18 6-6-6-6"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                    <CompletedServiceCard 
+                      key={`chat-${service.id}`}
+                      service={{
+                        id: service.id,
+                        title: service.title,
+                        location: service.location || '',
+                        date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não especificada',
+                        price: service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : '',
+                        store: service.store?.name || 'Loja não especificada',
+                        type: service.materialType || 'Não especificado',
+                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
+                        rated: !!service.rated
+                      }}
+                      onRateClick={handleRateClick}
+                      onChatClick={(serviceId) => setSelectedChatService(serviceId)}
+                    />
                   ))}
                 </>
               ) : (
