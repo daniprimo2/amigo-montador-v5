@@ -225,21 +225,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
               title="Sair"
             >
-              {profilePhotoUrl ? (
-                <img 
-                  src={profilePhotoUrl} 
-                  alt="Foto de perfil" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    // Fallback to icon if image fails to load
-                    setProfilePhotoUrl(null);
-                  }}
-                />
-              ) : (
-                <User className="h-5 w-5 text-gray-600" />
-              )}
+              <User className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         </div>
