@@ -395,36 +395,33 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 {/* Exibir avaliação para montadores e lojistas */}
                 {(user?.userType === 'montador' || user?.userType === 'lojista') && (
                   <div className="flex flex-col items-center mt-1 mb-2">
-                    {userRating > 0 ? (
-                      <>
-                        <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
-                          <div className="flex items-center text-yellow-500">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-3 w-3 ${
-                                  star <= userRating
-                                    ? 'text-yellow-500 fill-yellow-500'
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="font-medium text-yellow-700 text-sm">{userRating.toFixed(1)}</span>
-                        </div>
-                        <span className="text-xs text-gray-500 mt-1">
-                          {user?.userType === 'lojista' 
+                    <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+                      <div className="flex items-center text-yellow-500">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-3 w-3 ${
+                              star <= userRating
+                                ? 'text-yellow-500 fill-yellow-500'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="font-medium text-yellow-700 text-sm">
+                        {userRating > 0 ? userRating.toFixed(1) : '0.0'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1">
+                      {userRating > 0 
+                        ? (user?.userType === 'lojista' 
                             ? 'Avaliação dos montadores' 
-                            : 'Avaliação média'}
-                        </span>
-                      </>
-                    ) : (
-                      <p className="text-xs text-gray-500 rounded-full px-3 py-1 bg-gray-50">
-                        {user?.userType === 'lojista' 
-                          ? 'Ainda sem avaliações de montadores' 
-                          : 'Ainda sem avaliações'}
-                      </p>
-                    )}
+                            : 'Avaliação média')
+                        : (user?.userType === 'lojista' 
+                            ? 'Ainda sem avaliações de montadores' 
+                            : 'Ainda sem avaliações')
+                      }
+                    </span>
                   </div>
                 )}
                 
