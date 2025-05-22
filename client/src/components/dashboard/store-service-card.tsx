@@ -95,25 +95,37 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         
         setIsCompleting(false);
         
-        // Após completar o serviço com sucesso, disparar um evento personalizado
-        // para abrir o diálogo de avaliação automaticamente
-        if (response.service && service.assembler) {
-          // Cria e dispara um evento customizado para abrir o diálogo de avaliação
-          const event = new CustomEvent('open-rating-dialog', {
-            detail: {
-              serviceId: service.id,
-              serviceData: {
-                id: service.id,
-                title: service.title,
-                assemblerData: {
-                  id: service.assembler.id,
-                  userId: service.assembler.userId,
-                  name: service.assembler.name
+        // Após completar o serviço com sucesso, vamos abrir diretamente o diálogo de avaliação
+        // Isso garante que não há dependência de eventos do WebSocket
+        if (service.assembler && onRateClick) {
+          // Pequeno timeout para garantir que o estado da aplicação foi atualizado
+          setTimeout(() => {
+            // Chama diretamente a função de avaliação que foi passada como prop
+            onRateClick(service);
+            
+            // Também dispara o evento para garantir compatibilidade com ambas implementações
+            const event = new CustomEvent('open-rating-dialog', {
+              detail: {
+                serviceId: service.id,
+                serviceData: {
+                  id: service.id, 
+                  title: service.title,
+                  assemblerData: {
+                    id: service.assembler.id,
+                    userId: service.assembler.userId,
+                    name: service.assembler.name
+                  }
                 }
               }
-            }
-          });
-          window.dispatchEvent(event);
+            });
+            window.dispatchEvent(event);
+            
+            // Log para depuração
+            console.log("[StoreServiceCard] Diálogo de avaliação solicitado para serviço:", service.id);
+          }, 500);
+        } else {
+          console.log("[StoreServiceCard] Não foi possível abrir avaliação: assembler ou onRateClick indisponível", 
+            {hasAssembler: !!service.assembler, hasOnRateClick: !!onRateClick});
         }
       } catch (error: any) {
         toast({
