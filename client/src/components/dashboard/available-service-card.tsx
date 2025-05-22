@@ -18,11 +18,13 @@ interface ServiceProps {
 interface AvailableServiceCardProps {
   service: ServiceProps;
   onApply?: (id: number) => void;
+  activeServices?: any[]; // Array of services the montador has already applied to
 }
 
 export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({ 
   service, 
-  onApply 
+  onApply,
+  activeServices = []
 }) => {
   const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
@@ -69,6 +71,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     }
   };
 
+  // Check if this service is already in the active services (user already applied)
+  const hasApplied = activeServices.some(activeService => activeService.id === service.id);
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-start mb-2">
@@ -98,8 +103,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       </div>
       <Button 
         onClick={handleApply}
-        disabled={isApplying || service.status === 'in-progress'}
-        className="w-full py-2 px-4 bg-primary text-white font-medium rounded-full shadow-sm hover:bg-opacity-90 transition"
+        disabled={isApplying || service.status === 'in-progress' || hasApplied}
+        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${hasApplied ? 'bg-amber-500 hover:bg-amber-600' : 'bg-primary hover:bg-opacity-90'} text-white`}
       >
         {isApplying ? (
           <>
@@ -108,7 +113,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </>
         ) : service.status === 'in-progress' ? 
           'Serviço em andamento' : 
-          'Candidatar-se'}
+          hasApplied ? 'Em andamento' : 'Candidatar-se'}
       </Button>
     </div>
   );
