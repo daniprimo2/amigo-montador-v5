@@ -524,7 +524,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className={`font-bold text-xl ${serviceCounts.completed > 0 ? 'text-green-600' : 'text-primary'}`}>
               {serviceCounts.completed}
             </div>
-            <div className="text-xs text-gray-500">Finalizados</div>
+            <div className="text-xs text-gray-500">Concluídos</div>
           </div>
         </div>
       </div>
