@@ -220,17 +220,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </div>
           
           <div className="ml-auto flex space-x-2">
-            {service.status === 'in-progress' && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleCompleteClick}
-                disabled={isCompleting}
-              >
-                <CheckSquare className="h-4 w-4 mr-1" />
-                {isCompleting ? 'Finalizando...' : 'Montagem Concluída'}
-              </Button>
-            )}
+            {/* O botão "Montagem Concluída" foi movido para a interface de chat */}
             
             {service.status === 'completed' && service.assembler && (
               <Button 
