@@ -943,10 +943,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const servicesWithChat = React.useMemo(() => {
     const result: Array<any> = [];
     
-    // Adicionar serviços com candidaturas aceitas (em andamento)
+    // Adicionar serviços com candidaturas aceitas (em andamento ou finalizados)
     if (activeServices && activeServices.length > 0) {
       activeServices.forEach((service: any) => {
         if (service.assembler && service.assembler.id) {
+          // Definir o tipo de chat com base no status do serviço
+          const chatType = service.status === 'completed' ? 'completed' : 'active';
+          
           result.push({
             id: service.id,
             title: service.title,
@@ -955,7 +958,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             assemblerId: service.assembler.id,
             hasNewMessages: service.hasNewMessages || false,
             hasNewApplications: false,
-            chatType: 'active' // Indica que é um chat com montador já aceito
+            chatType: chatType // 'active' para serviços em andamento, 'completed' para serviços finalizados
           });
         }
       });
@@ -1005,8 +1008,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     
     // Dividir os serviços em três categorias
     const pendingApplications = servicesWithChat.filter(service => service.chatType === 'pending');
-    const activeChats = servicesWithChat.filter(service => service.chatType === 'active' && service.status !== 'completed');
-    const completedChats = servicesWithChat.filter(service => service.chatType === 'active' && service.status === 'completed');
+    const activeChats = servicesWithChat.filter(service => service.chatType === 'active');
+    const completedChats = servicesWithChat.filter(service => service.chatType === 'completed');
     
     // Estado de carregamento combinado
     const isLoading = isLoadingActiveServices || isLoadingPendingServices;
