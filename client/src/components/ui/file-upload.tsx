@@ -92,13 +92,34 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
-    setFiles(selectedFiles);
-    onChange(selectedFiles);
+    
+    // If this is triggered by "Add More" button and we have existing files
+    if (files && selectedFiles && inputRef.current?.hasAttribute('data-add-more')) {
+      // Create a new FileList by combining existing and new files
+      const totalFiles = [...Array.from(files), ...Array.from(selectedFiles)];
+      
+      // Convert to a DataTransfer object to create a new FileList
+      const dataTransfer = new DataTransfer();
+      totalFiles.forEach(file => dataTransfer.items.add(file));
+      
+      const newFileList = dataTransfer.files;
+      setFiles(newFileList);
+      onChange(newFileList);
+      
+      // Remove the flag attribute
+      inputRef.current?.removeAttribute('data-add-more');
+    } else {
+      // Normal behavior - replace files
+      setFiles(selectedFiles);
+      onChange(selectedFiles);
+    }
   };
 
   const handleAddMore = () => {
-    if (!isUploading) {
-      inputRef.current?.click();
+    if (!isUploading && inputRef.current) {
+      // Set a flag attribute to indicate this is an "add more" action
+      inputRef.current.setAttribute('data-add-more', 'true');
+      inputRef.current.click();
     }
   };
 
