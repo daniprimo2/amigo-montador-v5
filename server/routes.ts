@@ -34,6 +34,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar pasta de uploads para ser acessível publicamente
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
+  // Criar pasta para uploads de PDFs de projetos se não existir
+  const projectUploadsDir = path.join(process.cwd(), 'uploads', 'projects');
+  if (!fs.existsSync(projectUploadsDir)) {
+    fs.mkdirSync(projectUploadsDir, { recursive: true });
+  }
+  
   // Configurar autenticação
   setupAuth(app);
 

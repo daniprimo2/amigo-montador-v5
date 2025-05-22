@@ -1294,6 +1294,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 onChange={setProjectFile}
                 required={true}
                 showAddMoreButton={true}
+                isUploading={isUploading}
               />
             </div>
           </div>
@@ -1303,14 +1304,23 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               variant="outline" 
               onClick={() => setIsNewServiceOpen(false)}
               className="w-full sm:w-auto order-2 sm:order-1"
+              disabled={isUploading}
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleCreateService}
               className="w-full sm:w-auto order-1 sm:order-2"
+              disabled={isUploading}
             >
-              Criar Serviço
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando Arquivos...
+                </>
+              ) : (
+                "Criar Serviço"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
