@@ -596,6 +596,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Criar serviço com upload de arquivos PDF (apenas lojistas)
+  app.post("/api/services/with-files", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Verificar se é lojista
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
+      }
+
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+      
+      // Verificar se há arquivos enviados
+      if (!req.files || !req.files.projectFiles) {
+        return res.status(400).json({ message: "Nenhum arquivo de projeto enviado" });
+      }
+      
+      // Verificar se os dados do serviço foram enviados
+      if (!req.body.serviceData) {
+        return res.status(400).json({ message: "Dados do serviço não enviados" });
+      }
+      
+      // Parsing dos dados do serviço do JSON
+      let serviceData;
+      try {
+        serviceData = JSON.parse(req.body.serviceData);
+      } catch (error) {
+        return res.status(400).json({ message: "Formato inválido dos dados do serviço" });
+      }
+      
+      // Adicionar dados do lojista
+      serviceData = {
+        ...serviceData,
+        storeId: store.id,
+        status: 'open',
+        createdAt: new Date()
+      };
+      
+      // Verificar campos obrigatórios
+      const requiredFields = {
+        title: "Título do Serviço",
+        date: "Data",
+        location: "Localização",
+        price: "Valor",
+        materialType: "Material"
+      };
+      
+      const missingFields = [];
+      for (const [field, label] of Object.entries(requiredFields)) {
+        if (!serviceData[field]) {
+          missingFields.push(label);
+        }
+      }
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: "Campos obrigatórios não preenchidos", 
+          missingFields
+        });
+      }
+      
+      // Processar os arquivos PDF
+      const projectFilesArray = Array.isArray(req.files.projectFiles) 
+        ? req.files.projectFiles 
+        : [req.files.projectFiles];
+      
+      const uploadedFiles = [];
+      
+      for (const file of projectFilesArray) {
+        // Verificar se é um PDF
+        if (!file.mimetype.includes('pdf')) {
+          return res.status(400).json({ 
+            message: `O arquivo "${file.name}" não é um PDF válido` 
+          });
+        }
+        
+        // Verificar tamanho (máximo 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          return res.status(400).json({ 
+            message: `O arquivo "${file.name}" excede o tamanho máximo permitido de 10MB` 
+          });
+        }
+        
+        // Gerar nome de arquivo único
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${file.name}`;
+        const uploadPath = path.join(projectUploadsDir, fileName);
+        
+        // Mover o arquivo
+        await file.mv(uploadPath);
+        
+        // Adicionar à lista de arquivos
+        uploadedFiles.push({
+          name: file.name,
+          path: `/uploads/projects/${fileName}`
+        });
+      }
+      
+      // Adicionar os caminhos dos arquivos aos dados do serviço
+      serviceData.projectFiles = uploadedFiles;
+      
+      // Criar o serviço no banco de dados
+      const service = await storage.createService(serviceData);
+      
+      res.status(201).json({
+        ...service,
+        projectFiles: uploadedFiles
+      });
+    } catch (error) {
+      console.error("Erro ao criar serviço com arquivos:", error);
+      res.status(500).json({ message: "Erro ao criar serviço com arquivos" });
+    }
+  });
+  
   // Atualizar status de serviço
   app.patch("/api/services/:id/status", async (req, res) => {
     try {
