@@ -333,7 +333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
-      // Buscar todos os serviços da loja com status 'in-progress' (são os que têm candidaturas aceitas)
+      // Buscar todos os serviços da loja com status 'in-progress' ou 'completed'
+      // para garantir que conversas permaneçam visíveis mesmo após a finalização
       const storeServices = await db
         .select({
           id: services.id,
@@ -349,7 +350,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(
           and(
             eq(services.storeId, store.id),
-            eq(services.status, 'in-progress')
+            // Incluir tanto serviços em andamento quanto já finalizados
+            // para que as conversas não desapareçam após finalização
+            or(
+              eq(services.status, 'in-progress'),
+              eq(services.status, 'completed')
+            )
           )
         );
 
