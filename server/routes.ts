@@ -944,8 +944,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Tipo de usuário não autorizado" });
       }
 
-      // Atualizar status para 'completed'
-      const updatedService = await storage.updateServiceStatus(serviceId, 'completed');
+      // Atualizar status para 'completed' e gravar data de finalização
+      const updatedService = await storage.updateService(serviceId, {
+        status: 'completed',
+        completedAt: new Date()
+      });
       
       // Enviar notificação sobre a finalização do serviço
       try {

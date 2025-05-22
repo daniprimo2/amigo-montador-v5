@@ -61,6 +61,7 @@ export const services = pgTable("services", {
   materialType: text("material_type").notNull(),
   projectFiles: jsonb("project_files"), // URLs para arquivos do projeto
   createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"), // Data de finalização do serviço
 });
 
 // Candidaturas

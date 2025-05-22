@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Building, CalendarIcon, DollarSign, MapPin, Star } from 'lucide-react';
+import { Building, CalendarIcon, CheckSquare, DollarSign, MapPin, MessageSquare, Star } from 'lucide-react';
 
 interface ServiceProps {
   id: number;
@@ -11,19 +11,26 @@ interface ServiceProps {
   store: string;
   type: string;
   rated?: boolean;
+  completedAt?: string; // Nova propriedade para data de finalização
 }
 
 interface CompletedServiceCardProps {
   service: ServiceProps;
   onRateClick?: (service: ServiceProps) => void;
+  onChatClick?: (serviceId: number) => void; // Nova propriedade para acesso ao chat
 }
 
 export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({ 
   service, 
-  onRateClick 
+  onRateClick,
+  onChatClick
 }) => {
   const handleRateClick = () => {
     if (onRateClick) onRateClick(service);
+  };
+
+  const handleChatClick = () => {
+    if (onChatClick) onChatClick(service.id);
   };
 
   return (
@@ -52,6 +59,27 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
             <span>{service.date}</span>
           </div>
         </div>
+      </div>
+      
+      {/* Data de finalização */}
+      {service.completedAt && (
+        <div className="flex items-center text-sm text-gray-600 mb-3">
+          <CheckSquare className="h-4 w-4 mr-1 text-green-500" />
+          <span>Finalizado em: {service.completedAt}</span>
+        </div>
+      )}
+      
+      <div className="flex space-x-2 mb-3">
+        {/* Botão para chat */}
+        <Button 
+          onClick={handleChatClick}
+          size="sm" 
+          variant="outline"
+          className="flex items-center justify-center"
+        >
+          <MessageSquare className="h-4 w-4 mr-1" />
+          Ver Conversa
+        </Button>
       </div>
       
       {!service.rated && (
