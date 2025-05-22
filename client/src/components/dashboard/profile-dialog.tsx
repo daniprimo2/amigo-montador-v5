@@ -332,7 +332,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
               onClick={onLogout}
               className="text-red-500 hover:text-red-700 hover:bg-red-50"
             >
-              Logout
+              Sair
             </Button>
           </div>
         )}
