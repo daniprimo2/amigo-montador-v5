@@ -363,7 +363,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Calculate service counts by status
   const serviceCounts = {
     available: filteredServices.length || 0,
-    inProgress: activeServices?.length || 0, // Usar os serviços ativos do endpoint /api/services/active
+    inProgress: activeServices?.filter(s => s.status === 'in-progress').length || 0,
     completed: rawServices?.filter(s => s.status === 'completed').length || 0
   };
   
@@ -524,7 +524,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className={`font-bold text-xl ${serviceCounts.completed > 0 ? 'text-green-600' : 'text-primary'}`}>
               {serviceCounts.completed}
             </div>
-            <div className="text-xs text-gray-500">Concluídos</div>
+            <div className="text-xs text-gray-500">Finalizados</div>
           </div>
         </div>
       </div>
@@ -533,7 +533,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="available">Disponíveis</TabsTrigger>
           <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-          <TabsTrigger value="completed">Concluídos</TabsTrigger>
+          <TabsTrigger value="completed">Finalizados</TabsTrigger>
         </TabsList>
         
         <TabsContent value="available">
