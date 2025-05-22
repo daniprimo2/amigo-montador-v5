@@ -394,7 +394,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                 
                 {/* Exibir avaliação para montadores e lojistas */}
                 {(user?.userType === 'montador' || user?.userType === 'lojista') && (
-                  <div className="flex flex-col items-center mb-2">
+                  <div className="flex flex-col items-center mt-1 mb-2">
                     {userRating > 0 ? (
                       <>
                         <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
@@ -410,13 +410,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                               />
                             ))}
                           </div>
-                          <span className="font-medium text-yellow-700">{userRating.toFixed(1)}</span>
+                          <span className="font-medium text-yellow-700 text-sm">{userRating.toFixed(1)}</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <span className="text-xs text-gray-500 mt-1">
                           {user?.userType === 'lojista' 
                             ? 'Avaliação dos montadores' 
                             : 'Avaliação média'}
-                        </p>
+                        </span>
                       </>
                     ) : (
                       <p className="text-xs text-gray-500 rounded-full px-3 py-1 bg-gray-50">
