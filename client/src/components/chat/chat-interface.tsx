@@ -570,9 +570,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   
                   {/* Exibir avaliação logo após a foto de perfil para montadores */}
                   {userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler && (
-                    <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
-                      <span className="font-medium text-yellow-700">{userProfile.assembler.rating || 0}</span>
-                      <Star className="h-4 w-4 text-yellow-500 ml-1" />
+                    <div className="flex flex-col items-center mt-1">
+                      <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+                        <div className="flex items-center text-yellow-500">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3 w-3 ${
+                                star <= (userProfile.assembler?.rating || 0)
+                                  ? 'text-yellow-500 fill-yellow-500'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-medium text-yellow-700 text-sm">
+                          {userProfile.assembler.rating ? userProfile.assembler.rating.toFixed(1) : '0.0'}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
