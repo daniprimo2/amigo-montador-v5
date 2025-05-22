@@ -224,27 +224,47 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       const formData = new FormData();
       formData.append('photo', file);
       
+      // Determinar se estamos no tab de dados pessoais ou dados da loja
+      const isStoreLogoUpload = activeTab === 'dados-loja';
+      if (isStoreLogoUpload) {
+        formData.append('type', 'store-logo');
+      } else {
+        formData.append('type', 'profile-photo');
+      }
+      
       const response = await fetch('/api/profile/photo', {
         method: 'POST',
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Falha ao enviar foto de perfil');
+        throw new Error('Falha ao enviar imagem');
       }
       
       const data = await response.json();
-      setProfilePhoto(data.photoUrl);
+      
+      if (isStoreLogoUpload) {
+        setLogoUrl(data.photoUrl);
+        toast({
+          title: 'Sucesso',
+          description: 'Logo da loja atualizado com sucesso!',
+        });
+      } else {
+        setProfilePhoto(data.photoUrl);
+        toast({
+          title: 'Sucesso',
+          description: 'Foto de perfil atualizada com sucesso!',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
+      const errorMessage = activeTab === 'dados-loja' 
+        ? 'Ocorreu um erro ao enviar o logo da loja' 
+        : 'Ocorreu um erro ao enviar a foto de perfil';
       
       toast({
-        title: 'Sucesso',
-        description: 'Foto de perfil atualizada com sucesso!',
-      });
-    } catch (error) {
-      console.error('Erro ao enviar foto de perfil:', error);
-      toast({
         title: 'Erro',
-        description: 'Ocorreu um erro ao enviar a foto de perfil',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -454,6 +474,50 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             {/* Formulário de dados da loja (apenas para lojistas) */}
             {user?.userType === 'lojista' && (
               <TabsContent value="dados-loja" className="mt-4">
+                {/* Seção do logo da loja */}
+                <div className="flex flex-col items-center justify-center mb-6 relative">
+                  <div className="h-32 w-32 rounded-full overflow-hidden bg-primary/10 mb-2 relative">
+                    {logoUrl ? (
+                      <img 
+                        src={logoUrl} 
+                        alt="Logo da loja" 
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '';
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML += `
+                            <div class="h-full w-full rounded-full flex items-center justify-center">
+                              <svg class="h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 8.3C20 9.7 19.7 10.9 19.2 11.9C18.1 14.1 15.7 15.5 13 15.9V19C13 19.6 12.6 20 12 20C11.4 20 11 19.6 11 19V15.9C8.3 15.5 5.9 14.1 4.8 11.9C4.3 10.9 4 9.7 4 8.3V6C4 5.4 4.4 5 5 5H8V3C8 2.4 8.4 2 9 2H15C15.6 2 16 2.4 16 3V5H19C19.6 5 20 5.4 20 6V8.3ZM7 8C6.4 8 6 7.6 6 7C6 6.4 6.4 6 7 6C7.6 6 8 6.4 8 7C8 7.6 7.6 8 7 8ZM17 8C16.4 8 16 7.6 16 7C16 6.4 16.4 6 17 6C17.6 6 18 6.4 18 7C18 7.6 17.6 8 17 8Z"></path>
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <svg className="h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 8.3C20 9.7 19.7 10.9 19.2 11.9C18.1 14.1 15.7 15.5 13 15.9V19C13 19.6 12.6 20 12 20C11.4 20 11 19.6 11 19V15.9C8.3 15.5 5.9 14.1 4.8 11.9C4.3 10.9 4 9.7 4 8.3V6C4 5.4 4.4 5 5 5H8V3C8 2.4 8.4 2 9 2H15C15.6 2 16 2.4 16 3V5H19C19.6 5 20 5.4 20 6V8.3ZM7 8C6.4 8 6 7.6 6 7C6 6.4 6.4 6 7 6C7.6 6 8 6.4 8 7C8 7.6 7.6 8 7 8ZM17 8C16.4 8 16 7.6 16 7C16 6.4 16.4 6 17 6C17.6 6 18 6.4 18 7C18 7.6 17.6 8 17 8Z"></path>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm text-gray-500 mb-2">Logo da Loja</p>
+                  
+                  {/* Botão para upload do logo */}
+                  <Button 
+                    type="button"
+                    onClick={handlePhotoUploadClick}
+                    className="mt-2 flex items-center gap-2"
+                    size="sm"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Alterar logo da loja
+                  </Button>
+                </div>
+              
                 <Form {...storeForm}>
                   <form onSubmit={storeForm.handleSubmit(onStoreSubmit)} className="space-y-4">
                     <FormField
