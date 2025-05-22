@@ -67,12 +67,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  
   // Mutation para atualizar o status do serviço para "em andamento"
   const startServiceMutation = useMutation({
     mutationFn: async () => {
       console.log(`[ChatInterface] Iniciando serviço ${serviceId} como "em andamento"`);
-
+      
       const response = await fetch(`/api/services/${serviceId}/status`, {
         method: 'PATCH',
         headers: {
@@ -80,23 +80,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         },
         body: JSON.stringify({ status: 'in-progress' }),
       });
-
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao atualizar status do serviço');
       }
-
+      
       return await response.json();
     },
     onSuccess: (data) => {
       console.log(`[ChatInterface] Serviço iniciado com sucesso:`, data);
-
+      
       toast({
         title: 'Serviço iniciado',
         description: 'O status do serviço foi alterado para "Em Andamento"',
         duration: 3000,
       });
-
+      
       // Invalidar queries para atualizar a UI
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -105,7 +105,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     },
     onError: (error) => {
       console.error(`[ChatInterface] Erro ao iniciar serviço:`, error);
-
+      
       toast({
         title: 'Erro',
         description: error instanceof Error 
@@ -115,12 +115,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       });
     }
   });
-
+  
   // Função para iniciar o serviço (mudar status para "em andamento")
   const handleStartService = () => {
     startServiceMutation.mutate();
   };
-
+  
   // Buscar mensagens do chat
   const { data: messages = [], isLoading } = useQuery<Message[]>({
     queryKey: [`/api/services/${serviceId}/messages`, assemblerId], // Incluir assemblerId na query key
@@ -129,7 +129,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       const url = assemblerId 
         ? `/api/services/${serviceId}/messages?assemblerId=${assemblerId}`
         : `/api/services/${serviceId}/messages`;
-
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Erro ao buscar mensagens');
@@ -138,7 +138,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
   });
-
+  
   // Recuperar detalhes do serviço (para o título)
   const { data: service = { title: 'Serviço' } } = useQuery<any>({
     queryKey: [`/api/services/${serviceId}`],
@@ -148,7 +148,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       console.log(`[ChatInterface] Enviando mensagem para serviço ${serviceId}`);
-
+      
       const response = await fetch(`/api/services/${serviceId}/messages`, {
         method: 'POST',
         headers: {
@@ -157,26 +157,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         credentials: 'include',
         body: JSON.stringify({ content }),
       });
-
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Erro ao enviar mensagem');
       }
-
+      
       return await response.json();
     },
     onSuccess: (data) => {
       console.log(`[ChatInterface] Mensagem enviada com sucesso:`, data);
-
+      
       // Limpar campo de mensagem e atualizar a lista
       setMessage('');
-
+      
       // Invalidar a consulta para atualizar a lista de mensagens
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
-
+      
       // Também invalidar as listas de serviços para atualizar contadores e status se necessário
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-
+      
       // Rolar para o final da conversa depois que a lista for atualizada
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -184,7 +184,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     },
     onError: (error) => {
       console.error(`[ChatInterface] Erro ao enviar mensagem:`, error);
-
+      
       toast({
         title: 'Erro',
         description: error instanceof Error 
@@ -194,12 +194,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       });
     }
   });
-
+  
   // Rolar para o final da conversa quando novas mensagens chegarem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
+  
   // Marcar mensagens como lidas quando o chat for aberto
   useEffect(() => {
     // Função para marcar mensagens como lidas
@@ -212,7 +212,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               'Content-Type': 'application/json'
             }
           });
-
+          
           // Atualizar as listas para remover indicadores de novas mensagens
           queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
           queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
@@ -222,11 +222,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         console.error('Erro ao marcar mensagens como lidas:', error);
       }
     };
-
+    
     // Chamar a função quando o componente for montado
     markMessagesAsRead();
   }, [serviceId, queryClient]);
-
+  
   // Buscar perfil do usuário selecionado
   const fetchUserProfile = async (userId: number) => {
     if (userId === user?.id) {
@@ -240,15 +240,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       });
       return;
     }
-
+    
     try {
       setIsLoadingProfile(true);
       const response = await fetch(`/api/users/${userId}/profile`);
-
+      
       if (!response.ok) {
         throw new Error('Falha ao buscar perfil do usuário');
       }
-
+      
       const data = await response.json();
       setUserProfile(data);
     } catch (error) {
@@ -262,24 +262,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       setIsLoadingProfile(false);
     }
   };
-
+  
   // Abrir diálogo de perfil
   const handleOpenProfile = (userId: number) => {
     setSelectedUserId(userId);
     fetchUserProfile(userId);
     setIsProfileDialogOpen(true);
   };
-
+  
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!message.trim()) {
       return;
     }
-
+    
     sendMessageMutation.mutate(message);
   };
-
+  
   const formatMessageDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { 
@@ -290,7 +290,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       return 'agora';
     }
   };
-
+  
   return (
     <div className="flex flex-col h-full">
       {/* Cabeçalho do chat */}
@@ -311,7 +311,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
             </p>
           </div>
         </div>
-
+        
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
@@ -338,12 +338,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               onClick={() => setIsPaymentDialogOpen(true)}
             >
               <DollarSign className="h-4 w-4" />
-              Contratar Montador
+              Finalizar
             </Button>
           </div>
         )}
       </div>
-
+      
       {/* Área de mensagens */}
       <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
         {isLoading ? (
@@ -364,7 +364,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           <div className="space-y-3">
             {messages.map((msg) => {
               const isCurrentUser = msg.senderId === user?.id;
-
+              
               return (
                 <div key={msg.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                   <div 
@@ -397,7 +397,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           </div>
         )}
       </div>
-
+      
       {/* Área de entrada de mensagem */}
       <div className="bg-white p-3 rounded-b-lg shadow-sm">
         <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -421,7 +421,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           </Button>
         </form>
       </div>
-
+      
       {/* Modal de pagamento */}
       {isPaymentDialogOpen && (
         <PaymentDialog
@@ -431,7 +431,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           amount={service?.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
         />
       )}
-
+      
       {/* Modal de perfil do usuário */}
       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -441,7 +441,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               Informações de contato e detalhes do usuário
             </DialogDescription>
           </DialogHeader>
-
+          
           <div className="p-4">
             {isLoadingProfile ? (
               <div className="space-y-3">
@@ -456,7 +456,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                     <User className="h-12 w-12 text-primary" />
                   </div>
-
+                  
                   {/* Exibir avaliação logo após a foto de perfil para montadores */}
                   {userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler && (
                     <div className="flex items-center bg-yellow-50 px-3 py-1 rounded-full">
@@ -465,18 +465,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                     </div>
                   )}
                 </div>
-
+                
                 <div className="grid grid-cols-1 gap-3">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Nome</h3>
                     <p className="text-base">{userProfile.name}</p>
                   </div>
-
+                  
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Tipo de Usuário</h3>
                     <p className="text-base capitalize">{userProfile.userType === 'lojista' ? 'Lojista' : 'Montador'}</p>
                   </div>
-
+                  
                   {userProfile.userType === 'lojista' && userProfile.store && (
                     <>
                       <div className="pt-2 border-t">
@@ -492,7 +492,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                       </div>
                     </>
                   )}
-
+                  
                   {userProfile.userType === 'montador' && userProfile.assembler && (
                     <>
                       <div className="pt-2 border-t">
