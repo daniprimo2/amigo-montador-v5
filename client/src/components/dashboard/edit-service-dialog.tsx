@@ -50,7 +50,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
   // Extrair e formatar datas do período do serviço
   useEffect(() => {
     if (service.date && service.date.includes('-')) {
-      const [startDateStr, endDateStr] = service.date.split('-').map(d => d.trim());
+      const [startDateStr, endDateStr] = service.date.split('-').map((d: string) => d.trim());
       const startDate = formatDateForInput(startDateStr);
       const endDate = formatDateForInput(endDateStr);
       
