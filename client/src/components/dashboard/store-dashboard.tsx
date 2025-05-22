@@ -860,8 +860,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 key={service.id} 
                 service={service} 
                 onClick={async (serviceId) => {
-                  // Se o serviço estiver em andamento, redirecionar para o chat
-                  if (service.status === 'in-progress' && service.assembler) {
+                  // Se o serviço estiver em andamento ou finalizado, redirecionar para o chat
+                  if ((service.status === 'in-progress' || service.status === 'completed') && service.assembler) {
                     console.log(`Redirecionando para chat do serviço ${serviceId} com montador ${service.assembler.id}`);
                     
                     // Garantir que os dados estejam carregados antes de mudar para a seção de chat
