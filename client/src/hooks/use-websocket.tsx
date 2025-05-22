@@ -18,16 +18,51 @@ type WebSocketMessage = {
 };
 
 // Função para tocar som de notificação
-const playNotificationSound = () => {
+const playNotificationSound = (type: 'message' | 'application' | 'default' = 'default') => {
   try {
+    // Podemos usar o mesmo som para todos os tipos por enquanto, mas a função está preparada para sons diferentes
     const audio = new Audio('/notification.mp3');
-    audio.volume = 0.5;
+    
+    // Ajustar volume baseado no tipo de notificação
+    switch (type) {
+      case 'message':
+        audio.volume = 0.7; // Volume mais alto para mensagens
+        break;
+      case 'application':
+        audio.volume = 0.6; // Volume médio para candidaturas
+        break;
+      default:
+        audio.volume = 0.5; // Volume padrão para outras notificações
+    }
+    
     audio.play().catch(error => {
       // Alguns navegadores bloqueiam a reprodução automática
       console.log('Erro ao reproduzir som:', error);
     });
   } catch (error) {
     console.error('Erro ao criar objeto de áudio:', error);
+  }
+};
+
+// Função para enviar notificação do navegador
+const sendBrowserNotification = (title: string, body: string, icon: string = '/logo.png') => {
+  // Verificar se o navegador suporta notificações
+  if (!("Notification" in window)) {
+    console.log("Este navegador não suporta notificações desktop");
+    return;
+  }
+  
+  // Verificar a permissão
+  if (Notification.permission === "granted") {
+    // Se for permitido, criar notificação
+    new Notification(title, { body, icon });
+  } else if (Notification.permission !== "denied") {
+    // Caso contrário, pedir permissão
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification(title, { body, icon });
+      }
+    });
   }
 };
 
@@ -108,20 +143,26 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
-          // Tocar som de notificação
-          playNotificationSound();
+          // Tocar som de notificação com tipo específico
+          playNotificationSound('application');
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '🔔 Nova candidatura', 
+            data.message || 'Um montador se candidatou ao seu serviço'
+          );
           
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
           queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
           
-          // Mostrar notificação em estilo destacado
+          // Mostrar notificação em estilo destacado com animação de pulso
           toast({
             title: '🔔 Nova candidatura',
             description: data.message,
             duration: 8000,
             variant: 'default',
-            className: 'bg-blue-100 border-blue-500 border-2'
+            className: 'bg-blue-100 border-blue-500 border-2 animate-pulse-once shadow-lg'
           });
           
           // Importante: debugar para verificar se isto está sendo executado
@@ -134,8 +175,14 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
           
-          // Tocar som de notificação
-          playNotificationSound();
+          // Tocar som de notificação com tipo específico
+          playNotificationSound('message');
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '💬 Nova mensagem recebida!', 
+            data.message || 'Você recebeu uma nova mensagem. Clique para visualizar.'
+          );
           
           // Invalidar consultas para atualizar mensagens
           if (data.serviceId) {
@@ -144,14 +191,19 @@ export function useWebSocket() {
             queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
           }
           
-          // Mostrar notificação visível e com ícone
+          // Mostrar notificação visível e com ícone e animação
           toast({
             title: '💬 Nova mensagem recebida!',
             description: data.message,
             duration: 8000,
             variant: 'default',
-            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
           });
+          
+          // Vibrar no celular se API estiver disponível
+          if ('vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
           
           debugLogger('WebSocket', 'Notificação de nova mensagem processada com sucesso', {
             message: data.message,
@@ -163,7 +215,13 @@ export function useWebSocket() {
           });
           
           // Tocar som de notificação
-          playNotificationSound();
+          playNotificationSound('application');
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '✅ Candidatura aceita!', 
+            data.message || 'Uma loja aceitou sua candidatura para um serviço'
+          );
           
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -174,8 +232,13 @@ export function useWebSocket() {
             description: data.message,
             duration: 8000,
             variant: 'default',
-            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
           });
+          
+          // Vibrar no celular se API estiver disponível
+          if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100, 50, 100]);
+          }
           
           debugLogger('WebSocket', 'Notificação de candidatura aceita processada com sucesso', {
             message: data.message,
@@ -189,6 +252,12 @@ export function useWebSocket() {
           
           // Tocar som de notificação
           playNotificationSound();
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '🌟 Serviço finalizado!', 
+            'Por favor, avalie sua experiência com este serviço.'
+          );
           
           // Invalidar consultas para atualizar listas de serviços
           queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -211,7 +280,7 @@ export function useWebSocket() {
             description: 'Por favor, avalie sua experiência.',
             duration: 10000,
             variant: 'default',
-            className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+            className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg animate-pulse-once'
           });
           
           debugLogger('WebSocket', 'Notificação de serviço finalizado processada com sucesso', {

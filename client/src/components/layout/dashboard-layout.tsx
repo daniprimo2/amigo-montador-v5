@@ -93,7 +93,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="relative">
         <MessageSquare className="h-5 w-5" />
         {hasUnreadMessage && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+          <span className="notification-badge">!</span>
         )}
       </div>
       <span className="text-xs mt-1">Chat</span>
@@ -171,9 +171,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               onClick={() => handleTabChange('chat')} 
               title="Ir para o chat"
             >
-              <Bell className="h-5 w-5" />
+              <Bell className={`h-5 w-5 ${hasUnreadMessage ? 'animate-pulse-once' : ''}`} />
               {hasUnreadMessage && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+                <span className="notification-badge">!</span>
               )}
             </button>
             <button 
