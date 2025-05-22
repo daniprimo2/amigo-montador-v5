@@ -398,7 +398,18 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                     {userRating > 0 ? (
                       <>
                         <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
-                          <RatingStars rating={userRating} size="sm" />
+                          <div className="flex items-center text-yellow-500">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-3 w-3 ${
+                                  star <= userRating
+                                    ? 'text-yellow-500 fill-yellow-500'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
                           <span className="font-medium text-yellow-700">{userRating.toFixed(1)}</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
