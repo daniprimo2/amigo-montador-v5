@@ -948,6 +948,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       activeServices.forEach((service: any) => {
         if (service.assembler && service.assembler.id) {
           // Definir o tipo de chat com base no status do serviço
+          // Garantir que serviços com status 'completed' sejam sempre marcados como 'completed'
           const chatType = service.status === 'completed' ? 'completed' : 'active';
           
           result.push({
