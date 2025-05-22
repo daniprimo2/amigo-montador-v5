@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -7,6 +7,7 @@ import { eq, and, not, isNotNull } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
+import path from 'path';
 import fileUpload from 'express-fileupload';
 
 // Declarar as funções globais de notificação
@@ -21,6 +22,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
   });
+  
+  // Configurar middleware de upload de arquivos
+  app.use(fileUpload({
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    abortOnLimit: true,
+    useTempFiles: true,
+    tempFileDir: '/tmp/'
+  }));
+  
+  // Configurar pasta de uploads para ser acessível publicamente
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
   // Configurar autenticação
   setupAuth(app);
 
@@ -996,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Nenhum arquivo enviado" });
       }
       
-      const photoFile = req.files.photo;
+      const photoFile = req.files.photo as fileUpload.UploadedFile;
       
       // Verificar tipo de arquivo (apenas imagens)
       if (!photoFile.mimetype.startsWith('image/')) {
@@ -1027,7 +1040,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const photoUrl = `/uploads/profiles/${fileName}`;
       
       // Atualizar perfil do usuário com a URL da foto
-      let profileData = req.user.profileData || {};
+      const profileData = req.user.profileData as Record<string, any> || {};
       profileData.photoUrl = photoUrl;
       
       await storage.updateUser(req.user.id, {
