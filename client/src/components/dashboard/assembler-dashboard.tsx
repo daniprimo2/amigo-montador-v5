@@ -752,9 +752,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     // Log para diagnosticar se estamos obtendo o ID do montador corretamente
     console.log("Renderizando dashboard com perfil:", profileData);
     
-    // Se houver um serviço selecionado para chat, mostra a interface de chat
-    // independente da seção atual do dashboard
-    if (selectedChatService !== null) {
+    // Se estivermos na seção de chat E houver um serviço selecionado, mostrar a interface de chat
+    if (dashboardSection === 'chat' && selectedChatService !== null) {
       const assemblerId = profileData?.assembler?.id;
       console.log(`Abrindo chat para serviço ${selectedChatService} com montador ID: ${assemblerId}`);
       
@@ -767,7 +766,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Caso contrário, mostra a seção correspondente à aba selecionada
+    // Se um tab de navegação foi selecionado, mas ainda estamos com um chat aberto, fechar o chat
+    if (selectedChatService !== null && dashboardSection !== 'chat') {
+      setSelectedChatService(null);
+    }
+    
+    // Mostrar a seção correspondente à aba selecionada
     switch(dashboardSection) {
       case 'home':
         return renderHomeSection();
