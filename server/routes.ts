@@ -1149,15 +1149,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...userDataWithoutPassword } = user;
       let profileData = { ...userDataWithoutPassword };
       
+      // Obter a média de avaliações do usuário
+      const averageRating = await storage.getAverageRatingForUser(userId);
+      
       // Adicionar dados específicos com base no tipo de usuário
       if (userType === 'lojista') {
         const store = await storage.getStoreByUserId(userId);
         if (store) {
           profileData.store = store;
         }
+        // Adicionar a avaliação média para lojistas
+        profileData.rating = averageRating;
       } else if (userType === 'montador') {
         const assembler = await storage.getAssemblerByUserId(userId);
         if (assembler) {
+          // Para montadores, adicionar o rating médio no objeto assembler
+          assembler.rating = averageRating;
           profileData.assembler = assembler;
         }
       }

@@ -50,11 +50,16 @@ interface UserProfile {
   email: string;
   phone: string;
   userType: string;
+  profileData?: {
+    photoUrl?: string;
+  };
+  rating?: number; // Avaliação para lojistas
   store?: {
     name: string;
     address: string;
     city: string;
     state: string;
+    logoUrl?: string;
   };
   assembler?: {
     specialties: string[];
@@ -568,26 +573,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                     )}
                   </div>
                   
-                  {/* Exibir avaliação logo após a foto de perfil para montadores */}
-                  {userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler && (
+                  {/* Exibir avaliação logo após a foto de perfil para montadores e lojistas */}
+                  {((userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler) || 
+                    (userProfile.userType === 'lojista' && 'rating' in userProfile)) && (
                     <div className="flex flex-col items-center mt-1">
                       <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
                         <div className="flex items-center text-yellow-500">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-3 w-3 ${
-                                star <= (userProfile.assembler?.rating || 0)
-                                  ? 'text-yellow-500 fill-yellow-500'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map((star) => {
+                            const rating = userProfile.userType === 'montador' 
+                              ? (userProfile.assembler?.rating || 0) 
+                              : (userProfile.rating || 0);
+                            return (
+                              <Star
+                                key={star}
+                                className={`h-3 w-3 ${
+                                  star <= rating
+                                    ? 'text-yellow-500 fill-yellow-500'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            );
+                          })}
                         </div>
                         <span className="font-medium text-yellow-700 text-sm">
-                          {userProfile.assembler.rating ? userProfile.assembler.rating.toFixed(1) : '0.0'}
+                          {userProfile.userType === 'montador' 
+                            ? (userProfile.assembler?.rating ? userProfile.assembler.rating.toFixed(1) : '0.0')
+                            : (userProfile.rating ? userProfile.rating.toFixed(1) : '0.0')}
                         </span>
                       </div>
+                      <span className="text-xs text-gray-500 mt-1">
+                        {userProfile.userType === 'lojista' 
+                          ? 'Avaliação dos montadores' 
+                          : 'Avaliação média'}
+                      </span>
                     </div>
                   )}
                 </div>
