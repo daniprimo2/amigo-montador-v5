@@ -40,6 +40,7 @@ interface Service {
   id: number;
   title: string;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  price?: string | number;
   [key: string]: any;
 }
 
@@ -153,9 +154,54 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
   });
   
-  // Recuperar detalhes do serviço (para o título)
-  const { data: service = { title: 'Serviço' } } = useQuery<any>({
-    queryKey: [`/api/services/${serviceId}`],
+  // Recuperar detalhes do serviço (para o título e status)
+  const { data: service = { id: 0, title: 'Serviço', status: 'open' as const, price: '0' } } = useQuery<Service>({
+    queryKey: [`/api/services/${serviceId}`]
+  });
+  
+  // Mutation para excluir mensagem
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      console.log(`[ChatInterface] Excluindo mensagem ${messageId}`);
+      
+      const response = await fetch(`/api/services/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao excluir mensagem');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      console.log(`[ChatInterface] Mensagem excluída com sucesso`);
+      
+      toast({
+        title: 'Mensagem excluída',
+        description: 'A mensagem foi excluída com sucesso',
+        duration: 3000,
+      });
+      
+      // Invalidar a consulta para atualizar a lista de mensagens
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
+    },
+    onError: (error) => {
+      console.error(`[ChatInterface] Erro ao excluir mensagem:`, error);
+      
+      toast({
+        title: 'Erro',
+        description: error instanceof Error 
+          ? error.message 
+          : 'Não foi possível excluir a mensagem. Mensagens de serviços concluídos não podem ser excluídas.',
+        variant: 'destructive',
+      });
+    }
   });
 
   // Mutation para enviar mensagem
@@ -370,11 +416,45 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                       isCurrentUser ? 'bg-primary text-white' : 'bg-white shadow-sm'
                     }`}
                   >
-                    <div 
-                      className={`text-xs font-medium mb-1 ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
-                      onClick={() => !isCurrentUser && handleOpenProfile(msg.senderId)}
-                    >
-                      {isCurrentUser ? 'Você' : msg.sender?.name || 'Usuário'}
+                    <div className="flex justify-between items-start mb-1">
+                      <div 
+                        className={`text-xs font-medium ${!isCurrentUser ? 'cursor-pointer hover:underline' : ''}`}
+                        onClick={() => !isCurrentUser && handleOpenProfile(msg.senderId)}
+                      >
+                        {isCurrentUser ? 'Você' : msg.sender?.name || 'Usuário'}
+                      </div>
+                      
+                      {/* Botão de excluir - apenas para mensagens do usuário atual */}
+                      {isCurrentUser && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (service?.status === 'completed') {
+                              toast({
+                                title: 'Não é possível excluir',
+                                description: 'Mensagens relacionadas a serviços concluídos não podem ser apagadas',
+                                variant: 'destructive',
+                              });
+                            } else {
+                              deleteMessageMutation.mutate(msg.id);
+                            }
+                          }}
+                          disabled={service?.status === 'completed' || deleteMessageMutation.isPending}
+                          className={`ml-2 p-1 rounded-full -mt-1 -mr-1 ${service?.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-white/70 hover:bg-white/20 hover:text-white'}`}
+                          title={service?.status === 'completed' ? 'Mensagens de serviços concluídos não podem ser excluídas' : 'Excluir mensagem'}
+                        >
+                          {service?.status === 'completed' ? (
+                            <div className="flex items-center text-[10px]">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              <span>Bloqueado</span>
+                            </div>
+                          ) : deleteMessageMutation.isPending ? (
+                            <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
                     </div>
                     <div className="break-words whitespace-pre-wrap">{msg.content}</div>
                     <div className={`text-xs mt-1 text-right ${isCurrentUser ? 'text-white/70' : 'text-gray-500'}`}>
@@ -426,7 +506,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           open={isPaymentDialogOpen}
           onClose={() => setIsPaymentDialogOpen(false)}
           serviceId={serviceId}
-          amount={service?.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
+          amount={service?.price ? `R$ ${(typeof service.price === 'string' ? parseFloat(service.price) : service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
         />
       )}
       
