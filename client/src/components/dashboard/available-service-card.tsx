@@ -120,7 +120,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
             <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
             <span>
               {/* Exibe a data de início do serviço conforme informada pelo Lojista */}
-              {service.date}
+              {service.date && service.date !== 'Invalid Date' 
+                ? service.date 
+                : 'Data não informada'}
             </span>
           </div>
         </div>
