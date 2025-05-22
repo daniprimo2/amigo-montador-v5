@@ -353,19 +353,20 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                     </div>
                   )}
                   
-                  {/* Botão para upload */}
-                  <button 
-                    type="button"
-                    onClick={handlePhotoUploadClick}
-                    className="absolute bottom-2 right-2 bg-primary text-white p-3 rounded-full hover:bg-primary/90 transition-colors shadow-lg z-10 border-2 border-white translate-x-1/4 translate-y-1/4"
-                    title="Alterar foto de perfil"
-                  >
-                    <Camera className="h-5 w-5" />
-                  </button>
                 </div>
                 
                 <p className="text-sm text-gray-500 mb-2">Foto de perfil</p>
-                <p className="text-xs text-gray-400">Clique no ícone para alterar sua foto</p>
+                
+                {/* Botão para upload mais visível e claro */}
+                <Button 
+                  type="button"
+                  onClick={handlePhotoUploadClick}
+                  className="mt-2 flex items-center gap-2"
+                  size="sm"
+                >
+                  <Camera className="h-4 w-4" />
+                  Alterar foto de perfil
+                </Button>
                 
                 {/* Input oculto para upload de arquivo */}
                 <input 
