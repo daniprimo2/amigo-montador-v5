@@ -521,8 +521,51 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
             ) : userProfile ? (
               <div className="space-y-4">
                 <div className="flex flex-col items-center justify-center mb-4">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                    <User className="h-12 w-12 text-primary" />
+                  {/* Use Avatar component for profile photo */}
+                  <div className="h-20 w-20 mb-2">
+                    {userProfile.profileData?.photoUrl ? (
+                      <img 
+                        src={userProfile.profileData.photoUrl} 
+                        alt={`Foto de ${userProfile.name}`}
+                        className="h-full w-full rounded-full object-cover"
+                        onError={(e) => {
+                          // Fallback if image fails to load
+                          e.currentTarget.src = '';
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = `
+                            <div class="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                              <svg class="h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : userProfile.userType === 'lojista' && userProfile.store?.logoUrl ? (
+                      <img 
+                        src={userProfile.store.logoUrl} 
+                        alt={`Logo de ${userProfile.store.name}`}
+                        className="h-full w-full rounded-full object-cover"
+                        onError={(e) => {
+                          // Fallback if image fails to load
+                          e.currentTarget.src = '';
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = `
+                            <div class="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                              <svg class="h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-12 w-12 text-primary" />
+                      </div>
+                    )}
                   </div>
                   
                   {/* Exibir avaliação logo após a foto de perfil para montadores */}
