@@ -662,6 +662,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Confirmar serviço pelo montador após notificação da loja
+  app.patch("/api/services/:id/confirm-assembler", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const serviceId = parseInt(req.params.id, 10);
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se o usuário é montador
+      if (req.user?.userType !== 'montador') {
+        return res.status(403).json({ message: "Apenas montadores podem confirmar serviços" });
+      }
+      
+      // Verificar se o montador está associado a este serviço
+      const assembler = await storage.getAssemblerByUserId(req.user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Perfil de montador não encontrado" });
+      }
+      
+      // Buscar a candidatura aceita para o serviço
+      const acceptedApplication = await db
+        .select()
+        .from(applications)
+        .where(
+          and(
+            eq(applications.serviceId, serviceId),
+            eq(applications.assemblerId, assembler.id),
+            eq(applications.status, 'accepted')
+          )
+        )
+        .limit(1);
+      
+      if (acceptedApplication.length === 0) {
+        return res.status(403).json({ 
+          message: "Você não está associado a este serviço ou sua candidatura não foi aceita" 
+        });
+      }
+      
+      // Atualizar status do serviço para 'confirmed' (status intermediário)
+      await db
+        .update(services)
+        .set({ 
+          status: 'confirmed',
+          updatedAt: new Date()
+        })
+        .where(eq(services.id, serviceId));
+      
+      // Notificar o lojista que o montador confirmou
+      try {
+        // Buscar informações da loja
+        const storeData = await storage.getStore(service.storeId);
+        if (storeData) {
+          const storeUser = await storage.getUser(storeData.userId);
+          
+          // Preparar dados para notificação
+          const serviceInfo = {
+            id: service.id,
+            title: service.title,
+            storeData: {
+              id: storeData.id,
+              userId: storeData.userId,
+              name: storeUser ? storeUser.name : 'Loja'
+            },
+            assemblerData: {
+              id: assembler.id,
+              userId: req.user.id,
+              name: req.user.name
+            }
+          };
+          
+          // Enviar notificação para o lojista
+          const lojistaWs = clients.get(storeData.userId.toString());
+          if (lojistaWs) {
+            lojistaWs.send(JSON.stringify({
+              type: 'service_confirmed',
+              message: `O montador ${req.user.name} confirmou o serviço "${service.title}". Aguardando pagamento.`,
+              serviceId: service.id,
+              serviceData: serviceInfo,
+              timestamp: new Date().toISOString()
+            }));
+          }
+        }
+      } catch (notifyError) {
+        console.error("Erro ao enviar notificação de confirmação:", notifyError);
+        // Não falhar a API se a notificação não for enviada
+      }
+      
+      res.json({
+        success: true,
+        message: "Serviço confirmado com sucesso",
+        status: 'confirmed'
+      });
+    } catch (error: any) {
+      console.error("Erro ao confirmar serviço:", error);
+      res.status(500).json({ message: error.message || "Erro ao confirmar serviço" });
+    }
+  });
+
   // Finalizar serviço e confirmar pagamento
   app.patch("/api/services/:id/complete", async (req, res) => {
     try {

@@ -100,6 +100,10 @@ const getCurrentYear = () => {
   return new Date().getFullYear().toString();
 };
 
+// Importar o diálogo de confirmação
+import { ServiceConfirmDialog } from '@/components/payment/service-confirm-dialog';
+import { PaymentDialog } from '@/components/payment/payment-dialog';
+
 export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -108,7 +112,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
+  const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
+  const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
   
   // Reagir a mensagens de WebSocket
@@ -124,6 +132,71 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     } 
+    // Novidade: quando receber [NOTIFICAÇÃO AUTOMÁTICA] de serviço pelo lojista
+    else if (lastMessage.type === 'automatic_notification') {
+      console.log("[AssemblerDashboard] Notificação automática recebida do lojista", lastMessage);
+      
+      // Atualizar todas as listas de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      
+      // Se houver dados do serviço, abrir diálogo de confirmação
+      if (lastMessage.serviceId && lastMessage.serviceData) {
+        const service = lastMessage.serviceData;
+        
+        // Configurar dados para confirmação do serviço pelo montador
+        setSelectedServiceForConfirm({
+          id: service.id,
+          title: service.title,
+          price: service.price || 'Valor não definido'
+        });
+        
+        // Forçar a abertura do diálogo de confirmação
+        setIsConfirmDialogOpen(true);
+        
+        // Mudar para a seção inicial para contexto
+        setDashboardSection('home');
+        
+        // Notificar o montador sobre a necessidade de confirmar
+        toast({
+          title: '🔔 Notificação automática',
+          description: 'O lojista enviou uma notificação de serviço. Por favor, confirme para prosseguir.',
+          duration: 10000,
+          className: 'bg-blue-100 border-blue-500 border-2 font-medium shadow-lg'
+        });
+      }
+    }
+    // Quando o serviço já foi confirmado pelo montador e está pronto para pagamento
+    else if (lastMessage.type === 'payment_ready') {
+      console.log("[AssemblerDashboard] Serviço confirmado e pronto para pagamento", lastMessage);
+      
+      // Atualizar todas as listas de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      
+      // Se houver dados do serviço, abrir diálogo de pagamento
+      if (lastMessage.serviceId && lastMessage.serviceData) {
+        const service = lastMessage.serviceData;
+        
+        // Configurar dados para pagamento
+        setSelectedServiceForPayment({
+          id: service.id,
+          title: service.title,
+          amount: service.price || 'Valor não definido'
+        });
+        
+        // Forçar a abertura do diálogo de pagamento
+        setIsPaymentDialogOpen(true);
+        
+        // Notificar o montador sobre a necessidade de pagamento
+        toast({
+          title: '💰 Pagamento pendente',
+          description: 'O serviço foi confirmado e agora está pronto para pagamento.',
+          duration: 8000,
+          className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+        });
+      }
+    }
     else if (lastMessage.type === 'service_completed') {
       console.log("[AssemblerDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
       
@@ -808,6 +881,51 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               description: 'Obrigado por avaliar este serviço!'
             });
           }}
+        />
+      )}
+      
+      {/* Diálogo de Confirmação de Serviço (NOVO) */}
+      {selectedServiceForConfirm && (
+        <ServiceConfirmDialog
+          open={isConfirmDialogOpen}
+          onClose={() => setIsConfirmDialogOpen(false)}
+          serviceId={selectedServiceForConfirm.id}
+          serviceTitle={selectedServiceForConfirm.title}
+          onConfirmed={() => {
+            // Após confirmação, limpar os dados e atualizar listas
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+            
+            // Aguardar um momento antes de abrir o diálogo de pagamento
+            // Na prática, será aberto quando receber a notificação payment_ready
+            setTimeout(() => {
+              // Configurar dados para pagamento
+              setSelectedServiceForPayment({
+                id: selectedServiceForConfirm.id,
+                title: selectedServiceForConfirm.title,
+                amount: selectedServiceForConfirm.price
+              });
+              
+              // Abrir diálogo de pagamento automaticamente
+              setIsPaymentDialogOpen(true);
+            }, 500);
+            
+            // Limpar dados da confirmação
+            setSelectedServiceForConfirm(null);
+          }}
+        />
+      )}
+      
+      {/* Diálogo de Pagamento (NOVO) */}
+      {selectedServiceForPayment && (
+        <PaymentDialog
+          open={isPaymentDialogOpen}
+          onClose={() => {
+            setIsPaymentDialogOpen(false);
+            setSelectedServiceForPayment(null);
+          }}
+          serviceId={selectedServiceForPayment.id}
+          amount={selectedServiceForPayment.amount}
         />
       )}
       
