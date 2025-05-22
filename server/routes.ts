@@ -1668,6 +1668,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Atualizar detalhes do serviço
+  app.patch("/api/services/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+      const { price, date, status } = req.body;
+      
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se é o lojista dono do serviço
+      const store = await storage.getStoreByUserId(req.user!.id);
+      if (req.user?.userType !== 'lojista' || !store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Não autorizado a modificar este serviço" });
+      }
+      
+      // Preparar dados para atualização
+      const updateData: Partial<Service> = {};
+      
+      if (price !== undefined) {
+        updateData.price = price;
+      }
+      
+      if (date !== undefined) {
+        updateData.date = date;
+      }
+      
+      if (status !== undefined) {
+        // Validar status
+        if (!['open', 'in-progress', 'completed', 'cancelled'].includes(status)) {
+          return res.status(400).json({ message: "Status inválido" });
+        }
+        updateData.status = status;
+      }
+      
+      // Se não houver dados para atualizar, retornar erro
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "Nenhum dado fornecido para atualização" });
+      }
+      
+      // Atualizar serviço
+      const updatedService = await storage.updateService(serviceId, updateData);
+      
+      // Notificar montador se serviço for iniciado (status = in-progress)
+      if (status === 'in-progress') {
+        // Buscar candidaturas aceitas para este serviço
+        const applications = await storage.getApplicationsByServiceId(serviceId);
+        
+        for (const application of applications) {
+          if (application.status === 'accepted') {
+            // Buscar informações do montador
+            const assembler = await storage.getAssemblerById(application.assemblerId);
+            if (assembler && assembler.userId) {
+              // Notificar montador que o serviço foi iniciado
+              sendNotification(assembler.userId, {
+                type: 'service_update',
+                serviceId,
+                message: `O serviço "${service.title}" foi atualizado e está em andamento`,
+                timestamp: new Date().toISOString()
+              });
+              
+              console.log(`Notificação enviada para o montador ID ${assembler.userId}`);
+            }
+          }
+        }
+      }
+      
+      res.json(updatedService);
+    } catch (error) {
+      console.error("Erro ao atualizar serviço:", error);
+      res.status(500).json({ message: "Erro ao atualizar serviço" });
+    }
+  });
+
   // Rota para finalizar serviço
   app.post("/api/services/:id/complete", async (req, res) => {
     try {

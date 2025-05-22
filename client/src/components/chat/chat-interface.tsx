@@ -321,7 +321,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               variant="outline"
               size="sm"
               className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
-              onClick={() => setIsPaymentDialogOpen(true)}
+              onClick={() => setIsHireDialogOpen(true)}
             >
               <DollarSign className="h-4 w-4" />
               Contratar Montador
@@ -415,6 +415,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           onClose={() => setIsPaymentDialogOpen(false)}
           serviceId={serviceId}
           amount={service?.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
+        />
+      )}
+      
+      {/* Modal de contratação de montador */}
+      {isHireDialogOpen && (
+        <HireAssemblerDialog
+          open={isHireDialogOpen}
+          onClose={() => setIsHireDialogOpen(false)}
+          serviceId={serviceId}
+          assemblerId={assemblerId}
         />
       )}
       

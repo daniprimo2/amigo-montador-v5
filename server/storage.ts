@@ -297,6 +297,15 @@ export class DatabaseStorage implements IStorage {
     return updatedService;
   }
   
+  async updateService(id: number, serviceData: Partial<Service>): Promise<Service> {
+    const [updatedService] = await db
+      .update(services)
+      .set(serviceData)
+      .where(eq(services.id, id))
+      .returning();
+    return updatedService;
+  }
+  
   async deleteService(id: number): Promise<void> {
     // Verificar se o serviço existe
     const service = await this.getServiceById(id);
