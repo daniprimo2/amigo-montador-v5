@@ -577,8 +577,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-medium text-lg">{service.title}</h4>
                       <div className="flex items-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                          Em Andamento
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
+                          style={{ 
+                            backgroundColor: service.status === 'completed' ? '#dcfce7' : '#dbeafe',
+                            color: service.status === 'completed' ? '#166534' : '#1e40af'
+                          }}>
+                          {service.status === 'completed' ? 'Finalizado' : 'Em Andamento'}
                         </span>
                         {service.hasNewMessages ? (
                           <div className="relative">
