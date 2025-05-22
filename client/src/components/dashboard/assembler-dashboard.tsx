@@ -384,6 +384,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                     key={service.id} 
                     service={service} 
                     onApply={handleApply}
+                    activeServices={activeServices || []}
                   />
                 ))
               ) : (
@@ -577,6 +578,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 key={service.id} 
                 service={service} 
                 onApply={handleApply}
+                activeServices={activeServices || []}
               />
             ))
           ) : (
