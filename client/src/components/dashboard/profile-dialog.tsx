@@ -357,7 +357,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   <button 
                     type="button"
                     onClick={handlePhotoUploadClick}
-                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors"
+                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors shadow-md z-10 border-2 border-white"
                     title="Alterar foto de perfil"
                   >
                     <Camera className="h-4 w-4" />
