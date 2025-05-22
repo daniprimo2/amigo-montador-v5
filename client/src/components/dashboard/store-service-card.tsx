@@ -195,7 +195,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                 disabled={isCompleting}
               >
                 <CheckSquare className="h-4 w-4 mr-1" />
-                {isCompleting ? 'Finalizando...' : 'Finalizar'}
+                {isCompleting ? 'Finalizando...' : 'Montagem confluida'}
               </Button>
             )}
             
