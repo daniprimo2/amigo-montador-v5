@@ -10,7 +10,7 @@ const debugLogger = (context: string, message: string, data?: any) => {
 };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed';
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready';
   message: string;
   serviceId?: number;
   timestamp?: string;
@@ -284,6 +284,129 @@ export function useWebSocket() {
           });
           
           debugLogger('WebSocket', 'Notificação de serviço finalizado processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
+          });
+        } else if (data.type === 'automatic_notification') {
+          debugLogger('WebSocket', 'Processando notificação automática do sistema', {
+            serviceId: data.serviceId,
+            serviceData: data.serviceData
+          });
+          
+          // Tocar som de notificação especial para notificações do sistema
+          playNotificationSound('application');
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '⚠️ Confirmação Necessária', 
+            data.message || 'É necessário confirmar um serviço para prosseguir.'
+          );
+          
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+          
+          // Disparar evento para abrir diálogo de confirmação
+          if (data.serviceId && data.serviceData) {
+            // Criar e disparar evento personalizado para abertura do diálogo de confirmação
+            const confirmEvent = new CustomEvent('open-service-confirm-dialog', { 
+              detail: { 
+                serviceId: data.serviceId,
+                serviceData: data.serviceData
+              } 
+            });
+            window.dispatchEvent(confirmEvent);
+          }
+          
+          // Mostrar notificação com estilo de alerta
+          toast({
+            title: '⚠️ Confirmação Necessária',
+            description: data.message,
+            duration: 15000, // Maior duração por ser importante
+            variant: 'default',
+            className: 'bg-orange-100 border-orange-500 border-2 font-medium shadow-lg animate-pulse'
+          });
+          
+          // Vibrar no celular se API estiver disponível (padrão de alerta)
+          if ('vibrate' in navigator) {
+            navigator.vibrate([300, 100, 300, 100, 300]);
+          }
+          
+          debugLogger('WebSocket', 'Notificação automática processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
+          });
+        } else if (data.type === 'service_confirmed') {
+          debugLogger('WebSocket', 'Processando notificação de serviço confirmado', {
+            serviceId: data.serviceId,
+            serviceData: data.serviceData
+          });
+          
+          // Tocar som de notificação
+          playNotificationSound();
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '✅ Serviço Confirmado!', 
+            data.message || 'O montador confirmou o serviço. O pagamento já pode ser realizado.'
+          );
+          
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          
+          // Mostrar notificação com estilo personalizado
+          toast({
+            title: '✅ Serviço Confirmado!',
+            description: data.message,
+            duration: 8000,
+            variant: 'default',
+            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
+          });
+          
+          debugLogger('WebSocket', 'Notificação de serviço confirmado processada com sucesso', {
+            message: data.message,
+            serviceId: data.serviceId
+          });
+        } else if (data.type === 'payment_ready') {
+          debugLogger('WebSocket', 'Processando notificação de pagamento disponível', {
+            serviceId: data.serviceId,
+            serviceData: data.serviceData
+          });
+          
+          // Tocar som de notificação
+          playNotificationSound();
+          
+          // Enviar notificação do navegador
+          sendBrowserNotification(
+            '💳 Pagamento Disponível', 
+            data.message || 'O pagamento do serviço já pode ser realizado.'
+          );
+          
+          // Invalidar consultas para atualizar listas de serviços
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          
+          // Disparar evento para abrir tela de pagamento
+          if (data.serviceId && data.serviceData) {
+            // Criar e disparar evento personalizado para abertura do diálogo de pagamento
+            const paymentEvent = new CustomEvent('open-payment-dialog', { 
+              detail: { 
+                serviceId: data.serviceId,
+                serviceData: data.serviceData
+              } 
+            });
+            window.dispatchEvent(paymentEvent);
+          }
+          
+          // Mostrar notificação com estilo personalizado
+          toast({
+            title: '💳 Pagamento Disponível',
+            description: data.message || 'O pagamento do serviço já pode ser realizado.',
+            duration: 10000,
+            variant: 'default',
+            className: 'bg-blue-100 border-blue-500 border-2 font-medium shadow-lg animate-pulse-once'
+          });
+          
+          debugLogger('WebSocket', 'Notificação de pagamento disponível processada com sucesso', {
             message: data.message,
             serviceId: data.serviceId
           });

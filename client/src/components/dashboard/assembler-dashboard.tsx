@@ -132,7 +132,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     } 
-    // Novidade: quando receber [NOTIFICAÇÃO AUTOMÁTICA] de serviço pelo lojista
+    // Quando receber notificação automática de serviço pelo lojista
     else if (lastMessage.type === 'automatic_notification') {
       console.log("[AssemblerDashboard] Notificação automática recebida do lojista", lastMessage);
       
@@ -148,6 +148,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         setSelectedServiceForConfirm({
           id: service.id,
           title: service.title,
+          price: service.price,
           price: service.price || 'Valor não definido'
         });
         

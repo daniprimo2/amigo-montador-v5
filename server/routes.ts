@@ -1095,6 +1095,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         sendNotification(assembler.userId, notificationData);
+        
+        // Enviar notificação automática que requer confirmação do montador
+        setTimeout(() => {
+          console.log(`[AcceptApplication] Enviando notificação automática para montador userId: ${assembler.userId}`);
+          
+          // Preparar dados do serviço para a notificação
+          const serviceData = {
+            id: service.id,
+            title: service.title,
+            price: service.price,
+            storeId: service.storeId,
+            storeName: req.user?.name || 'Lojista',
+            status: 'in-progress'
+          };
+          
+          // Enviar notificação automática para confirmar o serviço
+          sendNotification(assembler.userId, {
+            type: 'automatic_notification',
+            message: `[NOTIFICAÇÃO AUTOMÁTICA] O lojista ${req.user?.name} requer confirmação para o serviço "${service.title}".`,
+            serviceId: service.id,
+            serviceData: serviceData,
+            timestamp: new Date().toISOString()
+          });
+          
+          console.log(`[AcceptApplication] Notificação automática enviada para montador userId: ${assembler.userId}`);
+        }, 2000); // Pequeno delay para que a primeira notificação seja processada primeiro
       }
 
       res.json({ message: "Candidatura aceita com sucesso" });
