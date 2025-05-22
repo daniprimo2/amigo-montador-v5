@@ -104,14 +104,43 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
       
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (updatedService) => {
       setStatus("success");
+      
+      // Criar uma mensagem no chat para informar o montador sobre as alterações
+      try {
+        // Formatando o valor para exibição no chat
+        const formattedPrice = formatDisplayPrice(price);
+        // Formatando a data para exibição no chat
+        const formattedDate = date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "";
+        
+        // Enviar mensagem automática no chat para informar o montador
+        const chatMessageResponse = await fetch(`/api/services/${serviceId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            content: `[NOTIFICAÇÃO AUTOMÁTICA]\n\nVocê foi contratado para este serviço!\n\nValor atualizado: ${formattedPrice}\nData de início: ${formattedDate}\n\nPor favor, confirme a aceitação destas condições respondendo a esta mensagem.`
+          }),
+        });
+        
+        if (!chatMessageResponse.ok) {
+          console.error("Erro ao enviar mensagem automática de contratação");
+        } else {
+          console.log("Mensagem automática de contratação enviada com sucesso");
+        }
+      } catch (error) {
+        console.error("Erro ao enviar mensagem automática:", error);
+      }
       
       // Atualizar os dados da aplicação após contratar o montador
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       queryClient.invalidateQueries({ queryKey: ["/api/services/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/store/services/with-applications"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
       
       // Mostrar mensagem de sucesso ao usuário
       toast({
