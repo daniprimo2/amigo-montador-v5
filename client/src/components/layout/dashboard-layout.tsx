@@ -205,25 +205,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="gradient-bg w-full p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            {userType === 'lojista' && storeLogoUrl ? (
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full overflow-hidden mr-2 bg-white">
-                  <img 
-                    src={storeLogoUrl} 
-                    alt="Logo da loja" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      setStoreLogoUrl(null);
-                    }}
-                  />
-                </div>
-                <Logo size="sm" className="text-white" />
-              </div>
-            ) : (
-              <Logo size="sm" className="text-white" />
-            )}
+            <Logo size="sm" className="text-white" />
           </div>
           <div className="flex items-center space-x-4">
             <button 
