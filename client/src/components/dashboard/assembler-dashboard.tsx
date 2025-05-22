@@ -795,6 +795,20 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   });
   
   const renderChatSection = () => {
+    // Se estiver selecionado um chat específico, exibir a interface de chat
+    if (selectedChatService !== null) {
+      return (
+        <ChatInterface 
+          serviceId={selectedChatService} 
+          onBack={() => setSelectedChatService(null)} 
+        />
+      );
+    }
+    
+    // Separar os serviços ativos em 'em andamento' e 'finalizados'
+    const activeChats = activeServices ? activeServices.filter((service: any) => service.status === 'in-progress') : [];
+    const completedChats = activeServices ? activeServices.filter((service: any) => service.status === 'completed') : [];
+    
     return (
       <div className="mt-2">
         <h3 className="text-lg font-semibold mb-4">Conversas</h3>
@@ -808,38 +822,79 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               </div>
             ))}
           </div>
-        ) : activeServices && activeServices.length > 0 ? (
-          <div className="space-y-3">
-            {activeServices.map((service: any) => (
-              <div 
-                key={service.id} 
-                className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer ${service.hasUnreadMessages ? 'border-l-4 border-primary' : ''}`}
-                onClick={() => setSelectedChatService(service.id)}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center">
-                      <h4 className="font-medium">{service.title}</h4>
-                      {service.hasUnreadMessages && (
-                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
-                          Nova mensagem
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      Loja: {service.store?.name || 'Não especificada'}
-                    </p>
-                  </div>
-                  <MessageSquare className={`h-5 w-5 ${service.hasUnreadMessages ? 'text-primary' : 'text-gray-400'}`} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
+        ) : (activeChats.length === 0 && completedChats.length === 0) ? (
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
             <p className="text-gray-500 mb-4">Quando você tiver mensagens de lojas ou clientes, elas aparecerão aqui.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Seção de conversas ativas */}
+            {activeChats.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-3">Conversas Ativas</h4>
+                <div className="space-y-3">
+                  {activeChats.map((service: any) => (
+                    <div 
+                      key={service.id} 
+                      className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer ${service.hasUnreadMessages ? 'border-l-4 border-primary' : ''}`}
+                      onClick={() => setSelectedChatService(service.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            {service.hasUnreadMessages && (
+                              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
+                                Nova mensagem
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Loja: {service.store?.name || 'Não especificada'}
+                          </p>
+                        </div>
+                        <MessageSquare className={`h-5 w-5 ${service.hasUnreadMessages ? 'text-primary' : 'text-gray-400'}`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Seção de conversas finalizadas */}
+            {completedChats.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-3 text-gray-600">Conversas Finalizadas</h4>
+                <div className="space-y-3">
+                  {completedChats.map((service: any) => (
+                    <div 
+                      key={service.id} 
+                      className="bg-gray-50 rounded-xl shadow-sm p-4 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
+                      onClick={() => setSelectedChatService(service.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              Finalizado
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Loja: {service.store?.name || 'Não especificada'}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
