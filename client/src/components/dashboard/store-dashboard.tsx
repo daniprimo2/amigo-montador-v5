@@ -859,6 +859,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               <StoreServiceCard 
                 key={service.id} 
                 service={service} 
+                onClick={(serviceId) => {
+                  // Se o serviço estiver em andamento, redirecionar para o chat
+                  if (service.status === 'in-progress' && service.assembler) {
+                    setSelectedChatService(serviceId);
+                    setSelectedAssemblerId(service.assembler.id);
+                    setDashboardSection('chat');
+                  }
+                }}
                 onRateClick={(serviceToRate) => {
                   // Configurar o serviço para avaliação
                   if (serviceToRate.assembler) {
