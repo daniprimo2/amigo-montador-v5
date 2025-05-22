@@ -108,6 +108,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [dateError, setDateError] = useState('');
   const [isValidatingCep, setIsValidatingCep] = useState(false);
   const [cepError, setCepError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
   // Buscar serviços da API
   const servicesQuery = useQuery({
@@ -499,7 +500,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
   });
 
-  const handleCreateService = () => {
+  const handleCreateService = async () => {
     // Criar uma lista de campos obrigatórios não preenchidos
     const missingFields = [];
     
@@ -569,10 +570,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return;
     }
     
-    // Temporariamente desabilitar a validação de arquivo para testar o formulário
-    // Depois implementaremos upload de arquivo via outra abordagem
-    
-    /* Código comentado temporariamente para teste
     // Verifica se o arquivo PDF foi carregado
     if (!projectFile || projectFile.length === 0) {
       toast({
@@ -584,44 +581,108 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     }
     
     // Verifica o tamanho do arquivo (máximo 10MB = 10 * 1024 * 1024 bytes)
-    if (projectFile[0].size > 10 * 1024 * 1024) {
+    for (let i = 0; i < projectFile.length; i++) {
+      if (projectFile[i].size > 10 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `O arquivo "${projectFile[i].name}" excede o limite de 10MB.`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!projectFile[i].name.toLowerCase().endsWith('.pdf')) {
+        toast({
+          title: "Formato de arquivo inválido",
+          description: `O arquivo "${projectFile[i].name}" não é um PDF.`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
+    // Ativar estado de upload
+    setIsUploading(true);
+    
+    try {
+      // Formatar os dados do serviço para a API
+      const serviceData = {
+        title: newService.title.trim(),
+        description: newService.description.trim(),
+        location: newService.location.trim(),
+        address: newService.address.trim(),
+        addressNumber: newService.addressNumber.trim(),
+        date: `${newService.startDate} - ${newService.endDate}`,
+        price: priceValue,
+        materialType: newService.materialType.trim(),
+        status: 'open' // Garantir que o serviço seja criado com status 'open'
+      };
+      
+      // Criar FormData para upload dos arquivos
+      const formData = new FormData();
+      
+      // Adicionar os dados do serviço como um campo JSON
+      formData.append('serviceData', JSON.stringify(serviceData));
+      
+      // Adicionar cada arquivo PDF ao FormData
+      if (projectFile) {
+        for (let i = 0; i < projectFile.length; i++) {
+          formData.append('projectFiles', projectFile[i]);
+        }
+      }
+      
+      // Enviar para a API
+      const response = await fetch('/api/services/with-files', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar serviço');
+      }
+      
+      const result = await response.json();
+      
+      // Resetar formulário após sucesso
+      setNewService({
+        title: '',
+        description: '',
+        cep: '',
+        address: '',
+        addressNumber: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        price: '',
+        materialType: ''
+      });
+      setProjectFile(null);
+      
+      // Fechar modal e mostrar mensagem de sucesso
+      setIsNewServiceOpen(false);
+      
       toast({
-        title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 10MB.",
+        title: "Serviço criado com sucesso",
+        description: "Seus arquivos foram enviados e o serviço está disponível para montadores.",
+        variant: "default"
+      });
+      
+      // Recarregar a lista de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    } catch (error: any) {
+      console.error("Erro ao criar serviço:", error);
+      
+      toast({
+        title: "Erro ao criar serviço",
+        description: error.message || "Ocorreu um erro ao criar o serviço. Tente novamente.",
         variant: "destructive"
       });
-      return;
+    } finally {
+      // Desativar estado de upload
+      setIsUploading(false);
     }
-    */
-    
-    // Utilizando a interface ServiceFormData definida acima
-    
-    // Formatar os dados para a API de forma mais simples e direta
-    const serviceData = {
-      title: newService.title.trim(),
-      description: newService.description.trim(),
-      location: newService.location.trim(),
-      address: newService.address.trim(),
-      addressNumber: newService.addressNumber.trim(),
-      date: `${newService.startDate} - ${newService.endDate}`,
-      price: priceValue,
-
-      materialType: newService.materialType.trim(),
-      status: 'open' // Garantir que o serviço seja criado com status 'open'
-    };
-    
-    // Adicionar logs detalhados para depuração
-    console.log("Dados do serviço antes do envio:", serviceData);
-    
-    // Log detalhado de cada campo específico para verificar valores
-    console.log("Título:", serviceData.title, typeof serviceData.title);
-    console.log("Localização:", serviceData.location, typeof serviceData.location);
-    console.log("Data:", serviceData.date, typeof serviceData.date);
-    console.log("Preço:", serviceData.price, typeof serviceData.price);
-    console.log("Material:", serviceData.materialType, typeof serviceData.materialType);
-    
-    // Enviar para a API
-    createServiceMutation.mutate(serviceData);
   };
   
   // Processar dados de serviços da API
