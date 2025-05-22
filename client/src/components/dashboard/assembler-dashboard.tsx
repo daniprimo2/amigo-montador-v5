@@ -148,7 +148,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             }
           });
           
-          // Abrir diálogo de avaliação automaticamente
+          // Bloquear o restante da interface até que a avaliação seja concluída
+          // Forçar a abertura do diálogo de avaliação
           setIsRatingDialogOpen(true);
           
           // Mudar para a seção inicial e mostrar serviços concluídos para contexto
@@ -156,9 +157,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           
           toast({
             title: '🌟 Serviço finalizado!',
-            description: 'Por favor, avalie sua experiência com a loja.',
+            description: 'É necessário avaliar o serviço antes de continuar.',
             duration: 10000,
-            variant: 'default',
+            variant: 'destructive',
             className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
           });
         }

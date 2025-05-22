@@ -245,6 +245,15 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             // Mudar para a aba de serviços concluídos para mostrar o contexto
             setActiveTab('completed');
             setDashboardSection('services');
+            
+            // Notificação mais enfática sobre a necessidade de avaliação
+            toast({
+              title: '🌟 Serviço finalizado!',
+              description: 'É necessário avaliar o montador antes de continuar usando o aplicativo.',
+              duration: 10000,
+              variant: 'destructive',
+              className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+            });
           }
         }
       }
