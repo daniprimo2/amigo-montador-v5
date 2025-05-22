@@ -6,6 +6,8 @@ import { db } from "./db";
 import { eq, and, not, isNotNull } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
+import fs from 'fs';
+import fileUpload from 'express-fileupload';
 
 // Declarar as funções globais de notificação
 declare global {
@@ -979,6 +981,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao aceitar candidatura:", error);
       res.status(500).json({ message: "Erro ao aceitar candidatura" });
+    }
+  });
+
+  // Upload de foto de perfil
+  app.post("/api/profile/photo", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      // Verificar se há um arquivo enviado
+      if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).json({ message: "Nenhum arquivo enviado" });
+      }
+      
+      const photoFile = req.files.photo;
+      
+      // Verificar tipo de arquivo (apenas imagens)
+      if (!photoFile.mimetype.startsWith('image/')) {
+        return res.status(400).json({ message: "O arquivo deve ser uma imagem" });
+      }
+      
+      // Verificar tamanho (max 5MB)
+      if (photoFile.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
+      }
+      
+      // Gerar nome de arquivo único
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${photoFile.name}`;
+      const uploadPath = `./uploads/profiles/${fileName}`;
+      
+      // Criar diretório se não existir
+      if (!fs.existsSync('./uploads')) {
+        fs.mkdirSync('./uploads');
+      }
+      if (!fs.existsSync('./uploads/profiles')) {
+        fs.mkdirSync('./uploads/profiles');
+      }
+      
+      // Mover arquivo para o diretório
+      await photoFile.mv(uploadPath);
+      
+      // URL pública para a imagem
+      const photoUrl = `/uploads/profiles/${fileName}`;
+      
+      // Atualizar perfil do usuário com a URL da foto
+      let profileData = req.user.profileData || {};
+      profileData.photoUrl = photoUrl;
+      
+      await storage.updateUser(req.user.id, {
+        profileData
+      });
+      
+      res.status(200).json({ success: true, photoUrl });
+    } catch (error) {
+      console.error("Erro no upload de foto:", error);
+      res.status(500).json({ message: "Erro ao processar upload de foto" });
     }
   });
 

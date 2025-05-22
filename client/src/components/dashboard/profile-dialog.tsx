@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -24,8 +24,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Camera, Upload } from 'lucide-react';
 import { BankAccountDialog } from '../banking/bank-account-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const userSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -59,6 +60,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('dados-pessoais');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   // Dados do usuário
   const userForm = useForm<UserFormValues>({
@@ -108,7 +112,14 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         phone: data.phone || '',
       });
       
-      // Se for lojista, atualizar formulário da loja
+      // Verificar se existe foto de perfil
+      if (data.profileData && data.profileData.photoUrl) {
+        setProfilePhoto(data.profileData.photoUrl);
+      } else {
+        setProfilePhoto(null);
+      }
+      
+      // Se for lojista, atualizar formulário da loja e verificar logo
       if (user?.userType === 'lojista' && data.store) {
         storeForm.reset({
           name: data.store.name || '',
@@ -117,6 +128,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           state: data.store.state || '',
           phone: data.store.phone || '',
         });
+        
+        // Verificar se existe logo da loja
+        if (data.store.logoUrl) {
+          setLogoUrl(data.store.logoUrl);
+        } else {
+          setLogoUrl(null);
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar dados do perfil:', error);
@@ -161,6 +179,72 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Abrir seletor de arquivo
+  const handlePhotoUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  // Processar upload de foto
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Verificar tipo e tamanho
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, selecione um arquivo de imagem válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast({
+        title: 'Erro',
+        description: 'A imagem deve ter menos de 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append('photo', file);
+      
+      const response = await fetch('/api/profile/photo', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao enviar foto de perfil');
+      }
+      
+      const data = await response.json();
+      setProfilePhoto(data.photoUrl);
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Foto de perfil atualizada com sucesso!',
+      });
+    } catch (error) {
+      console.error('Erro ao enviar foto de perfil:', error);
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao enviar a foto de perfil',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      // Limpar o input para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
   
@@ -241,6 +325,58 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             
             {/* Formulário de dados pessoais */}
             <TabsContent value="dados-pessoais" className="mt-4">
+              {/* Seção de foto de perfil */}
+              <div className="flex flex-col items-center justify-center mb-6 relative">
+                <div className="h-32 w-32 rounded-full overflow-hidden bg-primary/10 mb-2 relative">
+                  {profilePhoto ? (
+                    <img 
+                      src={profilePhoto} 
+                      alt="Foto de perfil" 
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '';
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML += `
+                          <div class="h-full w-full rounded-full flex items-center justify-center">
+                            <svg class="h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                          </div>
+                        `;
+                      }}
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <User className="h-16 w-16 text-primary" />
+                    </div>
+                  )}
+                  
+                  {/* Botão para upload */}
+                  <button 
+                    type="button"
+                    onClick={handlePhotoUploadClick}
+                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors"
+                    title="Alterar foto de perfil"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                <p className="text-sm text-gray-500 mb-2">Foto de perfil</p>
+                <p className="text-xs text-gray-400">Clique no ícone para alterar sua foto</p>
+                
+                {/* Input oculto para upload de arquivo */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handlePhotoChange}
+                  accept="image/*" 
+                  className="hidden" 
+                />
+              </div>
+              
               <Form {...userForm}>
                 <form onSubmit={userForm.handleSubmit(onUserSubmit)} className="space-y-4">
                   <FormField
