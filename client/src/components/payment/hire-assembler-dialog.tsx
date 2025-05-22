@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, DollarSign, Loader2, CheckCircle } from "lucide-react";
+import { Calendar, DollarSign, Loader2, CheckCircle, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
@@ -19,6 +19,7 @@ import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { RatingStars } from "@/components/rating/rating-stars";
 
 interface HireAssemblerDialogProps {
   open: boolean;
@@ -49,6 +50,21 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
       }
       return response.json();
     },
+  });
+  
+  // Buscar dados do montador para exibir avaliação
+  const { data: assemblerData } = useQuery({
+    queryKey: [`/api/assemblers/${assemblerId}`],
+    queryFn: async () => {
+      if (!assemblerId) return null;
+      
+      const response = await fetch(`/api/assemblers/${assemblerId}`);
+      if (!response.ok) {
+        throw new Error("Falha ao carregar dados do montador");
+      }
+      return response.json();
+    },
+    enabled: !!assemblerId,
   });
   
   // Inicializar os campos com os valores atuais do serviço quando disponíveis
@@ -236,6 +252,35 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
             <>
               {status === "editing" && (
                 <>
+                  {/* Informações do montador com avaliação */}
+                  {assemblerData && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-medium">{assemblerData.user?.name || 'Montador'}</h3>
+                        <div className="flex items-center gap-1">
+                          <RatingStars
+                            rating={assemblerData.rating || 0}
+                            size="sm"
+                          />
+                          <span className="text-sm font-medium text-yellow-600">
+                            {assemblerData.rating ? assemblerData.rating.toFixed(1) : '0.0'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600">
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="font-medium">Especialidades:</span>
+                          <span>{assemblerData.specialties?.join(', ') || 'Não informadas'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Região:</span>
+                          <span>{assemblerData.city} - {assemblerData.state}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                
                   <div className="space-y-2">
                     <Label htmlFor="price">Valor do serviço</Label>
                     <div className="relative">
