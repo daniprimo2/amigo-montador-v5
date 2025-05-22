@@ -567,8 +567,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   <p>Nenhum serviço em andamento.</p>
                 </div>
               ) : (
-                // Show active services
-                activeServices.map((service: any) => (
+                // Show active services (filtrando apenas os que estão realmente em andamento)
+                activeServices.filter((service: any) => service.status === 'in-progress').map((service: any) => (
                   <div 
                     key={service.id} 
                     className="p-4 hover:bg-gray-50 cursor-pointer"
