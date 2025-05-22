@@ -21,15 +21,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'calendar' | 'explore'>('home');
   // Estado para controlar a notificação de mensagem não lida
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
+  // Contador de mensagens não lidas
+  const [unreadCount, setUnreadCount] = useState(0);
   
   // Monitorar mensagens recebidas via WebSocket (através do hook)
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log('[DashboardLayout] Nova mensagem recebida via WebSocket', lastMessage);
       
-      // Se não estiver na aba de chat, marcar como mensagem não lida
+      // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
       if (activeTab !== 'chat') {
         setHasUnreadMessage(true);
+        setUnreadCount(prevCount => prevCount + 1);
       }
     }
   }, [lastMessage, activeTab]);
@@ -40,10 +43,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       const { type, data } = event.detail;
       console.log('[DashboardLayout] Notificação recebida via evento:', type, data);
       
-      if (type === 'new_message' || type === 'new_application') {
-        // Se não estiver na aba de chat, marcar como mensagem não lida
+      if (type === 'new_message') {
+        // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
         if (activeTab !== 'chat') {
           setHasUnreadMessage(true);
+          setUnreadCount(prevCount => prevCount + 1);
+        }
+      } else if (type === 'new_application') {
+        // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
+        if (activeTab !== 'chat') {
+          setHasUnreadMessage(true);
+          setUnreadCount(prevCount => prevCount + 1);
         }
       }
     };
@@ -61,6 +71,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   useEffect(() => {
     if (activeTab === 'chat') {
       setHasUnreadMessage(false);
+      setUnreadCount(0); // Reiniciar o contador ao abrir o chat
     }
   }, [activeTab]);
 
@@ -93,7 +104,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="relative">
         <MessageSquare className="h-5 w-5" />
         {hasUnreadMessage && (
-          <span className="notification-badge">!</span>
+          <span className="notification-badge">{unreadCount > 0 ? unreadCount : '!'}</span>
         )}
       </div>
       <span className="text-xs mt-1">Chat</span>
@@ -173,7 +184,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             >
               <Bell className={`h-5 w-5 ${hasUnreadMessage ? 'animate-pulse-once' : ''}`} />
               {hasUnreadMessage && (
-                <span className="notification-badge">!</span>
+                <span className="notification-badge">{unreadCount > 0 ? unreadCount : '!'}</span>
               )}
             </button>
             <button 
