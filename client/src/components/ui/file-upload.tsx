@@ -38,11 +38,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   // Simular progresso de upload quando isUploading estiver ativo
   React.useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
     if (isUploading) {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 95) {
-            clearInterval(interval);
+            if (interval) clearInterval(interval);
             return 95;
           }
           return prev + 5;
@@ -50,8 +52,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       }, 300);
 
       return () => {
-        clearInterval(interval);
-        if (uploadProgress < 100) setUploadProgress(100);
+        if (interval) clearInterval(interval);
+        setUploadProgress(100);
       };
     } else {
       setUploadProgress(0);
