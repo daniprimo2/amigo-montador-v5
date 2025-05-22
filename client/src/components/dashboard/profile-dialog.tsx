@@ -231,8 +231,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       formData.append('photo', file);
       
       // Usar o tipo de upload explícito passado para a função
-      const isStoreLogoUpload = uploadType === 'store-logo';
       formData.append('type', uploadType);
+      const isStoreLogoUpload = uploadType === 'store-logo';
       
       console.log(`Enviando imagem como: ${uploadType}`);
       
@@ -262,7 +262,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       }
     } catch (error) {
       console.error('Erro ao enviar imagem:', error);
-      const errorMessage = isStoreLogoUpload
+      const errorMessage = uploadType === 'store-logo'
         ? 'Ocorreu um erro ao enviar o logo da loja' 
         : 'Ocorreu um erro ao enviar a foto de perfil';
       
