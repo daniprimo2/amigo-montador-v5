@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Logo from '../logo/logo';
-import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 
@@ -169,12 +169,55 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
   };
 
+  // Get user data including store for lojista
+  const { user } = useAuth();
+  const [storeLogoUrl, setStoreLogoUrl] = useState<string | null>(null);
+
+  // Fetch store logo on mount if user is lojista
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      if (user?.userType === 'lojista') {
+        try {
+          const response = await fetch('/api/profile');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.store?.logoUrl) {
+              setStoreLogoUrl(data.store.logoUrl);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao carregar dados da loja:', error);
+        }
+      }
+    };
+
+    fetchStoreData();
+  }, [user]);
+
   return (
     <div className="flex flex-col h-screen">
       <div className="gradient-bg w-full p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Logo size="sm" className="text-white" />
+            {userType === 'lojista' && storeLogoUrl ? (
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full overflow-hidden mr-2 bg-white">
+                  <img 
+                    src={storeLogoUrl} 
+                    alt="Logo da loja" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      setStoreLogoUrl(null);
+                    }}
+                  />
+                </div>
+                <Logo size="sm" className="text-white" />
+              </div>
+            ) : (
+              <Logo size="sm" className="text-white" />
+            )}
           </div>
           <div className="flex items-center space-x-4">
             <button 
@@ -188,10 +231,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               )}
             </button>
             <button 
-              onClick={handleLogout}
-              className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden"
+              onClick={() => userType === 'lojista' ? window.dispatchEvent(new CustomEvent('open-profile-dialog')) : handleLogout()}
+              className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
+              title={userType === 'lojista' ? "Editar perfil e logo" : "Sair"}
             >
-              <LogOut className="h-5 w-5 text-gray-600" />
+              {userType === 'lojista' ? <User className="h-5 w-5 text-primary" /> : <LogOut className="h-5 w-5 text-gray-600" />}
             </button>
           </div>
         </div>

@@ -36,6 +36,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
   const { connected, lastMessage } = useWebSocket();
   
+  // Ouvir evento para abrir o diálogo de perfil
+  useEffect(() => {
+    const handleOpenProfileDialog = () => {
+      setIsProfileOpen(true);
+    };
+    
+    window.addEventListener('open-profile-dialog', handleOpenProfileDialog);
+    
+    return () => {
+      window.removeEventListener('open-profile-dialog', handleOpenProfileDialog);
+    };
+  }, []);
+  
   // Reagir a mensagens do WebSocket
   useEffect(() => {
     if (!lastMessage) return;

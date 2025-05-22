@@ -1041,13 +1041,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // URL pública para a imagem
       const photoUrl = `/uploads/profiles/${fileName}`;
       
-      // Atualizar perfil do usuário com a URL da foto
-      const profileData = req.user.profileData as Record<string, any> || {};
-      profileData.photoUrl = photoUrl;
+      // Verificar se é um upload de logo da loja ou de foto de perfil
+      const uploadType = req.body.type || 'profile-photo';
       
-      await storage.updateUser(req.user.id, {
-        profileData
-      });
+      if (uploadType === 'store-logo' && req.user.userType === 'lojista') {
+        // Upload de logo da loja
+        console.log("Processando upload de logo da loja");
+        
+        // Buscar a loja do usuário
+        const store = await storage.getStoreByUserId(req.user.id);
+        
+        if (!store) {
+          return res.status(404).json({ message: "Loja não encontrada para este usuário" });
+        }
+        
+        // Atualizar a logo da loja
+        await storage.updateStore(store.id, {
+          logoUrl: photoUrl
+        });
+        
+        console.log(`Logo da loja atualizado para ${photoUrl}`);
+      } else {
+        // Upload de foto de perfil
+        console.log("Processando upload de foto de perfil");
+        
+        // Atualizar perfil do usuário com a URL da foto
+        const profileData = req.user.profileData as Record<string, any> || {};
+        profileData.photoUrl = photoUrl;
+        
+        await storage.updateUser(req.user.id, {
+          profileData
+        });
+        
+        console.log(`Foto de perfil atualizada para ${photoUrl}`);
+      }
       
       res.status(200).json({ success: true, photoUrl });
     } catch (error) {
