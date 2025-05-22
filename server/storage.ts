@@ -583,6 +583,18 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return rating;
   }
+  
+  // Obter a média de avaliações recebidas por um usuário
+  async getAverageRatingForUser(userId: number): Promise<number> {
+    const result = await db
+      .select({
+        averageRating: sql`AVG(${ratings.rating})`.as('average_rating')
+      })
+      .from(ratings)
+      .where(eq(ratings.toUserId, userId));
+    
+    return result[0]?.averageRating ? parseFloat(result[0].averageRating.toFixed(1)) : 0;
+  }
 
   // Informações bancárias
   async getBankAccountsByUserId(userId: number): Promise<BankAccount[]> {

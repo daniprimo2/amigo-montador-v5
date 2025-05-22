@@ -1093,11 +1093,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id, userType } = req.user;
       let profileData = {};
 
+      // Obter a média de avaliações do usuário
+      const averageRating = await storage.getAverageRatingForUser(id);
+
       if (userType === 'lojista') {
         const store = await storage.getStoreByUserId(id);
-        profileData = { ...req.user, store };
+        profileData = { 
+          ...req.user, 
+          store,
+          rating: averageRating // Incluir avaliação média para o lojista
+        };
       } else if (userType === 'montador') {
         const assembler = await storage.getAssemblerByUserId(id);
+        // Para montadores, atualizar o rating médio no objeto assembler
+        if (assembler) {
+          assembler.rating = averageRating;
+        }
         profileData = { ...req.user, assembler };
       }
 
