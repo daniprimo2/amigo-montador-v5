@@ -1,6 +1,6 @@
 import { users, type User, type InsertUser, stores, type Store, type InsertStore, assemblers, type Assembler, type InsertAssembler, services, type Service, type InsertService, applications, type Application, type InsertApplication, messages, type Message, type InsertMessage, messageReads, type MessageRead, type InsertMessageRead, ratings, type Rating, type InsertRating, bankAccounts, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, not, desc, asc, or, gt, lt, inArray } from "drizzle-orm";
+import { eq, and, not, desc, asc, or, gt, lt, inArray, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -586,14 +586,28 @@ export class DatabaseStorage implements IStorage {
   
   // Obter a média de avaliações recebidas por um usuário
   async getAverageRatingForUser(userId: number): Promise<number> {
-    const result = await db
-      .select({
-        averageRating: sql`AVG(${ratings.rating})`.as('average_rating')
-      })
-      .from(ratings)
-      .where(eq(ratings.toUserId, userId));
-    
-    return result[0]?.averageRating ? parseFloat(result[0].averageRating.toFixed(1)) : 0;
+    try {
+      // Buscar todas as avaliações para o usuário
+      const userRatings = await db
+        .select()
+        .from(ratings)
+        .where(eq(ratings.toUserId, userId));
+      
+      // Se não houver avaliações, retornar 0
+      if (userRatings.length === 0) {
+        return 0;
+      }
+      
+      // Calcular média
+      const sum = userRatings.reduce((acc, rating) => acc + rating.rating, 0);
+      const avg = sum / userRatings.length;
+      
+      // Retornar média formatada com 1 casa decimal
+      return parseFloat(avg.toFixed(1));
+    } catch (error) {
+      console.error('Erro ao calcular média de avaliações:', error);
+      return 0; // Retornar 0 em caso de erro
+    }
   }
 
   // Informações bancárias
