@@ -148,13 +148,43 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         setSelectedServiceForConfirm({
           id: service.id,
           title: service.title,
-          price: service.price,
           price: service.price || 'Valor não definido'
         });
         
         // Forçar a abertura do diálogo de confirmação
         setIsConfirmDialogOpen(true);
         
+        // Vibrar no celular se API estiver disponível
+        if ('vibrate' in navigator) {
+          navigator.vibrate([300, 100, 300]);
+        }
+      }
+    }
+    // Quando receber notificação de pagamento disponível após confirmação
+    else if (lastMessage.type === 'payment_ready') {
+      console.log("[AssemblerDashboard] Notificação de pagamento disponível recebida", lastMessage);
+      
+      // Atualizar todas as listas de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      
+      // Se houver dados do serviço, abrir diálogo de pagamento
+      if (lastMessage.serviceId && lastMessage.serviceData) {
+        const service = lastMessage.serviceData;
+        
+        // Configurar dados para pagamento do serviço pelo montador
+        setSelectedServiceForPayment({
+          id: service.id,
+          title: service.title,
+          amount: service.price || '0.00'
+        });
+        
+        // Forçar a abertura do diálogo de pagamento
+        setIsPaymentDialogOpen(true);
+        
+        // Vibrar no celular se API estiver disponível (padrão mais longo para pagamento)
+        if ('vibrate' in navigator) {
+          navigator.vibrate([200, 100, 200, 100, 400]);
+        }
         // Mudar para a seção inicial para contexto
         setDashboardSection('home');
         

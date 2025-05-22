@@ -739,17 +739,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           };
           
-          // Enviar notificação para o lojista
-          const lojistaWs = clients.get(storeData.userId.toString());
-          if (lojistaWs) {
-            lojistaWs.send(JSON.stringify({
-              type: 'service_confirmed',
-              message: `O montador ${req.user.name} confirmou o serviço "${service.title}". Aguardando pagamento.`,
+          // Enviar notificação para o lojista usando a função sendNotification
+          sendNotification(storeData.userId, {
+            type: 'service_confirmed',
+            message: `O montador ${req.user.name} confirmou o serviço "${service.title}". Aguardando pagamento.`,
+            serviceId: service.id,
+            serviceData: serviceInfo,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Após um breve delay, enviar notificação para o montador de que o pagamento está disponível
+          setTimeout(() => {
+            sendNotification(req.user.id, {
+              type: 'payment_ready',
+              message: `O serviço "${service.title}" foi confirmado. Você já pode realizar o pagamento.`,
               serviceId: service.id,
               serviceData: serviceInfo,
               timestamp: new Date().toISOString()
-            }));
-          }
+            });
+          }, 1500);
         }
       } catch (notifyError) {
         console.error("Erro ao enviar notificação de confirmação:", notifyError);
