@@ -632,17 +632,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             {activeServices.map((service: any) => (
               <div 
                 key={service.id} 
-                className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer"
+                className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer ${service.hasUnreadMessages ? 'border-l-4 border-primary' : ''}`}
                 onClick={() => setSelectedChatService(service.id)}
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <h4 className="font-medium">{service.title}</h4>
+                    <div className="flex items-center">
+                      <h4 className="font-medium">{service.title}</h4>
+                      {service.hasUnreadMessages && (
+                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
+                          Nova mensagem
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-500">
                       Loja: {service.store?.name || 'Não especificada'}
                     </p>
                   </div>
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <MessageSquare className={`h-5 w-5 ${service.hasUnreadMessages ? 'text-primary' : 'text-gray-400'}`} />
                 </div>
               </div>
             ))}

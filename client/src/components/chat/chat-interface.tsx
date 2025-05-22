@@ -136,7 +136,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       if (!response.ok) {
         throw new Error('Erro ao buscar mensagens');
       }
-      return response.json();
+      const fetchedMessages = await response.json();
+      
+      // Garantir que as mensagens estejam ordenadas por data de envio
+      return fetchedMessages.sort((a: Message, b: Message) => {
+        return new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
+      });
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
   });
