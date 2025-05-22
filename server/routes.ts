@@ -1290,28 +1290,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Deletar uma mensagem específica
+  // Endpoint para tentar deletar uma mensagem específica (agora retorna sempre erro)
   app.delete("/api/services/messages/:id", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
-      const { id } = req.params;
-      const messageId = parseInt(id);
-
-      const result = await storage.deleteMessage(messageId, req.user.id);
+      // Retornar sempre 403 com a mensagem de que nenhuma mensagem pode ser excluída
+      return res.status(403).json({ 
+        message: "Nenhuma mensagem poderá ser excluída do chat, garantindo a preservação completa do histórico de conversas."
+      });
       
-      if (!result) {
-        return res.status(403).json({ 
-          message: "Não foi possível excluir a mensagem. Mensagens de serviços concluídos não podem ser excluídas."
-        });
-      }
-      
-      res.status(200).json({ success: true });
     } catch (error) {
-      console.error("Erro ao excluir mensagem:", error);
-      res.status(500).json({ message: "Erro ao excluir mensagem" });
+      console.error("Tentativa de excluir mensagem:", error);
+      res.status(500).json({ message: "Erro ao processar requisição" });
     }
   });
 

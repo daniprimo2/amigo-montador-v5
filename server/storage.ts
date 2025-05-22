@@ -536,35 +536,21 @@ export class DatabaseStorage implements IStorage {
     return unreadCount > 0;
   }
 
-  // Deleta uma mensagem específica
+  // Método para tentar deletar uma mensagem - agora sempre retorna false para preservar o histórico completo
   async deleteMessage(messageId: number, userId: number): Promise<boolean> {
-    // Verificar se a mensagem existe e se o usuário é o dono
+    // Verificar se a mensagem existe apenas para log
     const [message] = await db
       .select()
       .from(messages)
       .where(eq(messages.id, messageId));
       
-    if (!message || message.senderId !== userId) {
-      return false;
+    if (message) {
+      console.log(`Tentativa de excluir mensagem ${messageId} foi bloqueada. Preservação do histórico completo.`);
     }
     
-    // Verificar se o serviço está completo - não permitir exclusão nesse caso
-    const service = await this.getServiceById(message.serviceId);
-    if (!service || service.status === 'completed') {
-      return false; // Não permitir excluir mensagens de serviços concluídos
-    }
-    
-    // Excluir registros de leitura associados à mensagem
-    await db
-      .delete(messageReads)
-      .where(eq(messageReads.messageId, messageId));
-      
-    // Excluir a mensagem
-    await db
-      .delete(messages)
-      .where(eq(messages.id, messageId));
-      
-    return true;
+    // Retorna sempre false, impossibilitando a exclusão de qualquer mensagem
+    // para garantir a preservação completa do histórico de conversas
+    return false;
   }
   
   // Avaliações
