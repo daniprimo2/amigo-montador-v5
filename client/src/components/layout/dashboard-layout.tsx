@@ -202,7 +202,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="gradient-bg w-full p-4">
+      <div className="bg-black w-full p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Logo size="sm" className="text-white" />

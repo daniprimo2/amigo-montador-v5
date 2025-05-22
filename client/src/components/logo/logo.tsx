@@ -35,8 +35,8 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
       {withText && (
         <div className={`text-white ${textSizes[size]} flex items-center mt-1`}>
-          <span className="font-light tracking-wide">amigo</span>
-          <span className="font-bold ml-1 tracking-wide">montador</span>
+          <span className="font-light tracking-wide">Amigo</span>
+          <span className="font-bold ml-1 tracking-wide">Montador</span>
         </div>
       )}
     </div>
