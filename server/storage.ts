@@ -252,16 +252,35 @@ export class DatabaseStorage implements IStorage {
       // Log para depuração
       console.log(`Encontrados ${servicesList.length} serviços com status 'open'`);
       
-      // Mapear resultados para incluir informações da loja
-      const enhancedServices = servicesList.map(result => {
+      // Mapear resultados para incluir informações da loja e arquivos do projeto
+      const enhancedServices = await Promise.all(servicesList.map(async result => {
         const { services: service, stores: store } = result;
+        
+        // Verificar se existem arquivos PDF do projeto (projectFiles)
+        let projectFiles = null;
+        
+        if (service.projectFiles) {
+          try {
+            // Se projectFiles estiver armazenado como string JSON, fazer o parse
+            if (typeof service.projectFiles === 'string') {
+              projectFiles = JSON.parse(service.projectFiles);
+            } else {
+              // Se já for um objeto/array, usar diretamente
+              projectFiles = service.projectFiles;
+            }
+          } catch (error) {
+            console.error(`Erro ao processar projectFiles para serviço ${service.id}:`, error);
+          }
+        }
+        
         return {
           ...service,
+          projectFiles,
           store: {
             name: store?.name || 'Loja não especificada'
           }
         } as Service;
-      });
+      }));
       
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {

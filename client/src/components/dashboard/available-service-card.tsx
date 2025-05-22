@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Building, CalendarIcon, MapPin, Loader2 } from 'lucide-react';
+import { Building, CalendarIcon, MapPin, Loader2, FileText, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ServiceProps {
   id: number;
@@ -13,6 +14,10 @@ interface ServiceProps {
   store: string;
   type: string;
   status?: string;
+  projectFiles?: Array<{
+    name: string;
+    path: string;
+  }>;
 }
 
 interface AvailableServiceCardProps {
@@ -27,6 +32,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   activeServices = []
 }) => {
   const [isApplying, setIsApplying] = useState(false);
+  const [isFilesDialogOpen, setIsFilesDialogOpen] = useState(false);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const { toast } = useToast();
   
   const handleApply = async () => {
@@ -120,6 +127,20 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </div>
         </div>
       </div>
+      {/* Botão para visualizar arquivos PDF */}
+      {service.projectFiles && service.projectFiles.length > 0 && (
+        <div className="mb-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsFilesDialogOpen(true)}
+            className="w-full flex items-center justify-center gap-2 text-sm"
+          >
+            <FileText className="h-4 w-4" />
+            Ver arquivos do projeto ({service.projectFiles.length})
+          </Button>
+        </div>
+      )}
+      
       <Button 
         onClick={handleApply}
         disabled={isApplying || service.status === 'in-progress' || hasApplied}
@@ -134,6 +155,51 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           'Serviço em andamento' : 
           hasApplied ? 'Em andamento' : 'Candidatar-se'}
       </Button>
+      
+      {/* Diálogo para visualizar arquivos PDF */}
+      <Dialog open={isFilesDialogOpen} onOpenChange={setIsFilesDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Arquivos do Projeto</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {service.projectFiles && service.projectFiles.length > 0 ? (
+              <div className="space-y-3">
+                {service.projectFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-md">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-sm font-medium truncate">{file.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a 
+                        href={file.path} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Visualizar PDF"
+                      >
+                        <FileText className="h-4 w-4 text-gray-600" />
+                      </a>
+                      <a 
+                        href={file.path} 
+                        download
+                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Baixar PDF"
+                      >
+                        <Download className="h-4 w-4 text-gray-600" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">Nenhum arquivo disponível para este serviço.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
