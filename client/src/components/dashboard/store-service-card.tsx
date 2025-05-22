@@ -236,20 +236,6 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             
             {service.status === 'open' && (
               <>
-                <div className="flex items-center">
-                  <button 
-                    className="text-sm text-primary font-medium bg-primary/10 px-3 py-1 rounded-full flex items-center hover:bg-primary/20 transition-colors relative"
-                    aria-label={`Ver ${service.candidates} ${service.candidates === 1 ? 'candidatura' : 'candidaturas'}`}
-                  >
-                    <div className="flex items-center">
-                      <div className="bg-primary text-white rounded-full h-5 w-auto min-w-5 px-1 flex items-center justify-center text-xs font-bold mr-2">
-                        {service.candidates}
-                      </div>
-                      <span>{service.candidates === 1 ? 'candidatura' : 'candidaturas'}</span>
-                      <ChevronRight className="h-4 w-4 text-primary ml-1" />
-                    </div>
-                  </button>
-                </div>
                 <Button 
                   size="sm" 
                   variant="outline" 
