@@ -45,7 +45,7 @@ const formatServiceForDisplay = (service: ServiceData) => {
     title: service.title,
     location: service.location,
     distance: '5 km', // This would be calculated based on user location
-    date: service.date, // Exibir a data exatamente como fornecida pelo lojista
+    date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não informada', // Formatar para padrão brasileiro
     price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
     store: service.store?.name || 'Loja não especificada',
     type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
