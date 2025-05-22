@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import EditServiceDialog from './edit-service-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,10 +19,15 @@ import {
 interface ServiceProps {
   id: number;
   title: string;
+  description?: string;
   location: string;
   date: string;
   price: string;
   candidates: number;
+  materialType?: string;
+  cep?: string;
+  address?: string;
+  addressNumber?: string;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
   assembler?: {
     id: number;
@@ -65,6 +71,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const handleClick = () => {
     if (onClick) onClick(service.id);
@@ -152,6 +159,11 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
     setDeleteDialogOpen(true);
   };
   
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditDialogOpen(true);
+  };
+  
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
@@ -236,6 +248,14 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             
             {service.status === 'open' && (
               <>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50" 
+                  onClick={handleEditClick}
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
