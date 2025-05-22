@@ -158,6 +158,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         if ('vibrate' in navigator) {
           navigator.vibrate([300, 100, 300]);
         }
+        
+        // Mudar para a seção inicial para contexto
+        setDashboardSection('home');
+        
+        // Notificar o montador sobre a necessidade de confirmar
+        toast({
+          title: '🔔 Notificação automática',
+          description: 'O lojista enviou uma notificação de serviço. Por favor, confirme para prosseguir.',
+          duration: 10000,
+          variant: 'default',
+          className: 'bg-orange-100 border-orange-500 border-2 font-medium shadow-lg animate-pulse'
+        });
       }
     }
     // Quando receber notificação de pagamento disponível após confirmação
@@ -185,15 +197,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         if ('vibrate' in navigator) {
           navigator.vibrate([200, 100, 200, 100, 400]);
         }
+        
         // Mudar para a seção inicial para contexto
         setDashboardSection('home');
         
-        // Notificar o montador sobre a necessidade de confirmar
+        // Notificar o montador sobre disponibilidade de pagamento
         toast({
-          title: '🔔 Notificação automática',
-          description: 'O lojista enviou uma notificação de serviço. Por favor, confirme para prosseguir.',
+          title: '💳 Pagamento Disponível',
+          description: 'O serviço foi confirmado. Você já pode fazer o pagamento.',
           duration: 10000,
-          className: 'bg-blue-100 border-blue-500 border-2 font-medium shadow-lg'
+          variant: 'default',
+          className: 'bg-blue-100 border-blue-500 border-2 font-medium shadow-lg animate-pulse'
         });
       }
     }
