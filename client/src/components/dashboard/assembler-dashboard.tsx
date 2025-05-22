@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi, Star, CheckCheck } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi, Star, CheckCheck, ChevronRight, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
