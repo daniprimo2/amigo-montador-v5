@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star, Trash2, AlertTriangle } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star, Trash2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
 import { HireAssemblerDialog } from '@/components/payment/hire-assembler-dialog';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Dialog,
   DialogContent,
@@ -81,6 +82,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Mutation para atualizar o status do serviço para "em andamento"
@@ -131,9 +133,62 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     }
   });
   
+  // Mutation para completar o serviço
+  const completeServiceMutation = useMutation({
+    mutationFn: async () => {
+      console.log(`[ChatInterface] Completando serviço ${serviceId}`);
+      setIsCompleting(true);
+      
+      const response = await apiRequest({
+        method: 'POST',
+        url: `/api/services/${serviceId}/complete`,
+        data: {}
+      });
+      
+      return response;
+    },
+    onSuccess: () => {
+      console.log(`[ChatInterface] Serviço finalizado com sucesso`);
+      
+      toast({
+        title: 'Serviço finalizado com sucesso!',
+        description: 'É necessário avaliar o serviço para continuar. Uma tela de avaliação será aberta automaticamente.',
+        duration: 8000,
+        variant: 'default',
+        className: 'bg-yellow-100 border-yellow-500 border-2 font-medium'
+      });
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      
+      setIsCompleting(false);
+    },
+    onError: (error) => {
+      console.error(`[ChatInterface] Erro ao completar serviço:`, error);
+      
+      toast({
+        title: 'Erro',
+        description: error instanceof Error 
+          ? error.message 
+          : 'Não foi possível finalizar o serviço. Tente novamente.',
+        variant: 'destructive',
+      });
+      
+      setIsCompleting(false);
+    }
+  });
+  
   // Função para iniciar o serviço (mudar status para "em andamento")
   const handleStartService = () => {
     startServiceMutation.mutate();
+  };
+  
+  // Função para completar o serviço
+  const handleCompleteService = () => {
+    completeServiceMutation.mutate();
   };
   
   // Buscar mensagens do chat
@@ -390,6 +445,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
+            {service.status === 'in-progress' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                onClick={handleCompleteService}
+                disabled={isCompleting}
+              >
+                <CheckSquare className="h-4 w-4" />
+                {isCompleting ? 'Finalizando...' : 'Montagem Concluída'}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
