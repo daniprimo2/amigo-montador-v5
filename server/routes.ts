@@ -1290,6 +1290,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deletar uma mensagem específica
+  app.delete("/api/services/messages/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const messageId = parseInt(id);
+
+      const result = await storage.deleteMessage(messageId, req.user.id);
+      
+      if (!result) {
+        return res.status(403).json({ 
+          message: "Não foi possível excluir a mensagem. Mensagens de serviços concluídos não podem ser excluídas."
+        });
+      }
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Erro ao excluir mensagem:", error);
+      res.status(500).json({ message: "Erro ao excluir mensagem" });
+    }
+  });
+
   // Marcar mensagens como lidas
   app.post("/api/services/:id/messages/read", async (req, res) => {
     try {

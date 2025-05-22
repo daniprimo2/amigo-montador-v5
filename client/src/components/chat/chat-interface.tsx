@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star, Trash2, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
@@ -34,6 +34,13 @@ interface Message {
     name: string;
     userType: string;
   };
+}
+
+interface Service {
+  id: number;
+  title: string;
+  status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  [key: string]: any;
 }
 
 interface UserProfile {

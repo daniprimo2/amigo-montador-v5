@@ -535,6 +535,37 @@ export class DatabaseStorage implements IStorage {
     const unreadCount = await this.getUnreadMessageCountForService(serviceId, userId);
     return unreadCount > 0;
   }
+
+  // Deleta uma mensagem específica
+  async deleteMessage(messageId: number, userId: number): Promise<boolean> {
+    // Verificar se a mensagem existe e se o usuário é o dono
+    const [message] = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.id, messageId));
+      
+    if (!message || message.senderId !== userId) {
+      return false;
+    }
+    
+    // Verificar se o serviço está completo - não permitir exclusão nesse caso
+    const service = await this.getServiceById(message.serviceId);
+    if (!service || service.status === 'completed') {
+      return false; // Não permitir excluir mensagens de serviços concluídos
+    }
+    
+    // Excluir registros de leitura associados à mensagem
+    await db
+      .delete(messageReads)
+      .where(eq(messageReads.messageId, messageId));
+      
+    // Excluir a mensagem
+    await db
+      .delete(messages)
+      .where(eq(messages.id, messageId));
+      
+    return true;
+  }
   
   // Avaliações
   async getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined> {
