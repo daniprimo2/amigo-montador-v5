@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText, Download, Clock, MapPin, Building, CalendarIcon, DollarSign, Eye, ExternalLink } from 'lucide-react';
 import type { ServiceProps } from './available-service-card';
