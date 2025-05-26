@@ -43,23 +43,40 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editedService, setEditedService] = useState({
-    title: service.title,
-    description: service.description || '',
-    price: service.price,
-    materialType: service.materialType,
+    title: '',
+    description: '',
+    price: '',
+    materialType: '',
     startDate: '',
     endDate: '',
   });
   const [dateError, setDateError] = useState<string | null>(null);
-  const [projectFiles, setProjectFiles] = useState<Array<{name: string, path: string}>>(
-    service.projectFiles || []
-  );
+  const [projectFiles, setProjectFiles] = useState<Array<{name: string, path: string}>>([]);
   const [newFiles, setNewFiles] = useState<FileList | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
 
-  // Extrair e formatar datas do período do serviço
+  // Inicializar e reinicializar o formulário sempre que o serviço mudar
   useEffect(() => {
+    // Resetar o estado do formulário com os dados do serviço
+    setEditedService({
+      title: service.title || '',
+      description: service.description || '',
+      price: service.price || '',
+      materialType: service.materialType || '',
+      startDate: '',
+      endDate: '',
+    });
+
+    // Resetar arquivos do projeto
+    setProjectFiles(service.projectFiles || []);
+    
+    // Resetar outros estados
+    setNewFiles(null);
+    setFilesToDelete([]);
+    setDateError(null);
+
+    // Extrair e formatar datas do período do serviço
     if (service.date && service.date.includes('-')) {
       const [startDateStr, endDateStr] = service.date.split('-').map((d: string) => d.trim());
       const startDate = formatDateForInput(startDateStr);
@@ -69,6 +86,14 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
         ...prev,
         startDate,
         endDate
+      }));
+    } else if (service.date) {
+      // Se há apenas uma data, usar como data de início
+      const startDate = formatDateForInput(service.date);
+      setEditedService(prev => ({
+        ...prev,
+        startDate,
+        endDate: ''
       }));
     }
   }, [service]);
