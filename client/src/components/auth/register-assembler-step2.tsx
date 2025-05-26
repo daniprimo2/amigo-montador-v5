@@ -10,10 +10,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 
 const assemblerStep2Schema = z.object({
-  specialties: z.array(z.string()).min(1, 'Selecione pelo menos uma especialidade'),
+  specialties: z.array(z.string())
+    .min(1, 'Selecione pelo menos uma especialidade')
+    .max(3, 'Selecione no máximo 3 especialidades'),
   technicalAssistance: z.boolean(),
-  experience: z.string().min(10, 'Descreva sua experiência com pelo menos 10 caracteres'),
-  radius: z.number().min(20).max(100),
+  experience: z.string()
+    .min(10, 'Descreva sua experiência com pelo menos 10 caracteres')
+    .max(1000, 'Descrição deve ter no máximo 1000 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s0-9\.\,\-\!\?\:]+$/, 'Descrição contém caracteres inválidos'),
+  radius: z.number()
+    .min(20, 'Raio mínimo é de 20 km')
+    .max(100, 'Raio máximo é de 100 km'),
 });
 
 export type AssemblerStep2Data = z.infer<typeof assemblerStep2Schema>;

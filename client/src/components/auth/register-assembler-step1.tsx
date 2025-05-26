@@ -10,19 +10,80 @@ import FileUpload from '../ui/file-upload';
 import InputMask from 'react-input-mask';
 import { useToast } from '@/hooks/use-toast';
 
+// Função para validar CPF
+const validateCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/\D/g, '');
+  
+  if (cleanCPF.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false; // Evita CPFs com todos os dígitos iguais
+  
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  return remainder === parseInt(cleanCPF.charAt(10));
+};
+
+// Função para validar telefone brasileiro
+const validatePhone = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return cleanPhone.length === 10 || cleanPhone.length === 11;
+};
+
+// Função para validar CEP
+const validateZipCode = (zipCode: string): boolean => {
+  const cleanZipCode = zipCode.replace(/\D/g, '');
+  return cleanZipCode.length === 8;
+};
+
 const assemblerStep1Schema = z.object({
-  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  cpf: z.string().min(11, 'CPF inválido'),
-  phone: z.string().min(10, 'Telefone inválido'),
-  zipCode: z.string().min(8, 'CEP inválido'),
-  address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
-  addressNumber: z.string().min(1, 'Número é obrigatório'),
-  neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
-  city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
-  state: z.string().min(2, 'Selecione um estado'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  name: z.string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras e espaços'),
+  cpf: z.string()
+    .min(1, 'CPF é obrigatório')
+    .refine(validateCPF, 'CPF inválido'),
+  phone: z.string()
+    .min(1, 'Telefone é obrigatório')
+    .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
+  zipCode: z.string()
+    .min(1, 'CEP é obrigatório')
+    .refine(validateZipCode, 'CEP deve ter 8 dígitos'),
+  address: z.string()
+    .min(5, 'Endereço deve ter pelo menos 5 caracteres')
+    .max(255, 'Endereço deve ter no máximo 255 caracteres'),
+  addressNumber: z.string()
+    .min(1, 'Número é obrigatório')
+    .max(10, 'Número deve ter no máximo 10 caracteres'),
+  neighborhood: z.string()
+    .min(2, 'Bairro deve ter pelo menos 2 caracteres')
+    .max(100, 'Bairro deve ter no máximo 100 caracteres'),
+  city: z.string()
+    .min(2, 'Cidade deve ter pelo menos 2 caracteres')
+    .max(100, 'Cidade deve ter no máximo 100 caracteres'),
+  state: z.string()
+    .min(2, 'Selecione um estado')
+    .regex(/^[A-Z]{2}$/, 'Estado deve ter 2 caracteres maiúsculos'),
+  email: z.string()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido')
+    .max(255, 'Email deve ter no máximo 255 caracteres'),
+  password: z.string()
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .max(50, 'A senha deve ter no máximo 50 caracteres')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula e um número'),
+  confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
   profilePicture: z.any().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",

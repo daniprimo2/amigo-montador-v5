@@ -11,29 +11,55 @@ import FileUpload from '../ui/file-upload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { bankAccountSchema } from '@/lib/bank-account-schema';
+import { baseBankAccountSchema } from '@/lib/bank-account-schema';
 
 const assemblerStep3Schema = z.object({
-  identityFront: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
-    message: "Upload obrigatório do documento (frente)"
+  identityFront: z.any().refine(val => {
+    if (!val || !(val instanceof FileList) || val.length === 0) return false;
+    const file = val[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Documento (frente) deve ser uma imagem ou PDF de até 10MB"
   }),
-  identityBack: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
-    message: "Upload obrigatório do documento (verso)"
+  identityBack: z.any().refine(val => {
+    if (!val || !(val instanceof FileList) || val.length === 0) return false;
+    const file = val[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Documento (verso) deve ser uma imagem ou PDF de até 10MB"
   }),
-  proofOfAddress: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
-    message: "Upload obrigatório do comprovante de residência"
+  proofOfAddress: z.any().refine(val => {
+    if (!val || !(val instanceof FileList) || val.length === 0) return false;
+    const file = val[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Comprovante de residência deve ser uma imagem ou PDF de até 10MB"
   }),
-  certificates: z.any().optional(),
+  certificates: z.any().optional().refine(val => {
+    if (!val || !(val instanceof FileList) || val.length === 0) return true; // opcional
+    const file = val[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Certificados devem ser imagens ou PDF de até 10MB"
+  }),
   // Dados bancários
-  bankName: bankAccountSchema.shape.bankName,
-  accountType: bankAccountSchema.shape.accountType,
-  accountNumber: bankAccountSchema.shape.accountNumber,
-  agency: bankAccountSchema.shape.agency,
-  holderName: bankAccountSchema.shape.holderName,
-  holderDocumentType: bankAccountSchema.shape.holderDocumentType,
-  holderDocumentNumber: bankAccountSchema.shape.holderDocumentNumber,
-  pixKey: bankAccountSchema.shape.pixKey,
-  pixKeyType: bankAccountSchema.shape.pixKeyType,
+  bankName: baseBankAccountSchema.shape.bankName,
+  accountType: baseBankAccountSchema.shape.accountType,
+  accountNumber: baseBankAccountSchema.shape.accountNumber,
+  agency: baseBankAccountSchema.shape.agency,
+  holderName: baseBankAccountSchema.shape.holderName,
+  holderDocumentType: baseBankAccountSchema.shape.holderDocumentType,
+  holderDocumentNumber: baseBankAccountSchema.shape.holderDocumentNumber,
+  pixKey: baseBankAccountSchema.shape.pixKey,
+  pixKeyType: baseBankAccountSchema.shape.pixKeyType,
   termsAgreed: z.boolean().refine(val => val === true, {
     message: "Você deve concordar com os termos de serviço",
   }),

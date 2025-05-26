@@ -9,33 +9,107 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import InputMask from 'react-input-mask';
 
+// Função para validar CPF
+const validateCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/\D/g, '');
+  
+  if (cleanCPF.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false; // Evita CPFs com todos os dígitos iguais
+  
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  return remainder === parseInt(cleanCPF.charAt(10));
+};
+
+// Função para validar CNPJ
+const validateCNPJ = (cnpj: string): boolean => {
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  
+  if (cleanCNPJ.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false; // Evita CNPJs com todos os dígitos iguais
+  
+  let length = cleanCNPJ.length - 2;
+  let numbers = cleanCNPJ.substring(0, length);
+  const digits = cleanCNPJ.substring(length);
+  let sum = 0;
+  let pos = length - 7;
+  
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+  if (result !== parseInt(digits.charAt(0))) return false;
+  
+  length = length + 1;
+  numbers = cleanCNPJ.substring(0, length);
+  sum = 0;
+  pos = length - 7;
+  
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+  return result === parseInt(digits.charAt(1));
+};
+
+// Função para validar telefone brasileiro
+const validatePhone = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return cleanPhone.length === 10 || cleanPhone.length === 11;
+};
+
 const storeStep1Schema = z.object({
-  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  name: z.string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras e espaços'),
   documentType: z.enum(['cpf', 'cnpj'], {
     required_error: "Selecione o tipo de documento"
   }),
-  documentNumber: z.string().min(1, 'Documento obrigatório'),
-  phone: z.string().min(10, 'Telefone inválido'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  documentNumber: z.string()
+    .min(1, 'Documento obrigatório'),
+  phone: z.string()
+    .min(1, 'Telefone é obrigatório')
+    .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
+  email: z.string()
+    .min(1, 'Email é obrigatório')
+    .email('Email inválido')
+    .max(255, 'Email deve ter no máximo 255 caracteres'),
+  password: z.string()
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .max(50, 'A senha deve ter no máximo 50 caracteres')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula e um número'),
+  confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
-}).refine(
-  (data) => {
-    if (data.documentType === 'cpf') {
-      return data.documentNumber.length >= 11;
-    } else if (data.documentType === 'cnpj') {
-      return data.documentNumber.length >= 14;
-    }
-    return false;
-  },
-  {
-    message: "Documento inválido",
-    path: ["documentNumber"],
+}).refine((data) => {
+  if (data.documentType === 'cpf') {
+    return validateCPF(data.documentNumber);
+  } else if (data.documentType === 'cnpj') {
+    return validateCNPJ(data.documentNumber);
   }
-);
+  return false;
+}, {
+  message: "Documento inválido",
+  path: ["documentNumber"],
+});
 
 export type StoreStep1Data = z.infer<typeof storeStep1Schema>;
 

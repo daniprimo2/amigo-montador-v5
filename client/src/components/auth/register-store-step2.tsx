@@ -12,33 +12,68 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import InputMask from 'react-input-mask';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { bankAccountSchema } from '@/lib/bank-account-schema';
+import { baseBankAccountSchema } from '@/lib/bank-account-schema';
+
+// Função para validar CEP
+const validateZipCode = (zipCode: string): boolean => {
+  const cleanZipCode = zipCode.replace(/\D/g, '');
+  return cleanZipCode.length === 8;
+};
+
+// Função para validar telefone brasileiro
+const validatePhone = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return cleanPhone.length === 10 || cleanPhone.length === 11;
+};
 
 const storeStep2Schema = z.object({
-  storeName: z.string().min(3, 'Nome da loja deve ter pelo menos 3 caracteres'),
-  zipCode: z.string().min(8, 'CEP inválido'),
-  address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
-  addressNumber: z.string().min(1, 'Número é obrigatório'),
-  neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
-  city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
-  state: z.string().min(2, 'Selecione um estado'),
+  storeName: z.string()
+    .min(3, 'Nome da loja deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome da loja deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s0-9\-\.]+$/, 'Nome da loja contém caracteres inválidos'),
+  zipCode: z.string()
+    .min(1, 'CEP é obrigatório')
+    .refine(validateZipCode, 'CEP deve ter 8 dígitos'),
+  address: z.string()
+    .min(5, 'Endereço deve ter pelo menos 5 caracteres')
+    .max(255, 'Endereço deve ter no máximo 255 caracteres'),
+  addressNumber: z.string()
+    .min(1, 'Número é obrigatório')
+    .max(10, 'Número deve ter no máximo 10 caracteres'),
+  neighborhood: z.string()
+    .min(2, 'Bairro deve ter pelo menos 2 caracteres')
+    .max(100, 'Bairro deve ter no máximo 100 caracteres'),
+  city: z.string()
+    .min(2, 'Cidade deve ter pelo menos 2 caracteres')
+    .max(100, 'Cidade deve ter no máximo 100 caracteres'),
+  state: z.string()
+    .min(2, 'Selecione um estado')
+    .regex(/^[A-Z]{2}$/, 'Estado deve ter 2 caracteres maiúsculos'),
   storePhone: z.string()
     .min(1, 'Telefone da loja é obrigatório')
-    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, 'Formato de telefone inválido. Use: (11) 99999-9999'),
-  materialTypes: z.array(z.string()).min(1, 'Selecione pelo menos um tipo de material'),
-  logoFile: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
-    message: "Upload obrigatório do logotipo da loja"
+    .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
+  materialTypes: z.array(z.string())
+    .min(1, 'Selecione pelo menos um tipo de material')
+    .max(3, 'Selecione no máximo 3 tipos de material'),
+  logoFile: z.any().refine(val => {
+    if (!val || !(val instanceof FileList) || val.length === 0) return false;
+    const file = val[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Logo deve ser uma imagem (JPG, PNG, GIF, WEBP) de até 10MB"
   }),
   // Dados bancários
-  bankName: bankAccountSchema.shape.bankName,
-  accountType: bankAccountSchema.shape.accountType,
-  accountNumber: bankAccountSchema.shape.accountNumber,
-  agency: bankAccountSchema.shape.agency,
-  holderName: bankAccountSchema.shape.holderName,
-  holderDocumentType: bankAccountSchema.shape.holderDocumentType,
-  holderDocumentNumber: bankAccountSchema.shape.holderDocumentNumber,
-  pixKey: bankAccountSchema.shape.pixKey,
-  pixKeyType: bankAccountSchema.shape.pixKeyType,
+  bankName: baseBankAccountSchema.shape.bankName,
+  accountType: baseBankAccountSchema.shape.accountType,
+  accountNumber: baseBankAccountSchema.shape.accountNumber,
+  agency: baseBankAccountSchema.shape.agency,
+  holderName: baseBankAccountSchema.shape.holderName,
+  holderDocumentType: baseBankAccountSchema.shape.holderDocumentType,
+  holderDocumentNumber: baseBankAccountSchema.shape.holderDocumentNumber,
+  pixKey: baseBankAccountSchema.shape.pixKey,
+  pixKeyType: baseBankAccountSchema.shape.pixKeyType,
 });
 
 export type StoreStep2Data = z.infer<typeof storeStep2Schema>;
