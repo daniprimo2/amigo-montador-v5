@@ -1362,12 +1362,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Upload de foto de perfil
         console.log("Processando upload de foto de perfil");
         
-        // Atualizar perfil do usuário com a URL da foto
-        const profileData = req.user.profileData as Record<string, any> || {};
-        profileData.photoUrl = photoUrl;
-        
+        // Atualizar a foto de perfil diretamente no campo profilePhotoUrl
         await storage.updateUser(req.user.id, {
-          profileData
+          profilePhotoUrl: photoUrl
         });
         
         console.log(`Foto de perfil atualizada para ${photoUrl}`);
