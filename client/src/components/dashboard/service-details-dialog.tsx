@@ -80,8 +80,10 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                     </div>
                   ) : (
                     <div className="bg-green-50 border border-green-200 rounded-md p-2">
-                      <div className="text-xs text-green-600 font-medium mb-1">DATA DO SERVIÇO</div>
-                      <div className="text-sm font-semibold text-green-700">{service.date}</div>
+                      <div className="text-xs text-green-600 font-medium mb-1">DATA DE INÍCIO</div>
+                      <div className="text-sm font-semibold text-green-700">
+                        {service.date.includes('-') ? service.date.split('-')[0].trim() : service.date}
+                      </div>
                     </div>
                   )}
                 </div>
