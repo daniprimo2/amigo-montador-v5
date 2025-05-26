@@ -89,7 +89,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Encontrados ${servicesList.length} serviços para o usuário tipo: ${req.user?.userType}`);
       
-      res.json(servicesList);
+      // Formatar dados para o frontend (especialmente para montadores)
+      if (req.user?.userType === 'montador') {
+        const formattedServices = servicesList.map(service => {
+          // Calcular distância simulada (em uma implementação real, usaria geolocalização)
+          const mockDistance = "2.5 km";
+          
+          return {
+            id: service.id,
+            title: service.title,
+            description: service.description,
+            location: service.location || 'Localização não especificada',
+            distance: mockDistance,
+            date: service.date || 'Data não especificada',
+            price: service.price || 'Preço não informado',
+            store: service.store?.name || 'Loja não especificada',
+            type: service.materialType || 'Material não especificado',
+            status: service.status,
+            projectFiles: service.projectFiles || []
+          };
+        });
+        
+        res.json(formattedServices);
+      } else {
+        res.json(servicesList);
+      }
     } catch (error) {
       console.error("Erro ao buscar serviços:", error);
       res.status(500).json({ message: "Erro ao buscar serviços" });

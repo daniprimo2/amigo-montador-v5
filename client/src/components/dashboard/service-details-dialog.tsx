@@ -37,6 +37,9 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl">Detalhes do Serviço</DialogTitle>
+          <DialogDescription>
+            Visualize todas as informações do serviço, incluindo datas, arquivos e detalhes do projeto.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="py-4 space-y-4">
