@@ -47,17 +47,29 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                 <span>{service.location} ({service.distance})</span>
               </div>
               
-              <div className="flex items-start text-sm text-gray-600">
+              <div className="flex items-start text-sm text-gray-600 col-span-2">
                 <CalendarIcon className="h-4 w-4 mr-1.5 text-primary mt-0.5" />
-                <div>
-                  <div className="font-medium mb-0.5">Período do Serviço:</div>
+                <div className="flex-1">
                   {service.date.includes('-') ? (
-                    <div>
-                      <div><span className="font-medium">Início:</span> {service.date.split('-')[0].trim()}</div>
-                      <div><span className="font-medium">Término:</span> {service.date.split('-')[1].trim()}</div>
+                    <div className="space-y-1">
+                      <div className="bg-green-50 border border-green-200 rounded-md p-2">
+                        <div className="text-xs text-green-600 font-medium mb-1">INÍCIO DO SERVIÇO</div>
+                        <div className="text-sm font-semibold text-green-700">
+                          {service.date.split('-')[0].trim()}
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
+                        <div className="text-xs text-blue-600 font-medium mb-1">TÉRMINO PREVISTO</div>
+                        <div className="text-sm font-semibold text-blue-700">
+                          {service.date.split('-')[1].trim()}
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <span>{service.date}</span>
+                    <div className="bg-green-50 border border-green-200 rounded-md p-2">
+                      <div className="text-xs text-green-600 font-medium mb-1">DATA DO SERVIÇO</div>
+                      <div className="text-sm font-semibold text-green-700">{service.date}</div>
+                    </div>
                   )}
                 </div>
               </div>
