@@ -460,10 +460,10 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                     <Checkbox
                       id="plano-corte"
                       onCheckedChange={(checked) => {
-                        const current = form.getValues().materialTypes || [];
+                        const current = form.getValues('materialTypes') || [];
                         const updated = checked
                           ? [...current, 'plano-corte']
-                          : current.filter(type => type !== 'plano-corte');
+                          : current.filter((type: string) => type !== 'plano-corte');
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
@@ -475,10 +475,10 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                     <Checkbox
                       id="marcenaria"
                       onCheckedChange={(checked) => {
-                        const current = form.getValues().materialTypes || [];
+                        const current = form.getValues('materialTypes') || [];
                         const updated = checked
                           ? [...current, 'marcenaria']
-                          : current.filter(type => type !== 'marcenaria');
+                          : current.filter((type: string) => type !== 'marcenaria');
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
@@ -490,10 +490,10 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                     <Checkbox
                       id="fabrica"
                       onCheckedChange={(checked) => {
-                        const current = form.getValues().materialTypes || [];
+                        const current = form.getValues('materialTypes') || [];
                         const updated = checked
                           ? [...current, 'fabrica']
-                          : current.filter(type => type !== 'fabrica');
+                          : current.filter((type: string) => type !== 'fabrica');
                         form.setValue('materialTypes', updated, { shouldValidate: true });
                       }}
                     />
