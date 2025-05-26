@@ -737,15 +737,21 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">5</div>
+            <div className="font-bold text-xl text-primary">
+              {allServices.filter(service => service.status === 'open').length}
+            </div>
             <div className="text-xs text-gray-500">Em Aberto</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">3</div>
+            <div className="font-bold text-xl text-primary">
+              {allServices.filter(service => service.status === 'in-progress').length}
+            </div>
             <div className="text-xs text-gray-500">Em Andamento</div>
           </div>
           <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">12</div>
+            <div className="font-bold text-xl text-primary">
+              {allServices.filter(service => service.status === 'completed').length}
+            </div>
             <div className="text-xs text-gray-500">Finalizados</div>
           </div>
         </div>
