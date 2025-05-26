@@ -1185,16 +1185,26 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     );
   };
 
-  const renderCalendarSection = () => (
-    <div className="mt-2">
-      <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
-      <ServiceCalendar 
-        markedDates={['15', '18', '20']} 
-        month="Junho" 
-        year="2023" 
-      />
-    </div>
-  );
+  const renderCalendarSection = () => {
+    // Converte os serviços para períodos do calendário
+    const servicePeriods = services?.map(service => ({
+      startDate: service.startDate,
+      endDate: service.endDate,
+      title: service.title
+    })) || [];
+
+    return (
+      <div className="mt-2">
+        <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
+        <ServiceCalendar 
+          servicePeriods={servicePeriods}
+          onDateClick={(date) => {
+            console.log('Data clicada:', date);
+          }}
+        />
+      </div>
+    );
+  };
 
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
