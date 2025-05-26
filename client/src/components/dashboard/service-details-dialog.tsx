@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileText, Download, Clock, MapPin, Building, CalendarIcon, DollarSign } from 'lucide-react';
+import { Loader2, FileText, Download, Clock, MapPin, Building, CalendarIcon, DollarSign, Eye, ExternalLink } from 'lucide-react';
 import type { ServiceProps } from './available-service-card';
 
 interface ServiceDetailsDialogProps {
@@ -19,6 +19,19 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   onApply,
   isApplying
 }) => {
+  const [selectedFile, setSelectedFile] = useState<{name: string, path: string} | null>(null);
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
+
+  const handleViewPdf = (file: {name: string, path: string}) => {
+    setSelectedFile(file);
+    setIsPdfViewerOpen(true);
+  };
+
+  const closePdfViewer = () => {
+    setIsPdfViewerOpen(false);
+    setSelectedFile(null);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -96,35 +109,58 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
             {service.projectFiles && service.projectFiles.length > 0 ? (
               <div className="space-y-2 max-h-52 overflow-y-auto p-1">
                 {service.projectFiles.map((file: {name: string, path: string}, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-2.5 border rounded-md bg-gray-50">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="text-sm font-medium truncate">{file.name}</span>
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-blue-50 to-gray-50 hover:from-blue-100 hover:to-gray-100 transition-all duration-200">
+                    <div className="flex items-center gap-3 overflow-hidden flex-1">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-gray-900 block truncate">{file.name}</span>
+                        <span className="text-xs text-gray-500">PDF • Anexado pelo lojista</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <a 
-                        href={file.path} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewPdf(file)}
+                        className="p-2 hover:bg-blue-100 rounded-full transition-colors"
                         title="Visualizar PDF"
                       >
-                        <FileText className="h-4 w-4 text-gray-600" />
-                      </a>
-                      <a 
-                        href={file.path} 
-                        download
-                        className="p-1.5 hover:bg-gray-200 rounded-full transition-colors"
+                        <Eye className="h-4 w-4 text-blue-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="p-2 hover:bg-green-100 rounded-full transition-colors"
                         title="Baixar PDF"
                       >
-                        <Download className="h-4 w-4 text-gray-600" />
-                      </a>
+                        <a href={file.path} download>
+                          <Download className="h-4 w-4 text-green-600" />
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Abrir em nova aba"
+                      >
+                        <a href={file.path} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 text-gray-600" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">Nenhum arquivo disponível para este serviço.</p>
+              <div className="text-center py-6">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Nenhum arquivo disponível para este serviço</p>
+                <p className="text-xs text-gray-400 mt-1">O lojista não anexou documentos do projeto</p>
+              </div>
             )}
           </div>
         </div>
@@ -149,6 +185,63 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Visualizador de PDF */}
+      <Dialog open={isPdfViewerOpen} onOpenChange={closePdfViewer}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="text-lg flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              {selectedFile?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden">
+            {selectedFile && (
+              <div className="h-[70vh] w-full border rounded-lg overflow-hidden bg-gray-100">
+                <iframe
+                  src={selectedFile.path}
+                  className="w-full h-full border-0"
+                  title={`Visualizar PDF: ${selectedFile.name}`}
+                  loading="lazy"
+                />
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="p-4 pt-2 flex justify-between sm:justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FileText className="h-4 w-4" />
+              <span>PDF anexado pelo lojista</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a href={selectedFile?.path} download className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Baixar PDF
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a href={selectedFile?.path} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Abrir em nova aba
+                </a>
+              </Button>
+              <Button variant="default" onClick={closePdfViewer}>
+                Fechar
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
