@@ -22,7 +22,9 @@ const storeStep2Schema = z.object({
   neighborhood: z.string().min(2, 'Bairro deve ter pelo menos 2 caracteres'),
   city: z.string().min(2, 'Cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'Selecione um estado'),
-  storePhone: z.string().min(10, 'Telefone da loja inválido'),
+  storePhone: z.string()
+    .min(1, 'Telefone da loja é obrigatório')
+    .regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, 'Formato de telefone inválido. Use: (11) 99999-9999'),
   materialTypes: z.array(z.string()).min(1, 'Selecione pelo menos um tipo de material'),
   logoFile: z.any().refine(val => val != null && (val instanceof FileList && val.length > 0), {
     message: "Upload obrigatório do logotipo da loja"
@@ -391,10 +393,21 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               <FormItem className="form-field">
                 <FormLabel>Telefone da Loja</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="(00) 00000-0000"
-                  />
+                  <InputMask
+                    mask="(99) 99999-9999"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    maskChar={null}
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        placeholder="(11) 99999-9999"
+                        ref={field.ref}
+                      />
+                    )}
+                  </InputMask>
                 </FormControl>
                 <FormMessage />
               </FormItem>
