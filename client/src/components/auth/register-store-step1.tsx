@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import FileUpload from '../ui/file-upload';
 import InputMask from 'react-input-mask';
 
 // Função para validar CPF
@@ -96,6 +97,19 @@ const storeStep1Schema = z.object({
     .max(50, 'A senha deve ter no máximo 50 caracteres')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula e um número'),
   confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
+  profilePicture: z.any().refine((files) => {
+    return files && files.length > 0;
+  }, {
+    message: "Foto de perfil é obrigatória"
+  }).refine((files) => {
+    if (!files || files.length === 0) return false;
+    const file = files[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Foto deve ser uma imagem (JPG, PNG, GIF, WEBP) de até 5MB"
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -122,6 +136,8 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
   onNext, 
   defaultValues = {} 
 }) => {
+  const [profileFiles, setProfileFiles] = useState<FileList | null>(null);
+
   const form = useForm<StoreStep1Data>({
     resolver: zodResolver(storeStep1Schema),
     defaultValues: {
@@ -138,8 +154,17 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
 
   const documentType = form.watch('documentType');
 
+  const handleProfileChange = (files: FileList | null) => {
+    setProfileFiles(files);
+    form.setValue('profilePicture', files);
+  };
+
   const onSubmit = (data: StoreStep1Data) => {
-    onNext(data);
+    const formData = {
+      ...data,
+      profilePicture: profileFiles,
+    };
+    onNext(formData);
   };
 
   return (

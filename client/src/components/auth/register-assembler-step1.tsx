@@ -84,7 +84,19 @@ const assemblerStep1Schema = z.object({
     .max(50, 'A senha deve ter no máximo 50 caracteres')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'A senha deve conter pelo menos uma letra minúscula, uma maiúscula e um número'),
   confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
-  profilePicture: z.any().optional(),
+  profilePicture: z.any().refine((files) => {
+    return files && files.length > 0;
+  }, {
+    message: "Foto de perfil é obrigatória"
+  }).refine((files) => {
+    if (!files || files.length === 0) return false;
+    const file = files[0];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    return validTypes.includes(file.type) && file.size <= maxSize;
+  }, {
+    message: "Foto deve ser uma imagem (JPG, PNG, GIF, WEBP) de até 5MB"
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
@@ -476,12 +488,12 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
           />
           
           <div className="form-field">
-            <FormLabel>Foto de Perfil</FormLabel>
+            <FormLabel>Foto de Perfil *</FormLabel>
             <FileUpload 
-              label="Foto de perfil"
+              label="Foto de perfil (obrigatória)"
               accept="image/*"
               onChange={handleProfileChange}
-              helpText="PNG, JPG, GIF até 10MB"
+              helpText="PNG, JPG, GIF, WEBP até 5MB"
             />
             {form.formState.errors.profilePicture && (
               <p className="text-sm text-red-500 mt-1">
