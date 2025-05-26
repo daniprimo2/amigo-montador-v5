@@ -117,8 +117,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       });
       
       // Verificar se existe foto de perfil
-      if (data.profileData && data.profileData.photoUrl) {
-        setProfilePhoto(data.profileData.photoUrl);
+      if (data.profilePhotoUrl) {
+        setProfilePhoto(data.profilePhotoUrl);
       } else {
         setProfilePhoto(null);
       }

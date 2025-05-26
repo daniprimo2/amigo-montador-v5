@@ -333,6 +333,21 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
             )}
           />
           
+          <div className="form-field">
+            <FormLabel>Foto de Perfil *</FormLabel>
+            <FileUpload 
+              label="Foto de perfil (obrigatória)"
+              accept="image/*"
+              onChange={handleProfileChange}
+              helpText="PNG, JPG, GIF, WEBP até 5MB"
+            />
+            {form.formState.errors.profilePicture && (
+              <p className="text-sm text-red-500 mt-1">
+                {form.formState.errors.profilePicture.message?.toString()}
+              </p>
+            )}
+          </div>
+          
           <Button type="submit" className="auth-button">
             Próximo
           </Button>
