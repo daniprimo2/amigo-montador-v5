@@ -957,7 +957,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log("[AssemblerDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-      console.log("[AssemblerDashboard] ID do montador do perfil:", profileData?.assembler?.id);
+      console.log("[AssemblerDashboard] ID do montador do perfil:", user?.assembler?.id);
       
       // Atualizar as listas relevantes para refletir nova mensagem
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -994,11 +994,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
     // Log para diagnosticar se estamos obtendo o ID do montador corretamente
-    console.log("Renderizando dashboard com perfil:", profileData);
+    console.log("Renderizando dashboard com perfil:", user);
     
     // Se estivermos na seção de chat E houver um serviço selecionado, mostrar a interface de chat
     if (dashboardSection === 'chat' && selectedChatService !== null) {
-      const assemblerId = profileData?.assembler?.id;
+      const assemblerId = user?.assembler?.id;
       console.log(`Abrindo chat para serviço ${selectedChatService} com montador ID: ${assemblerId}`);
       
       return (
