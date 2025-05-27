@@ -100,7 +100,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const ChatButton = () => (
     <button 
       onClick={() => handleTabChange('chat')}
-      className={`flex flex-col items-center py-1 ${activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}`}
+      className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'chat' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
     >
       <NotificationBadge
         count={unreadCount}
@@ -109,62 +109,62 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         className={activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}
         showPulse={false}
       />
-      <span className="text-xs mt-1">Chat</span>
+      <span className="text-xs sm:text-sm mt-1 font-medium">Chat</span>
     </button>
   );
 
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'home' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Início</span>
+            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('services')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'services' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'services' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <List className="h-5 w-5" />
-            <span className="text-xs mt-1">Serviços</span>
+            <List className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Serviços</span>
           </button>
           <ChatButton />
           <button 
             onClick={() => handleTabChange('calendar')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'calendar' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'calendar' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <Calendar className="h-5 w-5" />
-            <span className="text-xs mt-1">Agenda</span>
+            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Agenda</span>
           </button>
         </div>
       );
     } else {
       return (
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'home' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Início</span>
+            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('explore')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'explore' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'explore' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <Map className="h-5 w-5" />
-            <span className="text-xs mt-1">Explorar</span>
+            <Map className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Explorar</span>
           </button>
           <ChatButton />
           <button 
             onClick={() => handleTabChange('calendar')}
-            className={`flex flex-col items-center py-1 ${activeTab === 'calendar' ? 'text-primary' : 'text-gray-500'}`}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'calendar' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
           >
-            <Calendar className="h-5 w-5" />
-            <span className="text-xs mt-1">Agenda</span>
+            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Agenda</span>
           </button>
         </div>
       );
@@ -208,14 +208,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="bg-zinc-800 w-full p-4">
-        <div className="flex items-center justify-between">
+      {/* Header - Responsive */}
+      <div className="bg-zinc-800 w-full p-3 sm:p-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center">
             <Logo size="sm" className="text-white" />
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button 
-              className="text-white relative"
+              className="text-white relative touch-target"
               onClick={() => handleTabChange('chat')} 
               title="Ir para o chat"
             >
@@ -229,7 +230,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </button>
             <button 
               onClick={handleLogout}
-              className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white touch-target"
               title="Sair"
             >
               {profilePhotoUrl ? (
@@ -238,27 +239,32 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   alt="Foto de perfil" 
                   className="h-full w-full object-cover"
                   onError={(e) => {
-                    // Fallback to user icon if image fails to load
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     const parent = target.parentElement!;
-                    parent.innerHTML = '<svg class="h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    parent.innerHTML = '<svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                   }}
                 />
               ) : (
-                <User className="h-5 w-5 text-gray-600" />
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
               )}
             </button>
           </div>
         </div>
       </div>
       
+      {/* Main Content - Responsive */}
       <div className="flex-1 overflow-auto bg-gray-100">
-        {children}
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </div>
       
-      <div className="bg-white border-t border-gray-200 py-2">
-        {renderNavigation()}
+      {/* Bottom Navigation - Mobile optimized */}
+      <div className="bg-white border-t border-gray-200 py-2 px-2 sm:py-3">
+        <div className="max-w-7xl mx-auto">
+          {renderNavigation()}
+        </div>
       </div>
     </div>
   );
