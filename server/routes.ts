@@ -572,9 +572,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
+      // Processar o campo de data combinado em startDate e endDate
+      let serviceData = { ...req.body };
+      if (serviceData.date) {
+        try {
+          const dateRange = serviceData.date.split(' - ');
+          if (dateRange.length === 2) {
+            serviceData.startDate = new Date(dateRange[0]);
+            serviceData.endDate = new Date(dateRange[1]);
+          } else {
+            // Se não estiver no formato esperado, usar a data como startDate e endDate
+            serviceData.startDate = new Date(serviceData.date);
+            serviceData.endDate = new Date(serviceData.date);
+          }
+        } catch (error) {
+          return res.status(400).json({ message: "Formato de data inválido" });
+        }
+        // Remover o campo date original
+        delete serviceData.date;
+      }
+
       // Criar serviço
-      const serviceData = {
-        ...req.body,
+      serviceData = {
+        ...serviceData,
         storeId: store.id,
         status: 'open',
         createdAt: new Date()
@@ -591,7 +611,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requiredFields = {
         title: "Título do Serviço",
         location: "Cidade/UF",
-        date: "Data do Serviço",
+        startDate: "Data de Início",
+        endDate: "Data de Fim",
         price: "Valor",
         materialType: "Material"
       };
@@ -631,7 +652,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const column = error.column;
         let fieldName = column === 'title' ? 'Título do Serviço' :
                         column === 'location' ? 'Cidade/UF' :
-                        column === 'date' ? 'Data do Serviço' :
+                        column === 'start_date' ? 'Data de Início' :
+                        column === 'end_date' ? 'Data de Fim' :
                         column === 'price' ? 'Valor' :
                         column === 'material_type' ? 'Material' : column;
         
@@ -681,6 +703,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Formato inválido dos dados do serviço" });
       }
       
+      // Processar o campo de data combinado em startDate e endDate
+      if (serviceData.date) {
+        try {
+          const dateRange = serviceData.date.split(' - ');
+          if (dateRange.length === 2) {
+            serviceData.startDate = new Date(dateRange[0]);
+            serviceData.endDate = new Date(dateRange[1]);
+          } else {
+            // Se não estiver no formato esperado, usar a data como startDate e endDate
+            serviceData.startDate = new Date(serviceData.date);
+            serviceData.endDate = new Date(serviceData.date);
+          }
+        } catch (error) {
+          return res.status(400).json({ message: "Formato de data inválido" });
+        }
+        // Remover o campo date original
+        delete serviceData.date;
+      }
+
       // Adicionar dados do lojista
       serviceData = {
         ...serviceData,
@@ -692,7 +733,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar campos obrigatórios principais
       const requiredFields = {
         title: "Título do Serviço",
-        date: "Data",
+        startDate: "Data de Início",
+        endDate: "Data de Fim",
         location: "Localização",
         price: "Valor",
         materialType: "Material"
