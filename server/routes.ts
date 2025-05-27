@@ -775,7 +775,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Não autorizado a excluir este serviço" });
       }
       
-      // Excluir serviço
+      // IMPORTANTE: Verificar se o serviço está em andamento ou finalizado
+      if (service.status === 'in-progress') {
+        return res.status(400).json({ 
+          message: "Não é possível excluir um serviço que está em andamento. Conversas de serviços em andamento devem ser preservadas." 
+        });
+      }
+      
+      if (service.status === 'completed') {
+        return res.status(400).json({ 
+          message: "Não é possível excluir um serviço finalizado. O histórico deve ser preservado." 
+        });
+      }
+      
+      // Excluir serviço (apenas se status for 'open' ou 'cancelled')
       await storage.deleteService(serviceId);
       
       res.status(200).json({ message: "Serviço excluído com sucesso" });
