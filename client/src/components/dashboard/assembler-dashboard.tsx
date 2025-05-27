@@ -712,6 +712,37 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       onChatClick={(serviceId) => setSelectedChatService(serviceId)}
                     />
                   ))}
+                  
+                  {/* Seção de conversas finalizadas */}
+                  {completedChats.length > 0 && (
+                    <div className="p-4 border-t bg-gray-50">
+                      <h4 className="text-md font-medium mb-3 text-gray-700">Ver Conversas Finalizadas</h4>
+                      <div className="space-y-3">
+                        {completedChats.map((service: any) => (
+                          <div 
+                            key={`completed-chat-${service.id}`} 
+                            className="bg-white rounded-lg shadow-sm p-3 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
+                            onClick={() => setSelectedChatService(service.id)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex-1">
+                                <div className="flex items-center">
+                                  <h4 className="font-medium text-gray-800">{service.title}</h4>
+                                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Finalizado
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Loja: {service.store?.name || 'Não especificada'}
+                                </p>
+                              </div>
+                              <MessageSquare className="h-5 w-5 text-gray-400" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 // Show empty state
@@ -835,13 +866,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Mostrar serviços onde o montador tem conversas ativas
-    // Incluir serviços onde há candidatura (independente do status) ou mensagens trocadas
+    // Mostrar serviços onde o montador tem conversas ativas (apenas serviços não finalizados)
+    // Incluir serviços onde há candidatura (qualquer status) ou se está em andamento, mas NÃO os completos
     const activeChats = activeServices ? activeServices.filter((service: any) => {
-      // Mostrar se tem candidatura (qualquer status) ou se está em andamento ou completo
-      return service.applicationStatus || 
-             service.status === 'in-progress' || 
-             service.status === 'completed';
+      // Mostrar se tem candidatura ou está em andamento, mas excluir os completos
+      return (service.applicationStatus || service.status === 'in-progress') && 
+             service.status !== 'completed';
+    }) : [];
+    
+    // Conversas finalizadas (apenas serviços completos)
+    const completedChats = activeServices ? activeServices.filter((service: any) => {
+      return service.status === 'completed' && service.applicationStatus;
     }) : [];
     
     console.log('[AssemblerDashboard] Serviços disponíveis para chat:', activeChats);
