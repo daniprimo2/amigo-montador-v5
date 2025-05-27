@@ -99,33 +99,32 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const hasApplied = activeServices.some(activeService => activeService.id === service.id);
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h4 className="font-medium">{service.title}</h4>
-          <div className="flex items-center text-sm text-gray-500">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{service.location} ({service.distance})</span>
+    <div className="p-3 sm:p-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm sm:text-base truncate">{service.title}</h4>
+          <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+            <span className="truncate">{service.location} ({service.distance})</span>
           </div>
         </div>
-        <div className="text-right">
-          <div className="font-medium text-primary">{service.price}</div>
+        <div className="text-right flex-shrink-0">
+          <div className="font-medium text-primary text-sm sm:text-base">{service.price}</div>
           <div className="text-xs text-gray-500">{service.type}</div>
         </div>
       </div>
-      <div className="text-sm text-gray-600 mb-3">
-        <div className="flex justify-between">
-          <div className="flex items-center">
-            <Building className="h-4 w-4 mr-1 text-gray-400" />
-            <span>{service.store}</span>
-          </div>
-          <div className="flex items-center">
-            <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-            <span>
-              {/* Exibe a data de início do serviço conforme informada pelo Lojista */}
-              {service.date === '22/05/2025' ? service.date : '22/05/2025'}
-            </span>
-          </div>
+      
+      {/* Informações da loja e data em layout responsivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+          <Building className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400 flex-shrink-0" />
+          <span className="truncate">{service.store}</span>
+        </div>
+        <div className="flex items-center text-xs sm:text-sm text-gray-600">
+          <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400 flex-shrink-0" />
+          <span className="truncate">
+            {service.date}
+          </span>
         </div>
       </div>
       {/* Botão para visualizar arquivos PDF */}

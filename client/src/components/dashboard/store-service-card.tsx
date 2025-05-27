@@ -206,43 +206,49 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
 
   return (
     <>
-      <div className="p-4 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors" onClick={handleClick}>
-        <div className="flex justify-between items-start mb-2">
-          <div>
-            <h4 className="font-medium">{service.title}</h4>
-            <p className="text-sm text-gray-500">{service.location}</p>
+      <div className="p-3 sm:p-4 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors" onClick={handleClick}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-sm sm:text-base truncate">{service.title}</h4>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">{service.location}</p>
             {service.assembler && (
               <p className="text-xs text-gray-600 mt-1">
                 <span className="font-medium">Montador:</span> {service.assembler.name}
               </p>
             )}
           </div>
-          <StatusBadge status={service.status} />
+          <div className="flex-shrink-0">
+            <StatusBadge status={service.status} />
+          </div>
         </div>
-        <div className="flex justify-between items-center mt-3">
+        
+        {/* Data e preço em layout responsivo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
           <div className="flex items-center">
-            <CalendarIcon className="h-4 w-4 text-gray-400 mr-1" />
-            <span className="text-sm text-gray-600">
+            <CalendarIcon className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-gray-600 truncate">
               {service.date}
             </span>
           </div>
           <div className="flex items-center">
-            <DollarSign className="h-4 w-4 text-gray-400 mr-1" />
-            <span className="text-sm text-gray-600">{service.price}</span>
+            <DollarSign className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-gray-600 font-medium">{service.price}</span>
           </div>
-          
-          <div className="ml-auto flex space-x-2">
+        </div>
+        
+        <div className="flex justify-end">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {/* O botão "Montagem Concluída" foi movido para a interface de chat */}
             
             {service.status === 'completed' && service.assembler && (
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="text-yellow-600 border-yellow-300 hover:bg-yellow-50" 
+                className="text-yellow-600 border-yellow-300 hover:bg-yellow-50 text-xs sm:text-sm" 
                 onClick={handleRateClick}
               >
-                <Star className="h-4 w-4 mr-1 fill-yellow-500" />
-                Avaliar
+                <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 fill-yellow-500" />
+                <span className="hidden sm:inline">Avaliar</span>
               </Button>
             )}
             
@@ -253,8 +259,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                   variant="outline" 
                   className="text-blue-600 border-blue-200 hover:bg-blue-50" 
                   onClick={handleEditClick}
+                  title="Editar serviço"
                 >
-                  <PencilIcon className="h-4 w-4" />
+                  <PencilIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
                 <Button 
                   size="sm" 
@@ -262,8 +269,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                   className="text-red-600 border-red-200 hover:bg-red-50" 
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
+                  title="Excluir serviço"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </>
             )}

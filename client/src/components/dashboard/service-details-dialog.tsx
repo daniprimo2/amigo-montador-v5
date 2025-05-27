@@ -72,26 +72,27 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                 </div>
               </div>
               
-              {/* Data do serviço - seção destacada e obrigatória */}
-              <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4 mt-3">
+              {/* Data do serviço - seção destacada e responsiva */}
+              <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3 sm:p-4 mt-3">
                 <div className="flex items-center mb-3">
-                  <CalendarIcon className="h-5 w-5 mr-2 text-green-600" />
-                  <span className="text-sm font-bold text-green-700 uppercase tracking-wide">
-                    Data do Serviço - Informação Obrigatória
+                  <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold text-green-700 uppercase tracking-wide">
+                    Período do Serviço
                   </span>
                 </div>
                 
                 {service.date && service.date.includes('-') ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-white border border-green-300 rounded-md p-3 shadow-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
                       <div className="text-xs text-green-600 font-medium mb-1">📅 INÍCIO DO SERVIÇO</div>
-                      <div className="text-sm font-semibold text-green-700">
+                      <div className="text-xs sm:text-sm font-semibold text-green-700">
                         {(() => {
                           try {
-                            return new Date(service.date.split('-')[0].trim()).toLocaleDateString('pt-BR', {
-                              weekday: 'long',
+                            const date = new Date(service.date.split('-')[0].trim());
+                            return date.toLocaleDateString('pt-BR', {
+                              weekday: 'short',
                               year: 'numeric',
-                              month: 'long',
+                              month: 'short',
                               day: 'numeric'
                             });
                           } catch (error) {
@@ -100,15 +101,16 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                         })()}
                       </div>
                     </div>
-                    <div className="bg-white border border-blue-300 rounded-md p-3 shadow-sm">
+                    <div className="bg-white border border-blue-300 rounded-md p-2 sm:p-3 shadow-sm">
                       <div className="text-xs text-blue-600 font-medium mb-1">🏁 TÉRMINO PREVISTO</div>
-                      <div className="text-sm font-semibold text-blue-700">
+                      <div className="text-xs sm:text-sm font-semibold text-blue-700">
                         {(() => {
                           try {
-                            return new Date(service.date.split('-')[1].trim()).toLocaleDateString('pt-BR', {
-                              weekday: 'long',
+                            const date = new Date(service.date.split('-')[1].trim());
+                            return date.toLocaleDateString('pt-BR', {
+                              weekday: 'short',
                               year: 'numeric',
-                              month: 'long',
+                              month: 'short',
                               day: 'numeric'
                             });
                           } catch (error) {
@@ -119,22 +121,23 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white border border-green-300 rounded-md p-3 shadow-sm">
+                  <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
                     <div className="text-xs text-green-600 font-medium mb-1">📅 DATA DO SERVIÇO</div>
-                    <div className="text-sm font-semibold text-green-700">
+                    <div className="text-xs sm:text-sm font-semibold text-green-700">
                       {(() => {
                         if (!service.date) {
                           return (
                             <span className="text-red-600 font-bold">
-                              ⚠️ ERRO: Data do serviço não informada
+                              ⚠️ ERRO: Data não informada
                             </span>
                           );
                         }
                         try {
-                          return new Date(service.date).toLocaleDateString('pt-BR', {
-                            weekday: 'long',
+                          const date = new Date(service.date);
+                          return date.toLocaleDateString('pt-BR', {
+                            weekday: 'short',
                             year: 'numeric',
-                            month: 'long',
+                            month: 'short',
                             day: 'numeric'
                           });
                         } catch (error) {
