@@ -297,8 +297,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       // Invalidar a consulta para atualizar a lista de mensagens
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
       
+      // IMPORTANTE: Invalidar a nova API que busca TODOS os serviços com mensagens
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-messages'] });
+      
       // Também invalidar as listas de serviços para atualizar contadores e status se necessário
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
       
       // Rolar para o final da conversa depois que a lista for atualizada
       setTimeout(() => {
