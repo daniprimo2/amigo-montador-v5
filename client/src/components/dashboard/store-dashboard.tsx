@@ -719,113 +719,109 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
-    <>
-      <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">
+    <div className="padding-responsive">
+      <div className="dashboard-card p-3 sm:p-4 lg:p-6 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <h2 className="text-responsive-lg font-semibold">
             Olá, <span className="text-primary">{user?.name || 'Lojista'}</span>
           </h2>
-          <a 
-            href="#" 
-            className="text-primary text-sm font-medium hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsProfileOpen(true);
-            }}
+          <button 
+            className="text-primary text-responsive-sm font-medium hover:underline self-start sm:self-auto touch-target"
+            onClick={() => setIsProfileOpen(true)}
           >
             Ver Perfil
-          </a>
+          </button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+          <div className="bg-gray-100 rounded-lg p-3 sm:p-4 text-center hover:bg-gray-200 transition-colors">
+            <div className="font-bold text-xl sm:text-2xl lg:text-3xl text-primary">
               {allServices.filter(service => service.status === 'open').length}
             </div>
-            <div className="text-xs text-gray-500">Em Aberto</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Em Aberto</div>
           </div>
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">
+          <div className="bg-gray-100 rounded-lg p-3 sm:p-4 text-center hover:bg-gray-200 transition-colors">
+            <div className="font-bold text-xl sm:text-2xl lg:text-3xl text-primary">
               {allServices.filter(service => service.status === 'in-progress').length}
             </div>
-            <div className="text-xs text-gray-500">Em Andamento</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Em Andamento</div>
           </div>
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <div className="font-bold text-xl text-primary">
+          <div className="bg-gray-100 rounded-lg p-3 sm:p-4 text-center hover:bg-gray-200 transition-colors">
+            <div className="font-bold text-xl sm:text-2xl lg:text-3xl text-primary">
               {allServices.filter(service => service.status === 'completed').length}
             </div>
-            <div className="text-xs text-gray-500">Finalizados</div>
+            <div className="text-xs sm:text-sm text-gray-500 mt-1">Finalizados</div>
           </div>
         </div>
       </div>
       
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Serviços Recentes</h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <h3 className="text-responsive-lg font-semibold">Serviços Recentes</h3>
         <Button 
           variant="default" 
-          className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium"
+          className="mobile-button bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1.5 font-medium w-full sm:w-auto"
           onClick={() => setIsNewServiceOpen(true)}
         >
           <Plus className="h-4 w-4" /> Novo Serviço
         </Button>
       </div>
       
-      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+      <div className="dashboard-card overflow-hidden mb-4">
         <div className="divide-y">
           {allServices.slice(0, 3).map(service => (
             <StoreServiceCard key={service.id} service={service} />
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 
   const renderServicesSection = () => (
-    <>
-      <div className="flex justify-between items-center mb-4 mt-2">
-        <h3 className="text-lg font-semibold">Todos os Serviços</h3>
+    <div className="padding-responsive">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <h3 className="text-responsive-lg font-semibold">Todos os Serviços</h3>
         <Button 
           variant="default" 
-          className="bg-primary hover:bg-primary/90 text-white text-sm py-1.5 px-4 rounded-full flex items-center gap-1.5 font-medium"
+          className="mobile-button bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1.5 font-medium w-full sm:w-auto"
           onClick={() => setIsNewServiceOpen(true)}
         >
           <Plus className="h-4 w-4" /> Novo Serviço
         </Button>
       </div>
       
-      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+      <div className="dashboard-card overflow-hidden mb-4">
         <div className="flex border-b">
           <div 
             onClick={() => setActiveTab('open')}
             className={cn(
-              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
               activeTab === 'open' 
                 ? "text-primary border-b-2 border-primary" 
                 : "text-gray-500 hover:text-primary"
             )}
           >
-            Em Aberto
+            <span className="text-xs sm:text-sm lg:text-base">Em Aberto</span>
           </div>
           <div 
             onClick={() => setActiveTab('in-progress')}
             className={cn(
-              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
               activeTab === 'in-progress' 
                 ? "text-primary border-b-2 border-primary" 
                 : "text-gray-500 hover:text-primary"
             )}
           >
-            Em Andamento
+            <span className="text-xs sm:text-sm lg:text-base">Em Andamento</span>
           </div>
           <div 
             onClick={() => setActiveTab('completed')}
             className={cn(
-              "flex-1 py-3 text-center font-medium cursor-pointer transition-colors",
+              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
               activeTab === 'completed' 
                 ? "text-primary border-b-2 border-primary" 
                 : "text-gray-500 hover:text-primary"
             )}
           >
-            Finalizados
+            <span className="text-xs sm:text-sm lg:text-base">Finalizados</span>
           </div>
         </div>
         
