@@ -703,6 +703,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Formato inválido dos dados do serviço" });
       }
       
+      // Debug: verificar se o campo date existe
+      console.log("DEBUG: Verificando campo date em serviceData:", !!serviceData.date);
+      console.log("DEBUG: Valor do campo date:", serviceData.date);
+      console.log("DEBUG: Todas as chaves de serviceData:", Object.keys(serviceData));
+      
       // Processar o campo de data combinado em startDate e endDate
       if (serviceData.date) {
         console.log("Processando data:", serviceData.date);
@@ -722,6 +727,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         // Remover o campo date original
         delete serviceData.date;
+      } else {
+        console.log("DEBUG: Campo date não encontrado, mas deveria estar presente!");
       }
 
       // Adicionar dados do lojista
