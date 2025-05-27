@@ -929,6 +929,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
   });
   
+  // IMPORTANTE: Buscar TODOS os serviços que possuem mensagens (nenhuma conversa pode desaparecer)
+  const { data: servicesWithMessages, isLoading: isLoadingServicesWithMessages } = useQuery({
+    queryKey: ['/api/store/services/with-messages'],
+    queryFn: async () => {
+      const response = await fetch('/api/store/services/with-messages');
+      if (!response.ok) {
+        throw new Error('Falha ao buscar serviços com mensagens');
+      }
+      return response.json();
+    },
+    enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
+  });
+
   // Buscar serviços com candidaturas pendentes
   const { data: pendingServices, isLoading: isLoadingPendingServices } = useQuery({
     queryKey: ['/api/store/services/with-pending-applications'],

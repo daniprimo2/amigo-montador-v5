@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, not, isNotNull, or } from "drizzle-orm";
+import { eq, and, not, isNotNull, or, sql } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
@@ -277,6 +277,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar serviços ativos:", error);
       res.status(500).json({ message: "Erro ao buscar serviços ativos" });
+    }
+  });
+  
+  // IMPORTANTE: Buscar TODOS os serviços que possuem mensagens para garantir que nenhuma conversa desapareça
+  app.get("/api/store/services/with-messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      if (req.user?.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem acessar esta rota" });
+      }
+
+      // Buscar a loja do usuário
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Buscar TODOS os serviços da loja que possuem mensagens
+      const servicesWithMessages = await db
+        .select({
+          serviceId: services.id,
+          serviceTitle: services.title,
+          serviceStatus: services.status,
+          servicePrice: services.price,
+          serviceLocation: services.location,
+          serviceDescription: services.description,
+          messageCount: sql<number>`COUNT(DISTINCT ${messages.id})`,
+          lastMessageAt: sql<Date>`MAX(${messages.sentAt})`,
+          // Buscar informações do montador se houver candidatura aceita
+          assemblerId: applications.assemblerId,
+          assemblerUserId: users.id,
+          assemblerName: users.name,
+        })
+        .from(services)
+        .innerJoin(messages, eq(messages.serviceId, services.id))
+        .leftJoin(applications, and(
+          eq(applications.serviceId, services.id),
+          eq(applications.status, 'accepted')
+        ))
+        .leftJoin(assemblers, eq(assemblers.id, applications.assemblerId))
+        .leftJoin(users, eq(users.id, assemblers.userId))
+        .where(eq(services.storeId, store.id))
+        .groupBy(
+          services.id,
+          services.title,
+          services.status,
+          services.price,
+          services.location,
+          services.description,
+          applications.assemblerId,
+          users.id,
+          users.name
+        )
+        .orderBy(sql`MAX(${messages.sentAt}) DESC`);
+
+      // Formatar dados para o frontend
+      const formattedServices = servicesWithMessages.map(service => ({
+        id: service.serviceId,
+        title: service.serviceTitle,
+        status: service.serviceStatus,
+        price: service.servicePrice,
+        location: service.serviceLocation,
+        description: service.serviceDescription,
+        messageCount: service.messageCount,
+        lastMessageAt: service.lastMessageAt,
+        assembler: service.assemblerUserId ? {
+          id: service.assemblerId,
+          userId: service.assemblerUserId,
+          name: service.assemblerName
+        } : null,
+        hasConversation: true // Garantir que sempre tenha conversa disponível
+      }));
+
+      console.log(`[API] Encontrados ${formattedServices.length} serviços com mensagens para a loja ${store.id}`);
+
+      res.json(formattedServices);
+    } catch (error: any) {
+      console.error("Erro ao buscar serviços com mensagens:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
   
