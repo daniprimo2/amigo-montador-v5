@@ -14,8 +14,8 @@ export interface ServiceProps {
   cep?: string;
   distance: string;
   date: string; // Campo legacy mantido para compatibilidade
-  startDate?: string; // Data de início do serviço
-  endDate?: string; // Data de término previsto do serviço
+  startDate: string | null; // Data de início do serviço
+  endDate: string | null; // Data de término previsto do serviço
   price: string;
   store: string;
   type: string;
