@@ -2636,26 +2636,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PIX Payment Authentication - Return Canvi Token
   app.post("/api/payment/pix/token", async (req, res) => {
     try {
+      console.log("[PIX Token] Iniciando geração de token...");
+      
       if (!req.isAuthenticated()) {
+        console.log("[PIX Token] Usuário não autenticado");
         return res.status(401).json({ message: "Não autenticado" });
       }
+
+      console.log("[PIX Token] Usuário autenticado:", req.user?.id);
 
       // Return the Canvi API token from environment
       const canviToken = process.env.CANVI_API_TOKEN;
       
+      console.log("[PIX Token] Token encontrado:", !!canviToken);
+      
       if (!canviToken) {
+        console.log("[PIX Token] ERRO: Token não configurado");
         return res.status(500).json({ 
           success: false, 
           message: "Token de autenticação PIX não configurado" 
         });
       }
       
+      console.log("[PIX Token] Sucesso - retornando token");
       res.json({
         success: true,
         token: canviToken
       });
     } catch (error) {
-      console.error("Erro ao gerar token PIX:", error);
+      console.error("[PIX Token] Erro ao gerar token PIX:", error);
       res.status(500).json({ 
         success: false, 
         message: "Erro ao gerar token de autenticação PIX" 
