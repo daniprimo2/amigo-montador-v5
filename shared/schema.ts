@@ -53,7 +53,10 @@ export const services = pgTable("services", {
   storeId: integer("store_id").notNull().references(() => stores.id),
   title: text("title").notNull(),
   description: text("description"),
-  location: text("location").notNull(),
+  location: text("location").notNull(), // Cidade/UF
+  address: text("address"), // Endereço (rua)
+  addressNumber: text("address_number"), // Número do endereço
+  cep: text("cep"), // CEP
   latitude: text("latitude"),
   longitude: text("longitude"),
   date: text("date").notNull(),

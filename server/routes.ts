@@ -95,15 +95,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Calcular distância simulada (em uma implementação real, usaria geolocalização)
           const mockDistance = "2.5 km";
           
+          // Criar endereço completo quando disponível
+          let fullAddress = service.location || 'Localização não especificada';
+          if (service.address && service.addressNumber) {
+            fullAddress = `${service.address}, ${service.addressNumber} - ${service.location}`;
+            if (service.cep) {
+              fullAddress += ` - CEP: ${service.cep}`;
+            }
+          }
+          
           return {
             id: service.id,
             title: service.title,
             description: service.description,
-            location: service.location || 'Localização não especificada',
+            location: fullAddress,
+            address: service.address || '',
+            addressNumber: service.addressNumber || '',
+            cep: service.cep || '',
             distance: mockDistance,
             date: service.date || 'Data não especificada',
             price: service.price || 'Preço não informado',
-            store: service.store?.name || 'Loja não especificada',
+            store: service.storeName || 'Loja não especificada',
             type: service.materialType || 'Material não especificado',
             status: service.status,
             projectFiles: service.projectFiles || []
