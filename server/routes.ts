@@ -705,6 +705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Processar o campo de data combinado em startDate e endDate
       if (serviceData.date) {
+        console.log("Processando data:", serviceData.date);
         try {
           const dateRange = serviceData.date.split(' - ');
           if (dateRange.length === 2) {
@@ -715,25 +716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             serviceData.startDate = new Date(serviceData.date);
             serviceData.endDate = new Date(serviceData.date);
           }
-        } catch (error) {
-          return res.status(400).json({ message: "Formato de data inválido" });
-        }
-        // Remover o campo date original
-        delete serviceData.date;
-      }
-
-      // Processar o campo de data combinado em startDate e endDate
-      if (serviceData.date) {
-        try {
-          const dateRange = serviceData.date.split(' - ');
-          if (dateRange.length === 2) {
-            serviceData.startDate = new Date(dateRange[0]);
-            serviceData.endDate = new Date(dateRange[1]);
-          } else {
-            // Se não estiver no formato esperado, usar a data como startDate e endDate
-            serviceData.startDate = new Date(serviceData.date);
-            serviceData.endDate = new Date(serviceData.date);
-          }
+          console.log("Data processada - startDate:", serviceData.startDate, "endDate:", serviceData.endDate);
         } catch (error) {
           return res.status(400).json({ message: "Formato de data inválido" });
         }
