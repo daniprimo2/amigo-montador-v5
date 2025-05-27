@@ -118,7 +118,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             addressNumber: service.addressNumber || '',
             cep: service.cep || '',
             distance: mockDistance,
-            date: service.date || 'Data não especificada',
+            date: service.startDate && service.endDate 
+              ? `${service.startDate.toISOString().split('T')[0]} - ${service.endDate.toISOString().split('T')[0]}`
+              : 'Data não especificada',
             price: service.price || 'Preço não informado',
             store: (service as any).storeName || 'Loja não especificada',
             type: service.materialType || 'Material não especificado',
