@@ -406,54 +406,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
       // Para cada serviço, obter a candidatura aceita
-      const servicesWithApplication = await Promise.all(storeServices.map(async (service) => {
-        // Buscar a candidatura aceita para este serviço
-        const acceptedApplications = await db
-          .select()
-          .from(applications)
-          .where(
-            and(
-              eq(applications.serviceId, service.id),
-              eq(applications.status, 'accepted')
-            )
-          );
+      const servicesWithApplication = [];
+      
+      for (const service of storeServices) {
+        try {
+          // Buscar a candidatura aceita para este serviço
+          const acceptedApplications = await db
+            .select({
+              id: applications.id,
+              assemblerId: applications.assemblerId,
+              serviceId: applications.serviceId,
+              status: applications.status
+            })
+            .from(applications)
+            .where(
+              and(
+                eq(applications.serviceId, service.id),
+                eq(applications.status, 'accepted')
+              )
+            );
 
-        // Se houver uma candidatura aceita, obter detalhes do montador
-        if (acceptedApplications.length > 0) {
-          const assemblerId = acceptedApplications[0].assemblerId;
-          
-          // Buscar dados do montador
-          const assembler = await storage.getAssemblerById(assemblerId);
+          // Se houver uma candidatura aceita, obter detalhes do montador
+          if (acceptedApplications.length > 0) {
+            const assemblerId = acceptedApplications[0].assemblerId;
             
-          if (assembler) {
-            const assemblerUserId = assembler.userId;
-            
-            // Buscar dados do usuário montador
-            const userResult = await db
-              .select({
-                id: users.id,
-                name: users.name
-              })
-              .from(users)
-              .where(eq(users.id, assemblerUserId))
-              .limit(1);
+            // Buscar dados do montador
+            const assembler = await storage.getAssemblerById(assemblerId);
               
-            if (userResult.length > 0) {
-              return {
-                ...service,
-                assembler: {
-                  id: assemblerId,
-                  name: userResult[0].name,
-                  userId: assemblerUserId
-                }
-              };
+            if (assembler) {
+              const assemblerUserId = assembler.userId;
+              
+              // Buscar dados do usuário montador
+              const userResult = await db
+                .select({
+                  id: users.id,
+                  name: users.name
+                })
+                .from(users)
+                .where(eq(users.id, assemblerUserId))
+                .limit(1);
+                
+              if (userResult.length > 0) {
+                servicesWithApplication.push({
+                  ...service,
+                  assembler: {
+                    id: assemblerId,
+                    name: userResult[0].name,
+                    userId: assemblerUserId
+                  }
+                });
+              } else {
+                servicesWithApplication.push(service);
+              }
+            } else {
+              servicesWithApplication.push(service);
             }
+          } else {
+            // Se não houver candidatura aceita, não incluir o serviço na lista
+            // pois esta endpoint é apenas para serviços com candidaturas aceitas
           }
+        } catch (serviceError) {
+          console.error(`Erro ao processar serviço ${service.id}:`, serviceError);
+          // Incluir o serviço sem dados do montador em caso de erro
+          servicesWithApplication.push(service);
         }
-        
-        // Se não houver candidatura aceita ou não encontrar o montador, retornar apenas o serviço
-        return service;
-      }));
+      }
 
       res.json(servicesWithApplication);
     } catch (error) {
