@@ -110,6 +110,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          // Processar projectFiles para garantir que sejam incluídos corretamente
+          let projectFiles = [];
+          if (service.projectFiles) {
+            try {
+              // Se projectFiles estiver como string JSON, fazer parse
+              if (typeof service.projectFiles === 'string') {
+                projectFiles = JSON.parse(service.projectFiles);
+              } else if (Array.isArray(service.projectFiles)) {
+                projectFiles = service.projectFiles;
+              }
+            } catch (error) {
+              console.error(`Erro ao processar projectFiles para serviço ${service.id}:`, error);
+              projectFiles = [];
+            }
+          }
+          
           return {
             id: service.id,
             title: service.title,
@@ -128,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             store: (service as any).storeName || 'Loja não especificada',
             type: service.materialType || 'Material não especificado',
             status: service.status,
-            projectFiles: service.projectFiles || []
+            projectFiles: projectFiles
           };
         });
         
