@@ -116,6 +116,11 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                         {(() => {
                           try {
                             const date = new Date(service.startDate);
+                            // Verificar se a data é válida
+                            if (isNaN(date.getTime())) {
+                              console.log('Data de início inválida:', service.startDate);
+                              return service.startDate;
+                            }
                             return date.toLocaleDateString("pt-BR", {
                               weekday: "short",
                               year: "numeric",
@@ -123,6 +128,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                               day: "numeric",
                             });
                           } catch (error) {
+                            console.error('Erro ao formatar startDate:', error);
                             return service.startDate;
                           }
                         })()}
@@ -136,6 +142,11 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                         {(() => {
                           try {
                             const date = new Date(service.endDate);
+                            // Verificar se a data é válida
+                            if (isNaN(date.getTime())) {
+                              console.log('Data de término inválida:', service.endDate);
+                              return service.endDate;
+                            }
                             return date.toLocaleDateString("pt-BR", {
                               weekday: "short",
                               year: "numeric",
@@ -143,6 +154,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                               day: "numeric",
                             });
                           } catch (error) {
+                            console.error('Erro ao formatar endDate:', error);
                             return service.endDate;
                           }
                         })()}
