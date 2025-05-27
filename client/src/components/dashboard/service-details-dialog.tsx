@@ -55,10 +55,10 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Detalhes do Serviço</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[95vw] max-w-md sm:max-w-lg lg:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-responsive-lg">Detalhes do Serviço</DialogTitle>
+          <DialogDescription className="text-responsive-sm text-gray-600">
             Visualize todas as informações do serviço, incluindo datas, arquivos
             e detalhes do projeto.
           </DialogDescription>
