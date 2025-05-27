@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: services.title,
           description: services.description,
           location: services.location,
-          date: services.date,
+          startDate: services.startDate,
           price: services.price,
           status: services.status,
           storeId: services.storeId
@@ -387,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: services.title,
           description: services.description,
           location: services.location,
-          date: services.date,
+          startDate: services.startDate,
           price: services.price,
           status: services.status,
           storeId: services.storeId
@@ -479,112 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para buscar serviços com candidaturas pendentes (ainda não aceitas)
-  app.get("/api/store/services/with-pending-applications", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
 
-      if (req.user?.userType !== 'lojista') {
-        return res.status(403).json({ message: "Acesso permitido apenas para lojistas" });
-      }
-
-      // Obter o id da loja do usuário
-      const store = await storage.getStoreByUserId(req.user.id);
-      if (!store) {
-        return res.status(404).json({ message: "Loja não encontrada" });
-      }
-
-      // Buscar todos os serviços da loja com candidaturas pendentes
-      const storeServices = await db
-        .select({
-          id: services.id,
-          title: services.title,
-          description: services.description,
-          location: services.location,
-          price: services.price,
-          status: services.status,
-          storeId: services.storeId,
-          startDate: services.startDate,
-          endDate: services.endDate
-        })
-        .from(services)
-        .where(
-          eq(services.storeId, store.id)
-        );
-      
-      // Lista para armazenar os serviços com candidaturas pendentes
-      const servicesWithPendingApplications = [];
-      
-      // Para cada serviço, verificar se há candidaturas pendentes
-      for (const service of storeServices) {
-        try {
-          // Buscar as candidaturas pendentes para este serviço
-          const pendingApplications = await db
-            .select({
-              id: applications.id,
-              assemblerId: applications.assemblerId,
-              serviceId: applications.serviceId,
-              status: applications.status,
-              createdAt: applications.createdAt
-            })
-            .from(applications)
-            .where(
-              and(
-                eq(applications.serviceId, service.id),
-                eq(applications.status, 'pending')
-              )
-            );
-          
-          // Se houver candidaturas pendentes, adicionar o serviço à lista
-          if (pendingApplications.length > 0) {
-            // Para cada candidatura pendente, obter informações do montador
-            const applicationsWithDetails = [];
-            
-            for (const application of pendingApplications) {
-              try {
-                // Buscar o montador
-                const assembler = await storage.getAssemblerById(application.assemblerId);
-                
-                if (assembler) {
-                  // Buscar o usuário do montador para obter informações como nome
-                  const assemblerUser = await storage.getUser(assembler.userId);
-                  
-                  applicationsWithDetails.push({
-                    ...application,
-                    assembler: {
-                      id: assembler.id,
-                      name: assemblerUser?.name || 'Montador',
-                      userId: assembler.userId
-                    }
-                  });
-                } else {
-                  applicationsWithDetails.push(application);
-                }
-              } catch (appError) {
-                console.error(`Erro ao processar candidatura ${application.id}:`, appError);
-                applicationsWithDetails.push(application);
-              }
-            }
-            
-            // Adicionar o serviço com as candidaturas pendentes à lista
-            servicesWithPendingApplications.push({
-              ...service,
-              pendingApplications: applicationsWithDetails
-            });
-          }
-        } catch (serviceError) {
-          console.error(`Erro ao processar serviço ${service.id}:`, serviceError);
-        }
-      }
-      
-      return res.json(servicesWithPendingApplications);
-    } catch (error) {
-      console.error("Erro ao buscar serviços com candidaturas pendentes:", error);
-      res.status(500).json({ message: "Erro ao buscar serviços com candidaturas pendentes" });
-    }
-  });
 
   // Criar novo serviço (apenas lojistas)
   app.post("/api/services", async (req, res) => {
