@@ -2508,30 +2508,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // PIX Payment Authentication - Generate Token
+  // PIX Payment Authentication - Return Canvi Token
   app.post("/api/payment/pix/token", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
-      const CLIENT_ID = "FA854108C1FF62";
-      const PRIVATE_KEY = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      // Return the Canvi API token from environment
+      const canviToken = process.env.CANVI_API_TOKEN;
       
-      // Generate authentication token with Canvi gateway
-      const tokenResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/token', {
-        client_id: CLIENT_ID,
-        private_key: PRIVATE_KEY
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
+      if (!canviToken) {
+        return res.status(500).json({ 
+          success: false, 
+          message: "Token de autenticação PIX não configurado" 
+        });
+      }
+      
       res.json({
         success: true,
-        token: tokenResponse.data.access_token,
-        expires_in: tokenResponse.data.expires_in
+        token: canviToken
       });
     } catch (error) {
       console.error("Erro ao gerar token PIX:", error);
@@ -2561,40 +2557,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Create PIX payment with Canvi gateway
+      // Get user information for PIX payment
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Generate unique reference for this payment
+      const uniqueReference = `service_${serviceId}_${Date.now()}`;
+      
+      // Calculate expiration time (1 hour from now)
+      const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
+
+      // Create PIX payment with Canvi gateway using exact format from your example
       const pixPaymentData = {
-        amount: parseFloat(amount),
-        description: description || `Pagamento do serviço: ${service.title}`,
-        reference: `service_${serviceId}_${Date.now()}`,
-        expiration_minutes: 60 // 1 hour expiration
+        valor: parseFloat(amount),
+        vencimento: expirationDate.toISOString().replace('.000Z', ''), 
+        descricao: description || `Pagamento do serviço: ${service.title}`,
+        tipo_transacao: "pixCashin",
+        texto_instrucao: "Pagamento do serviço de montagem",
+        identificador_externo: uniqueReference,
+        identificador_movimento: uniqueReference,
+        enviar_qr_code: true,
+        tag: [
+          "amigo_montador",
+          `service_${serviceId}`
+        ],
+        cliente: {
+          nome: user.name,
+          tipo_documento: "cpf",
+          numero_documento: user.phone, // Using phone as fallback for document
+          "e-mail": user.email
+        },
+        split: [
+          {
+            tipo: "percentual",
+            conta: "89392367-30d4-11f0-a96f-42010a400013",
+            valor: "0.95"
+          }
+        ]
       };
 
-      const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix/create', pixPaymentData, {
+      const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix', pixPaymentData, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Cookie': `token=${token}`
         }
       });
 
       // Store payment reference in service for tracking
       await storage.updateService(serviceId, {
-        paymentReference: paymentResponse.data.reference,
+        paymentReference: uniqueReference,
         paymentStatus: 'pending'
       });
 
       res.json({
         success: true,
-        pixCode: paymentResponse.data.pix_code,
-        qrCode: paymentResponse.data.qr_code,
-        reference: paymentResponse.data.reference,
-        amount: paymentResponse.data.amount,
-        expiresAt: paymentResponse.data.expires_at
+        pixCode: paymentResponse.data.pix_copia_e_cola || paymentResponse.data.codigo_pix,
+        qrCode: paymentResponse.data.qr_code || paymentResponse.data.qr_code_base64,
+        reference: uniqueReference,
+        amount: parseFloat(amount),
+        expiresAt: expirationDate.toISOString(),
+        paymentId: paymentResponse.data.id || paymentResponse.data.identificador
       });
     } catch (error) {
       console.error("Erro ao criar pagamento PIX:", error);
+      console.error("Detalhes do erro:", error.response?.data);
       res.status(500).json({ 
         success: false, 
-        message: "Erro ao criar pagamento PIX" 
+        message: "Erro ao criar pagamento PIX",
+        details: error.response?.data?.message || error.message
+      });
+    }
+  });
+
+  // PIX Payment Status Check
+  app.post("/api/payment/pix/status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { paymentId, token } = req.body;
+
+      if (!paymentId || !token) {
+        return res.status(400).json({ message: "ID do pagamento e token são obrigatórios" });
+      }
+
+      // Check payment status with Canvi gateway
+      const statusResponse = await axios.get(`https://gateway-homol.service-canvi.com.br/bt/pix/${paymentId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': `token=${token}`
+        }
+      });
+
+      const paymentStatus = statusResponse.data.status || statusResponse.data.situacao;
+      const isCompleted = paymentStatus === 'CONCLUIDO' || paymentStatus === 'PAGO' || paymentStatus === 'CONFIRMADO';
+
+      res.json({
+        success: true,
+        status: paymentStatus,
+        isCompleted,
+        paymentData: statusResponse.data
+      });
+    } catch (error) {
+      console.error("Erro ao verificar status do pagamento PIX:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao verificar status do pagamento",
+        details: error.response?.data?.message || error.message
       });
     }
   });

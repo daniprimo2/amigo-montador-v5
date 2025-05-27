@@ -43,6 +43,8 @@ export function PixPaymentDialog({
   const [pixData, setPixData] = useState<PixPaymentData | null>(null);
   const [paymentProof, setPaymentProof] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
