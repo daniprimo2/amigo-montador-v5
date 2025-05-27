@@ -223,7 +223,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(services);
         
       // Filtrar para incluir apenas os serviços que estão na lista de IDs
-      // Importante: Não filtrar por status para manter conversas ativas após a finalização do serviço
       const filteredServices = servicesResult.filter(service => 
         allServiceIds.includes(service.id)
       );
