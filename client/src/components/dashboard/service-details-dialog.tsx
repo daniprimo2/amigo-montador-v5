@@ -81,10 +81,51 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                   </span>
                 </div>
                 
-                {service.date && service.date.includes('-') ? (
+                {/* Verifica se tem startDate e endDate separados (dados corretos do banco) */}
+                {service.startDate && service.endDate ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
-                      <div className="text-xs text-green-600 font-medium mb-1">📅 INÍCIO DO SERVIÇO</div>
+                      <div className="text-xs text-green-600 font-medium mb-1">🚀 INÍCIO DO SERVIÇO</div>
+                      <div className="text-xs sm:text-sm font-semibold text-green-700">
+                        {(() => {
+                          try {
+                            const date = new Date(service.startDate);
+                            return date.toLocaleDateString('pt-BR', {
+                              weekday: 'short',
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            });
+                          } catch (error) {
+                            return service.startDate;
+                          }
+                        })()}
+                      </div>
+                    </div>
+                    <div className="bg-white border border-blue-300 rounded-md p-2 sm:p-3 shadow-sm">
+                      <div className="text-xs text-blue-600 font-medium mb-1">🏁 TÉRMINO PREVISTO</div>
+                      <div className="text-xs sm:text-sm font-semibold text-blue-700">
+                        {(() => {
+                          try {
+                            const date = new Date(service.endDate);
+                            return date.toLocaleDateString('pt-BR', {
+                              weekday: 'short',
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            });
+                          } catch (error) {
+                            return service.endDate;
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                ) : service.date && service.date.includes('-') ? (
+                  /* Fallback para formato antigo com hífen */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                    <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
+                      <div className="text-xs text-green-600 font-medium mb-1">🚀 INÍCIO DO SERVIÇO</div>
                       <div className="text-xs sm:text-sm font-semibold text-green-700">
                         {(() => {
                           try {
@@ -121,11 +162,13 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                     </div>
                   </div>
                 ) : (
+                  /* Fallback para data única */
                   <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
                     <div className="text-xs text-green-600 font-medium mb-1">📅 DATA DO SERVIÇO</div>
                     <div className="text-xs sm:text-sm font-semibold text-green-700">
                       {(() => {
-                        if (!service.date) {
+                        const dateToUse = service.startDate || service.date;
+                        if (!dateToUse) {
                           return (
                             <span className="text-red-600 font-bold">
                               ⚠️ ERRO: Data não informada
@@ -133,7 +176,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                           );
                         }
                         try {
-                          const date = new Date(service.date);
+                          const date = new Date(dateToUse);
                           return date.toLocaleDateString('pt-BR', {
                             weekday: 'short',
                             year: 'numeric',
@@ -141,7 +184,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                             day: 'numeric'
                           });
                         } catch (error) {
-                          return service.date;
+                          return dateToUse;
                         }
                       })()}
                     </div>
