@@ -214,7 +214,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: services.title,
           description: services.description,
           location: services.location,
-          date: services.date,
+          startDate: services.startDate,
+          endDate: services.endDate,
           price: services.price,
           status: services.status,
           storeId: services.storeId
