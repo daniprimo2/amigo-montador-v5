@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +30,7 @@ interface PixPaymentData {
   reference: string;
   amount: number;
   expiresAt: string;
+  paymentId: string;
 }
 
 export function PixPaymentDialog({ 
@@ -45,16 +46,22 @@ export function PixPaymentDialog({
   const [copiedCode, setCopiedCode] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [currentToken, setCurrentToken] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate PIX token
   const generateTokenMutation = useMutation({
-    mutationFn: () => apiRequest('/api/payment/pix/token', {
-      method: 'POST'
-    }),
-    onSuccess: (data) => {
+    mutationFn: async () => {
+      const response = await apiRequest('/api/payment/pix/token', {
+        method: 'POST'
+      });
+      return response;
+    },
+    onSuccess: (data: any) => {
       if (data.success) {
+        setCurrentToken(data.token);
         createPixPayment(data.token);
       } else {
         toast({
@@ -73,24 +80,64 @@ export function PixPaymentDialog({
     }
   });
 
+  // Check PIX payment status
+  const checkPaymentStatusMutation = useMutation({
+    mutationFn: async ({ paymentId, token }: { paymentId: string; token: string }) => {
+      const response = await apiRequest('/api/payment/pix/status', {
+        method: 'POST',
+        body: { paymentId, token }
+      });
+      return response;
+    },
+    onSuccess: (data: any) => {
+      if (data.success && data.isCompleted) {
+        setPaymentCompleted(true);
+        setIsCheckingPayment(false);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        
+        // Automatically send payment proof to chat
+        sendAutomaticPaymentProof(data.paymentData);
+        
+        toast({
+          title: "Pagamento Confirmado!",
+          description: "Seu pagamento PIX foi confirmado automaticamente. O comprovante foi enviado no chat.",
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Erro ao verificar status do pagamento:", error);
+    }
+  });
+
   // Create PIX payment
   const createPixMutation = useMutation({
-    mutationFn: (token: string) => apiRequest('/api/payment/pix/create', {
-      method: 'POST',
-      body: {
-        serviceId,
-        amount,
-        description: `Pagamento do serviço: ${serviceTitle}`,
-        token
-      }
-    }),
-    onSuccess: (data) => {
+    mutationFn: async (token: string) => {
+      const response = await apiRequest('/api/payment/pix/create', {
+        method: 'POST',
+        body: {
+          serviceId,
+          amount,
+          description: `Pagamento do serviço: ${serviceTitle}`,
+          token
+        }
+      });
+      return response;
+    },
+    onSuccess: (data: any) => {
       if (data.success) {
         setPixData(data);
         setStep('payment');
+        setIsCheckingPayment(true);
+        
+        // Start automatic payment status checking
+        startPaymentStatusPolling(data.paymentId, currentToken);
+        
         toast({
           title: "PIX Gerado",
-          description: "Código PIX criado com sucesso! Escaneie o QR Code ou copie o código.",
+          description: "Código PIX criado com sucesso! Verificaremos automaticamente quando o pagamento for confirmado.",
         });
       } else {
         toast({
@@ -143,6 +190,50 @@ export function PixPaymentDialog({
       });
     }
   });
+
+  // Start automatic payment status polling
+  const startPaymentStatusPolling = (paymentId: string, token: string) => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setInterval(() => {
+      if (!paymentCompleted) {
+        checkPaymentStatusMutation.mutate({ paymentId, token });
+      }
+    }, 5000); // Check every 5 seconds
+  };
+
+  // Send automatic payment proof to chat
+  const sendAutomaticPaymentProof = (paymentData: any) => {
+    const automaticProof = `🎉 PAGAMENTO CONFIRMADO AUTOMATICAMENTE VIA PIX!\n\n` +
+      `💰 Valor: R$ ${amount}\n` +
+      `🏷️ Serviço: ${serviceTitle}\n` +
+      `📅 Data: ${new Date().toLocaleString('pt-BR')}\n` +
+      `🔗 Referência: ${pixData?.reference}\n` +
+      `✅ Status: CONFIRMADO\n\n` +
+      `Este comprovante foi gerado automaticamente pelo sistema após a confirmação do pagamento PIX.`;
+
+    submitProofMutation.mutate();
+  };
+
+  // Clean up interval on unmount or dialog close
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // Stop polling when payment is completed
+  useEffect(() => {
+    if (paymentCompleted && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [paymentCompleted]);
 
   const createPixPayment = (token: string) => {
     createPixMutation.mutate(token);
