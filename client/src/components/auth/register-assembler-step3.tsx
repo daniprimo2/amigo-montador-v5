@@ -157,7 +157,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         name: step1Data.name,
         email: step1Data.email,
         phone: step1Data.phone,
-        userType: 'montador',
+        userType: 'montador' as const,
         
         // Dados específicos do montador
         address: step2Data.address,
@@ -197,7 +197,20 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         },
         onError: (error: any) => {
           console.error('Erro detalhado no registro:', error);
-          const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido';
+          console.error('Tipo do erro:', typeof error);
+          console.error('Stack do erro:', error?.stack);
+          
+          let errorMessage = 'Erro desconhecido';
+          
+          // Tentar extrair a mensagem de erro de diferentes formas
+          if (error?.message) {
+            errorMessage = error.message;
+          } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+          
           toast({
             title: 'Erro ao cadastrar',
             description: `Erro: ${errorMessage}`,
