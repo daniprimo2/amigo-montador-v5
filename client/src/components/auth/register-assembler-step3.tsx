@@ -106,13 +106,13 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         userType: 'montador' as const,
         
         // Dados específicos do montador
-        address: step2Data.address,
-        city: step2Data.city,
-        state: step2Data.state,
-        specialties: step2Data.specialties || [],
-        technicalAssistance: step2Data.technicalAssistance || false,
-        experience: step2Data.experience || '',
-        radius: step2Data.radius || 20,
+        address: step2Data?.address || 'Endereço não informado',
+        city: step2Data?.city || 'Cidade não informada',
+        state: step2Data?.state || 'Estado não informado',
+        specialties: step2Data?.specialties || [],
+        technicalAssistance: step2Data?.technicalAssistance || false,
+        experience: step2Data?.experience || '',
+        radius: step2Data?.radius || 20,
         
         // Documentos
         documents: documentUrls,
