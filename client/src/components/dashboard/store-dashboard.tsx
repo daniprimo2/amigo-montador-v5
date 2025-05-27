@@ -962,11 +962,15 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     
     // 1. PRIORIDADE MÁXIMA: Adicionar TODOS os serviços que possuem mensagens
     if (servicesWithMessages && servicesWithMessages.length > 0) {
+      console.log('[StoreDashboard] Serviços com mensagens encontrados:', servicesWithMessages);
+      
       servicesWithMessages.forEach((service: any) => {
         addedServiceIds.add(service.id);
         
         const chatType = service.status === 'completed' ? 'completed' : 
                         service.status === 'in-progress' ? 'active' : 'messages';
+        
+        console.log(`[StoreDashboard] Processando serviço ${service.title} (ID: ${service.id}), status: ${service.status}, chatType: ${chatType}`);
         
         result.push({
           id: service.id,
