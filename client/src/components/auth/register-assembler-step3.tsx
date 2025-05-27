@@ -91,45 +91,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
       const hasBankData = data.bankName && data.accountNumber && data.agency && data.holderName && data.holderDocumentNumber;
       console.log('Dados bancários completos:', hasBankData);
 
-      // Upload de documentos primeiro
+      // Pular upload por enquanto e ir direto para o registro
+      console.log('Pulando upload - indo direto para registro...');
       let documentUrls: Record<string, string> = {};
-      
-      if (idFrontFiles && idFrontFiles.length > 0 && idBackFiles && idBackFiles.length > 0 && addressFiles && addressFiles.length > 0) {
-        console.log('Iniciando upload dos documentos...');
-        const formData = new FormData();
-        
-        // Adicionar documentos obrigatórios
-        formData.append('identityFront', idFrontFiles[0]);
-        formData.append('identityBack', idBackFiles[0]);
-        formData.append('proofOfAddress', addressFiles[0]);
-        
-        // Adicionar certificados se existirem
-        if (certFiles && certFiles.length > 0) {
-          for (let i = 0; i < certFiles.length; i++) {
-            formData.append(`certificate_${i}`, certFiles[i]);
-          }
-        }
-
-        // Fazer upload dos documentos
-        const response = await fetch('/api/upload/documents', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Erro no upload:', errorText);
-          throw new Error(`Erro ao fazer upload dos documentos: ${response.status}`);
-        }
-
-        const uploadResult = await response.json();
-        documentUrls = uploadResult.documents;
-        console.log('Upload concluído:', documentUrls);
-      } else {
-        console.log('Documentos não carregados - prosseguindo sem upload');
-        // Prosseguir sem documentos por enquanto para testar o resto do cadastro
-        documentUrls = {};
-      }
 
       // Combinar dados de todos os passos
       const userData = {
