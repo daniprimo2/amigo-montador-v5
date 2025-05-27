@@ -908,7 +908,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 
   // Estado para o serviço de chat selecionado
