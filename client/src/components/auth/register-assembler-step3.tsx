@@ -171,42 +171,61 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
       console.log('Dados do usuário para registro:', userData);
 
-      // Registrar no backend
-      registerMutation.mutate(userData, {
-        onSuccess: () => {
+      // Fazer registro diretamente com fetch para melhor controle de erro
+      try {
+        console.log('Fazendo requisição de registro...');
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+        });
+
+        console.log('Status da resposta:', response.status);
+        console.log('Headers da resposta:', response.headers);
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Registro bem-sucedido:', result);
+          
           toast({
             title: 'Cadastro realizado com sucesso',
             description: 'Seu cadastro foi concluído! Você será redirecionado para o dashboard.',
           });
           navigate('/montador');
-        },
-        onError: (error: any) => {
-          console.error('Erro detalhado no registro:', error);
-          console.error('Tipo do erro:', typeof error);
-          console.error('Stack do erro:', error?.stack);
-          console.error('Response completo:', error?.response);
-          console.error('Data do response:', error?.response?.data);
+        } else {
+          const errorData = await response.text();
+          console.error('Erro na resposta:', errorData);
           
-          let errorMessage = 'Erro desconhecido';
+          let errorMessage = `Erro ${response.status}: ${response.statusText}`;
           
-          // Tentar extrair a mensagem de erro de diferentes formas
-          if (error?.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error?.message) {
-            errorMessage = error.message;
-          } else if (typeof error === 'string') {
-            errorMessage = error;
-          } else if (error?.response?.status) {
-            errorMessage = `Erro ${error.response.status}: ${error.response.statusText || 'Erro no servidor'}`;
+          try {
+            const parsedError = JSON.parse(errorData);
+            if (parsedError.message) {
+              errorMessage = parsedError.message;
+            }
+          } catch (e) {
+            // Se não conseguir fazer parse do JSON, usa o texto bruto
+            if (errorData) {
+              errorMessage = errorData;
+            }
           }
-          
+
           toast({
             title: 'Erro ao cadastrar',
-            description: `Erro: ${errorMessage}`,
+            description: errorMessage,
             variant: 'destructive',
           });
         }
-      });
+      } catch (fetchError) {
+        console.error('Erro na requisição:', fetchError);
+        toast({
+          title: 'Erro ao cadastrar',
+          description: 'Erro de conexão. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Erro ao cadastrar:', error);
       toast({
