@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, User, Camera, Upload, Star } from 'lucide-react';
+import { Loader2, User, Camera, Upload, Star, LogOut } from 'lucide-react';
 import { BankAccountDialog } from '../banking/bank-account-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RatingStars } from '@/components/rating/rating-stars';
@@ -332,8 +332,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             <Button 
               variant="outline" 
               onClick={onLogout}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center gap-2"
             >
+              <LogOut className="h-4 w-4" />
               Sair
             </Button>
           </div>
