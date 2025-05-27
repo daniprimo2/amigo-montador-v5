@@ -4,6 +4,7 @@ import Logo from '../logo/logo';
 import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
+import NotificationBadge from '@/components/ui/notification-badge';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -101,12 +102,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       onClick={() => handleTabChange('chat')}
       className={`flex flex-col items-center py-1 ${activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}`}
     >
-      <div className="relative">
-        <MessageSquare className="h-5 w-5" />
-        {hasUnreadMessage && (
-          <span className="notification-badge">{unreadCount > 0 ? unreadCount : '!'}</span>
-        )}
-      </div>
+      <NotificationBadge
+        count={unreadCount}
+        type="message"
+        size="md"
+        className={activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}
+        showPulse={false}
+      />
       <span className="text-xs mt-1">Chat</span>
     </button>
   );
@@ -215,10 +217,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               onClick={() => handleTabChange('chat')} 
               title="Ir para o chat"
             >
-              <Bell className={`h-5 w-5 ${hasUnreadMessage ? 'animate-pulse-once' : ''}`} />
-              {hasUnreadMessage && (
-                <span className="notification-badge">{unreadCount > 0 ? unreadCount : '!'}</span>
-              )}
+              <NotificationBadge
+                count={unreadCount}
+                type="bell"
+                size="md"
+                className="text-white"
+                showPulse={hasUnreadMessage}
+              />
             </button>
             <button 
               onClick={handleLogout}
