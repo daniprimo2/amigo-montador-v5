@@ -59,7 +59,8 @@ export const services = pgTable("services", {
   cep: text("cep"), // CEP
   latitude: text("latitude"),
   longitude: text("longitude"),
-  date: text("date").notNull(),
+  startDate: timestamp("start_date").notNull(), // Data de início do serviço
+  endDate: timestamp("end_date").notNull(), // Data de fim do serviço
   price: text("price").notNull(),
   status: text("status").notNull().default("open"), // 'open', 'in-progress', 'completed', 'cancelled'
   materialType: text("material_type").notNull(),
