@@ -795,10 +795,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Adicionar os caminhos dos arquivos aos dados do serviço
       serviceData.projectFiles = uploadedFiles;
       
+      // Processar o campo de data combinado em startDate e endDate ANTES de salvar
+      if (serviceData.date) {
+        console.log("Processando data:", serviceData.date);
+        try {
+          const dateRange = serviceData.date.split(' - ');
+          if (dateRange.length === 2) {
+            serviceData.startDate = new Date(dateRange[0]);
+            serviceData.endDate = new Date(dateRange[1]);
+          } else {
+            serviceData.startDate = new Date(serviceData.date);
+            serviceData.endDate = new Date(serviceData.date);
+          }
+          console.log("Data processada - startDate:", serviceData.startDate, "endDate:", serviceData.endDate);
+        } catch (error) {
+          return res.status(400).json({ message: "Formato de data inválido" });
+        }
+        // Remover o campo date original
+        delete serviceData.date;
+      }
+      
       // Log dos dados antes de salvar no banco
       console.log("Dados que serão salvos no banco:", serviceData);
-      
-
       
       // Criar o serviço no banco de dados
       const service = await storage.createService(serviceData);
