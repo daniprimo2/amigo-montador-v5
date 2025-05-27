@@ -9,6 +9,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';
 import fileUpload from 'express-fileupload';
+import axios from 'axios';
 
 // Declarar as funções globais de notificação
 declare global {
@@ -2455,6 +2456,235 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // PIX Payment Authentication - Generate Token
+  app.post("/api/payment/pix/token", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const CLIENT_ID = "FA854108C1FF62";
+      const PRIVATE_KEY = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      
+      // Generate authentication token with Canvi gateway
+      const tokenResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/token', {
+        client_id: CLIENT_ID,
+        private_key: PRIVATE_KEY
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      res.json({
+        success: true,
+        token: tokenResponse.data.access_token,
+        expires_in: tokenResponse.data.expires_in
+      });
+    } catch (error) {
+      console.error("Erro ao gerar token PIX:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao gerar token de autenticação PIX" 
+      });
+    }
+  });
+
+  // PIX Payment Creation
+  app.post("/api/payment/pix/create", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, amount, description, token } = req.body;
+
+      if (!serviceId || !amount || !token) {
+        return res.status(400).json({ message: "Dados obrigatórios não fornecidos" });
+      }
+
+      // Verify service exists and user has permission
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Create PIX payment with Canvi gateway
+      const pixPaymentData = {
+        amount: parseFloat(amount),
+        description: description || `Pagamento do serviço: ${service.title}`,
+        reference: `service_${serviceId}_${Date.now()}`,
+        expiration_minutes: 60 // 1 hour expiration
+      };
+
+      const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix/create', pixPaymentData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Store payment reference in service for tracking
+      await storage.updateService(serviceId, {
+        paymentReference: paymentResponse.data.reference,
+        paymentStatus: 'pending'
+      });
+
+      res.json({
+        success: true,
+        pixCode: paymentResponse.data.pix_code,
+        qrCode: paymentResponse.data.qr_code,
+        reference: paymentResponse.data.reference,
+        amount: paymentResponse.data.amount,
+        expiresAt: paymentResponse.data.expires_at
+      });
+    } catch (error) {
+      console.error("Erro ao criar pagamento PIX:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao criar pagamento PIX" 
+      });
+    }
+  });
+
+  // PIX Payment Confirmation via Chat
+  app.post("/api/payment/pix/confirm", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, paymentProof, paymentReference } = req.body;
+
+      if (!serviceId || !paymentProof) {
+        return res.status(400).json({ message: "Comprovante de pagamento é obrigatório" });
+      }
+
+      // Verify service exists
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Create a message in chat with payment confirmation
+      const paymentMessage = await storage.createMessage({
+        serviceId: serviceId,
+        senderId: req.user!.id,
+        content: `💰 COMPROVANTE DE PAGAMENTO PIX\n\n📋 Referência: ${paymentReference || 'N/A'}\n💵 Valor: R$ ${service.price || 'N/A'}\n\n📄 Comprovante: ${paymentProof}\n\n✅ Aguardando confirmação do recebimento.`,
+        messageType: 'payment_proof'
+      });
+
+      // Update service payment status
+      await storage.updateService(serviceId, {
+        paymentStatus: 'proof_submitted',
+        paymentProof: paymentProof
+      });
+
+      // Notify the other party about payment proof submission
+      const userType = req.user!.userType;
+      let targetUserId = null;
+
+      if (userType === 'lojista') {
+        // Find the assembler working on this service
+        const applications = await db
+          .select({ assemblerId: applications.assemblerId })
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+
+        if (applications.length > 0) {
+          const assemblerData = await storage.getAssemblerById(applications[0].assemblerId);
+          if (assemblerData) {
+            targetUserId = assemblerData.userId;
+          }
+        }
+      } else if (userType === 'montador') {
+        // Notify the store owner
+        const store = await storage.getStore(service.storeId);
+        if (store) {
+          targetUserId = store.userId;
+        }
+      }
+
+      // Send WebSocket notification if target user is found
+      if (targetUserId && global.notifyNewMessage) {
+        await global.notifyNewMessage(serviceId, req.user!.id);
+      }
+
+      res.json({
+        success: true,
+        message: "Comprovante de pagamento enviado com sucesso",
+        chatMessage: paymentMessage
+      });
+    } catch (error) {
+      console.error("Erro ao confirmar pagamento:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao processar confirmação de pagamento" 
+      });
+    }
+  });
+
+  // PIX Payment Verification/Approval by Receiver
+  app.post("/api/payment/pix/approve", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, approved } = req.body;
+
+      if (!serviceId || typeof approved !== 'boolean') {
+        return res.status(400).json({ message: "Dados inválidos para aprovação" });
+      }
+
+      // Verify service exists
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      const approvalStatus = approved ? 'confirmed' : 'rejected';
+      const statusMessage = approved ? 'confirmado' : 'rejeitado';
+
+      // Update service payment status
+      await storage.updateService(serviceId, {
+        paymentStatus: approvalStatus
+      });
+
+      // Create confirmation message in chat
+      const confirmationMessage = await storage.createMessage({
+        serviceId: serviceId,
+        senderId: req.user!.id,
+        content: `💰 PAGAMENTO ${statusMessage.toUpperCase()}\n\n${approved ? '✅' : '❌'} O comprovante de pagamento foi ${statusMessage}.\n\n${approved ? 'O serviço pode prosseguir normalmente.' : 'Entre em contato para resolver a situação do pagamento.'}`,
+        messageType: 'payment_confirmation'
+      });
+
+      // Notify the other party
+      if (global.notifyNewMessage) {
+        await global.notifyNewMessage(serviceId, req.user!.id);
+      }
+
+      res.json({
+        success: true,
+        message: `Pagamento ${statusMessage} com sucesso`,
+        chatMessage: confirmationMessage,
+        paymentStatus: approvalStatus
+      });
+    } catch (error) {
+      console.error("Erro ao aprovar pagamento:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao processar aprovação de pagamento" 
+      });
+    }
+  });
+
   // Criar avaliação para um serviço
   app.post("/api/services/:id/rate", async (req, res) => {
     try {

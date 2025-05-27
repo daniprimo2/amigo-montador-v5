@@ -65,6 +65,9 @@ export const services = pgTable("services", {
   status: text("status").notNull().default("open"), // 'open', 'in-progress', 'completed', 'cancelled'
   materialType: text("material_type").notNull(),
   projectFiles: jsonb("project_files"), // URLs para arquivos do projeto
+  paymentReference: text("payment_reference"), // Referência do pagamento PIX
+  paymentStatus: text("payment_status").default("pending"), // 'pending', 'proof_submitted', 'confirmed', 'rejected'
+  paymentProof: text("payment_proof"), // Comprovante de pagamento enviado
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"), // Data de finalização do serviço
 });
@@ -84,6 +87,7 @@ export const messages = pgTable("messages", {
   serviceId: integer("service_id").notNull().references(() => services.id),
   senderId: integer("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
+  messageType: text("message_type").default("text"), // 'text', 'payment_proof', 'payment_confirmation'
   sentAt: timestamp("sent_at").defaultNow(),
 });
 
