@@ -503,10 +503,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: services.title,
           description: services.description,
           location: services.location,
-          date: services.date,
           price: services.price,
           status: services.status,
-          storeId: services.storeId
+          storeId: services.storeId,
+          startDate: services.startDate,
+          endDate: services.endDate
         })
         .from(services)
         .where(
@@ -518,48 +519,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Para cada serviço, verificar se há candidaturas pendentes
       for (const service of storeServices) {
-        // Buscar as candidaturas pendentes para este serviço
-        const pendingApplications = await db
-          .select()
-          .from(applications)
-          .where(
-            and(
-              eq(applications.serviceId, service.id),
-              eq(applications.status, 'pending')
-            )
-          );
-        
-        // Se houver candidaturas pendentes, adicionar o serviço à lista
-        if (pendingApplications.length > 0) {
-          // Para cada candidatura pendente, obter informações do montador
-          const applicationsWithDetails = await Promise.all(
-            pendingApplications.map(async (application) => {
-              // Buscar o montador
-              const assembler = await storage.getAssemblerById(application.assemblerId);
-              
-              if (assembler) {
-                // Buscar o usuário do montador para obter informações como nome
-                const assemblerUser = await storage.getUser(assembler.userId);
-                
-                return {
-                  ...application,
-                  assembler: {
-                    id: assembler.id,
-                    name: assemblerUser?.name || 'Montador',
-                    userId: assembler.userId
-                  }
-                };
-              }
-              
-              return application;
+        try {
+          // Buscar as candidaturas pendentes para este serviço
+          const pendingApplications = await db
+            .select({
+              id: applications.id,
+              assemblerId: applications.assemblerId,
+              serviceId: applications.serviceId,
+              status: applications.status,
+              createdAt: applications.createdAt
             })
-          );
+            .from(applications)
+            .where(
+              and(
+                eq(applications.serviceId, service.id),
+                eq(applications.status, 'pending')
+              )
+            );
           
-          // Adicionar o serviço com as candidaturas pendentes à lista
-          servicesWithPendingApplications.push({
-            ...service,
-            pendingApplications: applicationsWithDetails
-          });
+          // Se houver candidaturas pendentes, adicionar o serviço à lista
+          if (pendingApplications.length > 0) {
+            // Para cada candidatura pendente, obter informações do montador
+            const applicationsWithDetails = [];
+            
+            for (const application of pendingApplications) {
+              try {
+                // Buscar o montador
+                const assembler = await storage.getAssemblerById(application.assemblerId);
+                
+                if (assembler) {
+                  // Buscar o usuário do montador para obter informações como nome
+                  const assemblerUser = await storage.getUser(assembler.userId);
+                  
+                  applicationsWithDetails.push({
+                    ...application,
+                    assembler: {
+                      id: assembler.id,
+                      name: assemblerUser?.name || 'Montador',
+                      userId: assembler.userId
+                    }
+                  });
+                } else {
+                  applicationsWithDetails.push(application);
+                }
+              } catch (appError) {
+                console.error(`Erro ao processar candidatura ${application.id}:`, appError);
+                applicationsWithDetails.push(application);
+              }
+            }
+            
+            // Adicionar o serviço com as candidaturas pendentes à lista
+            servicesWithPendingApplications.push({
+              ...service,
+              pendingApplications: applicationsWithDetails
+            });
+          }
+        } catch (serviceError) {
+          console.error(`Erro ao processar serviço ${service.id}:`, serviceError);
         }
       }
       
@@ -1927,7 +1943,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newMessage = await storage.createMessage(messageData);
       
-      // Notificar usuário sobre a nova mensagem
+      // Enviar notificação imediata via WebSocket para o destinatário
+      try {
+        // Determinar quem deve receber a notificação
+        if (req.user?.userType === 'montador') {
+          // Se é montador enviando, notificar o lojista
+          const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
+          if (storeResult.length > 0) {
+            const storeUserId = storeResult[0].userId;
+            
+            const notificationSent = sendNotification(storeUserId, {
+              type: 'new_message',
+              serviceId: serviceId,
+              message: `Nova mensagem de ${req.user.name} no serviço "${service.title}"`,
+              senderName: req.user.name,
+              senderType: req.user.userType,
+              timestamp: new Date().toISOString()
+            });
+            
+            console.log(`Notificação de nova mensagem enviada para lojista (userId: ${storeUserId}): ${notificationSent ? 'sucesso' : 'falhou'}`);
+          }
+        } else if (req.user?.userType === 'lojista') {
+          // Se é lojista enviando, notificar o(s) montador(es) relacionado(s)
+          const acceptedApplications = await db
+            .select()
+            .from(applications)
+            .where(and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            ));
+          
+          for (const app of acceptedApplications) {
+            const assemblerDataResult = await db
+              .select()
+              .from(assemblers)
+              .where(eq(assemblers.id, app.assemblerId));
+            
+            if (assemblerDataResult.length > 0) {
+              const assemblerUserId = assemblerDataResult[0].userId;
+              
+              const notificationSent = sendNotification(assemblerUserId, {
+                type: 'new_message',
+                serviceId: serviceId,
+                message: `Nova mensagem de ${req.user.name} no serviço "${service.title}"`,
+                senderName: req.user.name,
+                senderType: req.user.userType,
+                timestamp: new Date().toISOString()
+              });
+              
+              console.log(`Notificação de nova mensagem enviada para montador (userId: ${assemblerUserId}): ${notificationSent ? 'sucesso' : 'falhou'}`);
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error('Erro ao enviar notificação de nova mensagem:', notificationError);
+      }
+      
+      // Notificar usuário sobre a nova mensagem (função global)
       if (global.notifyNewMessage) {
         await global.notifyNewMessage(serviceId, req.user.id);
       }
