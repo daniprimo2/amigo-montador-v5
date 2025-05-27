@@ -498,15 +498,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                 {isCompleting ? 'Finalizando...' : 'Montagem Concluída'}
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
-              onClick={() => setIsHireDialogOpen(true)}
-            >
-              <DollarSign className="h-4 w-4" />
-              Contratar Montador
-            </Button>
+            
+            {/* Botão de Pagamento PIX - aparece quando o serviço está contratado */}
+            {(service.status === 'accepted' || service.status === 'in-progress') && service.price && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-purple-600 border-purple-600 hover:bg-purple-50"
+                onClick={() => setIsPixPaymentDialogOpen(true)}
+              >
+                <CreditCard className="h-4 w-4" />
+                Pagar via PIX
+              </Button>
+            )}
+            
+            {/* Botão de Contratar Montador - aparece apenas quando serviço não está contratado */}
+            {service.status === 'open' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
+                onClick={() => setIsHireDialogOpen(true)}
+              >
+                <DollarSign className="h-4 w-4" />
+                Contratar Montador
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -600,6 +617,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           onClose={() => setIsPaymentDialogOpen(false)}
           serviceId={serviceId}
           amount={service?.price ? `R$ ${(typeof service.price === 'string' ? parseFloat(service.price) : service.price).toFixed(2).replace('.', ',')}` : 'R$ 0,00'}
+        />
+      )}
+      
+      {/* Modal de pagamento PIX */}
+      {isPixPaymentDialogOpen && (
+        <PixPaymentDialog
+          isOpen={isPixPaymentDialogOpen}
+          onClose={() => setIsPixPaymentDialogOpen(false)}
+          serviceId={serviceId}
+          amount={service?.price || 'R$ 0,00'}
+          serviceTitle={service?.title || 'Serviço'}
         />
       )}
       
