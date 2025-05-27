@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star, Trash2, AlertTriangle, CheckSquare } from 'lucide-react';
+import { Send, ArrowLeft, DollarSign, User, Play, Loader2, Star, Trash2, AlertTriangle, CheckSquare, CreditCard, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
 import { HireAssemblerDialog } from '@/components/payment/hire-assembler-dialog';
+import { PixPaymentDialog } from '@/components/payment/pix-payment-dialog';
 import { apiRequest } from '@/lib/queryClient';
 import { 
   Dialog,
@@ -30,6 +31,7 @@ interface Message {
   serviceId: number;
   senderId: number;
   content: string;
+  messageType?: string;
   sentAt: string;
   sender?: {
     name: string;
@@ -77,6 +79,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isPixPaymentDialogOpen, setIsPixPaymentDialogOpen] = useState(false);
   const [isHireDialogOpen, setIsHireDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -310,6 +313,44 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         description: error instanceof Error 
           ? error.message 
           : 'Não foi possível enviar a mensagem. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mutation para aprovar/rejeitar pagamento PIX
+  const approvePixPaymentMutation = useMutation({
+    mutationFn: async ({ approved }: { approved: boolean }) => {
+      const response = await fetch('/api/payment/pix/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ serviceId, approved }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao processar aprovação de pagamento');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.approved ? 'Pagamento Confirmado' : 'Pagamento Rejeitado',
+        description: data.message,
+      });
+      
+      // Invalidar queries para atualizar mensagens e serviços
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro',
+        description: error instanceof Error ? error.message : 'Erro ao processar pagamento',
         variant: 'destructive',
       });
     }
