@@ -364,50 +364,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const service of storeServices) {
         try {
-          // Buscar a candidatura aceita para este serviço
-          const acceptedApplications = await db
-            .select({
-              id: applications.id,
-              assemblerId: applications.assemblerId,
-              serviceId: applications.serviceId,
-              status: applications.status
-            })
-            .from(applications)
-            .where(
-              and(
-                eq(applications.serviceId, service.id),
-                eq(applications.status, 'accepted')
-              )
-            );
+          // Buscar candidaturas aceitas para este serviço usando storage
+          const allApplications = await storage.getApplicationsByServiceId(service.id);
+          const acceptedApplications = allApplications.filter(app => app.status === 'accepted');
 
           // Se houver uma candidatura aceita, obter detalhes do montador
           if (acceptedApplications.length > 0) {
-            const assemblerId = acceptedApplications[0].assemblerId;
+            const application = acceptedApplications[0];
             
             // Buscar dados do montador
-            const assembler = await storage.getAssemblerById(assemblerId);
+            const assembler = await storage.getAssemblerById(application.assemblerId);
               
             if (assembler) {
-              const assemblerUserId = assembler.userId;
-              
               // Buscar dados do usuário montador
-              const userResult = await db
-                .select({
-                  id: users.id,
-                  name: users.name
-                })
-                .from(users)
-                .where(eq(users.id, assemblerUserId))
-                .limit(1);
+              const assemblerUser = await storage.getUser(assembler.userId);
                 
-              if (userResult.length > 0) {
+              if (assemblerUser) {
+                // Verificar se há mensagens não lidas para este serviço
+                const hasNewMessages = await storage.hasUnreadMessages(service.id, req.user!.id);
+                
                 servicesWithApplication.push({
                   ...service,
                   assembler: {
-                    id: assemblerId,
-                    name: userResult[0].name,
-                    userId: assemblerUserId
-                  }
+                    id: assembler.id,
+                    name: assemblerUser.name,
+                    userId: assembler.userId
+                  },
+                  hasNewMessages: hasNewMessages
                 });
               } else {
                 servicesWithApplication.push(service);
