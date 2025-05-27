@@ -833,11 +833,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Mostrar serviços onde o montador tem conversas ativas (candidatura aceita ou serviço em andamento)
-    // Incluir serviços com status 'open' onde há candidatura aceita, 'in-progress' e também 'completed' recentes
+    // Mostrar serviços onde o montador tem conversas ativas
+    // Incluir serviços onde há candidatura (independente do status) ou mensagens trocadas
     const activeChats = activeServices ? activeServices.filter((service: any) => {
-      // Mostrar se tem candidatura aceita (independente do status) ou se está em andamento ou completo
-      return service.hasAcceptedApplication || 
+      // Mostrar se tem candidatura (qualquer status) ou se está em andamento ou completo
+      return service.applicationStatus || 
              service.status === 'in-progress' || 
              service.status === 'completed';
     }) : [];
