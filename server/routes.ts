@@ -297,8 +297,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
-      // Buscar TODOS os serviços da loja que possuem mensagens
-      const servicesWithMessages = await db
+      // Primeiro, buscar serviços com mensagens
+      const baseServicesWithMessages = await db
         .select({
           serviceId: services.id,
           serviceTitle: services.title,
@@ -308,19 +308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           serviceDescription: services.description,
           messageCount: sql<number>`COUNT(DISTINCT ${messages.id})`,
           lastMessageAt: sql<Date>`MAX(${messages.sentAt})`,
-          // Buscar informações do montador se houver candidatura aceita
-          assemblerId: applications.assemblerId,
-          assemblerUserId: users.id,
-          assemblerName: users.name,
         })
         .from(services)
         .innerJoin(messages, eq(messages.serviceId, services.id))
-        .leftJoin(applications, and(
-          eq(applications.serviceId, services.id),
-          eq(applications.status, 'accepted')
-        ))
-        .leftJoin(assemblers, eq(assemblers.id, applications.assemblerId))
-        .leftJoin(users, eq(users.id, assemblers.userId))
         .where(eq(services.storeId, store.id))
         .groupBy(
           services.id,
@@ -328,12 +318,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           services.status,
           services.price,
           services.location,
-          services.description,
-          applications.assemblerId,
-          users.id,
-          users.name
+          services.description
         )
         .orderBy(sql`MAX(${messages.sentAt}) DESC`);
+
+      // Depois, buscar informações do montador para cada serviço
+      const servicesWithMessages = await Promise.all(
+        baseServicesWithMessages.map(async (service) => {
+          const acceptedApplication = await db
+            .select({
+              assemblerId: applications.assemblerId,
+              assemblerUserId: users.id,
+              assemblerName: users.name,
+            })
+            .from(applications)
+            .leftJoin(assemblers, eq(assemblers.id, applications.assemblerId))
+            .leftJoin(users, eq(users.id, assemblers.userId))
+            .where(and(
+              eq(applications.serviceId, service.serviceId),
+              eq(applications.status, 'accepted')
+            ))
+            .limit(1);
+
+          return {
+            ...service,
+            assemblerId: acceptedApplication[0]?.assemblerId || null,
+            assemblerUserId: acceptedApplication[0]?.assemblerUserId || null,
+            assemblerName: acceptedApplication[0]?.assemblerName || null,
+          };
+        })
+      );
 
       // Formatar dados para o frontend
       const formattedServices = servicesWithMessages.map(service => ({
