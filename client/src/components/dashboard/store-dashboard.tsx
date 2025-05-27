@@ -955,16 +955,41 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     enabled: dashboardSection === 'chat' // Buscar apenas quando a aba de chat estiver ativa
   });
   
-  // Combinar serviços ativos e com candidaturas pendentes para exibição na interface
+  // IMPORTANTE: Combinar TODOS os serviços com mensagens para garantir que nenhuma conversa desapareça
   const servicesWithChat = React.useMemo(() => {
     const result: Array<any> = [];
+    const addedServiceIds = new Set(); // Para evitar duplicatas
     
-    // Adicionar serviços com candidaturas aceitas (em andamento ou finalizados)
+    // 1. PRIORIDADE MÁXIMA: Adicionar TODOS os serviços que possuem mensagens
+    if (servicesWithMessages && servicesWithMessages.length > 0) {
+      servicesWithMessages.forEach((service: any) => {
+        addedServiceIds.add(service.id);
+        
+        const chatType = service.status === 'completed' ? 'completed' : 
+                        service.status === 'in-progress' ? 'active' : 'messages';
+        
+        result.push({
+          id: service.id,
+          title: service.title,
+          status: service.status,
+          assemblerName: service.assembler ? service.assembler.name : 'Montador não identificado',
+          assemblerId: service.assembler ? service.assembler.id : null,
+          hasNewMessages: false, // Será atualizado pelo WebSocket
+          hasNewApplications: false,
+          chatType: chatType,
+          messageCount: service.messageCount || 0,
+          lastMessageAt: service.lastMessageAt,
+          hasConversation: true // GARANTIR que sempre tenha conversa disponível
+        });
+      });
+    }
+    
+    // 2. Adicionar serviços com candidaturas aceitas que ainda não foram incluídos
     if (activeServices && activeServices.length > 0) {
       activeServices.forEach((service: any) => {
-        if (service.assembler && service.assembler.id) {
-          // Definir o tipo de chat com base no status do serviço
-          // Garantir que serviços com status 'completed' sejam sempre marcados como 'completed'
+        if (!addedServiceIds.has(service.id) && service.assembler && service.assembler.id) {
+          addedServiceIds.add(service.id);
+          
           const chatType = service.status === 'completed' ? 'completed' : 'active';
           
           result.push({
@@ -975,7 +1000,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             assemblerId: service.assembler.id,
             hasNewMessages: service.hasNewMessages || false,
             hasNewApplications: false,
-            chatType: chatType // 'active' para serviços em andamento, 'completed' para serviços finalizados
+            chatType: chatType
           });
         }
       });
@@ -1005,8 +1030,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       });
     }
     
-    return result;
-  }, [activeServices, pendingServices]);
+    // Ordenar por última mensagem (mais recente primeiro)
+    return result.sort((a, b) => {
+      if (a.lastMessageAt && b.lastMessageAt) {
+        return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+      }
+      return 0;
+    });
+  }, [servicesWithMessages, activeServices, pendingServices]);
 
   const renderChatSection = () => {
     // Se um serviço estiver selecionado para chat, mostrar a interface de chat
@@ -1028,8 +1059,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     const activeChats = servicesWithChat.filter(service => service.chatType === 'active');
     const completedChats = servicesWithChat.filter(service => service.chatType === 'completed');
     
-    // Estado de carregamento combinado
-    const isLoading = isLoadingActiveServices || isLoadingPendingServices;
+    // Estado de carregamento combinado - incluindo serviços com mensagens
+    const isLoading = isLoadingActiveServices || isLoadingPendingServices || isLoadingServicesWithMessages;
     
     return (
       <div className="mt-2">
