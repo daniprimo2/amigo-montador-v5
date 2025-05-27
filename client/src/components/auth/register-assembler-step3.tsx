@@ -151,10 +151,27 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
       // Combinar dados de todos os passos
       const userData = {
-        ...step1Data,
-        ...step2Data,
+        // Dados básicos do usuário
+        username: step1Data.email,
+        password: step1Data.password,
+        name: step1Data.name,
+        email: step1Data.email,
+        phone: step1Data.phone,
+        userType: 'montador',
+        
+        // Dados específicos do montador
+        address: step2Data.address,
+        city: step2Data.city,
+        state: step2Data.state,
+        specialties: step2Data.specialties || [],
+        technicalAssistance: step2Data.technicalAssistance || false,
+        experience: step2Data.experience || '',
+        radius: step2Data.radius || 20,
+        
+        // Documentos
         documents: documentUrls,
         termsAgreed: data.termsAgreed,
+        
         // Dados bancários
         bankName: data.bankName,
         accountType: data.accountType,
@@ -165,10 +182,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         holderDocumentNumber: data.holderDocumentNumber,
         pixKey: data.pixKey,
         pixKeyType: data.pixKeyType,
-        userType: 'montador',
-        username: step1Data.email,
-        email: step1Data.email, // Adicionando campo email requerido pelo backend
       };
+
+      console.log('Dados do usuário para registro:', userData);
 
       // Registrar no backend
       registerMutation.mutate(userData, {
@@ -179,6 +195,15 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           });
           navigate('/montador');
         },
+        onError: (error: any) => {
+          console.error('Erro detalhado no registro:', error);
+          const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido';
+          toast({
+            title: 'Erro ao cadastrar',
+            description: `Erro: ${errorMessage}`,
+            variant: 'destructive',
+          });
+        }
       });
     } catch (error) {
       console.error('Erro ao cadastrar:', error);
