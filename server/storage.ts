@@ -301,7 +301,13 @@ export class DatabaseStorage implements IStorage {
         return {
           ...service,
           projectFiles,
-          storeName: store?.name || 'Loja não especificada'
+          storeName: store?.name || 'Loja não especificada',
+          // Garantir que todos os campos estejam disponíveis
+          description: service.description || '',
+          materialType: service.materialType || '',
+          address: service.address || '',
+          addressNumber: service.addressNumber || '',
+          cep: service.cep || ''
         } as Service & { storeName: string };
       }));
       

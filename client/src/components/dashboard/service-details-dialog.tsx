@@ -75,26 +75,36 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
               <div className="flex items-start text-sm text-gray-600 col-span-2">
                 <CalendarIcon className="h-4 w-4 mr-1.5 text-primary mt-0.5" />
                 <div className="flex-1">
-                  {service.date.includes('-') ? (
-                    <div className="space-y-1">
-                      <div className="bg-green-50 border border-green-200 rounded-md p-2">
-                        <div className="text-xs text-green-600 font-medium mb-1">INÍCIO DO SERVIÇO</div>
+                  {service.date && service.date.includes('-') ? (
+                    <div className="space-y-2">
+                      <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                        <div className="text-xs text-green-600 font-medium mb-1">📅 INÍCIO DO SERVIÇO</div>
                         <div className="text-sm font-semibold text-green-700">
-                          {service.date.split('-')[0].trim()}
+                          {new Date(service.date.split('-')[0].trim()).toLocaleDateString('pt-BR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
                         </div>
                       </div>
-                      <div className="bg-blue-50 border border-blue-200 rounded-md p-2">
-                        <div className="text-xs text-blue-600 font-medium mb-1">TÉRMINO PREVISTO</div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                        <div className="text-xs text-blue-600 font-medium mb-1">🏁 TÉRMINO PREVISTO</div>
                         <div className="text-sm font-semibold text-blue-700">
-                          {service.date.split('-')[1].trim()}
+                          {new Date(service.date.split('-')[1].trim()).toLocaleDateString('pt-BR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-green-50 border border-green-200 rounded-md p-2">
-                      <div className="text-xs text-green-600 font-medium mb-1">DATA DE INÍCIO</div>
+                    <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                      <div className="text-xs text-green-600 font-medium mb-1">📅 DATA DO SERVIÇO</div>
                       <div className="text-sm font-semibold text-green-700">
-                        {service.date.includes('-') ? service.date.split('-')[0].trim() : service.date}
+                        {service.date || 'Data não especificada'}
                       </div>
                     </div>
                   )}

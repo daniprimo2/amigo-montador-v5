@@ -89,6 +89,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Encontrados ${servicesList.length} serviços para o usuário tipo: ${req.user?.userType}`);
       
+      // Log detalhado dos serviços antes da formatação
+      if (req.user?.userType === 'montador' && servicesList.length > 0) {
+        console.log("Dados completos do primeiro serviço:", JSON.stringify(servicesList[0], null, 2));
+      }
+      
       // Formatar dados para o frontend (especialmente para montadores)
       if (req.user?.userType === 'montador') {
         const formattedServices = servicesList.map(service => {
@@ -107,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return {
             id: service.id,
             title: service.title,
-            description: service.description,
+            description: service.description || '',
             location: fullAddress,
             address: service.address || '',
             addressNumber: service.addressNumber || '',
