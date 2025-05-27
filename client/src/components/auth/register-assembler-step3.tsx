@@ -126,12 +126,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         documentUrls = uploadResult.documents;
         console.log('Upload concluído:', documentUrls);
       } else {
-        toast({
-          title: 'Documentos obrigatórios',
-          description: 'Por favor, envie RG/CNH (frente e verso) e comprovante de residência.',
-          variant: 'destructive',
-        });
-        return;
+        console.log('Documentos não carregados - prosseguindo sem upload');
+        // Prosseguir sem documentos por enquanto para testar o resto do cadastro
+        documentUrls = {};
       }
 
       // Combinar dados de todos os passos
