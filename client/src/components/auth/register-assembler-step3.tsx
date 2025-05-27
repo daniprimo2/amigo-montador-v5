@@ -14,42 +14,10 @@ import { useLocation } from 'wouter';
 import { baseBankAccountSchema } from '@/lib/bank-account-schema';
 
 const assemblerStep3Schema = z.object({
-  identityFront: z.any().refine(val => {
-    if (!val || !(val instanceof FileList) || val.length === 0) return false;
-    const file = val[0];
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    return validTypes.includes(file.type) && file.size <= maxSize;
-  }, {
-    message: "Documento (frente) deve ser uma imagem ou PDF de até 10MB"
-  }),
-  identityBack: z.any().refine(val => {
-    if (!val || !(val instanceof FileList) || val.length === 0) return false;
-    const file = val[0];
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    return validTypes.includes(file.type) && file.size <= maxSize;
-  }, {
-    message: "Documento (verso) deve ser uma imagem ou PDF de até 10MB"
-  }),
-  proofOfAddress: z.any().refine(val => {
-    if (!val || !(val instanceof FileList) || val.length === 0) return false;
-    const file = val[0];
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    return validTypes.includes(file.type) && file.size <= maxSize;
-  }, {
-    message: "Comprovante de residência deve ser uma imagem ou PDF de até 10MB"
-  }),
-  certificates: z.any().optional().refine(val => {
-    if (!val || !(val instanceof FileList) || val.length === 0) return true; // opcional
-    const file = val[0];
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    return validTypes.includes(file.type) && file.size <= maxSize;
-  }, {
-    message: "Certificados devem ser imagens ou PDF de até 10MB"
-  }),
+  identityFront: z.any().optional(),
+  identityBack: z.any().optional(),
+  proofOfAddress: z.any().optional(),
+  certificates: z.any().optional(),
   // Dados bancários (opcionais para cadastro)
   bankName: z.string().optional(),
   accountType: z.enum(['corrente', 'poupança']).optional(),
@@ -110,10 +78,24 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
   const onSubmit = async (data: AssemblerStep3Data) => {
     try {
+      console.log('=== INÍCIO DO SUBMIT ===');
+      console.log('Dados do formulário:', data);
+      console.log('Arquivos selecionados:', {
+        idFront: idFrontFiles?.length,
+        idBack: idBackFiles?.length,
+        address: addressFiles?.length,
+        certificates: certFiles?.length
+      });
+
+      // Verificar se os dados bancários foram preenchidos corretamente
+      const hasBankData = data.bankName && data.accountNumber && data.agency && data.holderName && data.holderDocumentNumber;
+      console.log('Dados bancários completos:', hasBankData);
+
       // Upload de documentos primeiro
       let documentUrls: Record<string, string> = {};
       
       if (idFrontFiles && idFrontFiles.length > 0 && idBackFiles && idBackFiles.length > 0 && addressFiles && addressFiles.length > 0) {
+        console.log('Iniciando upload dos documentos...');
         const formData = new FormData();
         
         // Adicionar documentos obrigatórios
@@ -135,11 +117,14 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         });
 
         if (!response.ok) {
-          throw new Error('Erro ao fazer upload dos documentos');
+          const errorText = await response.text();
+          console.error('Erro no upload:', errorText);
+          throw new Error(`Erro ao fazer upload dos documentos: ${response.status}`);
         }
 
         const uploadResult = await response.json();
         documentUrls = uploadResult.documents;
+        console.log('Upload concluído:', documentUrls);
       } else {
         toast({
           title: 'Documentos obrigatórios',
@@ -172,16 +157,16 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         documents: documentUrls,
         termsAgreed: data.termsAgreed,
         
-        // Dados bancários
-        bankName: data.bankName,
-        accountType: data.accountType,
-        accountNumber: data.accountNumber,
-        agency: data.agency,
-        holderName: data.holderName,
-        holderDocumentType: data.holderDocumentType,
-        holderDocumentNumber: data.holderDocumentNumber,
-        pixKey: data.pixKey,
-        pixKeyType: data.pixKeyType,
+        // Dados bancários (apenas se estiverem preenchidos)
+        bankName: data.bankName || undefined,
+        accountType: data.accountType || undefined,
+        accountNumber: data.accountNumber || undefined,
+        agency: data.agency || undefined,
+        holderName: data.holderName || undefined,
+        holderDocumentType: data.holderDocumentType || undefined,
+        holderDocumentNumber: data.holderDocumentNumber || undefined,
+        pixKey: data.pixKey || undefined,
+        pixKeyType: data.pixKeyType || undefined,
       };
 
       console.log('Dados do usuário para registro:', userData);
