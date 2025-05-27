@@ -714,12 +714,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const dateRange = serviceData.date.split(' - ');
           if (dateRange.length === 2) {
-            serviceData.startDate = new Date(dateRange[0]);
-            serviceData.endDate = new Date(dateRange[1]);
+            // Validar se as datas são válidas
+            const startDate = new Date(dateRange[0]);
+            const endDate = new Date(dateRange[1]);
+            
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              return res.status(400).json({ message: "Formato de data inválido" });
+            }
+            
+            serviceData.startDate = startDate;
+            serviceData.endDate = endDate;
           } else {
-            // Se não estiver no formato esperado, usar a data como startDate e endDate
-            serviceData.startDate = new Date(serviceData.date);
-            serviceData.endDate = new Date(serviceData.date);
+            return res.status(400).json({ message: "Formato de data deve ser: YYYY-MM-DD - YYYY-MM-DD" });
           }
           console.log("Data processada - startDate:", serviceData.startDate, "endDate:", serviceData.endDate);
         } catch (error) {
@@ -729,6 +735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete serviceData.date;
       } else {
         console.log("DEBUG: Campo date não encontrado, mas deveria estar presente!");
+        return res.status(400).json({ message: "Data de início e fim são obrigatórias" });
       }
 
       // Adicionar dados do lojista
