@@ -114,19 +114,23 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                       </div>
                       <div className="text-xs sm:text-sm font-semibold text-green-700">
                         {(() => {
+                          console.log('DEBUG: service.startDate recebido:', service.startDate);
                           try {
                             const date = new Date(service.startDate);
+                            console.log('DEBUG: Data parseada startDate:', date);
                             // Verificar se a data é válida
                             if (isNaN(date.getTime())) {
                               console.log('Data de início inválida:', service.startDate);
                               return service.startDate;
                             }
-                            return date.toLocaleDateString("pt-BR", {
+                            const formatted = date.toLocaleDateString("pt-BR", {
                               weekday: "short",
                               year: "numeric",
                               month: "short",
                               day: "numeric",
                             });
+                            console.log('DEBUG: Data formatada startDate:', formatted);
+                            return formatted;
                           } catch (error) {
                             console.error('Erro ao formatar startDate:', error);
                             return service.startDate;
@@ -140,19 +144,23 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                       </div>
                       <div className="text-xs sm:text-sm font-semibold text-blue-700">
                         {(() => {
+                          console.log('DEBUG: service.endDate recebido:', service.endDate);
                           try {
                             const date = new Date(service.endDate);
+                            console.log('DEBUG: Data parseada endDate:', date);
                             // Verificar se a data é válida
                             if (isNaN(date.getTime())) {
                               console.log('Data de término inválida:', service.endDate);
                               return service.endDate;
                             }
-                            return date.toLocaleDateString("pt-BR", {
+                            const formatted = date.toLocaleDateString("pt-BR", {
                               weekday: "short",
                               year: "numeric",
                               month: "short",
                               day: "numeric",
                             });
+                            console.log('DEBUG: Data formatada endDate:', formatted);
+                            return formatted;
                           } catch (error) {
                             console.error('Erro ao formatar endDate:', error);
                             return service.endDate;
