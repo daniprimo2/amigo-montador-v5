@@ -110,23 +110,43 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
   const onSubmit = async (data: AssemblerStep3Data) => {
     try {
-      // Simular upload de arquivos
+      // Upload de documentos primeiro
       let documentUrls: Record<string, string> = {};
       
-      if (idFrontFiles && idFrontFiles.length > 0) {
-        documentUrls.identityFront = URL.createObjectURL(idFrontFiles[0]);
-      }
-      
-      if (idBackFiles && idBackFiles.length > 0) {
-        documentUrls.identityBack = URL.createObjectURL(idBackFiles[0]);
-      }
-      
-      if (addressFiles && addressFiles.length > 0) {
-        documentUrls.proofOfAddress = URL.createObjectURL(addressFiles[0]);
-      }
-      
-      if (certFiles && certFiles.length > 0) {
-        documentUrls.certificates = Array.from(certFiles).map(file => URL.createObjectURL(file)).join(',');
+      if (idFrontFiles && idFrontFiles.length > 0 && idBackFiles && idBackFiles.length > 0 && addressFiles && addressFiles.length > 0) {
+        const formData = new FormData();
+        
+        // Adicionar documentos obrigatórios
+        formData.append('identityFront', idFrontFiles[0]);
+        formData.append('identityBack', idBackFiles[0]);
+        formData.append('proofOfAddress', addressFiles[0]);
+        
+        // Adicionar certificados se existirem
+        if (certFiles && certFiles.length > 0) {
+          for (let i = 0; i < certFiles.length; i++) {
+            formData.append(`certificate_${i}`, certFiles[i]);
+          }
+        }
+
+        // Fazer upload dos documentos
+        const response = await fetch('/api/upload/documents', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao fazer upload dos documentos');
+        }
+
+        const uploadResult = await response.json();
+        documentUrls = uploadResult.documents;
+      } else {
+        toast({
+          title: 'Documentos obrigatórios',
+          description: 'Por favor, envie RG/CNH (frente e verso) e comprovante de residência.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       // Combinar dados de todos os passos

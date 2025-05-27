@@ -1248,6 +1248,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload de documentos
+  app.post("/api/upload/documents", async (req, res) => {
+    try {
+      if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).json({ message: "Nenhum arquivo enviado" });
+      }
+
+      // Criar pasta para uploads de documentos se não existir
+      const documentsDir = path.join(process.cwd(), 'uploads', 'documents');
+      if (!fs.existsSync(documentsDir)) {
+        fs.mkdirSync(documentsDir, { recursive: true });
+      }
+
+      const uploadedDocuments: Record<string, string> = {};
+
+      // Processar cada documento enviado
+      for (const [fieldName, file] of Object.entries(req.files)) {
+        const uploadedFile = file as fileUpload.UploadedFile;
+        
+        // Verificar tipo de arquivo (imagens e PDFs)
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        if (!validTypes.includes(uploadedFile.mimetype)) {
+          return res.status(400).json({ 
+            message: `Arquivo ${fieldName} deve ser uma imagem ou PDF` 
+          });
+        }
+
+        // Verificar tamanho (max 10MB)
+        if (uploadedFile.size > 10 * 1024 * 1024) {
+          return res.status(400).json({ 
+            message: `Arquivo ${fieldName} deve ter menos de 10MB` 
+          });
+        }
+
+        // Gerar nome de arquivo único
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${uploadedFile.name}`;
+        const uploadPath = path.join(documentsDir, fileName);
+
+        // Salvar arquivo
+        await uploadedFile.mv(uploadPath);
+        
+        // Salvar o caminho relativo para o banco
+        uploadedDocuments[fieldName] = `/uploads/documents/${fileName}`;
+      }
+
+      res.json({ documents: uploadedDocuments });
+    } catch (error) {
+      console.error("Erro ao fazer upload de documentos:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Upload de foto de perfil
   app.post("/api/profile/photo", async (req, res) => {
     try {
