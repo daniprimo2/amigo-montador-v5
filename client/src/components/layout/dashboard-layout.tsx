@@ -230,24 +230,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </button>
             <button 
               onClick={handleLogout}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white touch-target"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center border-2 border-white touch-target"
               title="Sair"
             >
-              {profilePhotoUrl ? (
-                <img 
-                  src={profilePhotoUrl} 
-                  alt="Foto de perfil" 
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement!;
-                    parent.innerHTML = '<svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
-                  }}
-                />
-              ) : (
-                <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-              )}
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
             </button>
           </div>
         </div>
