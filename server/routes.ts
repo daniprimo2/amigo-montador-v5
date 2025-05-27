@@ -682,14 +682,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date()
       };
       
-      // Verificar campos obrigatórios
+      // Verificar campos obrigatórios principais
       const requiredFields = {
         title: "Título do Serviço",
         date: "Data",
         location: "Localização",
-        address: "Endereço",
-        addressNumber: "Número do Endereço",
-        cep: "CEP",
         price: "Valor",
         materialType: "Material"
       };
@@ -747,8 +744,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Adicionar os caminhos dos arquivos aos dados do serviço
       serviceData.projectFiles = uploadedFiles;
       
+      // Log dos dados antes de salvar no banco
+      console.log("Dados que serão salvos no banco:", serviceData);
+      
       // Criar o serviço no banco de dados
       const service = await storage.createService(serviceData);
+      
+      console.log("Serviço criado no banco:", service);
       
       res.status(201).json({
         ...service,
