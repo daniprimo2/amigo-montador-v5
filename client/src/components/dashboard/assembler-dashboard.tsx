@@ -714,11 +714,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   ))}
                   
                   {/* Seção de conversas finalizadas */}
-                  {completedChats.length > 0 && (
+                  {activeServices && activeServices.filter((service: any) => service.status === 'completed' && service.applicationStatus).length > 0 && (
                     <div className="p-4 border-t bg-gray-50">
                       <h4 className="text-md font-medium mb-3 text-gray-700">Ver Conversas Finalizadas</h4>
                       <div className="space-y-3">
-                        {completedChats.map((service: any) => (
+                        {activeServices.filter((service: any) => service.status === 'completed' && service.applicationStatus).map((service: any) => (
                           <div 
                             key={`completed-chat-${service.id}`} 
                             className="bg-white rounded-lg shadow-sm p-3 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
