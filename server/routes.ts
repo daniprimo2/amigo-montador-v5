@@ -280,82 +280,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
-      // Buscar todos os serviços abertos da loja
-      const openServices = await db
-        .select({
-          id: services.id,
-          title: services.title,
-          description: services.description,
-          location: services.location,
-          startDate: services.startDate,
-          price: services.price,
-          status: services.status,
-          storeId: services.storeId
-        })
-        .from(services)
-        .where(
-          and(
-            eq(services.storeId, store.id),
-            eq(services.status, 'open')
-          )
-        );
+      // Usar storage diretamente para evitar problemas com Drizzle
+      const storeServices = await storage.getServicesByStoreId(store.id, 'open');
 
-      // Para cada serviço, verificar se tem candidaturas pendentes
-      const servicesWithPendingApplications = await Promise.all(openServices.map(async (service) => {
-        // Buscar candidaturas pendentes para este serviço
-        const pendingApplications = await db
-          .select()
-          .from(applications)
-          .where(
-            and(
-              eq(applications.serviceId, service.id),
-              eq(applications.status, 'pending')
-            )
-          );
+      const servicesWithPendingApplications = [];
 
-        // Se o serviço tiver candidaturas pendentes, incluir essas informações
-        if (pendingApplications.length > 0) {
-          // Obter informações dos montadores para cada candidatura
-          const applicationsWithAssemblers = await Promise.all(pendingApplications.map(async (app) => {
-            const assembler = await storage.getAssemblerById(app.assemblerId);
+      for (const service of storeServices) {
+        try {
+          // Buscar candidaturas pendentes para este serviço
+          const allApplications = await storage.getApplicationsByServiceId(service.id);
+          const pendingApplications = allApplications.filter(app => app.status === 'pending');
+
+          if (pendingApplications.length > 0) {
+            // Para cada candidatura pendente, obter informações do montador
+            const applicationsWithDetails = [];
             
-            if (assembler) {
-              const assemblerUser = await storage.getUser(assembler.userId);
-              
-              return {
-                ...app,
-                assembler: {
-                  id: app.assemblerId,
-                  name: assemblerUser?.name || 'Montador',
-                  userId: assembler.userId
+            for (const application of pendingApplications) {
+              try {
+                const assembler = await storage.getAssemblerById(application.assemblerId);
+                
+                if (assembler) {
+                  const assemblerUser = await storage.getUser(assembler.userId);
+                  
+                  applicationsWithDetails.push({
+                    ...application,
+                    assembler: {
+                      id: assembler.id,
+                      name: assemblerUser?.name || 'Montador',
+                      userId: assembler.userId
+                    }
+                  });
+                } else {
+                  applicationsWithDetails.push(application);
                 }
-              };
+              } catch (appError) {
+                console.error(`Erro ao processar candidatura ${application.id}:`, appError);
+                applicationsWithDetails.push(application);
+              }
             }
             
-            return app;
-          }));
-          
-          return {
-            ...service,
-            pendingApplications: applicationsWithAssemblers,
-            hasNewApplications: true
-          };
+            // Adicionar o serviço com as candidaturas pendentes à lista
+            servicesWithPendingApplications.push({
+              ...service,
+              pendingApplications: applicationsWithDetails
+            });
+          }
+        } catch (serviceError) {
+          console.error(`Erro ao processar serviço ${service.id}:`, serviceError);
         }
-        
-        // Se não houver candidaturas pendentes, retornar apenas o serviço
-        return {
-          ...service,
-          pendingApplications: [],
-          hasNewApplications: false
-        };
-      }));
-      
-      // Filtrar apenas serviços que têm candidaturas pendentes
-      const servicesWithApplications = servicesWithPendingApplications.filter(
-        service => service.pendingApplications.length > 0
-      );
+      }
 
-      res.json(servicesWithApplications);
+      res.json(servicesWithPendingApplications);
     } catch (error) {
       console.error("Erro ao buscar serviços com candidaturas pendentes:", error);
       res.status(500).json({ message: "Erro ao buscar serviços com candidaturas pendentes" });
@@ -379,31 +354,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
-      // Buscar todos os serviços da loja com status 'in-progress' ou 'completed'
-      // para garantir que conversas permaneçam visíveis mesmo após a finalização
-      const storeServices = await db
-        .select({
-          id: services.id,
-          title: services.title,
-          description: services.description,
-          location: services.location,
-          startDate: services.startDate,
-          price: services.price,
-          status: services.status,
-          storeId: services.storeId
-        })
-        .from(services)
-        .where(
-          and(
-            eq(services.storeId, store.id),
-            // Incluir tanto serviços em andamento quanto já finalizados
-            // para que as conversas não desapareçam após finalização
-            or(
-              eq(services.status, 'in-progress'),
-              eq(services.status, 'completed')
-            )
-          )
-        );
+      // Buscar serviços em progresso e concluídos usando storage
+      const inProgressServices = await storage.getServicesByStoreId(store.id, 'in-progress');
+      const completedServices = await storage.getServicesByStoreId(store.id, 'completed');
+      const storeServices = [...inProgressServices, ...completedServices];
 
       // Para cada serviço, obter a candidatura aceita
       const servicesWithApplication = [];
