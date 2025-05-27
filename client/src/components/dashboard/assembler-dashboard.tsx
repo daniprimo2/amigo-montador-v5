@@ -40,7 +40,7 @@ interface ServiceData {
 }
 
 // Format data for display in the UI
-const formatServiceForDisplay = (service: ServiceData & { startDate?: string; endDate?: string }) => {
+const formatServiceForDisplay = (service: ServiceData & { startDate?: string; endDate?: string; projectFiles?: any }) => {
   return {
     id: service.id,
     title: service.title,
@@ -52,7 +52,9 @@ const formatServiceForDisplay = (service: ServiceData & { startDate?: string; en
     price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
     store: service.store?.name || 'Loja não especificada',
     type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
-    status: service.status // Passar o status do serviço para o componente
+    status: service.status, // Passar o status do serviço para o componente
+    projectFiles: service.projectFiles || [], // Incluir os arquivos do projeto
+    description: service.description // Incluir a descrição se houver
   };
 };
 
