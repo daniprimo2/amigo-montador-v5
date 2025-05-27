@@ -50,16 +50,16 @@ const assemblerStep3Schema = z.object({
   }, {
     message: "Certificados devem ser imagens ou PDF de até 10MB"
   }),
-  // Dados bancários
-  bankName: baseBankAccountSchema.shape.bankName,
-  accountType: baseBankAccountSchema.shape.accountType,
-  accountNumber: baseBankAccountSchema.shape.accountNumber,
-  agency: baseBankAccountSchema.shape.agency,
-  holderName: baseBankAccountSchema.shape.holderName,
-  holderDocumentType: baseBankAccountSchema.shape.holderDocumentType,
-  holderDocumentNumber: baseBankAccountSchema.shape.holderDocumentNumber,
-  pixKey: baseBankAccountSchema.shape.pixKey,
-  pixKeyType: baseBankAccountSchema.shape.pixKeyType,
+  // Dados bancários (opcionais para cadastro)
+  bankName: z.string().optional(),
+  accountType: z.enum(['corrente', 'poupança']).optional(),
+  accountNumber: z.string().optional(),
+  agency: z.string().optional(),
+  holderName: z.string().optional(),
+  holderDocumentType: z.enum(['cpf', 'cnpj']).optional(),
+  holderDocumentNumber: z.string().optional(),
+  pixKey: z.string().optional(),
+  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória', 'nenhuma']).optional(),
   termsAgreed: z.boolean().refine(val => val === true, {
     message: "Você deve concordar com os termos de serviço",
   }),
@@ -199,16 +199,20 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           console.error('Erro detalhado no registro:', error);
           console.error('Tipo do erro:', typeof error);
           console.error('Stack do erro:', error?.stack);
+          console.error('Response completo:', error?.response);
+          console.error('Data do response:', error?.response?.data);
           
           let errorMessage = 'Erro desconhecido';
           
           // Tentar extrair a mensagem de erro de diferentes formas
-          if (error?.message) {
-            errorMessage = error.message;
-          } else if (error?.response?.data?.message) {
+          if (error?.response?.data?.message) {
             errorMessage = error.response.data.message;
+          } else if (error?.message) {
+            errorMessage = error.message;
           } else if (typeof error === 'string') {
             errorMessage = error;
+          } else if (error?.response?.status) {
+            errorMessage = `Erro ${error.response.status}: ${error.response.statusText || 'Erro no servidor'}`;
           }
           
           toast({

@@ -84,9 +84,13 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("=== INÍCIO DO REGISTRO ===");
+      console.log("Dados recebidos:", JSON.stringify(req.body, null, 2));
+      
       // Verificar se o usuário já existe
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log("Usuário já existe:", req.body.username);
         return res.status(400).json({ message: "Usuário já existe" });
       }
 
@@ -139,6 +143,7 @@ export function setupAuth(app: Express) {
 
       // Criar registro específico baseado no tipo (lojista ou montador)
       if (userType === 'lojista') {
+        console.log("Criando dados da loja...");
         const storeData = {
           userId,
           name: req.body.storeName,
@@ -154,7 +159,9 @@ export function setupAuth(app: Express) {
           materialTypes: req.body.materialTypes || []
         };
         await storage.createStore(storeData);
+        console.log("Loja criada com sucesso");
       } else if (userType === 'montador') {
+        console.log("Criando dados do montador...");
         const assemblerData = {
           userId,
           address: req.body.address,
@@ -167,10 +174,17 @@ export function setupAuth(app: Express) {
           rating: 0,
           documents: req.body.documents || {}
         };
+        console.log("Dados do montador a serem criados:", assemblerData);
         await storage.createAssembler(assemblerData);
+        console.log("Montador criado com sucesso");
 
         // Criar informações bancárias se fornecidas
+        console.log("Verificando dados bancários...");
+        console.log("bankName:", req.body.bankName);
+        console.log("accountNumber:", req.body.accountNumber);
+        
         if (req.body.bankName && req.body.accountNumber) {
+          console.log("Criando conta bancária...");
           const bankAccountData = {
             userId,
             bankName: req.body.bankName,
@@ -183,7 +197,11 @@ export function setupAuth(app: Express) {
             pixKey: req.body.pixKey || null,
             pixKeyType: req.body.pixKeyType || null
           };
+          console.log("Dados bancários a serem criados:", bankAccountData);
           await storage.createBankAccount(bankAccountData);
+          console.log("Conta bancária criada com sucesso");
+        } else {
+          console.log("Dados bancários não fornecidos - pulando criação da conta bancária");
         }
       }
 
