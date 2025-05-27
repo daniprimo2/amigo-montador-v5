@@ -168,6 +168,23 @@ export function setupAuth(app: Express) {
           documents: req.body.documents || {}
         };
         await storage.createAssembler(assemblerData);
+
+        // Criar informações bancárias se fornecidas
+        if (req.body.bankName && req.body.accountNumber) {
+          const bankAccountData = {
+            userId,
+            bankName: req.body.bankName,
+            accountType: req.body.accountType,
+            accountNumber: req.body.accountNumber,
+            agency: req.body.agency,
+            holderName: req.body.holderName,
+            holderDocumentType: req.body.holderDocumentType,
+            holderDocumentNumber: req.body.holderDocumentNumber,
+            pixKey: req.body.pixKey || null,
+            pixKeyType: req.body.pixKeyType || null
+          };
+          await storage.createBankAccount(bankAccountData);
+        }
       }
 
       // Login automático após registro
