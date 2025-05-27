@@ -246,7 +246,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   }}
                 />
               ) : (
-                <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
               )}
             </button>
           </div>
