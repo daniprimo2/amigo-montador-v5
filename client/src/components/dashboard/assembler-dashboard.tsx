@@ -833,8 +833,16 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Mostrar apenas serviços em andamento na aba de Chat, os finalizados vão para a aba Finalizados
-    const activeChats = activeServices ? activeServices.filter((service: any) => service.status === 'in-progress') : [];
+    // Mostrar serviços onde o montador tem conversas ativas (candidatura aceita ou serviço em andamento)
+    // Incluir serviços com status 'open' onde há candidatura aceita, 'in-progress' e também 'completed' recentes
+    const activeChats = activeServices ? activeServices.filter((service: any) => {
+      // Mostrar se tem candidatura aceita (independente do status) ou se está em andamento ou completo
+      return service.hasAcceptedApplication || 
+             service.status === 'in-progress' || 
+             service.status === 'completed';
+    }) : [];
+    
+    console.log('[AssemblerDashboard] Serviços disponíveis para chat:', activeChats);
     
     return (
       <div className="mt-2">

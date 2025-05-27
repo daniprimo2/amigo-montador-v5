@@ -251,6 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...service,
           store: storeResult.length > 0 ? storeResult[0] : null,
           applicationStatus: application ? application.status : null,
+          hasAcceptedApplication: application ? application.status === 'accepted' : false,
           hasUnreadMessages: hasUnreadMessages
         };
       }));
