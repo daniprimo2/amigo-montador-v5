@@ -490,19 +490,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
-            {service.status === 'in-progress' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
-                onClick={handleCompleteService}
-                disabled={isCompleting}
-              >
-                <CheckSquare className="h-4 w-4" />
-                {isCompleting ? 'Finalizando...' : 'Montagem Concluída'}
-              </Button>
-            )}
-            
             {/* Botão de Pagamento PIX - aparece quando o serviço está contratado */}
             {(service.status === 'accepted' || service.status === 'in-progress') && service.price && (
               <Button
