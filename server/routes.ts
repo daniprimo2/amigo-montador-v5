@@ -115,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             distance: mockDistance,
             date: service.date || 'Data não especificada',
             price: service.price || 'Preço não informado',
-            store: service.storeName || 'Loja não especificada',
+            store: (service as any).storeName || 'Loja não especificada',
             type: service.materialType || 'Material não especificado',
             status: service.status,
             projectFiles: service.projectFiles || []

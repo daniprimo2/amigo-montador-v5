@@ -9,6 +9,9 @@ export interface ServiceProps {
   id: number;
   title: string;
   location: string;
+  address?: string;
+  addressNumber?: string;
+  cep?: string;
   distance: string;
   date: string;
   price: string;

@@ -58,9 +58,18 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                 <span>{service.price}</span>
               </div>
               
-              <div className="flex items-center text-sm text-gray-600">
-                <MapPin className="h-4 w-4 mr-1.5 text-primary" />
-                <span>{service.location} ({service.distance})</span>
+              <div className="flex items-start text-sm text-gray-600 col-span-2">
+                <MapPin className="h-4 w-4 mr-1.5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <div className="font-medium">{service.location}</div>
+                  {service.address && service.addressNumber && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {service.address}, {service.addressNumber}
+                      {service.cep && ` - CEP: ${service.cep}`}
+                    </div>
+                  )}
+                  <div className="text-xs text-blue-600 mt-1">📍 {service.distance}</div>
+                </div>
               </div>
               
               <div className="flex items-start text-sm text-gray-600 col-span-2">

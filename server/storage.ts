@@ -240,7 +240,31 @@ export class DatabaseStorage implements IStorage {
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     try {
       // Obter serviços disponíveis (status 'open')
-      const servicesList = await db.select()
+      const servicesList = await db.select({
+        services: {
+          id: services.id,
+          storeId: services.storeId,
+          title: services.title,
+          description: services.description,
+          location: services.location,
+          address: services.address,
+          addressNumber: services.addressNumber,
+          cep: services.cep,
+          latitude: services.latitude,
+          longitude: services.longitude,
+          date: services.date,
+          price: services.price,
+          status: services.status,
+          materialType: services.materialType,
+          projectFiles: services.projectFiles,
+          createdAt: services.createdAt,
+          completedAt: services.completedAt
+        },
+        stores: {
+          id: stores.id,
+          name: stores.name
+        }
+      })
         .from(services)
         .leftJoin(stores, eq(services.storeId, stores.id))
         .where(
@@ -277,10 +301,8 @@ export class DatabaseStorage implements IStorage {
         return {
           ...service,
           projectFiles,
-          store: {
-            name: store?.name || 'Loja não especificada'
-          }
-        } as Service;
+          storeName: store?.name || 'Loja não especificada'
+        } as Service & { storeName: string };
       }));
       
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
