@@ -66,7 +66,6 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
         method: 'POST',
         url: `/api/services/${serviceId}/rate`,
         data: {
-          toUserId,
           rating: data.rating,
           comment: data.comment,
         }

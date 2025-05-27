@@ -2833,10 +2833,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const serviceId = Number(req.params.id);
-      const { toUserId, rating, comment } = req.body;
+      const { rating, comment } = req.body;
       
-      if (!toUserId || !rating) {
-        return res.status(400).json({ message: "Dados incompletos para avaliação" });
+      if (!rating) {
+        return res.status(400).json({ message: "Avaliação é obrigatória" });
       }
       
       if (rating < 1 || rating > 5) {
@@ -2854,23 +2854,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Só é possível avaliar serviços concluídos" });
       }
       
-      // Verificar se o usuário que está avaliando está autorizado
-      // (ou é o montador ou é a loja do serviço)
+      // Verificar se o usuário que está avaliando está autorizado e determinar quem será avaliado
       const fromUserId = req.user!.id;
       const userType = req.user!.userType;
-      
+      let toUserId: number;
       let isAuthorized = false;
+      
       if (userType === 'lojista') {
+        // Lojista avaliando montador
         const store = await storage.getStoreByUserId(fromUserId);
         if (store && store.id === service.storeId) {
           isAuthorized = true;
+          // Buscar o montador que trabalhou no serviço
+          const acceptedApplications = await db
+            .select({ assemblerId: applications.assemblerId })
+            .from(applications)
+            .where(
+              and(
+                eq(applications.serviceId, serviceId),
+                eq(applications.status, 'accepted')
+              )
+            )
+            .limit(1);
+          
+          if (acceptedApplications.length > 0) {
+            const assembler = await storage.getAssemblerById(acceptedApplications[0].assemblerId);
+            if (assembler) {
+              toUserId = assembler.userId;
+            } else {
+              return res.status(400).json({ message: "Montador não encontrado para este serviço" });
+            }
+          } else {
+            return res.status(400).json({ message: "Montador não encontrado para este serviço" });
+          }
         }
       } else if (userType === 'montador') {
+        // Montador avaliando lojista
         const assembler = await storage.getAssemblerByUserId(fromUserId);
         if (assembler) {
           const application = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
           if (application && application.status === 'accepted') {
             isAuthorized = true;
+            // Buscar o lojista dono do serviço
+            const store = await storage.getStore(service.storeId);
+            if (store) {
+              toUserId = store.userId;
+            } else {
+              return res.status(400).json({ message: "Loja não encontrada para este serviço" });
+            }
           }
         }
       }
@@ -2880,7 +2911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar se já existe uma avaliação deste usuário para este serviço
-      const existingRating = await storage.getRatingByServiceIdAndUser(serviceId, fromUserId, toUserId);
+      const existingRating = await storage.getRatingByServiceIdAndUser(serviceId, fromUserId, toUserId!);
       if (existingRating) {
         return res.status(400).json({ message: "Você já avaliou este usuário para este serviço" });
       }
@@ -2889,13 +2920,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newRating = await storage.createRating({
         serviceId,
         fromUserId,
-        toUserId,
+        toUserId: toUserId!,
         rating,
         comment
       });
       
       // Notificar o usuário avaliado via WebSocket
-      sendNotification(toUserId, {
+      sendNotification(toUserId!, {
         type: 'new_rating',
         message: `Você recebeu uma nova avaliação para o serviço ${service.title}`,
         serviceId,
