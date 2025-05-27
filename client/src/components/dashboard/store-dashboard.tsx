@@ -612,6 +612,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         location: newService.location.trim(),
         address: newService.address.trim(),
         addressNumber: newService.addressNumber.trim(),
+        cep: newService.cep.trim(),
         date: `${newService.startDate} - ${newService.endDate}`,
         price: priceValue,
         materialType: newService.materialType.trim(),

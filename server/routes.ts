@@ -687,6 +687,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: "Título do Serviço",
         date: "Data",
         location: "Localização",
+        address: "Endereço",
+        addressNumber: "Número do Endereço",
+        cep: "CEP",
         price: "Valor",
         materialType: "Material"
       };
