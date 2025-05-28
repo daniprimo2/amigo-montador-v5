@@ -2633,10 +2633,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // PIX Payment Authentication - Return Canvi Token
+  // PIX Payment Authentication - Generate Canvi Session Token
   app.post("/api/payment/pix/token", async (req, res) => {
     try {
-      console.log("[PIX Token] Iniciando geração de token...");
+      console.log("[PIX Token] Iniciando autenticação com Canvi...");
       
       if (!req.isAuthenticated()) {
         console.log("[PIX Token] Usuário não autenticado");
@@ -2645,26 +2645,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Token] Usuário autenticado:", req.user?.id);
 
-      // Return the Canvi API token from environment
-      const canviToken = process.env.CANVI_API_TOKEN;
+      // Canvi API credentials
+      const clientId = process.env.CANVI_CLIENT_ID || "FA854108C1FF62";
+      const privateKey = process.env.CANVI_PRIVATE_KEY || "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
       
-      console.log("[PIX Token] Token encontrado:", !!canviToken);
+      console.log("[PIX Token] Autenticando com Canvi API...");
       
-      if (!canviToken) {
-        console.log("[PIX Token] ERRO: Token não configurado");
+      // Authenticate with Canvi to get session token
+      const authResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/token', {
+        client_id: clientId,
+        private_key: privateKey
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log("[PIX Token] Resposta da autenticação:", authResponse.status);
+      
+      // Extract token from response
+      const sessionToken = authResponse.data.token || authResponse.data.access_token;
+      
+      if (!sessionToken) {
+        console.log("[PIX Token] ERRO: Token não recebido da API Canvi");
         return res.status(500).json({ 
           success: false, 
-          message: "Token de autenticação PIX não configurado" 
+          message: "Falha na autenticação com gateway de pagamento" 
         });
       }
       
-      console.log("[PIX Token] Sucesso - retornando token");
+      console.log("[PIX Token] Sucesso - token obtido da Canvi");
       res.json({
         success: true,
-        token: canviToken
+        token: sessionToken
       });
     } catch (error) {
-      console.error("[PIX Token] Erro ao gerar token PIX:", error);
+      console.error("[PIX Token] Erro ao autenticar com Canvi:", error);
+      console.error("[PIX Token] Detalhes do erro:", error.response?.data);
       res.status(500).json({ 
         success: false, 
         message: "Erro ao gerar token de autenticação PIX" 
