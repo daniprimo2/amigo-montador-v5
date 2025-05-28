@@ -2662,12 +2662,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log("[PIX Token] Resposta da autenticação:", authResponse.status);
+      console.log("[PIX Token] Dados recebidos:", authResponse.data);
       
-      // Extract token from response
-      const sessionToken = authResponse.data.token || authResponse.data.access_token;
+      // Extract token from response (Canvi returns the token in the 'token' field)
+      const sessionToken = authResponse.data.token;
       
       if (!sessionToken) {
         console.log("[PIX Token] ERRO: Token não recebido da API Canvi");
+        console.log("[PIX Token] Resposta completa:", authResponse.data);
         return res.status(500).json({ 
           success: false, 
           message: "Falha na autenticação com gateway de pagamento" 
