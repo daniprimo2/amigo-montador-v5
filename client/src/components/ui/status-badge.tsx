@@ -6,6 +6,7 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' }) => {
+  // Mapeamento padronizado de cores para todos os tipos de usuário
   const statusMap: Record<string, { bg: string; text: string; label: string }> = {
     open: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Em aberto' },
     'in-progress': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Em andamento' },
@@ -19,7 +20,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
   const sizeClasses = size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2 py-1 text-xs';
 
   return (
-    <span className={`${sizeClasses} ${bg} ${text} rounded-full font-medium`}>
+    <span className={`inline-flex items-center ${sizeClasses} ${bg} ${text} rounded-full font-medium`}>
       {label}
     </span>
   );
