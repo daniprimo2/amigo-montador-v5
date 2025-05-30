@@ -3343,13 +3343,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const service = await storage.getServiceById(serviceId);
-      if (!service || !service.paymentReference) {
-        return res.status(404).json({ message: "Serviço ou referência de pagamento não encontrado" });
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
       }
+
+      // Se não há referência de pagamento, criar uma para simulação
+      let paymentReference = service.paymentReference;
+      if (!paymentReference) {
+        paymentReference = `service_${serviceId}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        
+        // Atualizar serviço com a referência de pagamento
+        await storage.updateService(serviceId, { paymentReference });
+      }
+
+      console.log(`[PIX Simulação] Simulando pagamento para serviço ${serviceId} com referência ${paymentReference}`);
 
       // Simular webhook de confirmação
       const webhookData = {
-        identificador_externo: service.paymentReference,
+        identificador_externo: paymentReference,
         status: 'CONCLUIDO',
         valor: Math.round(parseFloat(service.price || '0') * 100),
         id_invoice_pix: `sim_${Date.now()}`
