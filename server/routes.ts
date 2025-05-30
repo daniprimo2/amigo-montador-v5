@@ -2880,12 +2880,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         token: sessionToken
       });
-    } catch (error) {
-      console.error("[PIX Token] Erro ao autenticar com Canvi:", error);
-      console.error("[PIX Token] Detalhes do erro:", error.response?.data);
+    } catch (error: any) {
+      console.error("[PIX Token] Erro ao autenticar com Canvi:", error.message);
+      if (error.response) {
+        console.error("[PIX Token] Status da resposta:", error.response.status);
+        console.error("[PIX Token] Dados da resposta:", error.response.data);
+        console.error("[PIX Token] Headers da resposta:", error.response.headers);
+      }
       res.status(500).json({ 
         success: false, 
-        message: "Erro ao gerar token de autenticação PIX" 
+        message: "Erro ao gerar token de autenticação PIX",
+        details: error.response?.data || error.message
       });
     }
   });
@@ -2969,9 +2974,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration time (1 hour from now)
       const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
 
-      // Generate unique identifiers as specified in documentation
-      const identificadorExterno = `ba1231fd-060d-4dfd-b702-e54f0ddc8fc${Date.now().toString().slice(-2)}`;
-      const identificadorMovimento = `f8097309-34b3-468b-99e1-cbdbdec123${Date.now().toString().slice(-2)}`;
+      // Generate unique identifiers for each transaction
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const identificadorExterno = `service_${serviceId}_${timestamp}_${randomSuffix}`;
+      const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
       const pixPaymentData = {
@@ -3009,27 +3016,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store payment reference in service for tracking
       await storage.updateService(serviceId, {
-        paymentReference: uniqueReference,
+        paymentReference: identificadorExterno,
         paymentStatus: 'pending'
       });
 
       // Extract data from Canvi API response structure
       const responseData = paymentResponse.data.data || paymentResponse.data;
-      const qrCodeData = responseData.qrcode || responseData.qr_code || responseData.qr_code_base64;
-      const pixCodeData = responseData.brcode || responseData.pix_copia_e_cola || responseData.codigo_pix;
+      const qrCodeData = responseData.qrcode;
+      const pixCodeData = responseData.brcode;
+      const paymentId = responseData.id_invoice_pix || responseData.tx_id || responseData.id;
       
       console.log("[PIX Create] QR Code encontrado:", !!qrCodeData);
       console.log("[PIX Create] PIX Code encontrado:", !!pixCodeData);
+      console.log("[PIX Create] Payment ID:", paymentId);
       console.log("[PIX Create] Response data structure:", JSON.stringify(responseData, null, 2));
+
+      if (!qrCodeData || !pixCodeData) {
+        console.log("[PIX Create] ERRO: QR Code ou PIX Code não encontrado na resposta");
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao gerar código PIX - dados incompletos",
+          details: "QR Code ou PIX Code não retornado pela API"
+        });
+      }
 
       res.json({
         success: true,
         pixCode: pixCodeData,
         qrCode: qrCodeData,
-        reference: uniqueReference,
+        reference: identificadorExterno,
         amount: parseFloat(amount),
         expiresAt: expirationDate.toISOString(),
-        paymentId: paymentResponse.data.id || paymentResponse.data.identificador
+        paymentId: paymentId
       });
     } catch (error) {
       console.error("Erro ao criar pagamento PIX:", error);
