@@ -234,7 +234,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json(formattedServices);
       } else {
-        res.json(servicesList);
+        // Formatar dados também para lojistas, incluindo startDate e endDate
+        const formattedServices = servicesList.map(service => ({
+          ...service,
+          startDate: service.startDate ? service.startDate.toISOString() : null,
+          endDate: service.endDate ? service.endDate.toISOString() : null
+        }));
+        
+        res.json(formattedServices);
       }
     } catch (error) {
       console.error("Erro ao buscar serviços:", error);
