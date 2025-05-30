@@ -196,12 +196,17 @@ export function PixPaymentDialog({
 
   // Start automatic payment status polling
   const startPaymentStatusPolling = (paymentId: string, token: string) => {
+    if (!paymentId || !token) {
+      console.log("PIX: ID do pagamento ou token não disponível para verificação");
+      return;
+    }
+    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     
     intervalRef.current = setInterval(() => {
-      if (!paymentCompleted) {
+      if (!paymentCompleted && paymentId && token) {
         checkPaymentStatusMutation.mutate({ paymentId, token });
       }
     }, 5000); // Check every 5 seconds
