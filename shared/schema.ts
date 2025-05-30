@@ -54,7 +54,7 @@ export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   storeId: integer("store_id").notNull().references(() => stores.id),
   title: text("title").notNull(),
-  description: text("description"),
+  description: text("description").notNull(),
   location: text("location").notNull(), // Cidade/UF
   address: text("address"), // Endereço (rua)
   addressNumber: text("address_number"), // Número do endereço
@@ -66,7 +66,7 @@ export const services = pgTable("services", {
   price: text("price").notNull(),
   status: text("status").notNull().default("open"), // 'open', 'in-progress', 'completed', 'cancelled'
   materialType: text("material_type").notNull(),
-  projectFiles: jsonb("project_files"), // URLs para arquivos do projeto
+  projectFiles: jsonb("project_files").notNull(), // URLs para arquivos do projeto
   paymentReference: text("payment_reference"), // Referência do pagamento PIX
   paymentStatus: text("payment_status").default("pending"), // 'pending', 'proof_submitted', 'confirmed', 'rejected'
   paymentProof: text("payment_proof"), // Comprovante de pagamento enviado

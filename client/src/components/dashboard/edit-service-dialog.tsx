@@ -203,11 +203,24 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
       }
       
       // Verificar campos obrigatórios
-      if (!editedService.title || !editedService.price || !editedService.materialType || 
-          !editedService.startDate || !editedService.endDate) {
+      const missingFields = [];
+      
+      if (!editedService.title || !editedService.title.trim()) missingFields.push("Título");
+      if (!editedService.description || !editedService.description.trim()) missingFields.push("Descrição");
+      if (!editedService.price) missingFields.push("Valor");
+      if (!editedService.materialType || !editedService.materialType.trim()) missingFields.push("Material");
+      if (!editedService.startDate) missingFields.push("Data de Início");
+      if (!editedService.endDate) missingFields.push("Data de Fim");
+      
+      // Verificar se há pelo menos um arquivo (existente ou novo)
+      if (projectFiles.length === 0 && (!newFiles || newFiles.length === 0)) {
+        missingFields.push("Arquivo PDF");
+      }
+      
+      if (missingFields.length > 0) {
         toast({
-          title: "Campos obrigatórios",
-          description: "Por favor, preencha todos os campos obrigatórios.",
+          title: "Campos obrigatórios não preenchidos",
+          description: `Por favor, preencha os seguintes campos: ${missingFields.join(", ")}.`,
           variant: "destructive"
         });
         return;
@@ -319,7 +332,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
+            <Label htmlFor="description" className="text-sm font-medium">Descrição *</Label>
             <Textarea 
               id="description"
               name="description"
@@ -388,7 +401,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
           
           {/* Seção de gerenciamento de arquivos */}
           <div className="mt-2">
-            <Label className="text-sm font-medium">Arquivos do Projeto</Label>
+            <Label className="text-sm font-medium">Arquivos do Projeto *</Label>
             
             {/* Arquivos existentes */}
             {projectFiles.length > 0 ? (

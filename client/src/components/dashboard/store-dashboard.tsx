@@ -504,6 +504,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     const missingFields = [];
     
     if (!newService.title) missingFields.push("Título do Serviço");
+    if (!newService.description || !newService.description.trim()) missingFields.push("Descrição");
     if (!newService.cep) missingFields.push("CEP");
     if (!newService.addressNumber) missingFields.push("Número do Endereço");
     if (!newService.location) missingFields.push("Cidade/UF");
@@ -511,6 +512,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (!newService.endDate) missingFields.push("Data de Fim");
     if (!newService.price) missingFields.push("Valor");
     if (!newService.materialType) missingFields.push("Material");
+    if (!projectFile || projectFile.length === 0) missingFields.push("Arquivo PDF");
     
     // Se houver campos obrigatórios faltando, exibe mensagem detalhada
     if (missingFields.length > 0) {
