@@ -85,8 +85,11 @@ const baseBankAccountSchema = z.object({
   }),
   holderDocumentNumber: z.string()
     .min(1, 'Número do documento é obrigatório'),
-  pixKey: z.string().optional(),
-  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória', 'nenhuma']).optional(),
+  pixKey: z.string()
+    .min(1, 'Chave PIX é obrigatória para receber pagamentos'),
+  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória'], {
+    required_error: 'Tipo de chave PIX é obrigatório',
+  }),
 });
 
 // Schema completo com validações complexas
@@ -103,7 +106,7 @@ export const bankAccountSchema = baseBankAccountSchema.refine((data) => {
   path: ["holderDocumentNumber"],
 }).refine((data) => {
   // Validar chave PIX se fornecida
-  if (!data.pixKey || !data.pixKeyType || data.pixKeyType === 'nenhuma') return true;
+  if (!data.pixKey || !data.pixKeyType) return true;
   
   switch (data.pixKeyType) {
     case 'cpf':

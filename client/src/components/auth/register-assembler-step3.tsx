@@ -18,16 +18,16 @@ const assemblerStep3Schema = z.object({
   identityBack: z.any().optional(),
   proofOfAddress: z.any().optional(),
   certificates: z.any().optional(),
-  // Dados bancários (opcionais para cadastro)
-  bankName: z.string().optional(),
-  accountType: z.enum(['corrente', 'poupança']).optional(),
-  accountNumber: z.string().optional(),
-  agency: z.string().optional(),
-  holderName: z.string().optional(),
-  holderDocumentType: z.enum(['cpf', 'cnpj']).optional(),
-  holderDocumentNumber: z.string().optional(),
-  pixKey: z.string().optional(),
-  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória', 'nenhuma']).optional(),
+  // Dados bancários (obrigatórios para PIX)
+  bankName: baseBankAccountSchema.shape.bankName,
+  accountType: baseBankAccountSchema.shape.accountType,
+  accountNumber: baseBankAccountSchema.shape.accountNumber,
+  agency: baseBankAccountSchema.shape.agency,
+  holderName: baseBankAccountSchema.shape.holderName,
+  holderDocumentType: baseBankAccountSchema.shape.holderDocumentType,
+  holderDocumentNumber: baseBankAccountSchema.shape.holderDocumentNumber,
+  pixKey: baseBankAccountSchema.shape.pixKey,
+  pixKeyType: baseBankAccountSchema.shape.pixKeyType,
   termsAgreed: z.boolean().refine(val => val === true, {
     message: "Você deve concordar com os termos de serviço",
   }),
@@ -71,7 +71,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
       holderDocumentType: 'cpf',
       holderDocumentNumber: '',
       pixKey: '',
-      pixKeyType: undefined,
+      pixKeyType: 'cpf',
       ...defaultValues,
     },
   });
@@ -443,7 +443,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
               )}
             />
             
-            {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
+            {form.watch('pixKeyType') && (
               <FormField
                 control={form.control}
                 name="pixKey"
