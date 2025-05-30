@@ -212,35 +212,35 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         </div>
         
         {/* Descrição do serviço */}
-        {service.description && (
-          <div className="mb-3 p-2 bg-gray-50 rounded-md">
-            <h5 className="text-xs font-medium text-gray-700 mb-1">Descrição:</h5>
-            <p className="text-xs text-gray-600 line-clamp-2">{service.description}</p>
+        {service.description && service.description.trim() && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h5 className="text-sm font-semibold text-blue-800 mb-2">Descrição:</h5>
+            <p className="text-sm text-blue-700 leading-relaxed">{service.description}</p>
           </div>
         )}
 
         {/* Material */}
-        {service.materialType && (
-          <div className="mb-3">
-            <span className="text-xs font-medium text-gray-700">Material: </span>
-            <span className="text-xs text-gray-600 bg-blue-50 px-2 py-1 rounded-full">{service.materialType}</span>
+        {service.materialType && service.materialType.trim() && (
+          <div className="mb-3 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+            <span className="text-sm font-semibold text-purple-800">Material: </span>
+            <span className="text-sm text-purple-700 bg-purple-100 px-3 py-1 rounded-full font-medium">{service.materialType}</span>
           </div>
         )}
 
         {/* Arquivos PDF anexados */}
         {service.projectFiles && service.projectFiles.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center">
-              <FileText className="h-4 w-4 text-green-600 mr-1" />
-              <span className="text-xs font-medium text-green-700">
+          <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center mb-2">
+              <FileText className="h-5 w-5 text-green-600 mr-2" />
+              <span className="text-sm font-semibold text-green-800">
                 {service.projectFiles.length} arquivo{service.projectFiles.length > 1 ? 's' : ''} PDF anexado{service.projectFiles.length > 1 ? 's' : ''}
               </span>
             </div>
-            <div className="mt-1 space-y-1">
+            <div className="space-y-2">
               {service.projectFiles.map((file, index) => (
-                <div key={index} className="text-xs text-gray-600 bg-green-50 px-2 py-1 rounded-md flex items-center">
-                  <FileText className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
-                  <span className="truncate">{file.name}</span>
+                <div key={index} className="text-sm text-green-700 bg-green-100 px-3 py-2 rounded-md flex items-center border border-green-300">
+                  <FileText className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                  <span className="truncate font-medium">{file.name}</span>
                 </div>
               ))}
             </div>
