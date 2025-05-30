@@ -327,9 +327,7 @@ export class DatabaseStorage implements IStorage {
           const { geocodeFromCEP, calculateDistance } = await import('./geocoding');
           
           // Importar função para obter coordenadas da cidade
-          const geocodingModule = await import('./geocoding');
-          const getCityCoordinates = geocodingModule.default?.getCityCoordinates || 
-                                   (geocodingModule as any).getCityCoordinates;
+          const { getCityCoordinates } = await import('./geocoding');
           
           if (typeof getCityCoordinates === 'function') {
             // Obter coordenadas aproximadas do montador baseado na cidade/estado
