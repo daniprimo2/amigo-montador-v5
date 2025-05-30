@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { 
@@ -59,6 +60,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('dados-pessoais');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -257,6 +259,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         });
       } else {
         setProfilePhoto(data.photoUrl);
+        // Atualizar dados do perfil para refletir a mudança
+        await fetchProfileData();
+        // Invalidar cache do usuário para atualizar a foto em todos os componentes
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
         toast({
           title: 'Sucesso',
           description: 'Foto de perfil atualizada com sucesso!',
