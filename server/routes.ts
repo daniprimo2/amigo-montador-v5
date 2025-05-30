@@ -2829,6 +2829,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // PIX Token Test - Direct test without authentication
+  app.post("/api/payment/pix/token-test", async (req, res) => {
+    try {
+      console.log("[PIX Token Test] Testando autenticação diretamente com Canvi...");
+
+      // Canvi API credentials
+      const clientId = "FA854108C1FF62";
+      const privateKey = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      
+      const apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
+      
+      console.log("[PIX Token Test] URL:", apiUrl);
+      console.log("[PIX Token Test] Client ID:", clientId);
+      console.log("[PIX Token Test] Private Key:", privateKey.substring(0, 10) + "...");
+      
+      const authResponse = await axios.post(apiUrl, {
+        client_id: clientId,
+        private_key: privateKey
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiIwNjA3YmRhZi00Zjk0LTQzZTItOTZhNy02Yzk1ZDcyMmI4MWEiLCJleHAiOjE3NDg4ODk2NTksImlhdCI6MTc0ODI4NDg1OX0.IixKnrEjEGxaa61NKz31TT4G273_gwMVKqwNIWSsfm0; token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiJhZWE2MWMwYi00YjBmLTRlOTMtODE4Yy1hMGY3MjNhNjllMzAiLCJleHAiOjE3NDkyMzI5NjgsImlhdCI6MTc0ODYyODE2OH0.t6VGncgXRJJpa5rM7_YCQhech4yCH3VW6BdWQhh-39M'
+        }
+      });
+      
+      console.log("[PIX Token Test] Status da resposta:", authResponse.status);
+      console.log("[PIX Token Test] Dados recebidos:", authResponse.data);
+      console.log("[PIX Token Test] Headers da resposta:", JSON.stringify(authResponse.headers, null, 2));
+      
+      const sessionToken = authResponse.data.token;
+      
+      if (!sessionToken) {
+        console.log("[PIX Token Test] ERRO: Token não recebido");
+        return res.status(500).json({
+          success: false,
+          message: "Token não recebido da API Canvi",
+          responseData: authResponse.data
+        });
+      }
+      
+      res.json({
+        success: true,
+        token: sessionToken,
+        fullResponse: authResponse.data
+      });
+    } catch (error: any) {
+      console.error("[PIX Token Test] Erro:", error.message);
+      if (error.response) {
+        console.error("[PIX Token Test] Status:", error.response.status);
+        console.error("[PIX Token Test] Dados:", error.response.data);
+        console.error("[PIX Token Test] Headers:", error.response.headers);
+      }
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao testar token PIX",
+        details: error.response?.data || error.message
+      });
+    }
+  });
+
   // PIX Payment Authentication - Generate Canvi Session Token
   app.post("/api/payment/pix/token", async (req, res) => {
     try {
