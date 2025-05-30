@@ -116,6 +116,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     queryKey: ['/api/services'],
     refetchOnWindowFocus: false
   });
+
+  // Buscar avaliações pendentes
+  const pendingEvaluationsQuery = useQuery({
+    queryKey: ['/api/services/pending-evaluations'],
+    refetchOnWindowFocus: false
+  });
+
+  // Verificar se há avaliações pendentes quando a dashboard carrega
+  useEffect(() => {
+    if (pendingEvaluationsQuery.data?.hasPendingEvaluations) {
+      setShowPendingEvaluations(true);
+    }
+  }, [pendingEvaluationsQuery.data]);
   
   // Buscar serviços com candidaturas aceitas
   const servicesWithApplicationsQuery = useQuery({
