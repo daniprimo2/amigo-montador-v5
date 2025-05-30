@@ -105,6 +105,10 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         phone: step1Data.phone,
         userType: 'montador' as const,
         
+        // Dados de documento do step1 (CPF/CNPJ para PIX)
+        documentType: step1Data.documentType,
+        documentNumber: step1Data.documentNumber,
+        
         // Dados específicos do montador
         address: step2Data?.address || 'Endereço não informado',
         city: step2Data?.city || 'Cidade não informada',
