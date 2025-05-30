@@ -12,7 +12,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   userType: text("user_type").notNull(), // 'lojista' ou 'montador'
   profilePhotoUrl: text("profile_photo_url").notNull(), // URL da foto de perfil
-  profileData: jsonb("profile_data").notNull(), // Dados adicionais específicos para cada tipo de usuário
+  profileData: jsonb("profile_data"), // Dados adicionais específicos para cada tipo de usuário
   createdAt: timestamp("created_at").defaultNow(),
 });
 
