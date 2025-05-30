@@ -3083,9 +3083,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert amount to centavos (multiply by 100 and remove decimals)
       const valorEmCentavos = Math.round(parseFloat(amount) * 100);
       
+      // Truncate service title to ensure description fits within 37 character limit
+      const maxTitleLength = 37 - "Pagamento: ".length; // "Pagamento: " has 11 chars
+      const truncatedTitle = service.title.length > maxTitleLength 
+        ? service.title.substring(0, maxTitleLength - 3) + "..."
+        : service.title;
+
       const pixPaymentData = {
         valor: parseFloat(amount), // Use valor decimal, não centavos
-        descricao: `Pagamento do serviço: ${service.title}`,
+        descricao: `Pagamento: ${truncatedTitle}`,
         tipo_transacao: "pixStaticCashin",
         texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador",
         identificador_externo: identificadorExterno,
