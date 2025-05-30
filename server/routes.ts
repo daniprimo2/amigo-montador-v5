@@ -2850,15 +2850,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[PIX Token] Autenticando com Canvi API...");
       
-      // Authenticate with Canvi to get session token
-      const authResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/token', {
-        client_id: clientId,
-        private_key: privateKey
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      // Try production endpoint first, then fallback to homolog
+      let authResponse;
+      let apiUrl = 'https://gateway.service-canvi.com.br/bt/token'; // Production endpoint
+      
+      console.log("[PIX Token] Tentando endpoint de produção...");
+      
+      try {
+        authResponse = await axios.post(apiUrl, {
+          client_id: clientId,
+          private_key: privateKey
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (prodError: any) {
+        console.log("[PIX Token] Erro no endpoint de produção:", prodError.response?.data);
+        console.log("[PIX Token] Tentando endpoint de homologação...");
+        
+        // Fallback to homolog endpoint
+        apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
+        authResponse = await axios.post(apiUrl, {
+          client_id: clientId,
+          private_key: privateKey
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       console.log("[PIX Token] Resposta da autenticação:", authResponse.status);
       console.log("[PIX Token] Dados recebidos:", authResponse.data);
