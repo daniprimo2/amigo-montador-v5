@@ -40,6 +40,34 @@ const validatePhone = (phone: string): boolean => {
   return cleanPhone.length === 10 || cleanPhone.length === 11;
 };
 
+// Função para validar CNPJ
+const validateCNPJ = (cnpj: string): boolean => {
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  
+  if (cleanCNPJ.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false; // Evita CNPJs com todos os dígitos iguais
+  
+  // Validação do primeiro dígito verificador
+  let sum = 0;
+  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights1[i];
+  }
+  let remainder = sum % 11;
+  const digit1 = remainder < 2 ? 0 : 11 - remainder;
+  if (digit1 !== parseInt(cleanCNPJ.charAt(12))) return false;
+  
+  // Validação do segundo dígito verificador
+  sum = 0;
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights2[i];
+  }
+  remainder = sum % 11;
+  const digit2 = remainder < 2 ? 0 : 11 - remainder;
+  return digit2 === parseInt(cleanCNPJ.charAt(13));
+};
+
 // Função para validar CEP
 const validateZipCode = (zipCode: string): boolean => {
   const cleanZipCode = zipCode.replace(/\D/g, '');
@@ -54,6 +82,20 @@ const assemblerStep1Schema = z.object({
   cpf: z.string()
     .min(1, 'CPF é obrigatório')
     .refine(validateCPF, 'CPF inválido'),
+  documentType: z.enum(['cpf', 'cnpj'], {
+    required_error: 'Tipo de documento é obrigatório',
+  }),
+  documentNumber: z.string()
+    .min(1, 'Número do documento é obrigatório')
+    .refine((value, ctx) => {
+      const documentType = ctx.parent.documentType;
+      if (documentType === 'cpf') {
+        return validateCPF(value);
+      } else if (documentType === 'cnpj') {
+        return validateCNPJ(value);
+      }
+      return true;
+    }, 'Documento inválido'),
   phone: z.string()
     .min(1, 'Telefone é obrigatório')
     .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
@@ -122,6 +164,8 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
     defaultValues: {
       name: '',
       cpf: '',
+      documentType: 'cpf' as const,
+      documentNumber: '',
       phone: '',
       zipCode: '',
       address: '',

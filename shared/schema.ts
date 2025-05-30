@@ -45,6 +45,8 @@ export const assemblers = pgTable("assemblers", {
   workRadius: integer("work_radius").default(20),
   rating: integer("rating"),
   documents: jsonb("documents"), // URLs para documentos
+  documentType: text("document_type"), // 'cpf' ou 'cnpj'
+  documentNumber: text("document_number"), // CPF: XXX.XXX.XXX-XX ou CNPJ: XX.XXX.XXX/XXXX-XX
 });
 
 // Serviços
