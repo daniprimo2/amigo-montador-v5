@@ -235,22 +235,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(formattedServices);
       } else {
         // Formatar dados também para lojistas, incluindo startDate e endDate
-        const formattedServices = servicesList.map(service => {
-          console.log(`[DEBUG] Formatando serviço ${service.id}:`, {
-            startDate: service.startDate,
-            endDate: service.endDate,
-            startDateFormatted: service.startDate ? service.startDate.toISOString() : null,
-            endDateFormatted: service.endDate ? service.endDate.toISOString() : null
-          });
-          
-          return {
-            ...service,
-            startDate: service.startDate ? service.startDate.toISOString() : null,
-            endDate: service.endDate ? service.endDate.toISOString() : null
-          };
-        });
+        const formattedServices = servicesList.map(service => ({
+          ...service,
+          startDate: service.startDate ? service.startDate.toISOString() : null,
+          endDate: service.endDate ? service.endDate.toISOString() : null
+        }));
         
-        console.log(`[DEBUG] Enviando ${formattedServices.length} serviços formatados para lojista`);
         res.json(formattedServices);
       }
     } catch (error) {

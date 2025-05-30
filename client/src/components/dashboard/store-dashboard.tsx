@@ -692,6 +692,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       title: service.title,
       location: service.location,
       date: service.date,
+      startDate: service.startDate,
+      endDate: service.endDate,
       price: service.price,
       // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
