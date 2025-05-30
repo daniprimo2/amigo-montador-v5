@@ -2865,7 +2865,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           private_key: privateKey
         }, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cookie': 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiIwNjA3YmRhZi00Zjk0LTQzZTItOTZhNy02Yzk1ZDcyMmI4MWEiLCJleHAiOjE3NDg4ODk2NTksImlhdCI6MTc0ODI4NDg1OX0.IixKnrEjEGxaa61NKz31TT4G273_gwMVKqwNIWSsfm0; token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzaWQiOiJhZWE2MWMwYi00YjBmLTRlOTMtODE4Yy1hMGY3MjNhNjllMzAiLCJleHAiOjE3NDkyMzI5NjgsImlhdCI6MTc0ODYyODE2OH0.t6VGncgXRJJpa5rM7_YCQhech4yCH3VW6BdWQhh-39M'
           }
         });
         
