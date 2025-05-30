@@ -2968,6 +2968,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Format document number according to Canvi API requirements
+      const formatDocumentNumber = (number: string, type: string) => {
+        // Remove any existing formatting
+        const cleanNumber = number.replace(/[^\d]/g, '');
+        
+        if (type === 'cpf' && cleanNumber.length === 11) {
+          // Format CPF: XXX.XXX.XXX-XX
+          return cleanNumber.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        } else if (type === 'cnpj' && cleanNumber.length === 14) {
+          // Format CNPJ: XX.XXX.XXX/XXXX-XX
+          return cleanNumber.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        }
+        
+        // Return original if formatting fails
+        return number;
+      };
+
+      const formattedDocumentNumber = formatDocumentNumber(documentNumber, documentType);
+
       // Generate unique reference for this payment
       const uniqueReference = `service_${serviceId}_${Date.now()}`;
       
@@ -2999,7 +3018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cliente: {
           nome: user.name,
           tipo_documento: documentType === 'cpf' ? 'cpf' : 'cnpj',
-          numero_documento: documentNumber,
+          numero_documento: formattedDocumentNumber,
           "e-mail": user.email
         }
       };
