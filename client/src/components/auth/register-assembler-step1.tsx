@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FileUpload from '../ui/file-upload';
 import InputMask from 'react-input-mask';
 import { useToast } from '@/hooks/use-toast';
@@ -86,16 +87,7 @@ const assemblerStep1Schema = z.object({
     required_error: 'Tipo de documento é obrigatório',
   }),
   documentNumber: z.string()
-    .min(1, 'Número do documento é obrigatório')
-    .refine((value, ctx) => {
-      const documentType = ctx.parent.documentType;
-      if (documentType === 'cpf') {
-        return validateCPF(value);
-      } else if (documentType === 'cnpj') {
-        return validateCNPJ(value);
-      }
-      return true;
-    }, 'Documento inválido'),
+    .min(1, 'Número do documento é obrigatório'),
   phone: z.string()
     .min(1, 'Telefone é obrigatório')
     .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
@@ -142,6 +134,16 @@ const assemblerStep1Schema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
+}).refine((data) => {
+  if (data.documentType === 'cpf') {
+    return validateCPF(data.documentNumber);
+  } else if (data.documentType === 'cnpj') {
+    return validateCNPJ(data.documentNumber);
+  }
+  return true;
+}, {
+  message: "Documento inválido",
+  path: ["documentNumber"],
 });
 
 export type AssemblerStep1Data = z.infer<typeof assemblerStep1Schema>;
@@ -304,6 +306,53 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
               </FormItem>
             )}
           />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="documentType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Documento para PIX</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="documentNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {form.watch('documentType') === 'cnpj' ? 'CNPJ' : 'CPF'} para PIX
+                  </FormLabel>
+                  <FormControl>
+                    <InputMask
+                      mask={form.watch('documentType') === 'cnpj' ? '99.999.999/9999-99' : '999.999.999-99'}
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder={form.watch('documentType') === 'cnpj' ? '00.000.000/0000-00' : '000.000.000-00'}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           
           <FormField
             control={form.control}
