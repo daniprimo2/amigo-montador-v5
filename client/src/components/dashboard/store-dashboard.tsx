@@ -1305,7 +1305,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Descrição *</Label>
               <Textarea 
                 id="description"
                 name="description"
