@@ -213,16 +213,38 @@ export function PixPaymentDialog({
   };
 
   // Send automatic payment proof to chat
-  const sendAutomaticPaymentProof = (paymentData: any) => {
-    const automaticProof = `🎉 PAGAMENTO CONFIRMADO AUTOMATICAMENTE VIA PIX!\n\n` +
-      `💰 Valor: R$ ${amount}\n` +
-      `🏷️ Serviço: ${serviceTitle}\n` +
-      `📅 Data: ${new Date().toLocaleString('pt-BR')}\n` +
-      `🔗 Referência: ${pixData?.reference}\n` +
-      `✅ Status: CONFIRMADO\n\n` +
-      `Este comprovante foi gerado automaticamente pelo sistema após a confirmação do pagamento PIX.`;
+  const sendAutomaticPaymentProof = async (paymentData: any) => {
+    try {
+      // Create a visual payment proof by calling the backend to generate the image
+      const response = await apiRequest({
+        method: 'POST',
+        url: '/api/payment/pix/confirm',
+        data: {
+          serviceId,
+          paymentProof: `Pagamento confirmado automaticamente via PIX - Valor: R$ ${amount} - Referência: ${pixData?.reference}`,
+          paymentReference: pixData?.reference,
+          isAutomatic: true
+        }
+      });
 
-    submitProofMutation.mutate();
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          toast({
+            title: "Comprovante Enviado",
+            description: "Comprovante de pagamento automático enviado no chat!",
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/messages', serviceId] });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao enviar comprovante automático:", error);
+      toast({
+        title: "Aviso",
+        description: "Pagamento confirmado, mas houve um problema ao enviar o comprovante no chat.",
+        variant: "default"
+      });
+    }
   };
 
   // Clean up interval on unmount or dialog close

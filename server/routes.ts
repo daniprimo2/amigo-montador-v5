@@ -11,6 +11,90 @@ import path from 'path';
 import fileUpload from 'express-fileupload';
 import axios from 'axios';
 
+// Function to generate payment proof image as SVG
+function generatePaymentProofImage(data: {
+  serviceId: number;
+  amount: string;
+  reference: string | null;
+  payerName: string;
+  timestamp: string;
+}): string {
+  const svg = `
+    <svg width="400" height="500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Background -->
+      <rect width="400" height="500" fill="url(#bg)" rx="15"/>
+      
+      <!-- Header -->
+      <rect x="20" y="20" width="360" height="80" fill="white" rx="10" opacity="0.95"/>
+      <text x="200" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1f2937">
+        COMPROVANTE PIX
+      </text>
+      <text x="200" y="75" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">
+        Amigo Montador
+      </text>
+      
+      <!-- Payment Details -->
+      <rect x="20" y="120" width="360" height="320" fill="white" rx="10" opacity="0.95"/>
+      
+      <!-- Status -->
+      <rect x="40" y="140" width="120" height="30" fill="#10b981" rx="15"/>
+      <text x="100" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">
+        CONFIRMADO
+      </text>
+      
+      <!-- Value -->
+      <text x="200" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1f2937">
+        R$ ${data.amount}
+      </text>
+      
+      <!-- Details -->
+      <text x="40" y="220" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#374151">
+        SERVIÇO:
+      </text>
+      <text x="40" y="240" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">
+        ID #${data.serviceId}
+      </text>
+      
+      <text x="40" y="270" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#374151">
+        PAGADOR:
+      </text>
+      <text x="40" y="290" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">
+        ${data.payerName}
+      </text>
+      
+      <text x="40" y="320" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#374151">
+        REFERÊNCIA:
+      </text>
+      <text x="40" y="340" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">
+        ${data.reference || 'N/A'}
+      </text>
+      
+      <text x="40" y="370" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#374151">
+        DATA/HORA:
+      </text>
+      <text x="40" y="390" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">
+        ${data.timestamp}
+      </text>
+      
+      <!-- Footer -->
+      <rect x="20" y="460" width="360" height="20" fill="white" rx="10" opacity="0.95"/>
+      <text x="200" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9ca3af">
+        Comprovante gerado automaticamente
+      </text>
+    </svg>
+  `;
+  
+  // Convert SVG to data URL
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+}
+
 // Declarar as funções globais de notificação
 declare global {
   var notifyStore: (serviceId: number, montadorId: number, mensagem: string) => Promise<void>;
@@ -2856,13 +2940,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate payment proof image URL
-      const proofImageUrl = await generatePaymentProofImage({
+      const proofImageUrl = generatePaymentProofImage({
         serviceId,
         amount: service.price || '0',
         reference: paymentReference,
         payerName: req.user!.name,
-        timestamp: new Date().toLocaleString('pt-BR'),
-        paymentProof
+        timestamp: new Date().toLocaleString('pt-BR')
       });
 
       // Create a message in chat with payment confirmation as image
