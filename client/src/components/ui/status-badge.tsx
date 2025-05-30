@@ -6,22 +6,46 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' }) => {
-  // Mapeamento padronizado de cores para todos os tipos de usuário
-  const statusMap: Record<string, { bg: string; text: string; label: string }> = {
-    open: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Em aberto' },
-    'in-progress': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Em andamento' },
-    completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Finalizado' },
-    cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelado' },
-    accepted: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Em andamento' },
-    confirmed: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Em andamento' }
+  // Cores padronizadas para ambos lojista e montador
+  const getStatusStyles = (status: string) => {
+    switch (status) {
+      case 'open':
+        return 'bg-blue-100 text-blue-800';
+      case 'in-progress':
+      case 'accepted':
+      case 'confirmed':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
   };
 
-  const { bg, text, label } = statusMap[status] || statusMap.open;
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'open':
+        return 'Em aberto';
+      case 'in-progress':
+      case 'accepted':
+      case 'confirmed':
+        return 'Em andamento';
+      case 'completed':
+        return 'Finalizado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return 'Em aberto';
+    }
+  };
+
   const sizeClasses = size === 'md' ? 'px-3 py-1.5 text-sm' : 'px-2 py-1 text-xs';
 
   return (
-    <span className={`inline-flex items-center ${sizeClasses} ${bg} ${text} rounded-full font-medium`}>
-      {label}
+    <span className={`inline-flex items-center ${sizeClasses} ${getStatusStyles(status)} rounded-full font-medium`}>
+      {getStatusLabel(status)}
     </span>
   );
 };

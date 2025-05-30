@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import EditServiceDialog from './edit-service-dialog';
-import StatusBadge from '@/components/ui/status-badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 import {
   AlertDialog,
   AlertDialogAction,
