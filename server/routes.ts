@@ -2767,11 +2767,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentStatus: 'pending'
       });
 
-      const qrCodeData = paymentResponse.data.qr_code || paymentResponse.data.qr_code_base64 || paymentResponse.data.qrcode || paymentResponse.data.qrCode;
-      const pixCodeData = paymentResponse.data.pix_copia_e_cola || paymentResponse.data.codigo_pix || paymentResponse.data.pixCode || paymentResponse.data.pix_code;
+      // Extract data from Canvi API response structure
+      const responseData = paymentResponse.data.data || paymentResponse.data;
+      const qrCodeData = responseData.qrcode || responseData.qr_code || responseData.qr_code_base64;
+      const pixCodeData = responseData.brcode || responseData.pix_copia_e_cola || responseData.codigo_pix;
       
       console.log("[PIX Create] QR Code encontrado:", !!qrCodeData);
       console.log("[PIX Create] PIX Code encontrado:", !!pixCodeData);
+      console.log("[PIX Create] Response data structure:", JSON.stringify(responseData, null, 2));
 
       res.json({
         success: true,
