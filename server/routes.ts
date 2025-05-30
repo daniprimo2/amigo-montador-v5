@@ -449,13 +449,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(sql`MAX(${messages.sentAt}) DESC`);
 
       // Depois, buscar informações do montador para cada serviço
+      // IMPORTANTE: Buscar QUALQUER aplicação (não apenas aceitas) para garantir que conversas não desapareçam
       const servicesWithMessages = await Promise.all(
         baseServicesWithMessages.map(async (service) => {
-          const acceptedApplication = await db
+          // Primeiro, tentar buscar aplicação aceita
+          let application = await db
             .select({
               assemblerId: applications.assemblerId,
               assemblerUserId: users.id,
               assemblerName: users.name,
+              applicationStatus: applications.status,
             })
             .from(applications)
             .leftJoin(assemblers, eq(assemblers.id, applications.assemblerId))
@@ -466,11 +469,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ))
             .limit(1);
 
+          // Se não houver aplicação aceita, buscar QUALQUER aplicação que tenha mensagens
+          if (!application || application.length === 0) {
+            // Buscar montadores que enviaram mensagens para este serviço
+            const messagesFromAssemblers = await db
+              .select({
+                senderId: messages.senderId,
+                assemblerUserId: users.id,
+                assemblerName: users.name,
+              })
+              .from(messages)
+              .leftJoin(users, eq(users.id, messages.senderId))
+              .where(and(
+                eq(messages.serviceId, service.serviceId),
+                eq(users.userType, 'montador')
+              ))
+              .limit(1);
+
+            if (messagesFromAssemblers && messagesFromAssemblers.length > 0) {
+              // Buscar dados do montador baseado no usuário que enviou mensagem
+              const assemblerData = await db
+                .select({
+                  assemblerId: assemblers.id,
+                  assemblerUserId: assemblers.userId,
+                  assemblerName: users.name,
+                })
+                .from(assemblers)
+                .leftJoin(users, eq(users.id, assemblers.userId))
+                .where(eq(assemblers.userId, messagesFromAssemblers[0].senderId))
+                .limit(1);
+
+              if (assemblerData && assemblerData.length > 0) {
+                application = [{
+                  assemblerId: assemblerData[0].assemblerId,
+                  assemblerUserId: assemblerData[0].assemblerUserId,
+                  assemblerName: assemblerData[0].assemblerName,
+                  applicationStatus: 'pending' as const,
+                }];
+              }
+            }
+          }
+
           return {
             ...service,
-            assemblerId: acceptedApplication[0]?.assemblerId || null,
-            assemblerUserId: acceptedApplication[0]?.assemblerUserId || null,
-            assemblerName: acceptedApplication[0]?.assemblerName || null,
+            assemblerId: application?.[0]?.assemblerId || null,
+            assemblerUserId: application?.[0]?.assemblerUserId || null,
+            assemblerName: application?.[0]?.assemblerName || null,
+            applicationStatus: application?.[0]?.applicationStatus || null,
           };
         })
       );
