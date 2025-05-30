@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Logo from '../logo/logo';
-import { Bell, Home, List, MessageSquare, Calendar, Map, LogOut, User } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Map, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 import NotificationBadge from '@/components/ui/notification-badge';

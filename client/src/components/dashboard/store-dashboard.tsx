@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Calendar, CalendarDays, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck } from 'lucide-react';
+import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
-import ServiceCalendar from './service-calendar';
 import ProfileDialog from './profile-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

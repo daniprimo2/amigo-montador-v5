@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Calendar, Wifi, Star, CheckCheck, ChevronRight, User } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
 import CompletedServiceCard from './completed-service-card';
-import ServiceCalendar from './service-calendar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -114,7 +113,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'calendar'>('home');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat'>('home');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -760,11 +759,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       
       <h3 className="text-lg font-semibold mb-4">Próximos Serviços</h3>
       
-      <ServiceCalendar 
-        markedDates={getServiceDates(rawServices)} 
-        month={getCurrentMonth()} 
-        year={getCurrentYear()} 
-      />
+      <div className="bg-white rounded-lg p-4">
+        <p className="text-gray-500 text-center">
+          Visualização de próximos serviços disponível na aba "Início"
+        </p>
+      </div>
     </>
   );
 
@@ -944,16 +943,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     );
   };
 
-  const renderCalendarSection = () => (
-    <div className="mt-2">
-      <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
-      <ServiceCalendar 
-        markedDates={getServiceDates(rawServices)} 
-        month={getCurrentMonth()} 
-        year={getCurrentYear()} 
-      />
-    </div>
-  );
+
 
   // Reagir a novas mensagens recebidas via WebSocket
   useEffect(() => {
@@ -1025,8 +1015,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         return renderExploreSection();
       case 'chat':
         return renderChatSection();
-      case 'calendar':
-        return renderCalendarSection();
       default:
         return renderHomeSection();
     }
