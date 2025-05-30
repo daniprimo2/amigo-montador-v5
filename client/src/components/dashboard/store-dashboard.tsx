@@ -709,7 +709,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
-    if (activeTab === 'in-progress') return service.status === 'in-progress';
+    if (activeTab === 'in-progress') return service.status === 'hired' || service.status === 'in-progress';
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
   });
