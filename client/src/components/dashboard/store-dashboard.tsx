@@ -712,10 +712,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Usar dados da API ou mostrar dados vazios se estiver carregando
   const allServices = servicesQuery.data && Array.isArray(servicesQuery.data) ? processApiServices(servicesQuery.data) : [];
   
-  // Debug: mostrar dados recebidos
-  console.log('[StoreDashboard] Dados da API:', servicesQuery.data);
-  console.log('[StoreDashboard] Todos os serviços processados:', allServices);
-  
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
@@ -723,8 +719,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
   });
-  
-  console.log(`[StoreDashboard] Aba ativa: ${activeTab}, Serviços filtrados:`, services);
 
   // Função para lidar com o clique no botão de avaliação
   const handleRateClick = (service: any) => {
