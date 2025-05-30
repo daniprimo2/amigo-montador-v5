@@ -1043,7 +1043,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         addedServiceIds.add(service.id);
         
         const chatType = service.status === 'completed' ? 'completed' : 
-                        service.status === 'in-progress' ? 'active' : 'messages';
+                        service.status === 'in-progress' ? 'active' : 'active';
         
         console.log(`[StoreDashboard] Processando serviço ${service.title} (ID: ${service.id}), status: ${service.status}, chatType: ${chatType}`);
         
