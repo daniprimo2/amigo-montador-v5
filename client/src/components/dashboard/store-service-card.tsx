@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon } from 'lucide-react';
+import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,6 +32,7 @@ interface ServiceProps {
   address?: string;
   addressNumber?: string;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  projectFiles?: Array<{ name: string; path: string; }>;
   assembler?: {
     id: number;
     name: string;
@@ -210,6 +211,42 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </div>
         </div>
         
+        {/* Descrição do serviço */}
+        {service.description && (
+          <div className="mb-3 p-2 bg-gray-50 rounded-md">
+            <h5 className="text-xs font-medium text-gray-700 mb-1">Descrição:</h5>
+            <p className="text-xs text-gray-600 line-clamp-2">{service.description}</p>
+          </div>
+        )}
+
+        {/* Material */}
+        {service.materialType && (
+          <div className="mb-3">
+            <span className="text-xs font-medium text-gray-700">Material: </span>
+            <span className="text-xs text-gray-600 bg-blue-50 px-2 py-1 rounded-full">{service.materialType}</span>
+          </div>
+        )}
+
+        {/* Arquivos PDF anexados */}
+        {service.projectFiles && service.projectFiles.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center">
+              <FileText className="h-4 w-4 text-green-600 mr-1" />
+              <span className="text-xs font-medium text-green-700">
+                {service.projectFiles.length} arquivo{service.projectFiles.length > 1 ? 's' : ''} PDF anexado{service.projectFiles.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="mt-1 space-y-1">
+              {service.projectFiles.map((file, index) => (
+                <div key={index} className="text-xs text-gray-600 bg-green-50 px-2 py-1 rounded-md flex items-center">
+                  <FileText className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
+                  <span className="truncate">{file.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Datas de início e fim, e preço */}
         <div className="space-y-2 mb-3">
           {/* Datas de início e fim */}
