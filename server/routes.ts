@@ -2981,8 +2981,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
+      // Convert amount to centavos (multiply by 100 and remove decimals)
+      const valorEmCentavos = Math.round(parseFloat(amount) * 100);
+      
       const pixPaymentData = {
-        valor: parseFloat(amount),
+        valor: valorEmCentavos,
         vencimento: expirationDate.toISOString().slice(0, 19), // Format: "2025-06-28T18:45:00"
         descricao: `Pagamento do serviço: ${service.title}`,
         tipo_transacao: "pixCashin",
