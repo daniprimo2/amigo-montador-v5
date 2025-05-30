@@ -2637,6 +2637,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/payment/pix/token", async (req, res) => {
     try {
       console.log("[PIX Token] Iniciando autenticação com Canvi...");
+      console.log("[PIX Token] Session ID:", req.sessionID);
+      console.log("[PIX Token] User from session:", req.user);
+      console.log("[PIX Token] isAuthenticated():", req.isAuthenticated());
       
       if (!req.isAuthenticated()) {
         console.log("[PIX Token] Usuário não autenticado");
