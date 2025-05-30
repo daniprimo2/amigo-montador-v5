@@ -495,7 +495,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-purple-600 border-purple-600 hover:bg-purple-50"
+                className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200"
                 onClick={() => setIsPixPaymentDialogOpen(true)}
               >
                 <CreditCard className="h-4 w-4" />
@@ -543,8 +543,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
               return (
                 <div key={msg.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                   <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      isCurrentUser ? 'bg-primary text-white' : 'bg-white shadow-sm'
+                    className={`max-w-[80%] rounded-lg p-3 transition-all duration-200 ${
+                      isCurrentUser 
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' 
+                        : 'bg-gradient-to-r from-gray-50 to-white border border-gray-200 shadow-sm hover:shadow-md'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-1">
