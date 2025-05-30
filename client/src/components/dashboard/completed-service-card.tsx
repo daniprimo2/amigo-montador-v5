@@ -84,7 +84,7 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
       
       {!service.rated && (
         <div className="flex flex-col space-y-2">
-          <div className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm mb-2">
+          <div className="px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm mb-2">
             <span className="font-semibold">⚠️ Avaliação Pendente:</span> É necessário avaliar este serviço.
           </div>
           <Button 
