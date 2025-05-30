@@ -1716,7 +1716,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Remover a senha dos dados retornados
       const { password, ...userDataWithoutPassword } = user;
-      let profileData = { ...userDataWithoutPassword };
+      let profileData: any = { ...userDataWithoutPassword };
+      
+      // Incluir foto do perfil no formato esperado pelo frontend
+      if (user.profilePhotoUrl) {
+        profileData.profileData = {
+          photoUrl: user.profilePhotoUrl
+        };
+      }
       
       // Obter a média de avaliações do usuário
       const averageRating = await storage.getAverageRatingForUser(userId);
