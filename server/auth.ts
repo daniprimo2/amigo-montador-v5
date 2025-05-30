@@ -200,7 +200,12 @@ export function setupAuth(app: Express) {
           rating: 0,
           documents: req.body.documents || {},
           documentType: req.body.documentType || 'cpf',
-          documentNumber: req.body.documentNumber || ''
+          documentNumber: req.body.documentNumber || '',
+          // Documentos obrigatórios
+          rgFrontUrl: req.body.rgFrontUrl || '/placeholder-document.pdf',
+          rgBackUrl: req.body.rgBackUrl || '/placeholder-document.pdf',
+          proofOfAddressUrl: req.body.proofOfAddressUrl || '/placeholder-document.pdf',
+          certificatesUrls: req.body.certificatesUrls || null
         };
         console.log("Dados do montador a serem criados:", assemblerData);
         await storage.createAssembler(assemblerData);

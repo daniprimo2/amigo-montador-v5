@@ -14,9 +14,15 @@ import { useLocation } from 'wouter';
 import { baseBankAccountSchema } from '@/lib/bank-account-schema';
 
 const assemblerStep3Schema = z.object({
-  identityFront: z.any().optional(),
-  identityBack: z.any().optional(),
-  proofOfAddress: z.any().optional(),
+  identityFront: z.any().refine((files) => files && files.length > 0, {
+    message: "RG/CNH (frente) é obrigatório",
+  }),
+  identityBack: z.any().refine((files) => files && files.length > 0, {
+    message: "RG/CNH (verso) é obrigatório",
+  }),
+  proofOfAddress: z.any().refine((files) => files && files.length > 0, {
+    message: "Comprovante de residência é obrigatório",
+  }),
   certificates: z.any().optional(),
   // Dados bancários (obrigatórios para PIX)
   bankName: baseBankAccountSchema.shape.bankName,

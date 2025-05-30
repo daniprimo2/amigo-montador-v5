@@ -47,6 +47,11 @@ export const assemblers = pgTable("assemblers", {
   documents: jsonb("documents"), // URLs para documentos
   documentType: text("document_type"), // 'cpf' ou 'cnpj'
   documentNumber: text("document_number"), // CPF: XXX.XXX.XXX-XX ou CNPJ: XX.XXX.XXX/XXXX-XX
+  // Documentos obrigatórios
+  rgFrontUrl: text("rg_front_url").notNull(), // RG/CNH frente (obrigatório)
+  rgBackUrl: text("rg_back_url").notNull(), // RG/CNH verso (obrigatório)
+  proofOfAddressUrl: text("proof_of_address_url").notNull(), // Comprovante de residência (obrigatório)
+  certificatesUrls: jsonb("certificates_urls"), // Certificados profissionais (opcional)
 });
 
 // Serviços
