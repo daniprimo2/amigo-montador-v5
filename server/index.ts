@@ -10,6 +10,11 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve default avatar and other static files from root directory
+app.get('/default-avatar.svg', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'default-avatar.svg'));
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
