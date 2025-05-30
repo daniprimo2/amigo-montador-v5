@@ -2844,9 +2844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Token] Usuário autenticado:", req.user?.id);
 
-      // Canvi API credentials - Produção
-      const clientId = "F77C510B3A1108";
-      const privateKey = "1093A110B3A1F77C5108D96108680102EE010149E109838109";
+      // Canvi API credentials - Teste
+      const clientId = "FA854108C1FF62";
+      const privateKey = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
       
       console.log("[PIX Token] Autenticando com Canvi API...");
       
