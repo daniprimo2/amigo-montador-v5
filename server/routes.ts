@@ -2746,7 +2746,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             tipo: "percentual",
             conta: "89392367-30d4-11f0-a96f-42010a400013",
-            valor: "0.95"
+            valor: "0.70"
+          },
+          {
+            tipo: "valor",
+            conta: "89392367-30d4-11f0-a96f-42010a400013",
+            valor: "0.40"
           }
         ]
       };
