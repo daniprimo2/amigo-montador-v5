@@ -736,11 +736,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
-          <div className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-            allServices.filter(service => service.status === 'open').length > 0 
-              ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm hover:shadow-md hover:from-blue-100 hover:to-indigo-100' 
-              : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-          }`}>
+          <div 
+            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
+              allServices.filter(service => service.status === 'open').length > 0 
+                ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm hover:shadow-md hover:from-blue-100 hover:to-indigo-100' 
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
+            }`}
+            onClick={() => {
+              if (allServices.filter(service => service.status === 'open').length > 0) {
+                setDashboardSection('services');
+                setActiveTab('open');
+              }
+            }}
+          >
             <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
               allServices.filter(service => service.status === 'open').length > 0 ? 'text-blue-700' : 'text-gray-500'
             }`}>
@@ -748,11 +756,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
             <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Em Aberto</div>
           </div>
-          <div className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-            allServices.filter(service => service.status === 'in-progress').length > 0 
-              ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
-              : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-          }`}>
+          <div 
+            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
+              allServices.filter(service => service.status === 'in-progress').length > 0 
+                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
+            }`}
+            onClick={() => {
+              if (allServices.filter(service => service.status === 'in-progress').length > 0) {
+                setDashboardSection('services');
+                setActiveTab('in-progress');
+              }
+            }}
+          >
             <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
               allServices.filter(service => service.status === 'in-progress').length > 0 ? 'text-amber-700' : 'text-gray-500'
             }`}>
@@ -760,11 +776,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
             <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Em Andamento</div>
           </div>
-          <div className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-            allServices.filter(service => service.status === 'completed').length > 0 
-              ? 'bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 shadow-sm hover:shadow-md hover:from-emerald-100 hover:to-green-100' 
-              : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-          }`}>
+          <div 
+            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
+              allServices.filter(service => service.status === 'completed').length > 0 
+                ? 'bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 shadow-sm hover:shadow-md hover:from-emerald-100 hover:to-green-100' 
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
+            }`}
+            onClick={() => {
+              if (allServices.filter(service => service.status === 'completed').length > 0) {
+                setDashboardSection('services');
+                setActiveTab('completed');
+              }
+            }}
+          >
             <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
               allServices.filter(service => service.status === 'completed').length > 0 ? 'text-emerald-700' : 'text-gray-500'
             }`}>
