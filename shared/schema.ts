@@ -75,6 +75,8 @@ export const services = pgTable("services", {
   paymentReference: text("payment_reference"), // Referência do pagamento PIX
   paymentStatus: text("payment_status").default("pending"), // 'pending', 'proof_submitted', 'confirmed', 'rejected'
   paymentProof: text("payment_proof"), // Comprovante de pagamento enviado
+  ratingRequired: boolean("rating_required").default(false), // true quando pagamento é confirmado e avaliação é obrigatória
+  ratingCompleted: boolean("rating_completed").default(false), // true quando avaliação foi feita
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"), // Data de finalização do serviço
 });

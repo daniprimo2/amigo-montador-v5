@@ -2803,8 +2803,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Só é possível finalizar serviços em andamento" });
       }
       
-      // Atualizar status do serviço para 'completed'
-      const updatedService = await storage.updateServiceStatus(serviceId, 'completed');
+      // Atualizar status do serviço para 'completed' e marcar avaliação como obrigatória
+      const updatedService = await storage.updateService(serviceId, {
+        status: 'completed',
+        ratingRequired: true,
+        completedAt: new Date()
+      });
       
       // Buscar a candidatura aceita para enviar notificação ao montador
       const acceptedApplication = await db
