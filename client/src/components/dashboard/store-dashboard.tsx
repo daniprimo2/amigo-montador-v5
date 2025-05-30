@@ -123,7 +123,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const onSubmit = (data: any) => {
     createServiceMutation.mutate({
       ...data,
-      storeId: store?.id,
+      storeId: (store as any)?.id,
       status: 'open',
       startDate: new Date(data.date),
     });
@@ -152,9 +152,12 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Combinar serviços com informações de chat
   const servicesWithChat = React.useMemo(() => {
     const allServices: any[] = [];
+    const pendingArray = Array.isArray(pendingServices) ? pendingServices : [];
+    const activeArray = Array.isArray(activeServices) ? activeServices : [];
+    const messagesArray = Array.isArray(servicesWithMessages) ? servicesWithMessages : [];
 
     // Serviços pendentes com candidaturas
-    pendingServices.forEach((service: any) => {
+    pendingArray.forEach((service: any) => {
       if (service.applications && service.applications.length > 0) {
         service.applications.forEach((application: any) => {
           allServices.push({
@@ -170,7 +173,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     });
 
     // Serviços ativos com montador aceito
-    activeServices.forEach((service: any) => {
+    activeArray.forEach((service: any) => {
       if (service.assembler) {
         allServices.push({
           ...service,
@@ -182,7 +185,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     });
 
     // Serviços com mensagens (finalizados)
-    servicesWithMessages.forEach((service: any) => {
+    messagesArray.forEach((service: any) => {
       if (service.status === 'completed' && service.assembler) {
         allServices.push({
           ...service,
@@ -198,12 +201,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Renderizar seção home com estatísticas
   const renderHomeSection = () => {
+    const pendingArray = Array.isArray(pendingServices) ? pendingServices : [];
+    const activeArray = Array.isArray(activeServices) ? activeServices : [];
+    const messagesArray = Array.isArray(servicesWithMessages) ? servicesWithMessages : [];
+    
     const stats = {
-      totalServices: pendingServices.length + activeServices.length,
-      activeServices: activeServices.length,
-      pendingApplications: pendingServices.reduce((acc: number, service: any) => 
+      totalServices: pendingArray.length + activeArray.length,
+      activeServices: activeArray.length,
+      pendingApplications: pendingArray.reduce((acc: number, service: any) => 
         acc + (service.applications?.length || 0), 0),
-      completedServices: servicesWithMessages.filter((s: any) => s.status === 'completed').length,
+      completedServices: messagesArray.filter((s: any) => s.status === 'completed').length,
     };
 
     return (
@@ -211,7 +218,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Olá, {store?.name || user?.name}!</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Olá, {(store as any)?.name || (user as any)?.name}!</h1>
             <p className="text-gray-600">Gerencie seus serviços de montagem</p>
           </div>
           <div className="flex gap-2">
@@ -314,7 +321,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Renderizar seção de serviços
   const renderServicesSection = () => {
-    const allServices = [...pendingServices, ...activeServices, ...servicesWithMessages];
+    const pendingArray = Array.isArray(pendingServices) ? pendingServices : [];
+    const activeArray = Array.isArray(activeServices) ? activeServices : [];
+    const messagesArray = Array.isArray(servicesWithMessages) ? servicesWithMessages : [];
+    const allServices = [...pendingArray, ...activeArray, ...messagesArray];
 
     return (
       <div className="space-y-6">
