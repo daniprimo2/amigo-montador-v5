@@ -7,7 +7,7 @@ import { promisify } from "util";
 import fs from "fs";
 import path from "path";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, InsertBankAccount } from "@shared/schema";
 
 declare global {
   namespace Express {

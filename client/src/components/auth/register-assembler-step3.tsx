@@ -93,13 +93,119 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         certificates: certFiles?.length
       });
 
+      // Verificar se todos os documentos obrigatórios foram enviados
+      if (!idFrontFiles || idFrontFiles.length === 0) {
+        toast({
+          title: 'Erro na validação',
+          description: 'RG/CNH (frente) é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!idBackFiles || idBackFiles.length === 0) {
+        toast({
+          title: 'Erro na validação',
+          description: 'RG/CNH (verso) é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!addressFiles || addressFiles.length === 0) {
+        toast({
+          title: 'Erro na validação',
+          description: 'Comprovante de residência é obrigatório',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Verificar se os dados bancários foram preenchidos corretamente
       const hasBankData = data.bankName && data.accountNumber && data.agency && data.holderName && data.holderDocumentNumber;
       console.log('Dados bancários completos:', hasBankData);
 
-      // Pular upload por enquanto e ir direto para o registro
-      console.log('Pulando upload - indo direto para registro...');
+      // Upload dos documentos obrigatórios
+      console.log('Iniciando upload dos documentos...');
       let documentUrls: Record<string, string> = {};
+
+      try {
+        // Upload RG/CNH frente
+        const rgFrontFormData = new FormData();
+        rgFrontFormData.append('file', idFrontFiles[0]);
+        const rgFrontResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: rgFrontFormData,
+        });
+        
+        if (rgFrontResponse.ok) {
+          const rgFrontResult = await rgFrontResponse.json();
+          documentUrls.rgFrontUrl = rgFrontResult.url;
+        } else {
+          throw new Error('Falha no upload do RG/CNH (frente)');
+        }
+
+        // Upload RG/CNH verso
+        const rgBackFormData = new FormData();
+        rgBackFormData.append('file', idBackFiles[0]);
+        const rgBackResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: rgBackFormData,
+        });
+        
+        if (rgBackResponse.ok) {
+          const rgBackResult = await rgBackResponse.json();
+          documentUrls.rgBackUrl = rgBackResult.url;
+        } else {
+          throw new Error('Falha no upload do RG/CNH (verso)');
+        }
+
+        // Upload comprovante de residência
+        const addressFormData = new FormData();
+        addressFormData.append('file', addressFiles[0]);
+        const addressResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: addressFormData,
+        });
+        
+        if (addressResponse.ok) {
+          const addressResult = await addressResponse.json();
+          documentUrls.proofOfAddressUrl = addressResult.url;
+        } else {
+          throw new Error('Falha no upload do comprovante de residência');
+        }
+
+        // Upload certificados (opcional)
+        if (certFiles && certFiles.length > 0) {
+          const certificateUrls: string[] = [];
+          for (let i = 0; i < certFiles.length; i++) {
+            const certFormData = new FormData();
+            certFormData.append('file', certFiles[i]);
+            const certResponse = await fetch('/api/upload', {
+              method: 'POST',
+              body: certFormData,
+            });
+            
+            if (certResponse.ok) {
+              const certResult = await certResponse.json();
+              certificateUrls.push(certResult.url);
+            }
+          }
+          if (certificateUrls.length > 0) {
+            documentUrls.certificatesUrls = certificateUrls;
+          }
+        }
+
+        console.log('Upload dos documentos concluído:', documentUrls);
+      } catch (uploadError) {
+        console.error('Erro no upload dos documentos:', uploadError);
+        toast({
+          title: 'Erro no upload',
+          description: 'Falha ao fazer upload dos documentos. Verifique os arquivos e tente novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       // Combinar dados de todos os passos
       const userData = {
@@ -127,6 +233,12 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         // Documentos
         documents: documentUrls,
         termsAgreed: data.termsAgreed,
+        
+        // URLs dos documentos obrigatórios
+        rgFrontUrl: documentUrls.rgFrontUrl,
+        rgBackUrl: documentUrls.rgBackUrl,
+        proofOfAddressUrl: documentUrls.proofOfAddressUrl,
+        certificatesUrls: documentUrls.certificatesUrls,
         
         // Dados bancários (apenas se estiverem preenchidos)
         bankName: data.bankName || undefined,
