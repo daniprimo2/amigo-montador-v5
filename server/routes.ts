@@ -3156,7 +3156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Create] Enviando dados para Canvi:", JSON.stringify(pixPaymentData, null, 2));
 
-      const paymentResponse = await axios.post('https://gateway-production.service-canvi.com.br/bt/pix', pixPaymentData, {
+      const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix', pixPaymentData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
