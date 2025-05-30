@@ -212,7 +212,8 @@ export class DatabaseStorage implements IStorage {
               id: users.id,
               name: users.name,
               phone: users.phone,
-              email: users.email
+              email: users.email,
+              profilePhotoUrl: users.profilePhotoUrl
             })
             .from(users)
             .where(eq(users.id, assembler.userId))
@@ -229,6 +230,7 @@ export class DatabaseStorage implements IStorage {
                 userId: assembler.userId,
                 phone: userResult[0].phone,
                 email: userResult[0].email,
+                photoUrl: userResult[0].profilePhotoUrl,
                 city: assembler.city,
                 state: assembler.state,
                 specialties: assembler.specialties,
