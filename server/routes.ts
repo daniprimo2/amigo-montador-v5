@@ -2809,28 +2809,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration time (1 hour from now)
       const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
 
-      // Create PIX payment with Canvi gateway using exact format from your example
-      // Convert amount to cents without decimal points (R$ 10.50 becomes 1050)
-      const valorEmCentavos = Math.round(parseFloat(amount) * 100);
-      
+      // Create PIX payment data according to static PIX transaction specifications
       const pixPaymentData = {
-        valor: valorEmCentavos,
-        vencimento: expirationDate.toISOString(),
-        descricao: `Pagamento do serviço: ${service.title}`,
-        tipo_transacao: "pixCashin",
-        texto_instrucao: "Pagamento do serviço de montagem",
-        identificador_externo: uniqueReference,
-        identificador_movimento: uniqueReference,
+        valor: parseFloat(amount), // Valor must be >= 0
+        descricao: `Pagamento do serviço: ${service.title}`, // Até 255 caracteres
+        tipo_transacao: "pixStaticCashin", // pixStaticCashin or pixStaticCashinSemStatus
+        texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador", // Até 1000 caracteres
+        identificador_externo: uniqueReference, // Identificador único
+        identificador_movimento: uniqueReference, // Código de referência ao movimento
+        enviar_qr_code: true, // Booleano para envio de QR Code
         tag: [
           "amigo_montador",
           `service_${serviceId}`
-        ],
+        ], // Lista de tags opcionais (máximo 100 caracteres cada)
         cliente: {
-          nome: user.name,
-          tipo_documento: "cpf",
-          numero_documento: "744.674.080-96",
-          "e-mail": user.email
+          nome: user.name, // Nome completo até 255 caracteres
+          tipo_documento: "cpf", // cpf ou cnpj
+          numero_documento: "744.674.080-96", // Formato: CPF XXX.XXX.XXX-XX ou CNPJ XX.XXX.XXX/XXXX-XX
+          "e-mail": user.email // E-mail válido
         }
+        // split: [] // Opcional - divisões de valor da transação
       };
 
       console.log("[PIX Create] Enviando dados para Canvi:", JSON.stringify(pixPaymentData, null, 2));
