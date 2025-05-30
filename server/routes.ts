@@ -2759,6 +2759,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]
       };
 
+      console.log("[PIX Create] Enviando dados para Canvi:", JSON.stringify(pixPaymentData, null, 2));
+
       const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix', pixPaymentData, {
         headers: {
           'Content-Type': 'application/json',
@@ -2766,16 +2768,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      console.log("[PIX Create] Resposta da Canvi:", JSON.stringify(paymentResponse.data, null, 2));
+      console.log("[PIX Create] Status da resposta:", paymentResponse.status);
+
       // Store payment reference in service for tracking
       await storage.updateService(serviceId, {
         paymentReference: uniqueReference,
         paymentStatus: 'pending'
       });
 
+      const qrCodeData = paymentResponse.data.qr_code || paymentResponse.data.qr_code_base64 || paymentResponse.data.qrcode || paymentResponse.data.qrCode;
+      const pixCodeData = paymentResponse.data.pix_copia_e_cola || paymentResponse.data.codigo_pix || paymentResponse.data.pixCode || paymentResponse.data.pix_code;
+      
+      console.log("[PIX Create] QR Code encontrado:", !!qrCodeData);
+      console.log("[PIX Create] PIX Code encontrado:", !!pixCodeData);
+
       res.json({
         success: true,
-        pixCode: paymentResponse.data.pix_copia_e_cola || paymentResponse.data.codigo_pix,
-        qrCode: paymentResponse.data.qr_code || paymentResponse.data.qr_code_base64,
+        pixCode: pixCodeData,
+        qrCode: qrCodeData,
         reference: uniqueReference,
         amount: parseFloat(amount),
         expiresAt: expirationDate.toISOString(),
