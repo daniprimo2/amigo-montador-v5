@@ -700,7 +700,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       price: service.price,
       // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
-      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
+      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired'
     }));
     console.log('[StoreDashboard] Serviços processados:', processedServices);
     
@@ -722,7 +722,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
-    if (activeTab === 'in-progress') return service.status === 'in-progress';
+    if (activeTab === 'in-progress') return service.status === 'in-progress' || service.status === 'hired';
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
   });
@@ -771,21 +771,21 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </div>
           <div 
             className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-              allServices.filter(service => service.status === 'in-progress').length > 0 
+              allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length > 0 
                 ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
                 : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
             }`}
             onClick={() => {
-              if (allServices.filter(service => service.status === 'in-progress').length > 0) {
+              if (allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length > 0) {
                 setDashboardSection('services');
                 setActiveTab('in-progress');
               }
             }}
           >
             <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
-              allServices.filter(service => service.status === 'in-progress').length > 0 ? 'text-amber-700' : 'text-gray-500'
+              allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length > 0 ? 'text-amber-700' : 'text-gray-500'
             }`}>
-              🟠 {allServices.filter(service => service.status === 'in-progress').length}
+              🟠 {allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length}
             </div>
             <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Em Andamento</div>
           </div>
