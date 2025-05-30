@@ -1983,6 +1983,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao marcar mensagens como lidas" });
     }
   });
+
+  // Buscar total de mensagens não lidas do usuário
+  app.get("/api/messages/unread-count", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const totalUnreadCount = await storage.getTotalUnreadMessageCount(req.user.id);
+      
+      res.json({ count: totalUnreadCount });
+    } catch (error) {
+      console.error("Erro ao buscar contagem de mensagens não lidas:", error);
+      res.status(500).json({ message: "Erro ao buscar contagem de mensagens não lidas" });
+    }
+  });
   
   // Enviar mensagem em um serviço
   app.post("/api/services/:id/messages", async (req, res) => {

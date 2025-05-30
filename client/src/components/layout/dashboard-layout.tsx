@@ -4,6 +4,7 @@ import Logo from '../logo/logo';
 import { Bell, Home, List, MessageSquare, Map, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NotificationBadge from '@/components/ui/notification-badge';
 
 interface DashboardLayoutProps {
@@ -18,12 +19,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { logoutMutation } = useAuth();
   const [, navigate] = useLocation();
   const { lastMessage } = useWebSocket();
+  const queryClient = useQueryClient();
   // Define the tabs with a state to track which tab is active
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore'>('home');
-  // Estado para controlar a notificação de mensagem não lida
-  const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
-  // Contador de mensagens não lidas
-  const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Buscar contagem de mensagens não lidas do servidor
+  const { data: unreadData = { count: 0 }, refetch: refetchUnreadCount } = useQuery({
+    queryKey: ['/api/messages/unread-count'],
+    queryFn: async () => {
+      const response = await fetch('/api/messages/unread-count');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar contagem de mensagens não lidas');
+      }
+      return await response.json();
+    },
+    refetchInterval: 10000, // Atualizar a cada 10 segundos
+  });
+  
+  const unreadCount = unreadData.count;
+  const hasUnreadMessage = unreadCount > 0;
   
   // Monitorar mensagens recebidas via WebSocket (através do hook)
   useEffect(() => {

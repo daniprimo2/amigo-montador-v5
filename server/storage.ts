@@ -48,6 +48,7 @@ export interface IStorage {
   markMessagesAsRead(serviceId: number, userId: number): Promise<void>;
   getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number>;
   hasUnreadMessages(serviceId: number, userId: number): Promise<boolean>;
+  getTotalUnreadMessageCount(userId: number): Promise<number>;
   
   // Avaliações
   getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined>;
@@ -655,6 +656,39 @@ export class DatabaseStorage implements IStorage {
   async hasUnreadMessages(serviceId: number, userId: number): Promise<boolean> {
     const unreadCount = await this.getUnreadMessageCountForService(serviceId, userId);
     return unreadCount > 0;
+  }
+
+  async getTotalUnreadMessageCount(userId: number): Promise<number> {
+    // Buscar todos os serviços que o usuário tem acesso
+    let userServiceIds: number[] = [];
+
+    if (await this.getStoreByUserId(userId)) {
+      // Se for lojista, buscar serviços da loja
+      const store = await this.getStoreByUserId(userId);
+      if (store) {
+        const storeServices = await this.getServicesByStoreId(store.id);
+        userServiceIds = storeServices.map(s => s.id);
+      }
+    } else if (await this.getAssemblerByUserId(userId)) {
+      // Se for montador, buscar serviços que ele tem candidatura
+      const assembler = await this.getAssemblerByUserId(userId);
+      if (assembler) {
+        const applications = await db
+          .select({ serviceId: applications.serviceId })
+          .from(applications)
+          .where(eq(applications.assemblerId, assembler.id));
+        userServiceIds = applications.map(app => app.serviceId);
+      }
+    }
+
+    // Contar mensagens não lidas em todos os serviços
+    let totalUnread = 0;
+    for (const serviceId of userServiceIds) {
+      const unreadCount = await this.getUnreadMessageCountForService(serviceId, userId);
+      totalUnread += unreadCount;
+    }
+
+    return totalUnread;
   }
 
   // Método para tentar deletar uma mensagem - agora sempre retorna false para preservar o histórico completo
