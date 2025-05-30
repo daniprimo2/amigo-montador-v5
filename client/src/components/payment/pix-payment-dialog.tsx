@@ -54,10 +54,11 @@ export function PixPaymentDialog({
   // Generate PIX token
   const generateTokenMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/payment/pix/token', {
-        method: 'POST'
+      const response = await apiRequest({
+        method: 'POST',
+        url: '/api/payment/pix/token'
       });
-      return response;
+      return await response.json();
     },
     onSuccess: (data: any) => {
       if (data.success) {
@@ -83,11 +84,12 @@ export function PixPaymentDialog({
   // Check PIX payment status
   const checkPaymentStatusMutation = useMutation({
     mutationFn: async ({ paymentId, token }: { paymentId: string; token: string }) => {
-      const response = await apiRequest('/api/payment/pix/status', {
+      const response = await apiRequest({
         method: 'POST',
-        body: { paymentId, token }
+        url: '/api/payment/pix/status',
+        data: { paymentId, token }
       });
-      return response;
+      return await response.json();
     },
     onSuccess: (data: any) => {
       if (data.success && data.isCompleted) {
@@ -115,16 +117,17 @@ export function PixPaymentDialog({
   // Create PIX payment
   const createPixMutation = useMutation({
     mutationFn: async (token: string) => {
-      const response = await apiRequest('/api/payment/pix/create', {
+      const response = await apiRequest({
         method: 'POST',
-        body: {
+        url: '/api/payment/pix/create',
+        data: {
           serviceId,
           amount,
           description: `Pagamento do serviço: ${serviceTitle}`,
           token
         }
       });
-      return response;
+      return await response.json();
     },
     onSuccess: (data: any) => {
       if (data.success) {
