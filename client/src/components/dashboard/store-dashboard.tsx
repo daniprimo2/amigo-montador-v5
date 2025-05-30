@@ -1321,23 +1321,24 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                                   <User className="h-4 w-4" />
                                   <span>Montador: {service.assembler?.name || service.assemblerName}</span>
                                 </p>
-                              {service.assembler && (
-                                <div className="text-xs text-gray-400 ml-5">
-                                  {service.assembler.phone && (
-                                    <span>Tel: {service.assembler.phone}</span>
-                                  )}
-                                  {service.assembler.city && service.assembler.state && (
-                                    <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
-                                  )}
-                                  {service.assembler.rating && (
-                                    <span className="ml-3">★ {service.assembler.rating}/5</span>
-                                  )}
-                                </div>
-                              )}
+                                {service.assembler && (
+                                  <div className="text-xs text-gray-400 ml-5">
+                                    {service.assembler.phone && (
+                                      <span>Tel: {service.assembler.phone}</span>
+                                    )}
+                                    {service.assembler.city && service.assembler.state && (
+                                      <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
+                                    )}
+                                    {service.assembler.rating && (
+                                      <span className="ml-3">★ {service.assembler.rating}/5</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                Serviço concluído
+                              </p>
                             </div>
-                            <p className="text-sm text-gray-500">
-                              Serviço concluído
-                            </p>
                           </div>
                         </div>
                         <div className="flex items-center">
