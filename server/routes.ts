@@ -2726,10 +2726,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
 
       // Create PIX payment with Canvi gateway using exact format from your example
+      // Convert amount to cents without decimal points (R$ 10.50 becomes 1050)
+      const valorEmCentavos = Math.round(parseFloat(amount) * 100);
+      
       const pixPaymentData = {
-        valor: parseFloat(amount),
-        vencimento: expirationDate.toISOString().replace('.000Z', ''), 
-        descricao: description || `Pagamento do serviço: ${service.title}`,
+        valor: valorEmCentavos,
+        vencimento: expirationDate.toISOString(),
+        descricao: `Pagamento do serviço: ${service.title}`,
         tipo_transacao: "pixCashin",
         texto_instrucao: "Pagamento do serviço de montagem",
         identificador_externo: uniqueReference,
@@ -2742,19 +2745,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cliente: {
           nome: user.name,
           tipo_documento: "cpf",
-          numero_documento: user.phone, // Using phone as fallback for document
+          numero_documento: "000.000.000-00", // Placeholder format
           "e-mail": user.email
         },
         split: [
           {
-            tipo: "percentual",
             conta: "89392367-30d4-11f0-a96f-42010a400013",
-            valor: "0.70"
+            tipo: "percentual",
+            valor: 70
           },
           {
-            tipo: "valor",
             conta: "89392367-30d4-11f0-a96f-42010a400013",
-            valor: "0.40"
+            tipo: "valor",
+            valor: 40
           }
         ]
       };
