@@ -2844,9 +2844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Token] Usuário autenticado:", req.user?.id);
 
-      // Canvi API credentials
-      const clientId = process.env.CANVI_CLIENT_ID || "FA854108C1FF62";
-      const privateKey = process.env.CANVI_PRIVATE_KEY || "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      // Canvi API credentials from documentation
+      const clientId = "FA854108C1FF62";
+      const privateKey = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
       
       console.log("[PIX Token] Autenticando com Canvi API...");
       
@@ -2969,26 +2969,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate expiration time (1 hour from now)
       const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
 
-      // Create PIX payment data according to static PIX transaction specifications
+      // Generate unique identifiers as specified in documentation
+      const identificadorExterno = `ba1231fd-060d-4dfd-b702-e54f0ddc8fc${Date.now().toString().slice(-2)}`;
+      const identificadorMovimento = `f8097309-34b3-468b-99e1-cbdbdec123${Date.now().toString().slice(-2)}`;
+      
+      // Create PIX payment data according to Canvi documentation format
       const pixPaymentData = {
-        valor: parseFloat(amount), // Valor must be >= 0
-        descricao: `Pagamento do serviço: ${service.title}`, // Até 255 caracteres
-        tipo_transacao: "pixStaticCashin", // pixStaticCashin or pixStaticCashinSemStatus
-        texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador", // Até 1000 caracteres
-        identificador_externo: uniqueReference, // Identificador único
-        identificador_movimento: uniqueReference, // Código de referência ao movimento
-        enviar_qr_code: true, // Booleano para envio de QR Code
+        valor: parseFloat(amount),
+        vencimento: expirationDate.toISOString().slice(0, 19), // Format: "2025-06-28T18:45:00"
+        descricao: `Pagamento do serviço: ${service.title}`,
+        tipo_transacao: "pixCashin",
+        texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador",
+        identificador_externo: identificadorExterno,
+        identificador_movimento: identificadorMovimento,
         tag: [
           "amigo_montador",
           `service_${serviceId}`
-        ], // Lista de tags opcionais (máximo 100 caracteres cada)
+        ],
         cliente: {
-          nome: user.name, // Nome completo até 255 caracteres
-          tipo_documento: documentType, // cpf ou cnpj
-          numero_documento: documentNumber, // Formato: CPF XXX.XXX.XXX-XX ou CNPJ XX.XXX.XXX/XXXX-XX
-          "e-mail": user.email // E-mail válido
+          nome: user.name,
+          tipo_documento: documentType === 'cpf' ? 'cpf' : 'cnpj',
+          numero_documento: documentNumber,
+          "e-mail": user.email
         }
-        // split: [] // Opcional - divisões de valor da transação
       };
 
       console.log("[PIX Create] Enviando dados para Canvi:", JSON.stringify(pixPaymentData, null, 2));
@@ -2996,6 +2999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix', pixPaymentData, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           'Cookie': `token=${token}`
         }
       });
@@ -3055,6 +3059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statusResponse = await axios.get(`https://gateway-homol.service-canvi.com.br/bt/pix/${paymentId}`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           'Cookie': `token=${token}`
         }
       });
