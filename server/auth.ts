@@ -172,7 +172,9 @@ export function setupAuth(app: Express) {
           experience: req.body.experience || '',
           workRadius: req.body.radius || 20,
           rating: 0,
-          documents: req.body.documents || {}
+          documents: req.body.documents || {},
+          documentType: req.body.documentType || 'cpf',
+          documentNumber: req.body.documentNumber || ''
         };
         console.log("Dados do montador a serem criados:", assemblerData);
         await storage.createAssembler(assemblerData);

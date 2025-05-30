@@ -2803,6 +2803,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
+      // Get assembler information to retrieve document data for PIX
+      let documentType = 'cpf';
+      let documentNumber = '';
+      
+      if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        if (assembler && assembler.documentType && assembler.documentNumber) {
+          documentType = assembler.documentType;
+          documentNumber = assembler.documentNumber;
+        }
+      } else if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(user.id);
+        if (store && store.documentType && store.documentNumber) {
+          documentType = store.documentType;
+          documentNumber = store.documentNumber;
+        }
+      }
+
+      // Validate that we have document information
+      if (!documentNumber) {
+        return res.status(400).json({ 
+          message: "Dados de documento não encontrados. Por favor, complete seu cadastro com CPF/CNPJ para realizar pagamentos PIX." 
+        });
+      }
+
       // Generate unique reference for this payment
       const uniqueReference = `service_${serviceId}_${Date.now()}`;
       
@@ -2824,8 +2849,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ], // Lista de tags opcionais (máximo 100 caracteres cada)
         cliente: {
           nome: user.name, // Nome completo até 255 caracteres
-          tipo_documento: "cpf", // cpf ou cnpj
-          numero_documento: "744.674.080-96", // Formato: CPF XXX.XXX.XXX-XX ou CNPJ XX.XXX.XXX/XXXX-XX
+          tipo_documento: documentType, // cpf ou cnpj
+          numero_documento: documentNumber, // Formato: CPF XXX.XXX.XXX-XX ou CNPJ XX.XXX.XXX/XXXX-XX
           "e-mail": user.email // E-mail válido
         }
         // split: [] // Opcional - divisões de valor da transação
