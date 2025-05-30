@@ -97,8 +97,8 @@ export function setupAuth(app: Express) {
       // Hash da senha
       const hashedPassword = await hashPassword(req.body.password);
 
-      // Processar foto de perfil se fornecida
-      let profilePhotoUrl = null;
+      // Processar foto de perfil se fornecida, caso contrário usar avatar padrão
+      let profilePhotoUrl = '/default-avatar.svg'; // Valor padrão obrigatório
       if (req.files && req.files.profilePicture) {
         const profileFile = req.files.profilePicture as any;
         
