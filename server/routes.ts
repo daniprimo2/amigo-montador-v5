@@ -238,6 +238,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
         
+        console.log(`[DEBUG] Dados formatados para o frontend:`, JSON.stringify(formattedServices, null, 2));
+        
         res.json(formattedServices);
       } else {
         // Formatar dados também para lojistas, incluindo startDate e endDate
