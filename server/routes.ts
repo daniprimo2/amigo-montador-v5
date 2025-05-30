@@ -210,6 +210,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          // Verificar se o storeName está disponível no objeto service
+          const serviceWithStore = service as any;
+          const storeName = serviceWithStore.storeName || 'Loja não especificada';
+          
+          console.log(`[DEBUG] Serviço ${service.id}: storeName = "${storeName}"`);
+          
           return {
             id: service.id,
             title: service.title,
@@ -225,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             startDate: service.startDate ? service.startDate.toISOString() : null,
             endDate: service.endDate ? service.endDate.toISOString() : null,
             price: service.price || 'Preço não informado',
-            store: service.storeName || 'Loja não especificada',
+            store: storeName,
             type: service.materialType || 'Material não especificado',
             status: service.status,
             projectFiles: projectFiles
