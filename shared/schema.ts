@@ -59,8 +59,8 @@ export const services = pgTable("services", {
   address: text("address"), // Endereço (rua)
   addressNumber: text("address_number"), // Número do endereço
   cep: text("cep"), // CEP
-  latitude: text("latitude"),
-  longitude: text("longitude"),
+  latitude: text("latitude").notNull(),
+  longitude: text("longitude").notNull(),
   startDate: timestamp("start_date").notNull(), // Data de início do serviço
   endDate: timestamp("end_date").notNull(), // Data de fim do serviço
   price: text("price").notNull(),

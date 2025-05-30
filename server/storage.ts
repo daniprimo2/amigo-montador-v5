@@ -279,8 +279,6 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(stores, eq(services.storeId, stores.id))
         .where(
           eq(services.status, 'open')
-          // Aqui seria implementada a lógica para filtrar por distância
-          // Na implementação real, utilizaríamos longitude/latitude para calcular distância
         )
         .orderBy(desc(services.createdAt));
       
@@ -321,6 +319,58 @@ export class DatabaseStorage implements IStorage {
         } as Service & { storeName: string };
       }));
       
+      // Filtrar por distância geográfica se o montador tem raio de trabalho definido
+      let filteredByDistance = enhancedServices;
+      
+      if (assembler.workRadius && assembler.city && assembler.state) {
+        try {
+          const { geocodeFromCEP, calculateDistance } = await import('./geocoding');
+          
+          // Importar função para obter coordenadas da cidade
+          const geocodingModule = await import('./geocoding');
+          const getCityCoordinates = geocodingModule.default?.getCityCoordinates || 
+                                   (geocodingModule as any).getCityCoordinates;
+          
+          if (typeof getCityCoordinates === 'function') {
+            // Obter coordenadas aproximadas do montador baseado na cidade/estado
+            const assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
+            
+            filteredByDistance = enhancedServices.filter(service => {
+              // Se o serviço não tem coordenadas, incluir por compatibilidade
+              if (!service.latitude || !service.longitude) {
+                return true;
+              }
+
+              try {
+                const serviceLat = parseFloat(service.latitude);
+                const serviceLng = parseFloat(service.longitude);
+                
+                // Calcular distância entre montador e serviço
+                const distance = calculateDistance(
+                  assemblerCoords.lat,
+                  assemblerCoords.lng,
+                  serviceLat,
+                  serviceLng
+                );
+
+                const withinRadius = distance <= assembler.workRadius;
+                console.log(`Serviço ${service.id}: distância ${distance.toFixed(1)}km, raio ${assembler.workRadius}km, dentro do raio: ${withinRadius}`);
+                
+                return withinRadius;
+              } catch (error) {
+                console.error('Erro ao calcular distância para serviço:', service.id, error);
+                return true; // Em caso de erro, incluir o serviço
+              }
+            });
+            
+            console.log(`Filtrados ${filteredByDistance.length} de ${enhancedServices.length} serviços por distância (raio: ${assembler.workRadius}km)`);
+          }
+        } catch (error) {
+          console.error('Erro ao filtrar serviços por distância:', error);
+          // Continuar sem filtro de distância em caso de erro
+        }
+      }
+
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
         const assemblerSpecialties = assembler.specialties as string[];
@@ -328,13 +378,13 @@ export class DatabaseStorage implements IStorage {
         
         // Atualização: mostrar todos os serviços disponíveis para o montador, independente da especialidade
         // Isso permite que o montador veja mais oportunidades de trabalho
-        console.log(`Retornando todos os serviços disponíveis (${enhancedServices.length}) para o montador`);
-        return enhancedServices;
+        console.log(`Retornando ${filteredByDistance.length} serviços disponíveis para o montador`);
+        return filteredByDistance;
       }
       
-      console.log(`Nenhuma especialidade definida para o montador, retornando todos os serviços disponíveis (${enhancedServices.length})`);
-      // Se o montador não tiver especialidades definidas, retorna todos os serviços disponíveis
-      return enhancedServices;
+      console.log(`Nenhuma especialidade definida para o montador, retornando ${filteredByDistance.length} serviços disponíveis`);
+      // Se o montador não tiver especialidades definidas, retorna todos os serviços filtrados por distância
+      return filteredByDistance;
     } catch (error) {
       console.error('Erro ao buscar serviços disponíveis para montador:', error);
       return []; // Retorna lista vazia em caso de erro
@@ -342,9 +392,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createService(serviceData: InsertService): Promise<Service> {
+    // Se não há coordenadas e há CEP, fazer geocodificação
+    let finalServiceData = { ...serviceData };
+    
+    if ((!serviceData.latitude || !serviceData.longitude) && serviceData.cep) {
+      try {
+        const { geocodeFromCEP } = await import('./geocoding');
+        const coordinates = await geocodeFromCEP(serviceData.cep);
+        finalServiceData.latitude = coordinates.latitude;
+        finalServiceData.longitude = coordinates.longitude;
+      } catch (error) {
+        console.error('Erro na geocodificação:', error);
+        throw new Error('Não foi possível obter coordenadas para o CEP fornecido');
+      }
+    }
+
     const [service] = await db
       .insert(services)
-      .values(serviceData)
+      .values(finalServiceData)
       .returning();
     return service;
   }
