@@ -86,6 +86,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [chatPartnerProfile, setChatPartnerProfile] = useState<UserProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Mutation para atualizar o status do serviço para "em andamento"
@@ -221,6 +222,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const { data: service = { id: 0, title: 'Serviço', status: 'open' as const, price: '0' } } = useQuery<Service>({
     queryKey: [`/api/services/${serviceId}`]
   });
+
+  // Buscar perfil do parceiro de conversa baseado nas mensagens
+  useEffect(() => {
+    const fetchChatPartnerProfile = async () => {
+      if (!messages || messages.length === 0 || !user) return;
+      
+      // Encontrar o ID do outro usuário (não sendo o usuário atual)
+      const otherUserId = messages.find(msg => msg.senderId !== user.id)?.senderId;
+      
+      if (!otherUserId || chatPartnerProfile?.id === otherUserId) return;
+      
+      try {
+        const response = await fetch(`/api/users/${otherUserId}/profile`);
+        if (!response.ok) {
+          throw new Error('Falha ao buscar perfil do parceiro');
+        }
+        
+        const profileData = await response.json();
+        setChatPartnerProfile(profileData);
+      } catch (error) {
+        console.error('Erro ao buscar perfil do parceiro de conversa:', error);
+      }
+    };
+    
+    fetchChatPartnerProfile();
+  }, [messages, user, chatPartnerProfile?.id]);
   
   // Mutation para excluir mensagem
   const deleteMessageMutation = useMutation({
@@ -479,11 +506,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          
+          {/* Foto do usuário da conversa */}
+          {chatPartnerProfile && (
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+              <img
+                src={chatPartnerProfile.profileData?.photoUrl || chatPartnerProfile.store?.logoUrl || '/default-avatar.svg'}
+                alt={chatPartnerProfile.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = '/default-avatar.svg';
+                }}
+              />
+            </div>
+          )}
+          
           <div>
             <h2 className="font-medium">{service?.title || 'Carregando...'}</h2>
-            <p className="text-sm text-muted-foreground">
-              {user?.userType === 'lojista' ? 'Chat com o montador' : 'Chat com a loja'}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                {chatPartnerProfile ? (
+                  <>
+                    {chatPartnerProfile.userType === 'lojista' && chatPartnerProfile.store 
+                      ? `${chatPartnerProfile.store.name} - ${chatPartnerProfile.name}`
+                      : chatPartnerProfile.name
+                    }
+                    {chatPartnerProfile.userType === 'montador' && ' (Montador)'}
+                    {chatPartnerProfile.userType === 'lojista' && ' (Loja)'}
+                  </>
+                ) : (
+                  user?.userType === 'lojista' ? 'Chat com o montador' : 'Chat com a loja'
+                )}
+              </p>
+            </div>
           </div>
         </div>
         
