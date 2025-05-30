@@ -689,7 +689,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Processar dados de serviços da API
   const processApiServices = (apiServices: any[] = []) => {
-    return apiServices.map(service => ({
+    console.log('[StoreDashboard] Serviços recebidos da API:', apiServices);
+    const processedServices = apiServices.map(service => ({
       id: service.id,
       title: service.title,
       location: service.location,
@@ -701,6 +702,18 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       candidates: 0,
       status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
     }));
+    console.log('[StoreDashboard] Serviços processados:', processedServices);
+    
+    // Log das contagens por status
+    const statusCounts = {
+      open: processedServices.filter(s => s.status === 'open').length,
+      'in-progress': processedServices.filter(s => s.status === 'in-progress').length,
+      completed: processedServices.filter(s => s.status === 'completed').length,
+      hired: processedServices.filter(s => s.status === 'hired').length
+    };
+    console.log('[StoreDashboard] Contagem por status:', statusCounts);
+    
+    return processedServices;
   };
   
   // Usar dados da API ou mostrar dados vazios se estiver carregando
