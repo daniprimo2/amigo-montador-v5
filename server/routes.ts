@@ -2850,11 +2850,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[PIX Token] Autenticando com Canvi API...");
       
-      // Try production endpoint first, then fallback to homolog
+      // Use only homolog endpoint as specified in curl
       let authResponse;
-      let apiUrl = 'https://gateway.service-canvi.com.br/bt/token'; // Production endpoint
+      let apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
       
-      console.log("[PIX Token] Tentando endpoint de produção...");
+      console.log("[PIX Token] Tentando endpoint de homologação...");
+      console.log("[PIX Token] URL:", apiUrl);
+      console.log("[PIX Token] Client ID:", clientId);
+      console.log("[PIX Token] Private Key:", privateKey.substring(0, 10) + "...");
       
       try {
         authResponse = await axios.post(apiUrl, {
@@ -2865,20 +2868,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json'
           }
         });
-      } catch (prodError: any) {
-        console.log("[PIX Token] Erro no endpoint de produção:", prodError.response?.data);
-        console.log("[PIX Token] Tentando endpoint de homologação...");
         
-        // Fallback to homolog endpoint
-        apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
-        authResponse = await axios.post(apiUrl, {
-          client_id: clientId,
-          private_key: privateKey
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        console.log("[PIX Token] Resposta recebida - Status:", authResponse.status);
+        console.log("[PIX Token] Headers da resposta:", authResponse.headers);
+        
+      } catch (error: any) {
+        console.log("[PIX Token] Erro na requisição:", error.response?.status);
+        console.log("[PIX Token] Dados do erro:", error.response?.data);
+        console.log("[PIX Token] Headers do erro:", error.response?.headers);
+        throw error;
       }
 
       console.log("[PIX Token] Resposta da autenticação:", authResponse.status);
