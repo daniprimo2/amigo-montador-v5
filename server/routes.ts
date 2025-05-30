@@ -225,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             startDate: service.startDate ? service.startDate.toISOString() : null,
             endDate: service.endDate ? service.endDate.toISOString() : null,
             price: service.price || 'Preço não informado',
-            store: (service as any).storeName || 'Loja não especificada',
+            store: service.storeName || 'Loja não especificada',
             type: service.materialType || 'Material não especificado',
             status: service.status,
             projectFiles: projectFiles
