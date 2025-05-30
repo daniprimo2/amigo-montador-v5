@@ -2826,28 +2826,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
-      // Get assembler information to retrieve document data for PIX
+      // Get user document information from multiple sources (prioritizing bank accounts)
       let documentType = 'cpf';
       let documentNumber = '';
+      let pixKey = '';
+      let pixKeyType = '';
       
-      if (user.userType === 'montador') {
-        const assembler = await storage.getAssemblerByUserId(user.id);
-        if (assembler && assembler.documentType && assembler.documentNumber) {
-          documentType = assembler.documentType;
-          documentNumber = assembler.documentNumber;
+      // First, try to get information from bank accounts (preferred for PIX)
+      const bankAccounts = await storage.getBankAccountsByUserId(user.id);
+      if (bankAccounts && bankAccounts.length > 0) {
+        // Use the first bank account with valid document info
+        const primaryAccount = bankAccounts[0];
+        documentType = primaryAccount.holderDocumentType;
+        documentNumber = primaryAccount.holderDocumentNumber;
+        pixKey = primaryAccount.pixKey || '';
+        pixKeyType = primaryAccount.pixKeyType || '';
+        
+        console.log("[PIX Create] Dados bancários encontrados:", {
+          documentType,
+          documentNumber: documentNumber.substring(0, 3) + '***',
+          hasPixKey: !!pixKey,
+          pixKeyType
+        });
+      } else {
+        // Fallback to profile data if no bank account is registered
+        if (user.userType === 'montador') {
+          const assembler = await storage.getAssemblerByUserId(user.id);
+          if (assembler && assembler.documentType && assembler.documentNumber) {
+            documentType = assembler.documentType;
+            documentNumber = assembler.documentNumber;
+          }
+        } else if (user.userType === 'lojista') {
+          const store = await storage.getStoreByUserId(user.id);
+          if (store && store.documentType && store.documentNumber) {
+            documentType = store.documentType;
+            documentNumber = store.documentNumber;
+          }
         }
-      } else if (user.userType === 'lojista') {
-        const store = await storage.getStoreByUserId(user.id);
-        if (store && store.documentType && store.documentNumber) {
-          documentType = store.documentType;
-          documentNumber = store.documentNumber;
-        }
+        
+        console.log("[PIX Create] Usando dados do perfil (sem conta bancária cadastrada)");
       }
 
       // Validate that we have document information
       if (!documentNumber) {
         return res.status(400).json({ 
-          message: "Dados de documento não encontrados. Por favor, complete seu cadastro com CPF/CNPJ para realizar pagamentos PIX." 
+          message: "Dados de documento não encontrados. Por favor, complete seu cadastro com CPF/CNPJ ou cadastre uma conta bancária para realizar pagamentos PIX." 
         });
       }
 
@@ -3229,6 +3252,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Rotas para gerenciamento de informações bancárias
+  
+  // Verificar se o usuário tem dados bancários configurados para PIX
+  app.get("/api/banking/pix-ready", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Check if user has bank accounts with PIX data
+      const bankAccounts = await storage.getBankAccountsByUserId(user.id);
+      const hasBankAccount = bankAccounts && bankAccounts.length > 0;
+      const hasPixKey = bankAccounts && bankAccounts.some(account => account.pixKey && account.pixKeyType);
+      
+      // Check if user has document data in profile
+      let hasProfileDocuments = false;
+      if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        hasProfileDocuments = !!(assembler && assembler.documentType && assembler.documentNumber);
+      } else if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(user.id);
+        hasProfileDocuments = !!(store && store.documentType && store.documentNumber);
+      }
+
+      const isPixReady = hasBankAccount || hasProfileDocuments;
+
+      res.json({
+        isPixReady,
+        hasBankAccount,
+        hasPixKey,
+        hasProfileDocuments,
+        recommendations: !isPixReady ? [
+          "Cadastre uma conta bancária com chave PIX para facilitar recebimentos",
+          "Complete os dados de CPF/CNPJ no seu perfil"
+        ] : hasPixKey ? [] : [
+          "Adicione uma chave PIX à sua conta bancária para recebimentos mais rápidos"
+        ]
+      });
+    } catch (error) {
+      console.error("Erro ao verificar dados PIX:", error);
+      res.status(500).json({ message: "Erro ao verificar configuração PIX" });
+    }
+  });
   
   // Obter contas bancárias do usuário logado
   app.get("/api/bank-accounts", async (req, res) => {
