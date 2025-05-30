@@ -39,56 +39,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const unreadCount = unreadData.count;
   const hasUnreadMessage = unreadCount > 0;
   
-  // Monitorar mensagens recebidas via WebSocket (através do hook)
+  // Monitorar mensagens recebidas via WebSocket e atualizar contagem
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log('[DashboardLayout] Nova mensagem recebida via WebSocket', lastMessage);
       
-      // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
-      if (activeTab !== 'chat') {
-        setHasUnreadMessage(true);
-        setUnreadCount(prevCount => prevCount + 1);
-      }
+      // Atualizar a contagem de mensagens não lidas
+      refetchUnreadCount();
     }
-  }, [lastMessage, activeTab]);
+  }, [lastMessage, refetchUnreadCount]);
   
-  // Ouvir eventos de notificação diretamente disparados pelo WebSocket
-  useEffect(() => {
-    const handleNotification = (event: any) => {
-      const { type, data } = event.detail;
-      console.log('[DashboardLayout] Notificação recebida via evento:', type, data);
-      
-      if (type === 'new_message') {
-        // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
-        if (activeTab !== 'chat') {
-          setHasUnreadMessage(true);
-          setUnreadCount(prevCount => prevCount + 1);
-        }
-      } else if (type === 'new_application') {
-        // Se não estiver na aba de chat, marcar como mensagem não lida e incrementar contador
-        if (activeTab !== 'chat') {
-          setHasUnreadMessage(true);
-          setUnreadCount(prevCount => prevCount + 1);
-        }
-      }
-    };
-    
-    // Adicionar ouvinte de evento
-    window.addEventListener('new-notification', handleNotification);
-    
-    // Remover ouvinte ao desmontar
-    return () => {
-      window.removeEventListener('new-notification', handleNotification);
-    };
-  }, [activeTab]);
-  
-  // Limpar indicador de mensagem não lida quando mudar para a aba de chat
+  // Limpar contagem quando mudar para a aba de chat
   useEffect(() => {
     if (activeTab === 'chat') {
-      setHasUnreadMessage(false);
-      setUnreadCount(0); // Reiniciar o contador ao abrir o chat
+      // Atualizar a contagem após um pequeno delay para permitir que as mensagens sejam marcadas como lidas
+      setTimeout(() => {
+        refetchUnreadCount();
+      }, 1000);
     }
-  }, [activeTab]);
+  }, [activeTab, refetchUnreadCount]);
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
