@@ -212,6 +212,49 @@ export function PixPaymentDialog({
     }, 5000); // Check every 5 seconds
   };
 
+  // Simulate payment confirmation for testing
+  const simulatePaymentConfirmation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest({
+        method: 'POST',
+        url: '/api/payment/pix/simulate-confirm',
+        data: { serviceId }
+      });
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.success) {
+        setPaymentCompleted(true);
+        setIsCheckingPayment(false);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        
+        toast({
+          title: "Pagamento Simulado",
+          description: "Pagamento confirmado automaticamente! Comprovante enviado no chat.",
+        });
+        
+        // Refresh messages to show the automatic payment proof
+        queryClient.invalidateQueries({ queryKey: ['/api/messages', serviceId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        
+        // Close dialog after success
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Erro ao simular confirmação de pagamento",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Send automatic payment proof to chat
   const sendAutomaticPaymentProof = async (paymentData: any) => {
     try {
@@ -408,12 +451,23 @@ export function PixPaymentDialog({
               </CardContent>
             </Card>
 
-            <Button 
-              onClick={() => setStep('proof')}
-              className="w-full"
-            >
-              Já Fiz o Pagamento
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setStep('proof')}
+                className="flex-1"
+                variant="outline"
+              >
+                Já Fiz o Pagamento
+              </Button>
+              <Button 
+                onClick={() => simulatePaymentConfirmation.mutate()}
+                disabled={simulatePaymentConfirmation.isPending}
+                className="flex-1"
+                variant="default"
+              >
+                {simulatePaymentConfirmation.isPending ? 'Simulando...' : 'Simular Pagamento'}
+              </Button>
+            </div>
           </div>
         )}
 

@@ -3095,6 +3095,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "ID do pagamento e token são obrigatórios" });
       }
 
+      console.log(`[PIX Status] Verificando pagamento ID: ${paymentId}`);
+
       // Check payment status with Canvi gateway
       const statusResponse = await axios.get(`https://gateway-homol.service-canvi.com.br/bt/pix/${paymentId}`, {
         headers: {
@@ -3107,18 +3109,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentStatus = statusResponse.data.status || statusResponse.data.situacao;
       const isCompleted = paymentStatus === 'CONCLUIDO' || paymentStatus === 'PAGO' || paymentStatus === 'CONFIRMADO';
 
+      console.log(`[PIX Status] Status do pagamento: ${paymentStatus}, Concluído: ${isCompleted}`);
+
       res.json({
         success: true,
         status: paymentStatus,
         isCompleted,
         paymentData: statusResponse.data
       });
-    } catch (error) {
-      console.error("Erro ao verificar status do pagamento PIX:", error);
+    } catch (error: any) {
+      console.error("Erro ao verificar status do pagamento PIX:", error.response?.data || error.message);
+      
+      // Se for erro 404, significa que o pagamento não foi encontrado
+      if (error.response?.status === 404) {
+        return res.json({
+          success: true,
+          status: 'PENDENTE',
+          isCompleted: false,
+          message: 'Pagamento ainda não processado pelo gateway'
+        });
+      }
+      
       res.status(500).json({ 
         success: false, 
         message: "Erro ao verificar status do pagamento",
         details: error.response?.data?.message || error.message
+      });
+    }
+  });
+
+  // PIX Payment Webhook - Recebe notificações automáticas da Canvi
+  app.post("/api/payment/pix/webhook", async (req, res) => {
+    try {
+      console.log("[PIX Webhook] Notificação recebida:", JSON.stringify(req.body, null, 2));
+      
+      const { identificador_externo, status, valor, id_invoice_pix } = req.body;
+      
+      if (!identificador_externo) {
+        console.log("[PIX Webhook] Identificador externo não encontrado");
+        return res.status(400).json({ message: "Identificador externo obrigatório" });
+      }
+      
+      // Extrair serviceId do identificador externo (formato: service_{serviceId}_{timestamp}_{randomSuffix})
+      const serviceIdMatch = identificador_externo.match(/service_(\d+)_/);
+      if (!serviceIdMatch) {
+        console.log("[PIX Webhook] ServiceId não encontrado no identificador:", identificador_externo);
+        return res.status(400).json({ message: "ServiceId não encontrado" });
+      }
+      
+      const serviceId = parseInt(serviceIdMatch[1]);
+      const service = await storage.getServiceById(serviceId);
+      
+      if (!service) {
+        console.log("[PIX Webhook] Serviço não encontrado:", serviceId);
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+      
+      // Verificar se o pagamento foi confirmado
+      const isCompleted = status === 'CONCLUIDO' || status === 'PAGO' || status === 'CONFIRMADO';
+      
+      if (isCompleted) {
+        console.log("[PIX Webhook] Pagamento confirmado para serviço:", serviceId);
+        
+        // Atualizar status do serviço
+        await storage.updateService(serviceId, {
+          paymentStatus: 'completed',
+          status: 'hired'
+        });
+        
+        // Buscar informações do pagador (lojista que está pagando)
+        const store = await storage.getStoreByUserId(service.storeId!);
+        const storeUser = store ? await storage.getUser(store.userId) : null;
+        
+        // Gerar comprovante de pagamento
+        const proofImageUrl = generatePaymentProofImage({
+          serviceId,
+          amount: service.price || '0',
+          reference: identificador_externo,
+          payerName: storeUser?.name || 'Usuário',
+          timestamp: new Date().toLocaleString('pt-BR')
+        });
+        
+        // Enviar comprovante no chat automaticamente
+        const paymentMessage = await storage.createMessage({
+          serviceId,
+          senderId: storeUser?.id || service.storeId!,
+          content: `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${identificador_externo}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*`,
+          fileUrl: proofImageUrl
+        });
+        
+        // Notificar via WebSocket sobre o pagamento confirmado
+        const clients = global.wsClients || new Map();
+        
+        // Notificar o montador
+        if (service.acceptedAssemblerId) {
+          const assemblerClients = clients.get(service.acceptedAssemblerId);
+          if (assemblerClients && assemblerClients.length > 0) {
+            assemblerClients.forEach((ws: WebSocket) => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  type: 'payment_confirmed',
+                  serviceId,
+                  message: 'Pagamento confirmado! O serviço foi pago.',
+                  amount: service.price
+                }));
+              }
+            });
+          }
+        }
+        
+        // Notificar a loja
+        if (storeUser) {
+          const storeClients = clients.get(storeUser.id);
+          if (storeClients && storeClients.length > 0) {
+            storeClients.forEach((ws: WebSocket) => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  type: 'payment_confirmed',
+                  serviceId,
+                  message: 'Seu pagamento PIX foi confirmado!',
+                  amount: service.price
+                }));
+              }
+            });
+          }
+        }
+        
+        console.log("[PIX Webhook] Comprovante enviado no chat e notificações enviadas");
+      }
+      
+      res.json({ success: true, message: "Webhook processado com sucesso" });
+    } catch (error: any) {
+      console.error("Erro ao processar webhook PIX:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao processar webhook",
+        details: error.message
+      });
+    }
+  });
+
+  // Simulador de confirmação de pagamento PIX (para testes)
+  app.post("/api/payment/pix/simulate-confirm", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId } = req.body;
+
+      if (!serviceId) {
+        return res.status(400).json({ message: "ID do serviço é obrigatório" });
+      }
+
+      const service = await storage.getServiceById(serviceId);
+      if (!service || !service.paymentReference) {
+        return res.status(404).json({ message: "Serviço ou referência de pagamento não encontrado" });
+      }
+
+      // Simular webhook de confirmação
+      const webhookData = {
+        identificador_externo: service.paymentReference,
+        status: 'CONCLUIDO',
+        valor: Math.round(parseFloat(service.price || '0') * 100),
+        id_invoice_pix: `sim_${Date.now()}`
+      };
+
+      // Processar como se fosse um webhook real
+      const webhookResponse = await axios.post(`${req.protocol}://${req.get('host')}/api/payment/pix/webhook`, webhookData);
+
+      res.json({
+        success: true,
+        message: "Pagamento simulado e confirmado com sucesso!",
+        webhookResponse: webhookResponse.data
+      });
+    } catch (error: any) {
+      console.error("Erro ao simular confirmação:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro ao simular confirmação",
+        details: error.message
       });
     }
   });
@@ -3130,7 +3300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
-      const { serviceId, paymentProof, paymentReference } = req.body;
+      const { serviceId, paymentProof, paymentReference, isAutomatic } = req.body;
 
       if (!serviceId || !paymentProof) {
         return res.status(400).json({ message: "Comprovante de pagamento é obrigatório" });
@@ -3142,14 +3312,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Generate payment proof image URL
-      const proofImageUrl = generatePaymentProofImage({
-        serviceId,
-        amount: service.price || '0',
-        reference: paymentReference,
-        payerName: req.user!.name,
-        timestamp: new Date().toLocaleString('pt-BR')
-      });
+      // Generate payment proof image URL se não for automático
+      let proofImageUrl;
+      if (isAutomatic) {
+        proofImageUrl = generatePaymentProofImage({
+          serviceId,
+          amount: service.price || '0',
+          reference: paymentReference,
+          payerName: req.user!.name,
+          timestamp: new Date().toLocaleString('pt-BR')
+        });
 
       // Create a message in chat with payment confirmation as image
       const paymentMessage = await storage.createMessage({
