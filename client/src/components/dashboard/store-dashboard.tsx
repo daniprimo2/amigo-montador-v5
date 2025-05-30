@@ -692,20 +692,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     return apiServices.map(service => ({
       id: service.id,
       title: service.title,
-      description: service.description,
       location: service.location,
       date: service.date,
       startDate: service.startDate,
       endDate: service.endDate,
       price: service.price,
-      materialType: service.materialType,
-      cep: service.cep,
-      address: service.address,
-      addressNumber: service.addressNumber,
-      projectFiles: service.projectFiles,
       // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
-      status: service.status
+      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
     }));
   };
   
@@ -715,7 +709,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
-    if (activeTab === 'in-progress') return service.status === 'hired' || service.status === 'in-progress';
+    if (activeTab === 'in-progress') return service.status === 'in-progress';
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
   });
