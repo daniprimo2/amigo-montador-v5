@@ -347,15 +347,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Adicionar informações da loja e status da candidatura a cada serviço
       const enhancedServices = await Promise.all(filteredServices.map(async (service) => {
-        // Buscar dados da loja
+        // Buscar dados completos da loja incluindo logoUrl
         const storeResult = await db
           .select({
             id: stores.id,
-            name: stores.name
+            name: stores.name,
+            logoUrl: stores.logoUrl,
+            userId: stores.userId
           })
           .from(stores)
           .where(eq(stores.id, service.storeId))
           .limit(1);
+        
+        // Buscar dados do usuário da loja para obter nome e foto do perfil
+        let storeUserData = null;
+        if (storeResult.length > 0 && storeResult[0].userId) {
+          const userResult = await db
+            .select({
+              id: users.id,
+              name: users.name,
+              profilePhotoUrl: users.profilePhotoUrl
+            })
+            .from(users)
+            .where(eq(users.id, storeResult[0].userId))
+            .limit(1);
+          
+          if (userResult.length > 0) {
+            storeUserData = userResult[0];
+          }
+        }
         
         // Buscar status da candidatura para este serviço
         const application = allApplications.find(app => app.serviceId === service.id);
@@ -365,7 +385,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return {
           ...service,
-          store: storeResult.length > 0 ? storeResult[0] : null,
+          store: storeResult.length > 0 ? {
+            ...storeResult[0],
+            user: storeUserData ? {
+              id: storeUserData.id,
+              name: storeUserData.name,
+              photoUrl: storeUserData.profilePhotoUrl
+            } : null
+          } : null,
           applicationStatus: application ? application.status : null,
           hasAcceptedApplication: application ? application.status === 'accepted' : false,
           hasUnreadMessages: hasUnreadMessages
