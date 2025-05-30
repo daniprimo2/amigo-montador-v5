@@ -608,7 +608,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       </div>
       
       {/* Área de entrada de mensagem */}
-      <div className="bg-white p-3 rounded-b-lg shadow-sm">
+      <div className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-b-lg shadow-sm border-t border-gray-200">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             value={message}
@@ -620,7 +620,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           <Button 
             type="submit" 
             disabled={!message.trim() || sendMessageMutation.isPending}
-            className="bg-primary text-white hover:bg-primary/90"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm transition-all duration-200"
           >
             {sendMessageMutation.isPending ? (
               <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
