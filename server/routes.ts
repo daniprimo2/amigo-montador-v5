@@ -3322,13 +3322,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payerName: req.user!.name,
           timestamp: new Date().toLocaleString('pt-BR')
         });
+      }
 
       // Create a message in chat with payment confirmation as image
       const paymentMessage = await storage.createMessage({
         serviceId: serviceId,
         senderId: req.user!.id,
-        content: proofImageUrl, // URL da imagem do comprovante
-        messageType: 'payment_proof'
+        content: isAutomatic ? 
+          `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${paymentReference}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*` :
+          paymentProof
       });
 
       // Update service payment status
