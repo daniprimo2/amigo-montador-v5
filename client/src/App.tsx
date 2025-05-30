@@ -14,6 +14,8 @@ function Router() {
       <ProtectedRoute path="/lojista" component={StoreDashboardPage} />
       <ProtectedRoute path="/montador" component={AssemblerDashboardPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/register" component={AuthPage} />
+      <Route path="/login" component={AuthPage} />
       <Route path="/" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

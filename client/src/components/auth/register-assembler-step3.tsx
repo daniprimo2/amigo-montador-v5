@@ -133,7 +133,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         // Upload RG/CNH frente
         const rgFrontFormData = new FormData();
         rgFrontFormData.append('file', idFrontFiles[0]);
-        const rgFrontResponse = await fetch('/api/upload/documents', {
+        const rgFrontResponse = await fetch('/api/upload', {
           method: 'POST',
           body: rgFrontFormData,
         });
@@ -148,7 +148,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         // Upload RG/CNH verso
         const rgBackFormData = new FormData();
         rgBackFormData.append('file', idBackFiles[0]);
-        const rgBackResponse = await fetch('/api/upload/documents', {
+        const rgBackResponse = await fetch('/api/upload', {
           method: 'POST',
           body: rgBackFormData,
         });
@@ -163,7 +163,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         // Upload comprovante de residência
         const addressFormData = new FormData();
         addressFormData.append('file', addressFiles[0]);
-        const addressResponse = await fetch('/api/upload/documents', {
+        const addressResponse = await fetch('/api/upload', {
           method: 'POST',
           body: addressFormData,
         });
@@ -181,7 +181,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           for (let i = 0; i < certFiles.length; i++) {
             const certFormData = new FormData();
             certFormData.append('file', certFiles[i]);
-            const certResponse = await fetch('/api/upload/documents', {
+            const certResponse = await fetch('/api/upload', {
               method: 'POST',
               body: certFormData,
             });
