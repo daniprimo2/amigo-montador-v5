@@ -21,7 +21,9 @@ interface ServiceProps {
   title: string;
   description?: string;
   location: string;
-  date: string;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
   price: string;
   candidates: number;
   materialType?: string;
@@ -222,14 +224,36 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </div>
         </div>
         
-        {/* Data e preço em layout responsivo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          <div className="flex items-center">
-            <CalendarIcon className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
-            <span className="text-xs sm:text-sm text-gray-600 truncate">
-              {service.date}
-            </span>
-          </div>
+        {/* Datas de início e fim, e preço */}
+        <div className="space-y-2 mb-3">
+          {/* Datas de início e fim */}
+          {service.startDate && service.endDate ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="flex items-center">
+                <CalendarIcon className="h-4 w-4 text-green-500 mr-1 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium text-green-600">Início:</span>{' '}
+                  {new Date(service.startDate).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <CalendarIcon className="h-4 w-4 text-blue-500 mr-1 flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-medium text-blue-600">Fim:</span>{' '}
+                  {new Date(service.endDate).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+            </div>
+          ) : service.date && (
+            <div className="flex items-center">
+              <CalendarIcon className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-gray-600 truncate">
+                {service.date}
+              </span>
+            </div>
+          )}
+          
+          {/* Preço */}
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
             <span className="text-xs sm:text-sm text-gray-600 font-medium">{service.price}</span>
