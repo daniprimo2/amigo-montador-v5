@@ -2737,7 +2737,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         texto_instrucao: "Pagamento do serviço de montagem",
         identificador_externo: uniqueReference,
         identificador_movimento: uniqueReference,
-        enviar_qr_code: true,
         tag: [
           "amigo_montador",
           `service_${serviceId}`
@@ -2745,7 +2744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cliente: {
           nome: user.name,
           tipo_documento: "cpf",
-          numero_documento: "000.000.000-00",
+          numero_documento: "744.674.080-96",
           "e-mail": user.email
         }
       };
