@@ -1161,21 +1161,35 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{service.title}</h4>
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full animate-pulse">
-                              Nova candidatura
-                            </span>
+                        <div className="flex items-start gap-3">
+                          {/* Foto do montador */}
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-1">
+                            <img
+                              src={service.assemblerPhoto || '/default-avatar.svg'}
+                              alt={service.assemblerName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/default-avatar.svg';
+                              }}
+                            />
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              <span>Montador: {service.assemblerName}</span>
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Aguardando sua aprovação
-                            </p>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <h4 className="font-medium">{service.title}</h4>
+                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full animate-pulse">
+                                Nova candidatura
+                              </span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Montador: {service.assemblerName}</span>
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Aguardando sua aprovação
+                              </p>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center">
@@ -1203,40 +1217,54 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{service.title}</h4>
-                            {service.hasNewMessages && (
-                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                Nova mensagem
-                              </span>
-                            )}
+                        <div className="flex items-start gap-3">
+                          {/* Foto do montador */}
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-1">
+                            <img
+                              src={service.assembler?.photoUrl || service.assemblerPhoto || '/default-avatar.svg'}
+                              alt={service.assembler?.name || service.assemblerName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/default-avatar.svg';
+                              }}
+                            />
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                            <div className="flex flex-col gap-1">
-                              <p className="text-sm text-gray-500 flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                <span>Montador: {service.assembler?.name || service.assemblerName}</span>
-                              </p>
-                              {service.assembler && (
-                                <div className="text-xs text-gray-400 ml-5">
-                                  {service.assembler.phone && (
-                                    <span>Tel: {service.assembler.phone}</span>
-                                  )}
-                                  {service.assembler.city && service.assembler.state && (
-                                    <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
-                                  )}
-                                  {service.assembler.rating && (
-                                    <span className="ml-3">★ {service.assembler.rating}/5</span>
-                                  )}
-                                </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <h4 className="font-medium">{service.title}</h4>
+                              {service.hasNewMessages && (
+                                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                  Nova mensagem
+                                </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-500">
-                              {service.status === 'open' ? 'Aguardando início' : 
-                               service.status === 'in-progress' ? 'Em andamento' : 
-                               service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
-                            </p>
+                            <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                                <div className="flex flex-col gap-1">
+                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Montador: {service.assembler?.name || service.assemblerName}</span>
+                                </p>
+                                {service.assembler && (
+                                  <div className="text-xs text-gray-400 ml-5">
+                                    {service.assembler.phone && (
+                                      <span>Tel: {service.assembler.phone}</span>
+                                    )}
+                                    {service.assembler.city && service.assembler.state && (
+                                      <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
+                                    )}
+                                    {service.assembler.rating && (
+                                      <span className="ml-3">★ {service.assembler.rating}/5</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                {service.status === 'open' ? 'Aguardando início' : 
+                                 service.status === 'in-progress' ? 'Em andamento' : 
+                                 service.status === 'completed' ? 'Concluído' : 'Status desconhecido'}
+                              </p>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center">
@@ -1267,19 +1295,32 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                       }}
                     >
                       <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h4 className="font-medium">{service.title}</h4>
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              Finalizado
-                            </span>
+                        <div className="flex items-start gap-3">
+                          {/* Foto do montador */}
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-1">
+                            <img
+                              src={service.assembler?.photoUrl || service.assemblerPhoto || '/default-avatar.svg'}
+                              alt={service.assembler?.name || service.assemblerName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/default-avatar.svg';
+                              }}
+                            />
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                            <div className="flex flex-col gap-1">
-                              <p className="text-sm text-gray-500 flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                <span>Montador: {service.assembler?.name || service.assemblerName}</span>
-                              </p>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <h4 className="font-medium">{service.title}</h4>
+                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                Finalizado
+                              </span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
+                              <div className="flex flex-col gap-1">
+                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  <span>Montador: {service.assembler?.name || service.assemblerName}</span>
+                                </p>
                               {service.assembler && (
                                 <div className="text-xs text-gray-400 ml-5">
                                   {service.assembler.phone && (
