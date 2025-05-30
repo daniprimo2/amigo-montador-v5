@@ -28,7 +28,7 @@ export const stores = pgTable("stores", {
   city: text("city").notNull(),
   state: text("state").notNull(),
   phone: text("phone"),
-  logoUrl: text("logo_url"),
+  logoUrl: text("logo_url").notNull(),
   materialTypes: jsonb("material_types"), // ['marcenaria', 'plano-corte', 'fabrica']
 });
 
