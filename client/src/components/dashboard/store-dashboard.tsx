@@ -692,19 +692,29 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     return apiServices.map(service => ({
       id: service.id,
       title: service.title,
+      description: service.description,
       location: service.location,
       date: service.date,
       startDate: service.startDate,
       endDate: service.endDate,
       price: service.price,
+      materialType: service.materialType,
+      cep: service.cep,
+      address: service.address,
+      addressNumber: service.addressNumber,
+      projectFiles: service.projectFiles,
       // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
-      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
+      status: service.status
     }));
   };
   
   // Usar dados da API ou mostrar dados vazios se estiver carregando
   const allServices = servicesQuery.data && Array.isArray(servicesQuery.data) ? processApiServices(servicesQuery.data) : [];
+  
+  // Debug: mostrar dados recebidos
+  console.log('[StoreDashboard] Dados da API:', servicesQuery.data);
+  console.log('[StoreDashboard] Todos os serviços processados:', allServices);
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
@@ -713,6 +723,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
   });
+  
+  console.log(`[StoreDashboard] Aba ativa: ${activeTab}, Serviços filtrados:`, services);
 
   // Função para lidar com o clique no botão de avaliação
   const handleRateClick = (service: any) => {
