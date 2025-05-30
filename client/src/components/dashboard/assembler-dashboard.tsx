@@ -510,12 +510,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <div 
             className={`rounded-lg p-3 text-center transition-all duration-300 ${
               serviceCounts.inProgress > 0 
-                ? 'bg-amber-50 border border-amber-200 shadow-sm hover:shadow' 
+                ? 'bg-yellow-50 border border-yellow-200 shadow-sm hover:shadow' 
                 : 'bg-gray-100'
             }`}
             onClick={() => serviceCounts.inProgress > 0 && setDashboardSection('chat')}
           >
-            <div className={`font-bold text-xl ${serviceCounts.inProgress > 0 ? 'text-amber-600' : 'text-primary'}`}>
+            <div className={`font-bold text-xl ${serviceCounts.inProgress > 0 ? 'text-yellow-600' : 'text-primary'}`}>
               {serviceCounts.inProgress}
             </div>
             <div className="text-xs text-gray-500">Em Andamento</div>

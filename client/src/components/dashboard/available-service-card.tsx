@@ -146,7 +146,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       <Button 
         onClick={handleViewServiceDetails}
         disabled={service.status === 'in-progress' || hasApplied}
-        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${hasApplied ? 'bg-amber-500 hover:bg-amber-600' : 'bg-primary hover:bg-opacity-90'} text-white`}
+        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${hasApplied ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-primary hover:bg-opacity-90'} text-white`}
       >
         {service.status === 'in-progress' ? 
           'Serviço em andamento' : 

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import EditServiceDialog from './edit-service-dialog';
+import StatusBadge from '@/components/ui/status-badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,22 +46,7 @@ interface StoreServiceCardProps {
   onRateClick?: (service: ServiceProps) => void;
 }
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const statusMap: Record<string, { bg: string; text: string; label: string }> = {
-    open: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Em aberto' },
-    'in-progress': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Em andamento' },
-    completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Finalizado' },
-    cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelado' },
-  };
 
-  const { bg, text, label } = statusMap[status] || statusMap.open;
-
-  return (
-    <span className={`px-2 py-1 ${bg} ${text} text-xs rounded-full`}>
-      {label}
-    </span>
-  );
-};
 
 export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({ 
   service, 
