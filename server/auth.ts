@@ -160,6 +160,32 @@ export function setupAuth(app: Express) {
         };
         await storage.createStore(storeData);
         console.log("Loja criada com sucesso");
+
+        // Criar informações bancárias para lojista
+        console.log("Verificando dados bancários para lojista...");
+        console.log("bankName:", req.body.bankName);
+        console.log("accountNumber:", req.body.accountNumber);
+        
+        if (req.body.bankName && req.body.accountNumber) {
+          console.log("Criando conta bancária para lojista...");
+          const bankAccountData: InsertBankAccount = {
+            userId,
+            bankName: req.body.bankName,
+            accountType: req.body.accountType,
+            accountNumber: req.body.accountNumber,
+            agency: req.body.agency,
+            holderName: req.body.holderName,
+            holderDocumentType: req.body.holderDocumentType,
+            holderDocumentNumber: req.body.holderDocumentNumber,
+            pixKey: req.body.pixKey || null,
+            pixKeyType: req.body.pixKeyType || null
+          };
+          console.log("Dados bancários do lojista a serem criados:", bankAccountData);
+          await storage.createBankAccount(bankAccountData);
+          console.log("Conta bancária do lojista criada com sucesso");
+        } else {
+          console.log("Dados bancários do lojista não fornecidos - pulando criação da conta bancária");
+        }
       } else if (userType === 'montador') {
         console.log("Criando dados do montador...");
         const assemblerData = {
