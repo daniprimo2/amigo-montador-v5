@@ -3025,13 +3025,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const valorEmCentavos = Math.round(parseFloat(amount) * 100);
       
       const pixPaymentData = {
-        valor: valorEmCentavos,
-        vencimento: expirationDate.toISOString().slice(0, 19), // Format: "2025-06-28T18:45:00"
+        valor: parseFloat(amount), // Use valor decimal, não centavos
         descricao: `Pagamento do serviço: ${service.title}`,
-        tipo_transacao: "pixCashin",
+        tipo_transacao: "pixStaticCashin",
         texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador",
         identificador_externo: identificadorExterno,
         identificador_movimento: identificadorMovimento,
+        enviar_qr_code: true,
         tag: [
           "amigo_montador",
           `service_${serviceId}`
