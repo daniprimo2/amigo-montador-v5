@@ -334,18 +334,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        {onLogout && (
-          <div className="flex justify-end mb-4">
-            <Button 
-              variant="outline" 
-              onClick={onLogout}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50 flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        )}
+
         
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
