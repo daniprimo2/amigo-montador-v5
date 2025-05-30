@@ -323,7 +323,8 @@ export class DatabaseStorage implements IStorage {
       // Filtrar por distância geográfica se o montador tem raio de trabalho definido
       let filteredByDistance = enhancedServices;
       
-      if (assembler.workRadius && assembler.city && assembler.state) {
+      if (assembler.workRadius && assembler.city && assembler.state && 
+          assembler.city !== 'Cidade não informada' && assembler.state !== 'Estado não informado') {
         try {
           const { geocodeFromCEP, calculateDistance } = await import('./geocoding');
           
@@ -368,6 +369,8 @@ export class DatabaseStorage implements IStorage {
           console.error('Erro ao filtrar serviços por distância:', error);
           // Continuar sem filtro de distância em caso de erro
         }
+      } else {
+        console.log('Montador sem localização válida cadastrada, mostrando todos os serviços disponíveis');
       }
 
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
@@ -673,11 +676,11 @@ export class DatabaseStorage implements IStorage {
       // Se for montador, buscar serviços que ele tem candidatura
       const assembler = await this.getAssemblerByUserId(userId);
       if (assembler) {
-        const applications = await db
+        const assemblerApplications = await db
           .select({ serviceId: applications.serviceId })
           .from(applications)
           .where(eq(applications.assemblerId, assembler.id));
-        userServiceIds = applications.map(app => app.serviceId);
+        userServiceIds = assemblerApplications.map(app => app.serviceId);
       }
     }
 
