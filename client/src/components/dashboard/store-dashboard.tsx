@@ -1151,10 +1151,25 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                             )}
                           </div>
                           <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              <span>Montador: {service.assemblerName}</span>
-                            </p>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Montador: {service.assembler?.name || service.assemblerName}</span>
+                              </p>
+                              {service.assembler && (
+                                <div className="text-xs text-gray-400 ml-5">
+                                  {service.assembler.phone && (
+                                    <span>Tel: {service.assembler.phone}</span>
+                                  )}
+                                  {service.assembler.city && service.assembler.state && (
+                                    <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
+                                  )}
+                                  {service.assembler.rating && (
+                                    <span className="ml-3">★ {service.assembler.rating}/5</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-500">
                               {service.status === 'open' ? 'Aguardando início' : 
                                service.status === 'in-progress' ? 'Em andamento' : 
@@ -1198,10 +1213,25 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                             </span>
                           </div>
                           <div className="flex flex-col sm:flex-row sm:justify-between mt-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              <span>Montador: {service.assemblerName}</span>
-                            </p>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>Montador: {service.assembler?.name || service.assemblerName}</span>
+                              </p>
+                              {service.assembler && (
+                                <div className="text-xs text-gray-400 ml-5">
+                                  {service.assembler.phone && (
+                                    <span>Tel: {service.assembler.phone}</span>
+                                  )}
+                                  {service.assembler.city && service.assembler.state && (
+                                    <span className="ml-3">{service.assembler.city}, {service.assembler.state}</span>
+                                  )}
+                                  {service.assembler.rating && (
+                                    <span className="ml-3">★ {service.assembler.rating}/5</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-500">
                               Serviço concluído
                             </p>

@@ -209,7 +209,9 @@ export class DatabaseStorage implements IStorage {
           const userResult = await db
             .select({
               id: users.id,
-              name: users.name
+              name: users.name,
+              phone: users.phone,
+              email: users.email
             })
             .from(users)
             .where(eq(users.id, assembler.userId))
@@ -223,7 +225,14 @@ export class DatabaseStorage implements IStorage {
               assembler: {
                 id: assemblerId,
                 name: userResult[0].name,
-                userId: assembler.userId
+                userId: assembler.userId,
+                phone: userResult[0].phone,
+                email: userResult[0].email,
+                city: assembler.city,
+                state: assembler.state,
+                specialties: assembler.specialties,
+                experience: assembler.experience,
+                rating: assembler.rating
               }
             };
           }
