@@ -2855,11 +2855,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Create a message in chat with payment confirmation
+      // Generate payment proof image URL
+      const proofImageUrl = await generatePaymentProofImage({
+        serviceId,
+        amount: service.price || '0',
+        reference: paymentReference,
+        payerName: req.user!.name,
+        timestamp: new Date().toLocaleString('pt-BR'),
+        paymentProof
+      });
+
+      // Create a message in chat with payment confirmation as image
       const paymentMessage = await storage.createMessage({
         serviceId: serviceId,
         senderId: req.user!.id,
-        content: `💰 COMPROVANTE DE PAGAMENTO PIX\n\n📋 Referência: ${paymentReference || 'N/A'}\n💵 Valor: R$ ${service.price || 'N/A'}\n\n📄 Comprovante: ${paymentProof}\n\n✅ Aguardando confirmação do recebimento.`,
+        content: proofImageUrl, // URL da imagem do comprovante
         messageType: 'payment_proof'
       });
 
