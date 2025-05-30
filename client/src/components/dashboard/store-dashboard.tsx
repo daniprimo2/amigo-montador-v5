@@ -864,7 +864,24 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             services.map(service => (
               <StoreServiceCard 
                 key={service.id} 
-                service={service} 
+                service={{
+                  id: service.id,
+                  title: service.title,
+                  description: service.description,
+                  location: service.location,
+                  date: service.date,
+                  startDate: service.startDate,
+                  endDate: service.endDate,
+                  price: service.price,
+                  candidates: service.candidates || 0,
+                  materialType: service.materialType,
+                  cep: service.cep,
+                  address: service.address,
+                  addressNumber: service.addressNumber,
+                  status: service.status,
+                  projectFiles: service.projectFiles,
+                  assembler: service.assembler
+                }} 
                 onClick={async (serviceId) => {
                   // Se o serviço estiver em andamento ou finalizado, redirecionar para o chat
                   if ((service.status === 'in-progress' || service.status === 'completed') && service.assembler) {
