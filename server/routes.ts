@@ -3592,6 +3592,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verificar se há avaliações pendentes para o usuário
+  app.get("/api/services/pending-evaluations", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const userId = req.user!.id;
+      const userType = req.user!.userType;
+      
+      let pendingServices = [];
+      
+      if (userType === 'lojista') {
+        // Buscar serviços da loja que precisam de avaliação
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          const services = await db
+            .select()
+            .from(services)
+            .where(
+              and(
+                eq(services.storeId, store.id),
+                eq(services.status, 'completed'),
+                eq(services.ratingRequired, true),
+                eq(services.ratingCompleted, false)
+              )
+            );
+          pendingServices = services;
+        }
+      } else if (userType === 'montador') {
+        // Buscar serviços do montador que precisam de avaliação
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          const acceptedApplications = await db
+            .select({ serviceId: applications.serviceId })
+            .from(applications)
+            .where(
+              and(
+                eq(applications.assemblerId, assembler.id),
+                eq(applications.status, 'accepted')
+              )
+            );
+          
+          if (acceptedApplications.length > 0) {
+            const serviceIds = acceptedApplications.map(app => app.serviceId);
+            pendingServices = await db
+              .select()
+              .from(services)
+              .where(
+                and(
+                  eq(services.status, 'completed'),
+                  eq(services.ratingRequired, true),
+                  eq(services.ratingCompleted, false),
+                  sql`${services.id} IN (${serviceIds.join(',')})`
+                )
+              );
+          }
+        }
+      }
+      
+      res.json({
+        hasPendingEvaluations: pendingServices.length > 0,
+        pendingServices: pendingServices.map(service => ({
+          id: service.id,
+          title: service.title,
+          completedAt: service.completedAt
+        }))
+      });
+    } catch (error) {
+      console.error("Erro ao verificar avaliações pendentes:", error);
+      res.status(500).json({ message: "Erro ao verificar avaliações pendentes" });
+    }
+  });
+
   // Criar avaliação para um serviço
   app.post("/api/services/:id/rate", async (req, res) => {
     try {
@@ -3690,6 +3764,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         toUserId: toUserId!,
         rating,
         comment
+      });
+      
+      // Marcar avaliação como concluída para este usuário no serviço
+      await storage.updateService(serviceId, {
+        ratingCompleted: true
       });
       
       // Notificar o usuário avaliado via WebSocket

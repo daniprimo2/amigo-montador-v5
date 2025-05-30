@@ -18,6 +18,7 @@ import { ChatInterface } from '@/components/chat/chat-interface';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { RatingList } from '@/components/rating/rating-list';
+import { PendingEvaluationsModal } from './pending-evaluations-modal';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -33,6 +34,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat'>('home');
+  const [showPendingEvaluations, setShowPendingEvaluations] = useState(false);
   const { connected, lastMessage } = useWebSocket();
   
   // Ouvir evento para abrir o diálogo de perfil
