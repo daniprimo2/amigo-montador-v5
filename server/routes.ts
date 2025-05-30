@@ -1465,6 +1465,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload de documentos
+  // Upload de documentos individuais para registro
+  app.post("/api/upload", async (req, res) => {
+    try {
+      if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).json({ message: "Nenhum arquivo enviado" });
+      }
+
+      // Criar pasta para uploads de documentos se não existir
+      const documentsDir = path.join(process.cwd(), 'uploads', 'documents');
+      if (!fs.existsSync(documentsDir)) {
+        fs.mkdirSync(documentsDir, { recursive: true });
+      }
+
+      // Pegar o primeiro arquivo (upload individual)
+      const file = Object.values(req.files)[0] as fileUpload.UploadedFile;
+      
+      // Verificar tipo de arquivo (imagens e PDFs)
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+      if (!validTypes.includes(file.mimetype)) {
+        return res.status(400).json({ 
+          message: "Arquivo deve ser uma imagem ou PDF" 
+        });
+      }
+
+      // Verificar tamanho (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ 
+          message: "Arquivo deve ter menos de 10MB" 
+        });
+      }
+
+      // Gerar nome de arquivo único
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${file.name}`;
+      const uploadPath = path.join(documentsDir, fileName);
+
+      // Salvar arquivo
+      await file.mv(uploadPath);
+      
+      // Retornar URL do arquivo
+      const url = `/uploads/documents/${fileName}`;
+      res.json({ url });
+    } catch (error) {
+      console.error("Erro ao fazer upload de documento:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.post("/api/upload/documents", async (req, res) => {
     try {
       if (!req.files || Object.keys(req.files).length === 0) {
