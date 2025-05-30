@@ -105,136 +105,28 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                   </span>
                 </div>
 
-                {/* Verifica se tem startDate e endDate separados (dados corretos do banco) */}
-                {service.startDate && service.endDate ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                    <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
-                      <div className="text-xs text-green-600 font-medium mb-1">
-                        🚀 INÍCIO DO SERVIÇO
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-green-700">
-                        {(() => {
-                          console.log('DEBUG: service.startDate recebido:', service.startDate);
-                          try {
-                            const date = new Date(service.startDate);
-                            console.log('DEBUG: Data parseada startDate:', date);
-                            // Verificar se a data é válida
-                            if (isNaN(date.getTime())) {
-                              console.log('Data de início inválida:', service.startDate);
-                              return service.startDate;
-                            }
-                            const formatted = date.toLocaleDateString("pt-BR", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            });
-                            console.log('DEBUG: Data formatada startDate:', formatted);
-                            return formatted;
-                          } catch (error) {
-                            console.error('Erro ao formatar startDate:', error);
-                            return service.startDate;
-                          }
-                        })()}
-                      </div>
-                    </div>
-                    <div className="bg-white border border-blue-300 rounded-md p-2 sm:p-3 shadow-sm">
-                      <div className="text-xs text-blue-600 font-medium mb-1">
-                        🏁 TÉRMINO PREVISTO
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-blue-700">
-                        {(() => {
-                          console.log('DEBUG: service.endDate recebido:', service.endDate);
-                          try {
-                            const date = new Date(service.endDate);
-                            console.log('DEBUG: Data parseada endDate:', date);
-                            // Verificar se a data é válida
-                            if (isNaN(date.getTime())) {
-                              console.log('Data de término inválida:', service.endDate);
-                              return service.endDate;
-                            }
-                            const formatted = date.toLocaleDateString("pt-BR", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            });
-                            console.log('DEBUG: Data formatada endDate:', formatted);
-                            return formatted;
-                          } catch (error) {
-                            console.error('Erro ao formatar endDate:', error);
-                            return service.endDate;
-                          }
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : service.date && service.date.includes("-") ? (
-                  /* Fallback para formato antigo com hífen */
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                    <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
-                      <div className="text-xs text-green-600 font-medium mb-1">
-                        🚀 INÍCIO DO SERVIÇO
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-green-700">
-                        {(() => {
-                          try {
-                            const date = new Date(
-                              service.date.split("-")[0].trim(),
-                            );
-                            return date.toLocaleDateString("pt-BR", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            });
-                          } catch (error) {
-                            return service.date.split("-")[0].trim();
-                          }
-                        })()}
-                      </div>
-                    </div>
-                    <div className="bg-white border border-blue-300 rounded-md p-2 sm:p-3 shadow-sm">
-                      <div className="text-xs text-blue-600 font-medium mb-1">
-                        🏁 TÉRMINO PREVISTO
-                      </div>
-                      <div className="text-xs sm:text-sm font-semibold text-blue-700">
-                        {(() => {
-                          try {
-                            const date = new Date(
-                              service.date.split("-")[1].trim(),
-                            );
-                            return date.toLocaleDateString("pt-BR", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            });
-                          } catch (error) {
-                            return service.date.split("-")[1].trim();
-                          }
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* Fallback para data única */
+                {/* Exibir datas de início e fim do serviço */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <div className="bg-white border border-green-300 rounded-md p-2 sm:p-3 shadow-sm">
                     <div className="text-xs text-green-600 font-medium mb-1">
-                      📅 DATA DO SERVIÇO
+                      🚀 INÍCIO DO SERVIÇO
                     </div>
                     <div className="text-xs sm:text-sm font-semibold text-green-700">
                       {(() => {
-                        const dateToUse = service.startDate || service.date;
-                        if (!dateToUse) {
-                          return (
-                            <span className="text-red-600 font-bold">
-                              ⚠️ ERRO: Data não informada
-                            </span>
-                          );
-                        }
                         try {
-                          const date = new Date(dateToUse);
+                          // Verificar se existe startDate
+                          const startDateValue = service.startDate;
+                          if (!startDateValue) {
+                            return "Data não informada";
+                          }
+                          
+                          const date = new Date(startDateValue);
+                          
+                          // Verificar se a data é válida
+                          if (isNaN(date.getTime())) {
+                            return "Data inválida";
+                          }
+                          
                           return date.toLocaleDateString("pt-BR", {
                             weekday: "short",
                             year: "numeric",
@@ -242,12 +134,46 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                             day: "numeric",
                           });
                         } catch (error) {
-                          return dateToUse;
+                          console.error('Erro ao formatar startDate:', error);
+                          return "Erro na data";
                         }
                       })()}
                     </div>
                   </div>
-                )}
+                  <div className="bg-white border border-blue-300 rounded-md p-2 sm:p-3 shadow-sm">
+                    <div className="text-xs text-blue-600 font-medium mb-1">
+                      🏁 TÉRMINO PREVISTO
+                    </div>
+                    <div className="text-xs sm:text-sm font-semibold text-blue-700">
+                      {(() => {
+                        try {
+                          // Verificar se existe endDate
+                          const endDateValue = service.endDate;
+                          if (!endDateValue) {
+                            return "Data não informada";
+                          }
+                          
+                          const date = new Date(endDateValue);
+                          
+                          // Verificar se a data é válida
+                          if (isNaN(date.getTime())) {
+                            return "Data inválida";
+                          }
+                          
+                          return date.toLocaleDateString("pt-BR", {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          });
+                        } catch (error) {
+                          console.error('Erro ao formatar endDate:', error);
+                          return "Erro na data";
+                        }
+                      })()}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center text-sm text-gray-600">
