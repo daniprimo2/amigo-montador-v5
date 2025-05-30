@@ -2880,10 +2880,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[PIX Token Test] Testando autenticação diretamente com Canvi...");
 
       // Canvi API credentials
-      const clientId = "FA854108C1FF62";
-      const privateKey = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      const clientId = "F77C510B3A1108";
+      const privateKey = "1093A110B3A1F77C5108D96108680102EE010149E109838109";
       
-      const apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
+      const apiUrl = 'https://gateway-production.service-canvi.com.br/bt/token';
       
       console.log("[PIX Token Test] URL:", apiUrl);
       console.log("[PIX Token Test] Client ID:", clientId);
@@ -2949,15 +2949,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Token] Usuário autenticado:", req.user?.id);
 
-      // Canvi API credentials - Teste
-      const clientId = "FA854108C1FF62";
-      const privateKey = "FBF62108C1FFA85410704AF6254F65C7F93AA106EBBFBF6210";
+      // Canvi API credentials - Produção
+      const clientId = "F77C510B3A1108";
+      const privateKey = "1093A110B3A1F77C5108D96108680102EE010149E109838109";
       
       console.log("[PIX Token] Autenticando com Canvi API...");
       
-      // Use only homolog endpoint as specified in curl
+      // Use production endpoint
       let authResponse;
-      let apiUrl = 'https://gateway-homol.service-canvi.com.br/bt/token';
+      let apiUrl = 'https://gateway-production.service-canvi.com.br/bt/token';
       
       console.log("[PIX Token] Tentando endpoint de homologação...");
       console.log("[PIX Token] URL:", apiUrl);
@@ -3156,7 +3156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[PIX Create] Enviando dados para Canvi:", JSON.stringify(pixPaymentData, null, 2));
 
-      const paymentResponse = await axios.post('https://gateway-homol.service-canvi.com.br/bt/pix', pixPaymentData, {
+      const paymentResponse = await axios.post('https://gateway-production.service-canvi.com.br/bt/pix', pixPaymentData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
