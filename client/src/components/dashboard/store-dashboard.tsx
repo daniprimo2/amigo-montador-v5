@@ -33,7 +33,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'calendar'>('home');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat'>('home');
   const { connected, lastMessage } = useWebSocket();
   
   // Ouvir evento para abrir o diálogo de perfil
@@ -1260,27 +1260,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     );
   };
 
-  const renderCalendarSection = () => {
-    // Converte os serviços para períodos do calendário
-    const servicePeriods = services?.map(service => ({
-      startDate: service.startDate,
-      endDate: service.endDate,
-      title: service.title
-    })) || [];
-
-    return (
-      <div className="mt-2">
-        <h3 className="text-lg font-semibold mb-4">Minha Agenda</h3>
-        <ServiceCalendar 
-          servicePeriods={servicePeriods}
-          onDateClick={(date) => {
-            console.log('Data clicada:', date);
-          }}
-        />
-      </div>
-    );
-  };
-
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
     switch(dashboardSection) {
@@ -1290,8 +1269,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         return renderServicesSection();
       case 'chat':
         return renderChatSection();
-      case 'calendar':
-        return renderCalendarSection();
       default:
         return renderHomeSection();
     }

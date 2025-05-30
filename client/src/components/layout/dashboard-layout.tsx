@@ -19,7 +19,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [, navigate] = useLocation();
   const { lastMessage } = useWebSocket();
   // Define the tabs with a state to track which tab is active
-  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'calendar' | 'explore'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore'>('home');
   // Estado para controlar a notificação de mensagem não lida
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
   // Contador de mensagens não lidas
@@ -85,7 +85,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
   
   // Function to handle tab changes and communicate with parent components
-  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'calendar' | 'explore') => {
+  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'explore') => {
     setActiveTab(tab);
     
     // Não navega para outra rota, apenas emite o evento para mudar a aba
@@ -116,7 +116,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-4 gap-1 sm:gap-2">
+        <div className="grid grid-cols-3 gap-1 sm:gap-2">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
@@ -132,18 +132,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <span className="text-xs sm:text-sm mt-1 font-medium">Serviços</span>
           </button>
           <ChatButton />
-          <button 
-            onClick={() => handleTabChange('calendar')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'calendar' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-          >
-            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Agenda</span>
-          </button>
         </div>
       );
     } else {
       return (
-        <div className="grid grid-cols-4 gap-1 sm:gap-2">
+        <div className="grid grid-cols-3 gap-1 sm:gap-2">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
@@ -159,13 +152,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <span className="text-xs sm:text-sm mt-1 font-medium">Explorar</span>
           </button>
           <ChatButton />
-          <button 
-            onClick={() => handleTabChange('calendar')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'calendar' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-          >
-            <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Agenda</span>
-          </button>
         </div>
       );
     }
