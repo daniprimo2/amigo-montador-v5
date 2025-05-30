@@ -546,7 +546,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
             {/* Botão de Pagamento PIX - aparece quando o serviço está contratado */}
-            {(service.status === 'accepted' || service.status === 'in-progress') && service.price && (
+            {(service.status === 'accepted' || service.status === 'in-progress' || service.status === 'hired') && service.price && (
               <Button
                 variant="outline"
                 size="sm"
@@ -702,7 +702,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           isOpen={isPixPaymentDialogOpen}
           onClose={() => setIsPixPaymentDialogOpen(false)}
           serviceId={serviceId}
-          amount={service?.price || 'R$ 0,00'}
+          amount={String(service?.price || '0')}
           serviceTitle={service?.title || 'Serviço'}
         />
       )}
