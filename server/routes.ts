@@ -3264,7 +3264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Buscar informações do pagador (lojista que está pagando)
-        const store = await storage.getStoreByUserId(service.storeId!);
+        const store = await storage.getStore(service.storeId!);
         const storeUser = store ? await storage.getUser(store.userId) : null;
         
         // Gerar comprovante de pagamento
@@ -3276,13 +3276,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timestamp: new Date().toLocaleString('pt-BR')
         });
         
-        // Enviar comprovante no chat automaticamente
-        const paymentMessage = await storage.createMessage({
-          serviceId,
-          senderId: storeUser?.id || service.storeId!,
-          content: `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${identificador_externo}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*`,
-          fileUrl: proofImageUrl
-        });
+        // Enviar comprovante no chat automaticamente (somente se temos um usuário válido)
+        if (storeUser?.id) {
+          const paymentMessage = await storage.createMessage({
+            serviceId,
+            senderId: storeUser.id,
+            content: `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${identificador_externo}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*`
+          });
+        }
         
         // Notificar via WebSocket sobre o pagamento confirmado
         const clients = global.wsClients || new Map();
