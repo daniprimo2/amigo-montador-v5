@@ -29,20 +29,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="absolute inset-0 tech-grid opacity-10"></div>
       
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Header with logo */}
-        <div className="flex items-center justify-center pt-8 pb-4">
-          {showBackButton && onBack && (
-            <button 
-              className="absolute left-6 text-white/80 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-white/10"
-              onClick={onBack}
-            >
-              <ArrowLeft size={24} />
-            </button>
-          )}
-          <div className="logo-glow">
-            <Logo size="lg" />
-          </div>
-        </div>
+        {showBackButton && onBack && (
+          <button 
+            className="absolute top-8 left-6 z-20 text-white/80 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-white/10"
+            onClick={onBack}
+          >
+            <ArrowLeft size={24} />
+          </button>
+        )}
         
         {/* Main content */}
         <div className="flex-1 flex items-center justify-center p-4">
