@@ -198,6 +198,30 @@
   animation: icon-pulse 2s ease-in-out infinite;
 }
 
+/* Tech logo container */
+.tech-logo-container {
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logo-pulse 3s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
 @keyframes icon-pulse {
   0%, 100% {
     transform: scale(1);

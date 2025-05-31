@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
+import Logo from '@/components/logo/logo';
 
 import { 
   Dialog,
@@ -90,8 +91,8 @@ export const LoginForm: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
-          <div className="tech-icon-container">
-            <Shield className="w-8 h-8 text-blue-400" />
+          <div className="tech-logo-container">
+            <Logo size="md" />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta</h2>
