@@ -180,15 +180,13 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
               </div>
             </div>
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '50%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+              <div style={{width: '50%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#282c34]"></div>
             </div>
           </div>
         </div>
       </div>
-      
       <h2 className="text-xl font-semibold text-foreground mb-1">Dados Pessoais</h2>
       <p className="text-sm text-muted-foreground mb-6">Preencha seus dados pessoais para continuar.</p>
-      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
