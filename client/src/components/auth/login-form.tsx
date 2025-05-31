@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 
 import { 
   Dialog,
@@ -85,61 +86,79 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-1">Bem vindo</h2>
-      <p className="text-sm text-gray-500 mb-6">
-        Preencha as informações abaixo para acessar sua conta.
-      </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="flex items-center justify-center mb-4">
+          <div className="tech-icon-container">
+            <Shield className="w-8 h-8 text-blue-400" />
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta</h2>
+        <p className="text-gray-300 text-sm">
+          Acesse sua conta para conectar-se com a rede
+        </p>
+      </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Email Field */}
           <FormField
             control={form.control}
             name="username"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-gray-300 text-sm font-medium">Email</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    className="round-input"
-                    placeholder="Email"
-                    type="email"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      {...field}
+                      className="tech-input pl-12"
+                      placeholder="seu@email.com"
+                      type="email"
+                    />
+                  </div>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-400 text-xs" />
               </FormItem>
             )}
           />
 
+          {/* Password Field */}
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-gray-300 text-sm font-medium">Senha</FormLabel>
                 <FormControl>
-                  <PasswordInput
-                    {...field}
-                    className="round-input"
-                    placeholder="Senha"
-                    showCounter
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <PasswordInput
+                      {...field}
+                      className="tech-input pl-12"
+                      placeholder="Digite sua senha"
+                    />
+                  </div>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-400 text-xs" />
               </FormItem>
             )}
           />
 
+          {/* Forgot Password */}
           <div className="text-center">
             <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
               <DialogTrigger asChild>
-                <button type="button" className="text-indigo-600 text-sm bg-transparent border-none cursor-pointer hover:underline">
+                <button type="button" className="text-blue-400 text-sm bg-transparent border-none cursor-pointer hover:text-blue-300 transition-colors duration-200">
                   Esqueci minha senha
                 </button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
                 <DialogHeader>
-                  <DialogTitle>Recuperação de senha</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-white">Recuperação de senha</DialogTitle>
+                  <DialogDescription className="text-gray-300">
                     Digite seu endereço de email para receber instruções de redefinição de senha.
                   </DialogDescription>
                 </DialogHeader>
@@ -150,23 +169,40 @@ export const LoginForm: React.FC = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="Seu email"
-                      className="col-span-4" 
+                      className="col-span-4 bg-gray-800 border-gray-600 text-white" 
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="button" onClick={handlePasswordReset}>Enviar</Button>
+                  <Button 
+                    type="button" 
+                    onClick={handlePasswordReset}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Enviar
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
 
+          {/* Submit Button */}
           <Button 
             type="submit" 
-            className="auth-button"
+            className="tech-button group w-full"
             disabled={loginMutation.isPending}
           >
-            {loginMutation.isPending ? 'Entrando...' : 'Entrar'}
+            <span className="flex items-center justify-center space-x-2">
+              <span>{loginMutation.isPending ? 'Conectando...' : 'Acessar Sistema'}</span>
+              {!loginMutation.isPending && (
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+              )}
+            </span>
+            {loginMutation.isPending && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="loading-spinner"></div>
+              </div>
+            )}
           </Button>
         </form>
       </Form>
