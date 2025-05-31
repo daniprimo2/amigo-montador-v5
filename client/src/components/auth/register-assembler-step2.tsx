@@ -78,8 +78,8 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
         </div>
       </div>
       
-      <h2 className="text-xl font-semibold text-gray-800 mb-1">Especialidades</h2>
-      <p className="text-sm text-gray-500 mb-6">Informe suas especialidades e experiência profissional.</p>
+      <h2 className="text-xl font-semibold text-foreground mb-1">Especialidades</h2>
+      <p className="text-sm text-muted-foreground mb-6">Informe suas especialidades e experiência profissional.</p>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
