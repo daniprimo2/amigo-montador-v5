@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import Logo from '../logo/logo';
+import amigoMontadorLogo from '@assets/Logo - Amigo Montador.jpg';
 import { Bell, Home, List, MessageSquare, Map, LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
@@ -181,7 +181,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="bg-zinc-800 w-full p-3 sm:p-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center">
-            <Logo size="sm" className="text-white" />
+            <img 
+              src={amigoMontadorLogo} 
+              alt="Amigo Montador" 
+              className="h-8 w-auto object-contain"
+            />
           </div>
           <div className="flex items-center space-x-3 sm:space-x-4">
             <button 

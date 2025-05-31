@@ -10,7 +10,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import Logo from '@/components/logo/logo';
+import amigoMontadorLogo from '@assets/Logo - Amigo Montador.jpg';
 
 import { 
   Dialog,
@@ -92,7 +92,11 @@ export const LoginForm: React.FC = () => {
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
           <div className="tech-logo-container">
-            <Logo size="md" />
+            <img 
+              src={amigoMontadorLogo} 
+              alt="Amigo Montador" 
+              className="w-32 h-32 object-contain"
+            />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta</h2>
