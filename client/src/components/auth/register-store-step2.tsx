@@ -239,15 +239,15 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                 </span>
               </div>
             </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
               <div style={{width: '100%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
             </div>
           </div>
         </div>
       </div>
       
-      <h2 className="text-xl font-semibold text-gray-800 mb-1">Dados da Loja</h2>
-      <p className="text-sm text-gray-500 mb-6">Preencha os dados da sua loja.</p>
+      <h2 className="text-xl font-semibold text-foreground mb-1">Dados da Loja</h2>
+      <p className="text-sm text-muted-foreground mb-6">Preencha os dados da sua loja.</p>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
