@@ -14,7 +14,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   onBack
 }) => {
   return (
-    <div className="min-h-screen tech-bg relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="floating-shapes">
@@ -29,7 +29,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="relative z-10 flex flex-col min-h-screen">
         {showBackButton && onBack && (
           <button 
-            className="absolute top-8 left-6 z-20 text-white/80 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-white/10"
+            className="absolute top-8 left-6 z-20 text-gray-600 hover:text-gray-800 transition-colors duration-200 p-2 rounded-full hover:bg-white/20"
             onClick={onBack}
           >
             <ArrowLeft size={24} />
@@ -37,9 +37,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         )}
         
         {/* Main content */}
-        <div className="flex-1 flex items-center justify-center p-4 text-[#bfc4c9]">
+        <div className="flex-1 flex items-center justify-center p-4">
           <div className="auth-card w-full max-w-md">
-            <div className="auth-card-inner bg-[#1c1c1c]">
+            <div className="auth-card-inner">
               {children}
             </div>
           </div>

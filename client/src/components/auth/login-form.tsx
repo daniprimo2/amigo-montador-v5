@@ -99,8 +99,8 @@ export const LoginForm: React.FC = () => {
             />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta</h2>
-        <p className="text-gray-300 text-sm">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Bem-vindo de volta</h2>
+        <p className="text-gray-600 text-sm">
           Acesse sua conta para conectar-se com a rede
         </p>
       </div>
@@ -112,10 +112,10 @@ export const LoginForm: React.FC = () => {
             name="username"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-gray-300 text-sm font-medium">Email</FormLabel>
+                <FormLabel className="text-gray-700 text-sm font-medium">Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                     <Input
                       {...field}
                       className="tech-input pl-12"
@@ -124,7 +124,7 @@ export const LoginForm: React.FC = () => {
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-400 text-xs" />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
@@ -135,10 +135,10 @@ export const LoginForm: React.FC = () => {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-gray-300 text-sm font-medium">Senha</FormLabel>
+                <FormLabel className="text-gray-700 text-sm font-medium">Senha</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
                     <PasswordInput
                       {...field}
                       className="tech-input pl-12"
@@ -146,7 +146,7 @@ export const LoginForm: React.FC = () => {
                     />
                   </div>
                 </FormControl>
-                <FormMessage className="text-red-400 text-xs" />
+                <FormMessage className="text-red-500 text-xs" />
               </FormItem>
             )}
           />
