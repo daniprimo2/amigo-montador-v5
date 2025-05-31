@@ -91,7 +91,7 @@ export const LoginForm: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
-          <div className="tech-logo-container text-[#0c0a0900]">
+          <div className="tech-logo-container text-[#0c0a0900] rounded-full">
             <img 
               src={amigoMontadorLogo} 
               alt="Amigo Montador" 
