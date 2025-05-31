@@ -95,7 +95,7 @@ export const LoginForm: React.FC = () => {
             <img 
               src={amigoMontadorLogo} 
               alt="Amigo Montador" 
-              className="w-32 h-32 object-contain"
+              className="w-32 h-32 object-cover rounded-full"
             />
           </div>
         </div>
