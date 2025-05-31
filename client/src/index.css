@@ -224,15 +224,15 @@
 }
 
 .auth-card-inner {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(245, 247, 249, 0.95);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  border: 1px solid rgba(209, 213, 219, 0.6);
   border-radius: 24px;
   padding: 2rem;
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 20px 25px -5px rgba(0, 0, 0, 0.08),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   animation: card-entrance 0.8s ease-out;
 }
 
@@ -297,13 +297,13 @@
 
 /* Tech input field */
 .tech-input {
-  @apply w-full h-12 bg-gray-50/80 border border-gray-300/70 rounded-xl text-gray-800 placeholder-gray-500 transition-all duration-300;
+  @apply w-full h-12 bg-gray-100/60 border border-gray-400/50 rounded-xl text-gray-800 placeholder-gray-600 transition-all duration-300;
   backdrop-filter: blur(10px);
 }
 
 .tech-input:focus {
-  @apply border-gray-500/70 ring-2 ring-gray-400/20 bg-white;
-  box-shadow: 0 0 20px rgba(107, 114, 128, 0.1);
+  @apply border-gray-600/60 ring-2 ring-gray-500/15 bg-gray-50;
+  box-shadow: 0 0 20px rgba(165, 168, 171, 0.12);
 }
 
 /* Tech button */
@@ -341,23 +341,23 @@
   }
 }
 
-/* Updated auth tabs for white/gray theme */
+/* Updated auth tabs for light gray theme */
 .auth-tabs {
-  @apply flex border-b border-gray-300/30 mb-6 bg-gray-100/50 rounded-xl p-1;
+  @apply flex border-b border-gray-400/20 mb-6 bg-gray-200/40 rounded-xl p-1;
   backdrop-filter: blur(10px);
 }
 
 .auth-tab {
-  @apply text-gray-600 font-medium py-2 px-6 rounded-lg transition-all duration-200 cursor-pointer;
+  @apply text-gray-700 font-medium py-2 px-6 rounded-lg transition-all duration-200 cursor-pointer;
 }
 
 .auth-tab.active {
-  @apply text-gray-800 bg-white border border-gray-300/50;
-  box-shadow: 0 2px 10px rgba(107, 114, 128, 0.1);
+  @apply text-gray-800 bg-gray-50 border border-gray-400/30;
+  box-shadow: 0 2px 10px rgba(165, 168, 171, 0.15);
 }
 
 .auth-tab:hover:not(.active) {
-  @apply text-gray-700 bg-gray-200/30;
+  @apply text-gray-800 bg-gray-300/30;
 }
 
 /* Legacy styles maintained for compatibility */

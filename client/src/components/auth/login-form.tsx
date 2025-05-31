@@ -159,10 +159,10 @@ export const LoginForm: React.FC = () => {
                   Esqueci minha senha
                 </button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-white border-gray-200">
+              <DialogContent className="sm:max-w-[425px] bg-gray-50 border-gray-300">
                 <DialogHeader>
                   <DialogTitle className="text-gray-800">Recuperação de senha</DialogTitle>
-                  <DialogDescription className="text-gray-600">
+                  <DialogDescription className="text-gray-700">
                     Digite seu endereço de email para receber instruções de redefinição de senha.
                   </DialogDescription>
                 </DialogHeader>
@@ -173,7 +173,7 @@ export const LoginForm: React.FC = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="Seu email"
-                      className="col-span-4 bg-gray-50 border-gray-300 text-gray-800" 
+                      className="col-span-4 bg-gray-100 border-gray-400 text-gray-800" 
                     />
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export const LoginForm: React.FC = () => {
                   <Button 
                     type="button" 
                     onClick={handlePasswordReset}
-                    className="bg-gray-700 hover:bg-gray-800 text-white"
+                    className="bg-gray-600 hover:bg-gray-700 text-white"
                   >
                     Enviar
                   </Button>
