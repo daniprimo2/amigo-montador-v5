@@ -155,14 +155,14 @@ export const LoginForm: React.FC = () => {
           <div className="text-center">
             <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
               <DialogTrigger asChild>
-                <button type="button" className="text-blue-400 text-sm bg-transparent border-none cursor-pointer hover:text-blue-300 transition-colors duration-200">
+                <button type="button" className="text-gray-600 text-sm bg-transparent border-none cursor-pointer hover:text-gray-800 transition-colors duration-200">
                   Esqueci minha senha
                 </button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
+              <DialogContent className="sm:max-w-[425px] bg-white border-gray-200">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Recuperação de senha</DialogTitle>
-                  <DialogDescription className="text-gray-300">
+                  <DialogTitle className="text-gray-800">Recuperação de senha</DialogTitle>
+                  <DialogDescription className="text-gray-600">
                     Digite seu endereço de email para receber instruções de redefinição de senha.
                   </DialogDescription>
                 </DialogHeader>
@@ -173,7 +173,7 @@ export const LoginForm: React.FC = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="Seu email"
-                      className="col-span-4 bg-gray-800 border-gray-600 text-white" 
+                      className="col-span-4 bg-gray-50 border-gray-300 text-gray-800" 
                     />
                   </div>
                 </div>
@@ -181,7 +181,7 @@ export const LoginForm: React.FC = () => {
                   <Button 
                     type="button" 
                     onClick={handlePasswordReset}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-gray-700 hover:bg-gray-800 text-white"
                   >
                     Enviar
                   </Button>
