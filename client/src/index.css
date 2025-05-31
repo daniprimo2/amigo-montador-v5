@@ -13,7 +13,7 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 220 10% 10%;
+  --primary: 210 100% 20%;
   --primary-foreground: 210 40% 98%;
   --secondary: 60 4.8% 95.9%;
   --secondary-foreground: 24 9.8% 10%;
@@ -36,7 +36,7 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --primary: 220 10% 10%;
+  --primary: 210 100% 20%;
   --primary-foreground: 210 40% 98%;
   --secondary: 240 3.7% 15.9%;
   --secondary-foreground: 0 0% 98%;
@@ -246,15 +246,15 @@
 
 /* Tech button */
 .tech-button {
-  @apply relative h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden transition-all duration-300 transform hover:scale-105;
+  @apply relative h-12 bg-gradient-to-r from-blue-800 to-blue-900 text-white font-semibold rounded-xl overflow-hidden transition-all duration-300 transform hover:scale-105;
   box-shadow: 
-    0 4px 15px rgba(59, 130, 246, 0.3),
+    0 4px 15px rgba(37, 99, 235, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .tech-button:hover {
   box-shadow: 
-    0 6px 20px rgba(59, 130, 246, 0.4),
+    0 6px 20px rgba(37, 99, 235, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -290,8 +290,8 @@
 }
 
 .auth-tab.active {
-  @apply text-white bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30;
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+  @apply text-white bg-gradient-to-r from-blue-800/20 to-blue-900/20 border border-blue-700/30;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
 }
 
 .auth-tab:hover:not(.active) {
