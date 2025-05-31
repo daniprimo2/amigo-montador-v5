@@ -24,10 +24,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           <div className="shape shape-4"></div>
         </div>
       </div>
-      
       {/* Grid overlay */}
       <div className="absolute inset-0 tech-grid opacity-10"></div>
-      
       <div className="relative z-10 flex flex-col min-h-screen">
         {showBackButton && onBack && (
           <button 
@@ -39,7 +37,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         )}
         
         {/* Main content */}
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex-1 flex items-center justify-center p-4 text-[#bfc4c9]">
           <div className="auth-card w-full max-w-md">
             <div className="auth-card-inner">
               {children}
