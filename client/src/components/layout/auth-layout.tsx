@@ -39,7 +39,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         {/* Main content */}
         <div className="flex-1 flex items-center justify-center p-4 text-[#bfc4c9]">
           <div className="auth-card w-full max-w-md">
-            <div className="auth-card-inner">
+            <div className="auth-card-inner bg-[#1c1c1c]">
               {children}
             </div>
           </div>
