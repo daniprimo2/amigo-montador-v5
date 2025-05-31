@@ -174,7 +174,7 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
           <div className="relative pt-1">
             <div className="flex mb-2 items-center justify-between">
               <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary bg-opacity-10">
+                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-opacity-10 text-[#282c34]">
                   Passo 1 de 2
                 </span>
               </div>
