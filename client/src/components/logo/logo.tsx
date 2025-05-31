@@ -25,7 +25,7 @@ export const Logo: React.FC<LogoProps> = ({
   };
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <>
       <div className="mb-2">
         <img 
           src={logoImage} 
@@ -39,7 +39,7 @@ export const Logo: React.FC<LogoProps> = ({
           <span className="font-bold ml-1 tracking-wide">Montador</span>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
