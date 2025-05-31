@@ -91,7 +91,7 @@ export const LoginForm: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
-          <div className="tech-logo-container">
+          <div className="tech-logo-container text-[#0c0a0900]">
             <img 
               src={amigoMontadorLogo} 
               alt="Amigo Montador" 
@@ -104,7 +104,6 @@ export const LoginForm: React.FC = () => {
           Acesse sua conta para conectar-se com a rede
         </p>
       </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Email Field */}
