@@ -23,7 +23,7 @@ const RegisterOption: React.FC<RegisterOptionProps> = ({
         <img src={image} alt={title} className="w-full h-full object-contain" />
       </div>
       <div className="text-left">
-        <div className="font-semibold text-foreground">{title}</div>
+        <div className="font-semibold text-[#FFFFFF]">{title}</div>
         <div className="text-sm text-muted-foreground">{description}</div>
       </div>
     </button>
