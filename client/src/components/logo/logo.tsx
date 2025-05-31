@@ -26,13 +26,6 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <>
-      <div className="mb-2">
-        <img 
-          src={logoImage} 
-          alt="Amigo Montador Logo" 
-          className={sizes[size]} 
-        />
-      </div>
       {withText && (
         <div className={`text-white ${textSizes[size]} flex items-center mt-1`}>
           <span className="font-light tracking-wide">Amigo</span>
