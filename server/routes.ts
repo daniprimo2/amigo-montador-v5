@@ -2575,7 +2575,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (price !== undefined) {
-        updateData.price = price.toString();
+        // Import price formatting utilities
+        const { ensureBrazilianFormat } = await import('./utils/price-formatter.js');
+        updateData.price = ensureBrazilianFormat(price);
       }
       
       if (date !== undefined) {
