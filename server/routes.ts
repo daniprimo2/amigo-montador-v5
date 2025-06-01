@@ -3167,8 +3167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parsedAmount = parseFloat(amount);
       }
       
-      console.log("[PIX Create] Valor original:", amount);
+      console.log("[PIX Create] Valor original:", amount, "tipo:", typeof amount);
       console.log("[PIX Create] Valor processado (em reais):", parsedAmount);
+      console.log("[PIX Create] Debugging parseBrazilianPrice('2,00'):", parseBrazilianPrice('2,00'));
       
       // Truncate service title to ensure description fits within 37 character limit
       const maxTitleLength = 37 - "Pagamento: ".length; // "Pagamento: " has 11 chars
