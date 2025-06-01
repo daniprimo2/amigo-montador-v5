@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
@@ -14,6 +14,7 @@ import { ChatInterface } from '@/components/chat/chat-interface';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { ProfileDialog } from './profile-dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
@@ -113,6 +114,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCity, setSelectedCity] = useState('Todas as cidades');
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat'>('home');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -122,6 +125,60 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
   const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
+
+  // Lista de cidades brasileiras principais para filtro
+  const brazilianCities = [
+    'Todas as cidades',
+    'São Paulo, SP',
+    'Rio de Janeiro, RJ',
+    'Brasília, DF',
+    'Salvador, BA',
+    'Fortaleza, CE',
+    'Belo Horizonte, MG',
+    'Manaus, AM',
+    'Curitiba, PR',
+    'Recife, PE',
+    'Goiânia, GO',
+    'Belém, PA',
+    'Porto Alegre, RS',
+    'Guarulhos, SP',
+    'Campinas, SP',
+    'São Luís, MA',
+    'São Gonçalo, RJ',
+    'Maceió, AL',
+    'Duque de Caxias, RJ',
+    'Natal, RN',
+    'Teresina, PI',
+    'Campo Grande, MS',
+    'Nova Iguaçu, RJ',
+    'São Bernardo do Campo, SP',
+    'João Pessoa, PB',
+    'Santo André, SP',
+    'Osasco, SP',
+    'Jaboatão dos Guararapes, PE',
+    'São José dos Campos, SP',
+    'Ribeirão Preto, SP',
+    'Uberlândia, MG',
+    'Sorocaba, SP',
+    'Contagem, MG',
+    'Aracaju, SE',
+    'Feira de Santana, BA',
+    'Cuiabá, MT',
+    'Joinville, SC',
+    'Juiz de Fora, MG',
+    'Londrina, PR',
+    'Aparecida de Goiânia, GO',
+    'Niterói, RJ',
+    'Ananindeua, PA',
+    'Belford Roxo, RJ',
+    'Caxias do Sul, RS',
+    'Campos dos Goytacazes, RJ',
+    'São João de Meriti, RJ',
+    'Vila Velha, ES',
+    'Florianópolis, SC',
+    'Santos, SP',
+    'Carapicuíba, SP'
+  ];
   
   // Reagir a mensagens de WebSocket
   useEffect(() => {
@@ -356,13 +413,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     // Sempre buscar os serviços ativos independente da aba selecionada
   });
   
-  // Filter services by search term
-  const filteredServices = services?.filter(service => 
-    service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.location.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Filter services by search term and selected city
+  const filteredServices = services?.filter(service => {
+    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCity = selectedCity === 'Todas as cidades' || 
+      service.location.toLowerCase().includes(selectedCity.toLowerCase());
+    
+    return matchesSearch && matchesCity;
+  }) || [];
   
   // Calculate service counts by status
   const serviceCounts = {
@@ -774,10 +836,44 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <div className="p-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Serviços Próximos</h3>
-            <button className="text-sm text-primary flex items-center">
-              <MapPin className="h-4 w-4 mr-1" /> São Paulo, SP
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
+            <Popover open={isCityDropdownOpen} onOpenChange={setIsCityDropdownOpen}>
+              <PopoverTrigger asChild>
+                <button className="text-sm text-primary flex items-center hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span className="max-w-[120px] truncate">{selectedCity}</span>
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="max-h-64 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <p className="text-sm font-medium text-gray-700">Filtrar por cidade</p>
+                  </div>
+                  <div className="py-2">
+                    {brazilianCities.map((city) => (
+                      <button
+                        key={city}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                          selectedCity === city ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                        }`}
+                        onClick={() => {
+                          setSelectedCity(city);
+                          setIsCityDropdownOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                          {city}
+                          {selectedCity === city && (
+                            <CheckCheck className="h-4 w-4 ml-auto text-blue-600" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="mt-2 relative">
             <div className="relative">
