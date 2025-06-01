@@ -336,8 +336,8 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             
             {service.status === 'open' && (
               <>
-                {/* Botão Ver Conversa - apenas se houver candidatos */}
-                {service.candidates > 0 && onChatClick && (
+                {/* Botão Ver Conversa - temporariamente sempre visível para teste */}
+                {onChatClick && (
                   <Button 
                     size="sm" 
                     variant="outline" 
