@@ -117,6 +117,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedCity, setSelectedCity] = useState('Todas as cidades');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat'>('home');
+  const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -438,10 +439,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const serviceCounts = {
     // Disponíveis: apenas serviços com status 'open'
     available: rawServices?.filter(s => s.status === 'open').length || 0,
-    // Em andamento: serviços 'in-progress' + 'hired'
-    inProgress: (rawServices?.filter(s => s.status === 'in-progress' || s.status === 'hired').length || 0) +
-                (activeServices?.filter((s: any) => s.status === 'in-progress' || s.status === 'hired').length || 0),
-    // Finalizados: apenas serviços 'completed'
+    // Em andamento: apenas contar serviços do activeServices (que são os que o montador tem participação)
+    inProgress: activeServices?.filter((s: any) => s.status === 'in-progress' || s.status === 'hired').length || 0,
+    // Finalizados: somar serviços completos do rawServices + activeServices (sem duplicar)
     completed: (rawServices?.filter(s => s.status === 'completed').length || 0) + 
                (activeServices?.filter((s: any) => s.status === 'completed').length || 0)
   };
@@ -586,7 +586,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
                 : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
             }`}
-            onClick={() => serviceCounts.inProgress > 0 && setDashboardSection('chat')}
+            onClick={() => {
+              if (serviceCounts.inProgress > 0) {
+                setDashboardSection('home');
+                setActiveTab('in-progress');
+              }
+            }}
           >
             <div className={`font-bold text-xl ${serviceCounts.inProgress > 0 ? 'text-amber-700' : 'text-gray-500'}`}>
               🟠 {serviceCounts.inProgress}
@@ -599,7 +604,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 ? 'bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 shadow-sm hover:shadow-md hover:from-emerald-100 hover:to-green-100' 
                 : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
             }`}
-            onClick={() => serviceCounts.completed > 0 && setDashboardSection('completed')}
+            onClick={() => {
+              if (serviceCounts.completed > 0) {
+                setDashboardSection('home');
+                setActiveTab('completed');
+              }
+            }}
           >
             <div className={`font-bold text-xl ${serviceCounts.completed > 0 ? 'text-emerald-700' : 'text-gray-500'}`}>
               ✅ {serviceCounts.completed}
@@ -609,7 +619,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
       </div>
       
-      <Tabs defaultValue="available" className="mt-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'available' | 'in-progress' | 'completed')} className="mt-4">
         <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="available">Disponíveis</TabsTrigger>
           <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
