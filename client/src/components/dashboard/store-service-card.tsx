@@ -61,6 +61,25 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Função para formatar o preço corretamente
+  const formatPrice = (price: string): string => {
+    // Remove caracteres não numéricos e converte para número
+    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    
+    // Se o valor for inválido, retorna o valor original
+    if (isNaN(numericPrice)) {
+      return price;
+    }
+    
+    // Formata como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericPrice);
+  };
   
   const handleClick = () => {
     if (onClick) onClick(service.id);
@@ -286,7 +305,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           {/* Preço */}
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
-            <span className="text-xs sm:text-sm text-gray-600 font-medium">{service.price}</span>
+            <span className="text-xs sm:text-sm text-gray-600 font-medium">{formatPrice(service.price)}</span>
           </div>
         </div>
         

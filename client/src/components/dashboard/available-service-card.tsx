@@ -43,6 +43,25 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Função para formatar o preço corretamente
+  const formatPrice = (price: string): string => {
+    // Remove caracteres não numéricos e converte para número
+    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    
+    // Se o valor for inválido, retorna o valor original
+    if (isNaN(numericPrice)) {
+      return price;
+    }
+    
+    // Formata como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericPrice);
+  };
   
   const handleViewServiceDetails = () => {
     setIsServiceDetailsOpen(true);
@@ -111,7 +130,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <div className="font-medium text-primary text-sm sm:text-base">{service.price}</div>
+          <div className="font-medium text-primary text-sm sm:text-base">{formatPrice(service.price)}</div>
           <div className="text-xs text-gray-500">{service.type}</div>
         </div>
       </div>
