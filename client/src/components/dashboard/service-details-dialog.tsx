@@ -43,6 +43,25 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   } | null>(null);
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
 
+  // Função para formatar o preço corretamente
+  const formatPrice = (price: string): string => {
+    // Remove caracteres não numéricos e converte para número
+    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    
+    // Se o valor for inválido, retorna o valor original
+    if (isNaN(numericPrice)) {
+      return price;
+    }
+    
+    // Formata como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericPrice);
+  };
+
   const handleViewPdf = (file: { name: string; path: string }) => {
     setSelectedFile(file);
     setIsPdfViewerOpen(true);
@@ -77,7 +96,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
 
               <div className="flex items-center text-sm text-gray-600">
                 <DollarSign className="h-4 w-4 mr-1.5 text-primary" />
-                <span>{service.price}</span>
+                <span>{formatPrice(service.price)}</span>
               </div>
 
               <div className="flex items-start text-sm text-gray-600 col-span-2">

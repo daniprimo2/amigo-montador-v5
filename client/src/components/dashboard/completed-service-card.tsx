@@ -25,6 +25,25 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
   onRateClick,
   onChatClick
 }) => {
+  // Função para formatar o preço corretamente
+  const formatPrice = (price: string): string => {
+    // Remove caracteres não numéricos e converte para número
+    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    
+    // Se o valor for inválido, retorna o valor original
+    if (isNaN(numericPrice)) {
+      return price;
+    }
+    
+    // Formata como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numericPrice);
+  };
+
   const handleRateClick = () => {
     if (onRateClick) onRateClick(service);
   };
@@ -44,7 +63,7 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
           </div>
         </div>
         <div className="text-right">
-          <div className="font-medium text-primary">{service.price}</div>
+          <div className="font-medium text-primary">{formatPrice(service.price)}</div>
           <div className="text-xs text-gray-500">{service.type}</div>
         </div>
       </div>
