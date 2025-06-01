@@ -16,6 +16,7 @@ interface FileUploadProps {
   isUploading?: boolean;
   existingFiles?: { name: string; url: string }[];
   onFileView?: (url: string) => void;
+  onFileRemove?: (index: number) => void;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -30,6 +31,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   isUploading = false,
   existingFiles = [],
   onFileView,
+  onFileRemove,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -123,6 +125,35 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
   };
 
+  const handleRemoveFile = (indexToRemove: number) => {
+    if (!files || isUploading) return;
+
+    const filesArray = Array.from(files);
+    const updatedFiles = filesArray.filter((_, index) => index !== indexToRemove);
+
+    if (updatedFiles.length === 0) {
+      setFiles(null);
+      onChange(null);
+      // Reset the input value
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    } else {
+      // Create a new FileList from the remaining files
+      const dataTransfer = new DataTransfer();
+      updatedFiles.forEach(file => dataTransfer.items.add(file));
+      const newFileList = dataTransfer.files;
+      
+      setFiles(newFileList);
+      onChange(newFileList);
+    }
+
+    // Call the external remove callback if provided
+    if (onFileRemove) {
+      onFileRemove(indexToRemove);
+    }
+  };
+
   // Listar cada arquivo selecionado
   const renderSelectedFiles = () => {
     if (!files) return null;
@@ -136,6 +167,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <span className="truncate">{files[i].name}</span>
             <span className="text-gray-400 text-xs">({(files[i].size / 1024).toFixed(0)} KB)</span>
           </div>
+          {!isUploading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleRemoveFile(i)}
+              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+              title="Remover arquivo"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       );
     }
