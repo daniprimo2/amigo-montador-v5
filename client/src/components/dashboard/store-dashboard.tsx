@@ -704,24 +704,40 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Processar dados de serviços da API
   const processApiServices = (apiServices: any[] = []) => {
-    const processedServices = apiServices.map(service => ({
-      id: service.id,
-      title: service.title,
-      location: service.location,
-      date: service.date,
-      startDate: service.startDate,
-      endDate: service.endDate,
-      price: service.price,
-      // Contagem de candidaturas será implementada posteriormente
-      candidates: 0,
-      status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired'
-    }));
+    console.log("[StoreDashboard] Dados brutos da API:", apiServices);
     
+    const processedServices = apiServices.map(service => {
+      console.log(`[StoreDashboard] Processando serviço ID ${service.id}, status: ${service.status}`);
+      return {
+        id: service.id,
+        title: service.title,
+        location: service.location,
+        date: service.date,
+        startDate: service.startDate,
+        endDate: service.endDate,
+        price: service.price,
+        // Contagem de candidaturas será implementada posteriormente
+        candidates: 0,
+        status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired'
+      };
+    });
+    
+    console.log("[StoreDashboard] Serviços processados:", processedServices);
     return processedServices;
   };
   
   // Usar dados da API ou mostrar dados vazios se estiver carregando
   const allServices = servicesQuery.data && Array.isArray(servicesQuery.data) ? processApiServices(servicesQuery.data) : [];
+  
+  // Debug: Contar status dos serviços
+  const openCount = allServices.filter(service => service.status === 'open').length;
+  const inProgressCount = allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length;
+  const completedCount = allServices.filter(service => service.status === 'completed').length;
+  
+  console.log("[StoreDashboard] Contagens de status:");
+  console.log(`- Em Aberto: ${openCount}`);
+  console.log(`- Em Andamento: ${inProgressCount}`);
+  console.log(`- Finalizados: ${completedCount}`);
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
