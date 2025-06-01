@@ -1005,6 +1005,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                     setIsRatingDialogOpen(true);
                   }
                 }}
+                onChatClick={(serviceId) => {
+                  // Abrir o chat para o serviço selecionado
+                  setSelectedChatService(serviceId);
+                  setDashboardSection('chat');
+                }}
               />
             ))
           )}

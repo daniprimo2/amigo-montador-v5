@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon, FileText } from 'lucide-react';
+import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -45,6 +45,7 @@ interface StoreServiceCardProps {
   onClick?: (id: number) => void;
   onComplete?: (id: number) => void;
   onRateClick?: (service: ServiceProps) => void;
+  onChatClick?: (id: number) => void;
 }
 
 
@@ -53,7 +54,8 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
   service, 
   onClick,
   onComplete,
-  onRateClick
+  onRateClick,
+  onChatClick
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -159,6 +161,13 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
     e.stopPropagation();
     if (onRateClick) {
       onRateClick(service);
+    }
+  };
+
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onChatClick) {
+      onChatClick(service.id);
     }
   };
   
@@ -327,6 +336,20 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             
             {service.status === 'open' && (
               <>
+                {/* Botão Ver Conversa - apenas se houver candidatos */}
+                {service.candidates > 0 && onChatClick && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-green-600 border-green-200 hover:bg-green-50" 
+                    onClick={handleChatClick}
+                    title="Ver conversa com candidatos"
+                  >
+                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="hidden sm:inline">Ver Conversa</span>
+                  </Button>
+                )}
+                
                 <Button 
                   size="sm" 
                   variant="outline" 
