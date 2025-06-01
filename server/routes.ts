@@ -3153,19 +3153,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (typeof amount === 'string') {
         if (amount.includes(',')) {
-          // If it contains comma, it's already in Brazilian format (e.g., "500,00" -> 500.00)
+          // If it contains comma, it's already in Brazilian format (e.g., "2,00" -> 2.00, "500,00" -> 500.00)
           parsedAmount = parseBrazilianPrice(amount);
         } else {
-          // If it's a simple number string, treat as cents value
-          // Examples: "500" -> 500.00, "1999" -> 19.99, "150" -> 1.50, "75" -> 0.75
-          const numericValue = parseInt(amount);
-          if (numericValue >= 100) {
-            // For values >= 100, last two digits are cents
-            parsedAmount = numericValue / 100;
-          } else {
-            // For values < 100, treat as cents (0.XX)
-            parsedAmount = numericValue / 100;
-          }
+          // If it's a simple number string without comma, treat as reais value
+          // Examples: "2" -> 2.00, "500" -> 500.00, "1999" -> 1999.00
+          parsedAmount = parseFloat(amount);
         }
       } else {
         // If it's already a number, use as is
