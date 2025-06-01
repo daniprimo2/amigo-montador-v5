@@ -725,6 +725,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         onClick={(e: React.MouseEvent) => {
                           e.stopPropagation();
                           setSelectedChatService(service.id);
+                          setDashboardSection('chat');
                         }}
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
