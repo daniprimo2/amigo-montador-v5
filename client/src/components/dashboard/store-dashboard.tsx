@@ -731,7 +731,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Debug: Contar status dos serviços
   const openCount = allServices.filter(service => service.status === 'open').length;
-  const inProgressCount = allServices.filter(service => service.status === 'in-progress').length;
+  const inProgressCount = allServices.filter(service => service.status === 'in-progress' || service.status === 'hired').length;
   const hiredCount = allServices.filter(service => service.status === 'hired').length;
   const completedCount = allServices.filter(service => service.status === 'completed').length;
   
