@@ -425,6 +425,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     
     return matchesSearch && matchesCity;
   }) || [];
+
+  // Filtrar serviços por status para cada aba
+  const availableServices = filteredServices.filter(service => service.status === 'open');
+  const inProgressServices = activeServices?.filter((service: any) => 
+    service.status === 'in-progress' || service.status === 'hired'
+  ) || [];
+  const completedServicesFromRaw = rawServices?.filter(s => s.status === 'completed') || [];
+  const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
   
   // Calculate service counts by status
   const serviceCounts = {
@@ -626,9 +634,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-red-500">
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
-              ) : filteredServices.length > 0 ? (
+              ) : availableServices.length > 0 ? (
                 // Show services (limitado a 3 para a tela inicial)
-                filteredServices.slice(0, 3).map(service => (
+                availableServices.slice(0, 3).map(service => (
                   <AvailableServiceCard 
                     key={service.id} 
                     service={service} 
@@ -658,15 +666,15 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                     <Skeleton className="h-4 w-full mb-2" />
                   </div>
                 ))
-              ) : !activeServices || activeServices.length === 0 ? (
+              ) : !inProgressServices || inProgressServices.length === 0 ? (
                 // Show empty state
                 <div className="p-8 text-center text-gray-500">
                   <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p>Nenhum serviço em andamento.</p>
                 </div>
               ) : (
-                // Show active services (filtrando apenas os que estão realmente em andamento)
-                activeServices.filter((service: any) => service.status === 'in-progress').map((service: any) => (
+                // Show in-progress services
+                inProgressServices.map((service: any) => (
                   <div 
                     key={service.id} 
                     className="p-4 hover:bg-gray-50 cursor-pointer"
@@ -737,11 +745,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-red-500">
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
-              ) : ((rawServices && rawServices.filter(s => s.status === 'completed').length > 0) || (activeServices && activeServices.filter((s: any) => s.status === 'completed').length > 0)) ? (
+              ) : (completedServicesFromRaw.length > 0 || completedServicesFromActive.length > 0) ? (
                 // Show completed services from both sources
                 <>
                   {/* Show completed services from rawServices */}
-                  {rawServices && rawServices.filter(s => s.status === 'completed').map(service => (
+                  {completedServicesFromRaw.map(service => (
                     <CompletedServiceCard 
                       key={`raw-${service.id}`} 
                       service={{
@@ -761,7 +769,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   ))}
                   
                   {/* Show completed chat services */}
-                  {activeServices && activeServices.filter((s: any) => s.status === 'completed').map((service: any) => (
+                  {completedServicesFromActive.map((service: any) => (
                     <CompletedServiceCard 
                       key={`chat-${service.id}`}
                       service={{
@@ -781,11 +789,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   ))}
                   
                   {/* Seção de conversas finalizadas */}
-                  {activeServices && activeServices.filter((service: any) => service.status === 'completed' && service.applicationStatus).length > 0 && (
+                  {completedServicesFromActive.filter((service: any) => service.applicationStatus).length > 0 && (
                     <div className="p-4 border-t bg-gray-50">
                       <h4 className="text-md font-medium mb-3 text-gray-700">Ver Conversas Finalizadas</h4>
                       <div className="space-y-3">
-                        {activeServices.filter((service: any) => service.status === 'completed' && service.applicationStatus).map((service: any) => (
+                        {completedServicesFromActive.filter((service: any) => service.applicationStatus).map((service: any) => (
                           <div 
                             key={`completed-chat-${service.id}`} 
                             className="bg-white rounded-lg shadow-sm p-3 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
