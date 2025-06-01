@@ -635,8 +635,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
               ) : availableServices.length > 0 ? (
-                // Show services (limitado a 3 para a tela inicial)
-                availableServices.slice(0, 3).map(service => (
+                // Show all available services
+                availableServices.map(service => (
                   <AvailableServiceCard 
                     key={service.id} 
                     service={service} 
