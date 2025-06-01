@@ -740,6 +740,18 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     if (activeTab === 'in-progress') return service.status === 'in-progress' || service.status === 'hired';
     if (activeTab === 'completed') return service.status === 'completed';
     return true;
+  }).sort((a, b) => {
+    // Para serviços "Em Andamento", ordenar por data de início (mais próxima primeiro)
+    if (activeTab === 'in-progress') {
+      if (a.startDate && b.startDate) {
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      }
+      // Se um não tem data de início, colocar por último
+      if (a.startDate && !b.startDate) return -1;
+      if (!a.startDate && b.startDate) return 1;
+    }
+    // Para outras abas, manter ordenação original (por data de criação)
+    return 0;
   });
 
   // Função para lidar com o clique no botão de avaliação
