@@ -319,58 +319,9 @@ export class DatabaseStorage implements IStorage {
         } as Service & { storeName: string };
       }));
       
-      // Filtrar por distância geográfica se o montador tem raio de trabalho definido
+      // Temporariamente desabilitando filtro de distância para mostrar todos os serviços
       let filteredByDistance = enhancedServices;
-      
-      if (assembler.workRadius && assembler.city && assembler.state && 
-          assembler.city !== 'Cidade não informada' && assembler.state !== 'Estado não informado') {
-        try {
-          const { geocodeFromCEP, calculateDistance } = await import('./geocoding');
-          
-          // Importar função para obter coordenadas da cidade
-          const { getCityCoordinates } = await import('./geocoding');
-          
-          if (typeof getCityCoordinates === 'function') {
-            // Obter coordenadas aproximadas do montador baseado na cidade/estado
-            const assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
-            
-            filteredByDistance = enhancedServices.filter(service => {
-              // Se o serviço não tem coordenadas, incluir por compatibilidade
-              if (!service.latitude || !service.longitude) {
-                return true;
-              }
-
-              try {
-                const serviceLat = parseFloat(service.latitude);
-                const serviceLng = parseFloat(service.longitude);
-                
-                // Calcular distância entre montador e serviço
-                const distance = calculateDistance(
-                  assemblerCoords.lat,
-                  assemblerCoords.lng,
-                  serviceLat,
-                  serviceLng
-                );
-
-                const withinRadius = distance <= assembler.workRadius;
-                console.log(`Serviço ${service.id}: distância ${distance.toFixed(1)}km, raio ${assembler.workRadius}km, dentro do raio: ${withinRadius}`);
-                
-                return withinRadius;
-              } catch (error) {
-                console.error('Erro ao calcular distância para serviço:', service.id, error);
-                return true; // Em caso de erro, incluir o serviço
-              }
-            });
-            
-            console.log(`Filtrados ${filteredByDistance.length} de ${enhancedServices.length} serviços por distância (raio: ${assembler.workRadius}km)`);
-          }
-        } catch (error) {
-          console.error('Erro ao filtrar serviços por distância:', error);
-          // Continuar sem filtro de distância em caso de erro
-        }
-      } else {
-        console.log('Montador sem localização válida cadastrada, mostrando todos os serviços disponíveis');
-      }
+      console.log('Mostrando todos os serviços disponíveis (filtro de distância desabilitado)');
 
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
