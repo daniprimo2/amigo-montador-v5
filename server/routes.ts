@@ -724,6 +724,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Loja não encontrada" });
       }
 
+      // Import price formatting utilities
+      const { ensureBrazilianFormat } = await import('./utils/price-formatter.js');
+
       // Processar o campo de data combinado em startDate e endDate
       let serviceData = { ...req.body };
       if (serviceData.date) {
@@ -742,6 +745,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         // Remover o campo date original
         delete serviceData.date;
+      }
+
+      // Formatar preço para o padrão brasileiro antes de salvar
+      if (serviceData.price) {
+        serviceData.price = ensureBrazilianFormat(serviceData.price);
       }
 
       // Criar serviço
@@ -889,6 +897,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         console.log("DEBUG: Campo date não encontrado, mas deveria estar presente!");
         return res.status(400).json({ message: "Data de início e fim são obrigatórias" });
+      }
+
+      // Import price formatting utilities
+      const { ensureBrazilianFormat } = await import('./utils/price-formatter.js');
+
+      // Formatar preço para o padrão brasileiro antes de salvar
+      if (serviceData.price) {
+        serviceData.price = ensureBrazilianFormat(serviceData.price);
       }
 
       // Adicionar dados do lojista
