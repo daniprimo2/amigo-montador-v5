@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, not, isNotNull, or, sql } from "drizzle-orm";
+import { eq, and, not, isNotNull, or, sql, inArray } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
@@ -3636,18 +3636,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
           
           if (acceptedApplications.length > 0) {
-            const serviceIds = acceptedApplications.map(app => app.serviceId);
-            pendingServices = await db
-              .select()
-              .from(services)
-              .where(
-                and(
-                  eq(services.status, 'completed'),
-                  eq(services.ratingRequired, true),
-                  eq(services.ratingCompleted, false),
-                  sql`${services.id} IN (${serviceIds.join(',')})`
-                )
-              );
+            const serviceIds = acceptedApplications.map(app => app.serviceId).filter(id => id && !isNaN(id));
+            if (serviceIds.length > 0) {
+              pendingServices = await db
+                .select()
+                .from(services)
+                .where(
+                  and(
+                    eq(services.status, 'completed'),
+                    eq(services.ratingRequired, true),
+                    eq(services.ratingCompleted, false),
+                    inArray(services.id, serviceIds)
+                  )
+                );
+            }
           }
         }
       }
