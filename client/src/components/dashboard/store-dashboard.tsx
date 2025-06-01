@@ -707,18 +707,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     const processedServices = apiServices.map(service => ({
       id: service.id,
       title: service.title,
-      description: service.description,
       location: service.location,
       date: service.date,
       startDate: service.startDate,
       endDate: service.endDate,
       price: service.price,
-      materialType: service.materialType,
-      cep: service.cep,
-      address: service.address,
-      addressNumber: service.addressNumber,
-      projectFiles: service.projectFiles || [],
-      assembler: service.assembler,
       // Contagem de candidaturas será implementada posteriormente
       candidates: 0,
       status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired'
