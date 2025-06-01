@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import fileUpload from 'express-fileupload';
 import axios from 'axios';
+import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
 
 // Function to generate payment proof image as SVG
 function generatePaymentProofImage(data: {
@@ -3147,8 +3148,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
-      // Convert amount to centavos (multiply by 100 and remove decimals)
-      const valorEmCentavos = Math.round(parseFloat(amount) * 100);
+      // Parse the amount correctly from Brazilian format (e.g., "2,00" -> 2.00)
+      const parsedAmount = typeof amount === 'string' && amount.includes(',') 
+        ? parseBrazilianPrice(amount) 
+        : parseFloat(amount);
+      
+      console.log("[PIX Create] Valor original:", amount);
+      console.log("[PIX Create] Valor processado:", parsedAmount);
       
       // Truncate service title to ensure description fits within 37 character limit
       const maxTitleLength = 37 - "Pagamento: ".length; // "Pagamento: " has 11 chars
@@ -3157,7 +3163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : service.title;
 
       const pixPaymentData = {
-        valor: parseFloat(amount), // Use valor decimal, não centavos
+        valor: parsedAmount, // Use valor decimal corretamente parseado
         descricao: `Pagamento: ${truncatedTitle}`,
         tipo_transacao: "pixStaticCashin",
         texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador",
@@ -3220,7 +3226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pixCode: pixCodeData,
         qrCode: qrCodeData,
         reference: identificadorExterno,
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         expiresAt: expirationDate.toISOString(),
         paymentId: paymentId
       });
