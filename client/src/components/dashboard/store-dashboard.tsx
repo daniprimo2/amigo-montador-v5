@@ -743,10 +743,18 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
-    if (activeTab === 'open') return service.status === 'open';
-    if (activeTab === 'in-progress') return service.status === 'in-progress' || service.status === 'hired';
-    if (activeTab === 'completed') return service.status === 'completed';
-    return true;
+    console.log(`[Status Filter] Serviço ${service.id} - Status: ${service.status}, Tab: ${activeTab}`);
+    
+    switch (activeTab) {
+      case 'open':
+        return service.status === 'open';
+      case 'in-progress':
+        return service.status === 'in-progress' || service.status === 'hired';
+      case 'completed':
+        return service.status === 'completed';
+      default:
+        return true;
+    }
   }).sort((a, b) => {
     // Para serviços "Em Andamento", ordenar por data de início (mais próxima primeiro)
     if (activeTab === 'in-progress') {
@@ -757,9 +765,15 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       if (a.startDate && !b.startDate) return -1;
       if (!a.startDate && b.startDate) return 1;
     }
-    // Para outras abas, manter ordenação original (por data de criação)
+    // Para outras abas, ordenar por data de criação mais recente primeiro
+    if (a.id && b.id) {
+      return b.id - a.id;
+    }
     return 0;
   });
+
+  // Log dos serviços filtrados para debug
+  console.log(`[Status Filter] Tab "${activeTab}" - Serviços filtrados:`, services.map(s => ({ id: s.id, title: s.title, status: s.status })));
 
   // Função para lidar com o clique no botão de avaliação
   const handleRateClick = (service: any) => {
