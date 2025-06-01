@@ -363,7 +363,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
               </>
             )}
             
-            {service.status === 'in-progress' && onChatClick && (
+            {(service.status === 'in-progress' || service.status === 'hired') && onChatClick && (
               <Button 
                 size="sm" 
                 variant="outline" 
