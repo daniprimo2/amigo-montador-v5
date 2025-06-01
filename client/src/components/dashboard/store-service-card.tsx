@@ -66,13 +66,8 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
 
   // Função para formatar o preço corretamente
   const formatPrice = (price: string): string => {
-    // Se já está formatado como moeda, retorna como está
-    if (price.includes('R$')) {
-      return price;
-    }
-    
-    // Converte string para número - o valor já vem correto da API
-    const numericPrice = parseFloat(price);
+    // Remove caracteres não numéricos e converte para número
+    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
     
     // Se o valor for inválido, retorna o valor original
     if (isNaN(numericPrice)) {
