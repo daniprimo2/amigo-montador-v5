@@ -48,6 +48,28 @@ export function PixPaymentDialog({
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [currentToken, setCurrentToken] = useState<string>('');
   const { toast } = useToast();
+
+  // Calculate the actual amount that will be charged (convert from centavos to reais)
+  const getActualChargeAmount = (serviceAmount: string): string => {
+    if (typeof serviceAmount === 'string') {
+      if (serviceAmount.includes(',')) {
+        // Parse Brazilian format and convert to centavos
+        const cleanAmount = serviceAmount.replace(/[^\d,]/g, '');
+        const normalized = cleanAmount.replace(/\./g, '').replace(',', '.');
+        const brazilianValue = parseFloat(normalized) || 0;
+        const actualAmount = brazilianValue / 100;
+        return actualAmount.toFixed(2).replace('.', ',');
+      } else {
+        // Convert from centavos to reais
+        const centavos = parseFloat(serviceAmount);
+        const actualAmount = centavos / 100;
+        return actualAmount.toFixed(2).replace('.', ',');
+      }
+    }
+    return serviceAmount;
+  };
+
+  const actualAmount = getActualChargeAmount(amount);
   const queryClient = useQueryClient();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -369,7 +391,7 @@ export function PixPaymentDialog({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  R$ {amount}
+                  R$ {actualAmount}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Clique abaixo para gerar o código PIX
