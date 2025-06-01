@@ -704,7 +704,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Processar dados de serviços da API
   const processApiServices = (apiServices: any[] = []) => {
-    console.log('[StoreDashboard] Serviços recebidos da API:', apiServices);
     const processedServices = apiServices.map(service => ({
       id: service.id,
       title: service.title,
@@ -724,16 +723,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       candidates: 0,
       status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired'
     }));
-    console.log('[StoreDashboard] Serviços processados:', processedServices);
-    
-    // Log das contagens por status
-    const statusCounts = {
-      open: processedServices.filter(s => s.status === 'open').length,
-      'in-progress': processedServices.filter(s => s.status === 'in-progress').length,
-      completed: processedServices.filter(s => s.status === 'completed').length,
-      hired: processedServices.filter(s => s.status === 'hired').length
-    };
-    console.log('[StoreDashboard] Contagem por status:', statusCounts);
     
     return processedServices;
   };
@@ -860,27 +849,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       <div className="dashboard-card overflow-hidden mb-4">
         <div className="divide-y">
           {allServices.slice(0, 3).map(service => (
-            <StoreServiceCard 
-              key={service.id} 
-              service={{
-                id: service.id,
-                title: service.title,
-                description: service.description,
-                location: service.location,
-                date: service.date,
-                startDate: service.startDate,
-                endDate: service.endDate,
-                price: service.price,
-                candidates: service.candidates || 0,
-                materialType: service.materialType,
-                cep: service.cep,
-                address: service.address,
-                addressNumber: service.addressNumber,
-                status: service.status,
-                projectFiles: service.projectFiles,
-                assembler: service.assembler
-              }} 
-            />
+            <StoreServiceCard key={service.id} service={service} />
           ))}
         </div>
       </div>
