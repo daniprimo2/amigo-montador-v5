@@ -31,7 +31,7 @@ interface ServiceProps {
   cep?: string;
   address?: string;
   addressNumber?: string;
-  status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'open' | 'in-progress' | 'completed' | 'cancelled' | 'hired';
   projectFiles?: Array<{ name: string; path: string; }>;
   assembler?: {
     id: number;
