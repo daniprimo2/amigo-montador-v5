@@ -3148,25 +3148,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
-      // Parse the amount based on the format received
+      // Parse the amount - convert from centavos to reais
       let parsedAmount: number;
       
       if (typeof amount === 'string') {
         if (amount.includes(',')) {
-          // If it contains comma, it's already in Brazilian format (e.g., "2,00" -> 2.00, "500,00" -> 500.00)
-          parsedAmount = parseBrazilianPrice(amount);
+          // If it contains comma, parse as Brazilian format and convert to centavos
+          // Examples: "2,00" -> 0.02, "500,00" -> 5.00, "1999,00" -> 19.99
+          const brazilianValue = parseBrazilianPrice(amount);
+          parsedAmount = brazilianValue / 100;
         } else {
-          // If it's a simple number string without comma, treat as reais value
-          // Examples: "2" -> 2.00, "500" -> 500.00, "1999" -> 1999.00
-          parsedAmount = parseFloat(amount);
+          // If it's a simple number string, convert from centavos to reais
+          // Examples: "2" -> 0.02, "500" -> 5.00, "1999" -> 19.99
+          const centavos = parseFloat(amount);
+          parsedAmount = centavos / 100;
         }
       } else {
-        // If it's already a number, use as is
-        parsedAmount = parseFloat(amount);
+        // If it's already a number, convert from centavos to reais
+        parsedAmount = parseFloat(amount) / 100;
       }
       
       console.log("[PIX Create] Valor original:", amount);
-      console.log("[PIX Create] Valor processado:", parsedAmount);
+      console.log("[PIX Create] Valor processado (em reais):", parsedAmount);
       
       // Truncate service title to ensure description fits within 37 character limit
       const maxTitleLength = 37 - "Pagamento: ".length; // "Pagamento: " has 11 chars
