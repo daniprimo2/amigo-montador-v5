@@ -33,6 +33,17 @@ interface UserProfile {
     workRadius: number;
     rating: number;
     technicalAssistance: boolean;
+    experienceYears: number;
+    serviceTypes: string[];
+    availability: {
+      dias: string[];
+      horarios: {
+        inicio: string;
+        fim: string;
+      };
+    };
+    hasOwnTools: boolean;
+    professionalDescription: string;
   };
 }
 
@@ -284,12 +295,104 @@ const ProfilePage: React.FC = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Experiência</CardTitle>
+                      <CardTitle>Experiência Profissional</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-gray-600 whitespace-pre-wrap">
-                        {profile.assembler.experience}
-                      </p>
+                      <div className="space-y-4">
+                        {profile.assembler.experienceYears && (
+                          <div>
+                            <h4 className="font-medium text-gray-900">Anos de Experiência</h4>
+                            <p className="text-gray-600">{profile.assembler.experienceYears} anos</p>
+                          </div>
+                        )}
+                        
+                        {profile.assembler.professionalDescription && (
+                          <div>
+                            <h4 className="font-medium text-gray-900">Descrição Profissional</h4>
+                            <p className="text-gray-600 whitespace-pre-wrap">
+                              {profile.assembler.professionalDescription}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {profile.assembler.experience && (
+                          <div>
+                            <h4 className="font-medium text-gray-900">Experiência Detalhada</h4>
+                            <p className="text-gray-600 whitespace-pre-wrap">
+                              {profile.assembler.experience}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {profile.assembler.serviceTypes && profile.assembler.serviceTypes.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Tipos de Atendimento</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {profile.assembler.serviceTypes.map((type, index) => (
+                            <Badge key={index} variant="secondary">
+                              {type === 'residencial' ? 'Residencial' : 
+                               type === 'corporativo' ? 'Corporativo' :
+                               type === 'lojas_parceiras' ? 'Lojas Parceiras' : type}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {profile.assembler.availability && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Disponibilidade</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-medium text-gray-900">Dias da Semana</h4>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {profile.assembler.availability.dias.map((dia, index) => (
+                                <Badge key={index} variant="outline">
+                                  {dia === 'seg' ? 'Segunda' :
+                                   dia === 'ter' ? 'Terça' :
+                                   dia === 'qua' ? 'Quarta' :
+                                   dia === 'qui' ? 'Quinta' :
+                                   dia === 'sex' ? 'Sexta' :
+                                   dia === 'sab' ? 'Sábado' :
+                                   dia === 'dom' ? 'Domingo' : dia}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {profile.assembler.availability.horarios && (
+                            <div>
+                              <h4 className="font-medium text-gray-900">Horário de Trabalho</h4>
+                              <p className="text-gray-600">
+                                {profile.assembler.availability.horarios.inicio} às {profile.assembler.availability.horarios.fim}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Ferramentas e Recursos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center">
+                        <Badge className={profile.assembler.hasOwnTools ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                          {profile.assembler.hasOwnTools ? 'Possui ferramentas próprias' : 'Não possui ferramentas próprias'}
+                        </Badge>
+                      </div>
                     </CardContent>
                   </Card>
 
