@@ -108,6 +108,7 @@ const getCurrentYear = () => {
 // Importar o diálogo de confirmação
 import { ServiceConfirmDialog } from '@/components/payment/service-confirm-dialog';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
+import { RankingSection } from '@/components/ranking/ranking-section';
 
 export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
@@ -973,6 +974,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             </div>
           )}
         </div>
+      </div>
+      
+      {/* Ranking de Avaliações */}
+      <div className="mt-4">
+        <RankingSection />
       </div>
     </>
   );
