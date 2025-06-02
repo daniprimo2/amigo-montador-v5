@@ -3150,12 +3150,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
-      // Parse the amount - NO CONVERSION, keep the value as is
+      // Parse the amount and ensure it's properly converted
       let parsedAmount: number;
       
       if (typeof amount === 'string') {
         if (amount.includes(',')) {
-          // Parse Brazilian format: "2,00" should become 2.00, NOT 0.02
+          // Parse Brazilian format: "2,00" should become 2.00
           const cleanAmount = amount.replace(/[^\d,]/g, '');
           const normalized = cleanAmount.replace(',', '.');
           parsedAmount = parseFloat(normalized) || 0;
@@ -3168,9 +3168,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parsedAmount = parseFloat(amount);
       }
       
+      // IMPORTANT: The Canvi API expects the amount in centavos (cents), not reais
+      // Convert reais to centavos by multiplying by 100
+      const amountInCentavos = Math.round(parsedAmount * 100);
+      
       console.log("[PIX Create] Valor original:", amount, "tipo:", typeof amount);
       console.log("[PIX Create] Valor processado (em reais):", parsedAmount);
-      console.log("[PIX Create] Debugging parseBrazilianPrice('2,00'):", parseBrazilianPrice('2,00'));
+      console.log("[PIX Create] Valor enviado para Canvi (em centavos):", amountInCentavos);
       
       // Truncate service title to ensure description fits within 37 character limit
       const maxTitleLength = 37 - "Pagamento: ".length; // "Pagamento: " has 11 chars
@@ -3179,7 +3183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : service.title;
 
       const pixPaymentData = {
-        valor: parsedAmount, // Use valor decimal corretamente parseado
+        valor: amountInCentavos, // Use amount in centavos as required by Canvi API
         descricao: `Pagamento: ${truncatedTitle}`,
         tipo_transacao: "pixStaticCashin",
         texto_instrucao: "Pagamento do serviço de montagem - Amigo Montador",
