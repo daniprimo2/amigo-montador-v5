@@ -15,6 +15,7 @@ import { RatingDialog } from '@/components/rating/rating-dialog';
 import { ProfileDialog } from './profile-dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { RankingSection } from '@/components/ranking/ranking-section';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
@@ -108,7 +109,6 @@ const getCurrentYear = () => {
 // Importar o diálogo de confirmação
 import { ServiceConfirmDialog } from '@/components/payment/service-confirm-dialog';
 import { PaymentDialog } from '@/components/payment/payment-dialog';
-import { RankingSection } from '@/components/ranking/ranking-section';
 
 export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
@@ -117,7 +117,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('Todas as cidades');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat'>('home');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
   const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);

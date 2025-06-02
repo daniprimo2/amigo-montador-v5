@@ -4335,6 +4335,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao excluir conta bancária" });
     }
   });
+
+  // Ranking de Avaliações
+  app.get("/api/ranking", async (req, res) => {
+    try {
+      const { type } = req.query;
+      
+      if (!type || (type !== 'lojista' && type !== 'montador')) {
+        return res.status(400).json({ message: "Tipo de ranking inválido. Use 'lojista' ou 'montador'" });
+      }
+
+      let ranking = [];
+      
+      if (type === 'montador') {
+        // Ranking de montadores baseado na média de avaliações recebidas
+        const assemblerRankings = await db
+          .select({
+            id: assemblers.id,
+            userId: assemblers.userId,
+            name: users.name,
+            city: assemblers.city,
+            state: assemblers.state,
+            specialties: assemblers.specialties,
+            averageRating: sql<number>`COALESCE(AVG(CAST(${ratings.rating} AS FLOAT)), 0)`,
+            totalRatings: sql<number>`COUNT(${ratings.id})`
+          })
+          .from(assemblers)
+          .leftJoin(users, eq(assemblers.userId, users.id))
+          .leftJoin(ratings, and(
+            eq(ratings.toUserId, users.id),
+            eq(ratings.toUserType, 'montador')
+          ))
+          .groupBy(assemblers.id, users.id, users.name, assemblers.city, assemblers.state, assemblers.specialties)
+          .having(sql`COUNT(${ratings.id}) > 0`) // Apenas montadores com pelo menos 1 avaliação
+          .orderBy(sql`AVG(CAST(${ratings.rating} AS FLOAT)) DESC, COUNT(${ratings.id}) DESC`)
+          .limit(10);
+
+        ranking = assemblerRankings.map(item => ({
+          id: item.id,
+          name: item.name || 'Nome não informado',
+          city: item.city || 'Cidade não informada',
+          state: item.state || 'Estado não informado',
+          rating: Number(item.averageRating),
+          userType: 'montador' as const,
+          specialties: item.specialties || []
+        }));
+        
+      } else if (type === 'lojista') {
+        // Ranking de lojistas baseado na média de avaliações recebidas
+        const storeRankings = await db
+          .select({
+            id: stores.id,
+            userId: stores.userId,
+            name: stores.name,
+            city: stores.city,
+            state: stores.state,
+            logoUrl: stores.logoUrl,
+            averageRating: sql<number>`COALESCE(AVG(CAST(${ratings.rating} AS FLOAT)), 0)`,
+            totalRatings: sql<number>`COUNT(${ratings.id})`
+          })
+          .from(stores)
+          .leftJoin(users, eq(stores.userId, users.id))
+          .leftJoin(ratings, and(
+            eq(ratings.toUserId, users.id),
+            eq(ratings.toUserType, 'lojista')
+          ))
+          .groupBy(stores.id, stores.name, stores.city, stores.state, stores.logoUrl)
+          .having(sql`COUNT(${ratings.id}) > 0`) // Apenas lojistas com pelo menos 1 avaliação
+          .orderBy(sql`AVG(CAST(${ratings.rating} AS FLOAT)) DESC, COUNT(${ratings.id}) DESC`)
+          .limit(10);
+
+        ranking = storeRankings.map(item => ({
+          id: item.id,
+          name: item.name || 'Nome não informado',
+          city: item.city || 'Cidade não informada',
+          state: item.state || 'Estado não informado',
+          rating: Number(item.averageRating),
+          userType: 'lojista' as const,
+          logoUrl: item.logoUrl
+        }));
+      }
+
+      res.json({
+        type,
+        ranking
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar ranking:", error);
+      res.status(500).json({ message: "Erro ao buscar ranking de avaliações" });
+    }
+  });
   
   return httpServer;
 }
