@@ -76,7 +76,9 @@ export const services = pgTable("services", {
   paymentStatus: text("payment_status").default("pending"), // 'pending', 'proof_submitted', 'confirmed', 'rejected'
   paymentProof: text("payment_proof"), // Comprovante de pagamento enviado
   ratingRequired: boolean("rating_required").default(false), // true quando pagamento é confirmado e avaliação é obrigatória
-  ratingCompleted: boolean("rating_completed").default(false), // true quando avaliação foi feita
+  storeRatingCompleted: boolean("store_rating_completed").default(false), // true quando loja avaliou montador
+  assemblerRatingCompleted: boolean("assembler_rating_completed").default(false), // true quando montador avaliou loja
+  bothRatingsCompleted: boolean("both_ratings_completed").default(false), // true quando ambas avaliações foram feitas
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"), // Data de finalização do serviço
 });
