@@ -340,8 +340,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(services);
         
       // Filtrar para incluir apenas os serviços que estão na lista de IDs
+      // E que tenham status 'in-progress' ou 'completed' (serviços realmente ativos)
       const filteredServices = servicesResult.filter(service => 
-        allServiceIds.includes(service.id)
+        allServiceIds.includes(service.id) && 
+        (service.status === 'in-progress' || service.status === 'completed')
       );
       
       console.log(`Encontrados ${filteredServices.length} serviços ativos para o montador (incluindo concluídos)`);
