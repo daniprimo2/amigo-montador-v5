@@ -91,7 +91,7 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div className="flex items-center text-sm text-gray-600">
                 <Building className="h-4 w-4 mr-1.5 text-primary" />
-                <span>{service.store}</span>
+                <span>{service.storeName || service.store || 'Loja não especificada'}</span>
               </div>
 
               <div className="flex items-center text-sm text-gray-600">

@@ -18,6 +18,7 @@ export interface ServiceProps {
   endDate: string | null; // Data de término previsto do serviço
   price: string;
   store: string;
+  storeName?: string; // Nome da loja vindo da tabela stores
   type: string;
   status?: string;
   description?: string;
@@ -144,7 +145,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
         <div className="flex items-center text-xs sm:text-sm text-gray-600">
           <Building className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400 flex-shrink-0" />
-          <span className="truncate">{service.store}</span>
+          <span className="truncate">{service.storeName || service.store || 'Loja não especificada'}</span>
         </div>
         <div className="flex items-center text-xs sm:text-sm text-gray-600">
           <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400 flex-shrink-0" />
