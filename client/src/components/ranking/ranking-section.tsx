@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Trophy, Star, MapPin, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ interface RankingResponse {
 
 export const RankingSection: React.FC = () => {
   const [selectedType, setSelectedType] = useState<'lojista' | 'montador'>('montador');
+  const [, setLocation] = useLocation();
 
   const { data: rankingData, isLoading } = useQuery<RankingResponse>({
     queryKey: ['/api/ranking', selectedType],
@@ -38,6 +40,10 @@ export const RankingSection: React.FC = () => {
   });
 
   const ranking = rankingData?.ranking || [];
+
+  const handleUserClick = (userId: number) => {
+    setLocation(`/profile/${userId}`);
+  };
 
   const getRankingIcon = (position: number) => {
     switch (position) {
@@ -129,7 +135,12 @@ export const RankingSection: React.FC = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                      <h4 
+                        className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                        onClick={() => handleUserClick(item.id)}
+                      >
+                        {item.name}
+                      </h4>
                       {position === 1 && (
                         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                           Campeão
