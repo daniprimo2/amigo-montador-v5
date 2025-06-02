@@ -34,7 +34,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat'>('home');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'ranking'>('home');
   const [showPendingEvaluations, setShowPendingEvaluations] = useState(false);
   const { connected, lastMessage } = useWebSocket();
   
