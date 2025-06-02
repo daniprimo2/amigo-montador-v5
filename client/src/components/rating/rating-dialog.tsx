@@ -18,11 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { RatingStars } from './rating-stars';
+import { EmojiFeedback } from './emoji-feedback';
 
 // Schema de validação para o formulário de avaliação
 const ratingSchema = z.object({
   rating: z.number().min(1).max(5),
   comment: z.string().optional(),
+  emojiRating: z.string().optional(),
 });
 
 type RatingFormValues = z.infer<typeof ratingSchema>;
@@ -54,6 +56,7 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
     defaultValues: {
       rating: 0,
       comment: '',
+      emojiRating: '',
     },
     mode: 'onChange',
   });
@@ -65,6 +68,7 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
       await apiRequest(`/api/services/${serviceId}/rate`, 'POST', {
         rating: data.rating,
         comment: data.comment,
+        emojiRating: data.emojiRating,
       });
 
       // Mostrar toast de sucesso

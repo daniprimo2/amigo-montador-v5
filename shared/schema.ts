@@ -123,6 +123,7 @@ export const ratings = pgTable("ratings", {
   toUserType: text("to_user_type").notNull(), // 'lojista' ou 'montador'
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
+  emojiRating: text("emoji_rating"), // Emoji escolhido para feedback rápido
   createdAt: timestamp("created_at").defaultNow(),
 });
 
