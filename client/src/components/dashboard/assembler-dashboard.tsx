@@ -50,7 +50,7 @@ const formatServiceForDisplay = (service: ServiceData & { startDate?: string; en
     startDate: service.startDate || null, // Incluir startDate do backend
     endDate: service.endDate || null, // Incluir endDate do backend
     price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
-    store: service.store?.name || 'Loja não especificada',
+    store: service.store || 'Loja não especificada',
     type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
     status: service.status, // Passar o status do serviço para o componente
     projectFiles: service.projectFiles || [], // Incluir os arquivos do projeto
@@ -771,7 +771,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         location: service.location || '',
                         date: new Date(service.date).toLocaleDateString('pt-BR'),
                         price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
-                        store: service.store?.name || 'Loja não especificada',
+                        store: service.store || 'Loja não especificada',
                         type: service.materialType || service.type || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
                         rated: false // Será atualizado pelo backend
@@ -791,7 +791,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         location: service.location || '',
                         date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não especificada',
                         price: service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : '',
-                        store: service.store?.name || 'Loja não especificada',
+                        store: service.store || 'Loja não especificada',
                         type: service.materialType || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
                         rated: !!service.rated
