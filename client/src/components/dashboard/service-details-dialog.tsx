@@ -305,6 +305,9 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
               <div className="text-sm text-green-600 font-medium">
                 ✓ Candidatura já enviada
               </div>
+              <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                📋 Processo de contrato enviado para o lojista
+              </div>
               <Button
                 disabled={true}
                 className="bg-green-500 text-white cursor-not-allowed opacity-75"
