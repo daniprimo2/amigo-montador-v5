@@ -28,6 +28,8 @@ interface ServiceDetailsDialogProps {
   service: ServiceProps;
   onApply: () => void;
   isApplying: boolean;
+  hasApplied?: boolean;
+  applicationStatus?: string;
 }
 
 export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
@@ -36,6 +38,8 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   service,
   onApply,
   isApplying,
+  hasApplied = false,
+  applicationStatus = '',
 }) => {
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
@@ -294,20 +298,36 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Voltar
           </Button>
-          <Button
-            onClick={onApply}
-            disabled={isApplying}
-            className="bg-primary hover:bg-opacity-90 text-white"
-          >
-            {isApplying ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              "Confirmar Candidatura"
-            )}
-          </Button>
+          
+          {/* Mostrar mensagem se já enviou candidatura */}
+          {hasApplied ? (
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-sm text-green-600 font-medium">
+                ✓ Candidatura já enviada
+              </div>
+              <Button
+                disabled={true}
+                className="bg-green-500 text-white cursor-not-allowed opacity-75"
+              >
+                Candidatura Enviada
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={onApply}
+              disabled={isApplying}
+              className="bg-primary hover:bg-opacity-90 text-white"
+            >
+              {isApplying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Confirmar Candidatura"
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
 

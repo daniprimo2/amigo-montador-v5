@@ -30,7 +30,7 @@ export interface ServiceProps {
 
 interface AvailableServiceCardProps {
   service: ServiceProps;
-  onApply?: (id: number) => void;
+  onApply?: (id: number) => Promise<any>;
   activeServices?: any[]; // Array of services the montador has already applied to
 }
 
@@ -94,7 +94,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       setIsServiceDetailsOpen(false);
       
       // Verificar se a resposta contém informações sobre candidatura existente
-      if (response.application && response.message) {
+      if (response && response.application && response.message) {
         toast({
           title: "Status da candidatura",
           description: response.message,
@@ -194,6 +194,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
         service={service}
         onApply={handleApply}
         isApplying={isApplying}
+        hasApplied={hasApplied}
       />
       
       {/* Diálogo para visualizar arquivos PDF */}
