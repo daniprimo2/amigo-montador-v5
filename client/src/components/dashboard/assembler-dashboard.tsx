@@ -1009,17 +1009,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Mostrar serviços onde o montador tem conversas ativas (apenas serviços não finalizados)
-    // Incluir serviços onde há candidatura (qualquer status) ou se está em andamento, mas NÃO os completos
+    // Mostrar serviços onde o montador tem conversas ativas
+    // Incluir serviços onde há candidatura (qualquer status) ou está em andamento
+    // TAMBÉM incluir serviços completados que tenham mensagens não lidas
     const activeChats = activeServices ? activeServices.filter((service: any) => {
-      // Mostrar se tem candidatura ou está em andamento, mas excluir os completos
+      // Mostrar se tem candidatura, está em andamento, OU tem mensagens não lidas (mesmo se completado)
       return (service.applicationStatus || service.status === 'in-progress') && 
-             service.status !== 'completed';
+             service.status !== 'completed' || 
+             (service.status === 'completed' && service.hasUnreadMessages);
     }) : [];
     
-    // Conversas finalizadas (apenas serviços completos)
+    // Conversas finalizadas (apenas serviços completos SEM mensagens não lidas)
     const completedChats = activeServices ? activeServices.filter((service: any) => {
-      return service.status === 'completed' && service.applicationStatus;
+      return service.status === 'completed' && service.applicationStatus && !service.hasUnreadMessages;
     }) : [];
     
     console.log('[AssemblerDashboard] Serviços disponíveis para chat:', activeChats);
