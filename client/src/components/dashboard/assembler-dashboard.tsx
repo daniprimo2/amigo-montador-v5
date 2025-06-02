@@ -431,27 +431,16 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
 
   // Filtrar serviços por status para cada aba
   const availableServices = filteredServices.filter(service => service.status === 'open');
+  
+  // Para serviços em andamento, incluir:
+  // 1. Serviços com status 'in-progress' 
+  // 2. Serviços onde o montador tem candidatura aceita mas ainda não finalizados
   const inProgressServices = activeServices?.filter((service: any) => 
-    service.status === 'in-progress'
+    service.status === 'in-progress' || 
+    (service.hasAcceptedApplication && service.status !== 'completed')
   ) || [];
-  const completedServicesFromRaw = rawServices?.filter(s => s.status === 'completed') || [];
+  
   const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
-  
-  // Debug logs para entender a categorização
-  console.log("[AssemblerDashboard] Serviços disponíveis:", availableServices.length);
-  console.log("[AssemblerDashboard] Serviços em andamento:", inProgressServices.length);
-  console.log("[AssemblerDashboard] Serviços finalizados (raw):", completedServicesFromRaw.length);
-  console.log("[AssemblerDashboard] Serviços finalizados (active):", completedServicesFromActive.length);
-  console.log("[AssemblerDashboard] Total rawServices:", rawServices?.length || 0);
-  console.log("[AssemblerDashboard] Total activeServices:", activeServices?.length || 0);
-  
-  // Debug detalhado dos serviços por status
-  console.log("[AssemblerDashboard] Serviços disponíveis detalhados:", availableServices.map(s => ({ id: s.id, title: s.title, status: s.status })));
-  console.log("[AssemblerDashboard] Serviços em andamento detalhados:", inProgressServices.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
-  console.log("[AssemblerDashboard] Serviços finalizados detalhados:", completedServicesFromActive.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
-  
-  // Debug completo do activeServices para entender todos os status
-  console.log("[AssemblerDashboard] Todos os activeServices com status:", activeServices?.map((s: any) => ({ id: s.id, title: s.title, status: s.status })) || []);
   
   // Calculate service counts by status
   const serviceCounts = {
@@ -773,40 +762,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 <div className="p-8 text-center text-red-500">
                   Erro ao carregar serviços. Por favor, tente novamente.
                 </div>
-              ) : (completedServicesFromRaw.length > 0 || completedServicesFromActive.length > 0) ? (
-                // Show completed services from both sources
+              ) : completedServicesFromActive.length > 0 ? (
+                // Show completed services
                 <>
-                  {/* Show completed services from rawServices */}
-                  {completedServicesFromRaw.map(service => (
-                    <CompletedServiceCard 
-                      key={`raw-${service.id}`} 
-                      service={{
-                        id: service.id,
-                        title: service.title,
-                        location: service.location || '',
-                        date: new Date(service.date).toLocaleDateString('pt-BR'),
-                        price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
-                        store: service.store || 'Loja não especificada',
-                        type: service.materialType || service.type || 'Não especificado',
-                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
-                        rated: false // Será atualizado pelo backend
-                      }}
-                      onRateClick={handleRateClick}
-                      onChatClick={(serviceId) => setSelectedChatService(serviceId)}
-                    />
-                  ))}
-                  
-                  {/* Show completed chat services */}
                   {completedServicesFromActive.map((service: any) => (
                     <CompletedServiceCard 
-                      key={`chat-${service.id}`}
+                      key={`completed-${service.id}`}
                       service={{
                         id: service.id,
                         title: service.title,
                         location: service.location || '',
                         date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não especificada',
                         price: service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : '',
-                        store: service.store || 'Loja não especificada',
+                        store: service.store?.name || service.store || 'Loja não especificada',
                         type: service.materialType || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
                         rated: !!service.rated
