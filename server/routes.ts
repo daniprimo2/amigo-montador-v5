@@ -4013,13 +4013,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Você já avaliou este usuário para este serviço" });
       }
       
+      // Determinar os tipos de usuário
+      const fromUserType = req.user!.userType;
+      const toUserType = fromUserType === 'lojista' ? 'montador' : 'lojista';
+      
       // Criar a avaliação
       const newRating = await storage.createRating({
         serviceId,
         fromUserId,
         toUserId: toUserId!,
         rating,
-        comment
+        comment,
+        fromUserType,
+        toUserType
       });
       
       // Marcar avaliação como concluída para este usuário no serviço
@@ -4039,6 +4045,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao criar avaliação:", error);
       res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
+  // Endpoint para buscar ranking dos usuários mais bem avaliados
+  app.get('/api/ranking', async (req, res) => {
+    try {
+      const query = `
+        SELECT 
+          u.id,
+          u.name,
+          u."userType",
+          u."profilePhotoUrl",
+          ROUND(AVG(r.rating::numeric), 1) as average_rating,
+          COUNT(r.id) as total_ratings
+        FROM users u
+        INNER JOIN ratings r ON u.id = r."toUserId"
+        GROUP BY u.id, u.name, u."userType", u."profilePhotoUrl"
+        HAVING COUNT(r.id) >= 1
+        ORDER BY average_rating DESC, total_ratings DESC
+        LIMIT 10
+      `;
+      
+      const result = await db.execute(sql.raw(query));
+      const ranking = result.rows.map((row: any, index: number) => ({
+        position: index + 1,
+        id: row.id,
+        name: row.name,
+        userType: row.userType,
+        profilePhotoUrl: row.profilePhotoUrl || '/default-avatar.svg',
+        averageRating: parseFloat(row.average_rating || '0'),
+        totalRatings: parseInt(row.total_ratings || '0')
+      }));
+      
+      res.json(ranking);
+    } catch (error) {
+      console.error('Erro ao buscar ranking:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
   

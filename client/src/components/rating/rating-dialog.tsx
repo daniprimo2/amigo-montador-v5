@@ -62,12 +62,9 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
 
   const onSubmit = async (data: RatingFormValues) => {
     try {
-      await apiRequest(`/api/services/${serviceId}/rate`, {
-        method: 'POST',
-        body: {
-          rating: data.rating,
-          comment: data.comment,
-        }
+      await apiRequest(`/api/services/${serviceId}/rate`, 'POST', {
+        rating: data.rating,
+        comment: data.comment,
       });
 
       // Mostrar toast de sucesso
