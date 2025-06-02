@@ -26,6 +26,8 @@ export interface ServiceProps {
     name: string;
     path: string;
   }>;
+  applicationStatus?: string | null; // Status da candidatura do montador
+  hasApplied?: boolean; // Se o montador já se candidatou
 }
 
 interface AvailableServiceCardProps {
