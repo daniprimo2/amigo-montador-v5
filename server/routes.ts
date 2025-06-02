@@ -3790,12 +3790,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasStoreRating = allRatings.some(r => r.fromUserType === 'lojista');
       const hasAssemblerRating = allRatings.some(r => r.fromUserType === 'montador');
 
-      // Se ambas as partes avaliaram, marcar como concluído
-      if (hasStoreRating && hasAssemblerRating) {
-        await storage.updateService(serviceId, {
-          ratingCompleted: true
-        });
+      // Atualizar os campos específicos de avaliação
+      const updateData: any = {};
+      
+      if (fromUserType === 'lojista') {
+        updateData.storeRatingCompleted = true;
+      } else if (fromUserType === 'montador') {
+        updateData.assemblerRatingCompleted = true;
       }
+
+      // Se ambas as partes avaliaram, marcar como totalmente concluído
+      if (hasStoreRating && hasAssemblerRating) {
+        updateData.bothRatingsCompleted = true;
+      }
+
+      await storage.updateService(serviceId, updateData);
 
       res.status(201).json({
         success: true,
@@ -3805,6 +3814,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao criar avaliação:", error);
       res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
+  // Verificar se há serviços que precisam de avaliação obrigatória
+  app.get("/api/services/pending-ratings", async (req, res) => {
+    try {
+      const userId = req.session.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      let pendingServices = [];
+
+      if (user.userType === 'montador') {
+        // Para montadores: buscar serviços completados onde ainda não avaliaram a loja
+        const completedServices = await db
+          .select()
+          .from(services)
+          .innerJoin(applications, eq(services.id, applications.serviceId))
+          .where(
+            and(
+              eq(applications.assemblerId, userId),
+              eq(applications.status, 'accepted'),
+              eq(services.status, 'completed'),
+              eq(services.paymentStatus, 'confirmed'),
+              eq(services.ratingRequired, true),
+              eq(services.assemblerRatingCompleted, false)
+            )
+          );
+
+        pendingServices = await Promise.all(
+          completedServices.map(async (item) => {
+            const store = await storage.getStore(item.services.storeId);
+            const storeUser = store ? await storage.getUser(store.userId) : null;
+            
+            return {
+              serviceId: item.services.id,
+              serviceName: item.services.title,
+              otherUserName: storeUser?.name || 'Loja',
+              userType: 'montador'
+            };
+          })
+        );
+      } else if (user.userType === 'lojista') {
+        // Para lojistas: buscar serviços completados onde ainda não avaliaram o montador
+        const store = await storage.getStoreByUserId(userId);
+        if (!store) {
+          return res.status(404).json({ message: "Loja não encontrada" });
+        }
+
+        const completedServices = await db
+          .select()
+          .from(services)
+          .innerJoin(applications, eq(services.id, applications.serviceId))
+          .where(
+            and(
+              eq(services.storeId, store.id),
+              eq(applications.status, 'accepted'),
+              eq(services.status, 'completed'),
+              eq(services.paymentStatus, 'confirmed'),
+              eq(services.ratingRequired, true),
+              eq(services.storeRatingCompleted, false)
+            )
+          );
+
+        pendingServices = await Promise.all(
+          completedServices.map(async (item) => {
+            const assembler = await storage.getAssemblerById(item.applications.assemblerId);
+            const assemblerUser = assembler ? await storage.getUser(assembler.userId) : null;
+            
+            return {
+              serviceId: item.services.id,
+              serviceName: item.services.title,
+              otherUserName: assemblerUser?.name || 'Montador',
+              userType: 'lojista'
+            };
+          })
+        );
+      }
+
+      res.json({
+        pendingRatings: pendingServices,
+        hasPendingRatings: pendingServices.length > 0
+      });
+    } catch (error) {
+      console.error("Erro ao buscar avaliações pendentes:", error);
+      res.status(500).json({ message: "Erro ao buscar avaliações pendentes" });
     }
   });
 
