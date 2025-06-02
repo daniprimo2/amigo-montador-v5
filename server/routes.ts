@@ -3150,22 +3150,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const identificadorMovimento = `payment_${serviceId}_${timestamp}_${randomSuffix}`;
       
       // Create PIX payment data according to Canvi documentation format
-      // Parse the amount - keep it in reais as stored
+      // Parse the amount - NO CONVERSION, keep the value as is
       let parsedAmount: number;
       
       if (typeof amount === 'string') {
         if (amount.includes(',')) {
-          // Parse Brazilian format directly to reais
-          // Examples: "2,00" -> 2.00, "500,00" -> 500.00, "1999,00" -> 1999.00
-          const brazilianValue = parseBrazilianPrice(amount);
-          parsedAmount = brazilianValue;
+          // Parse Brazilian format: "2,00" should become 2.00, NOT 0.02
+          const cleanAmount = amount.replace(/[^\d,]/g, '');
+          const normalized = cleanAmount.replace(',', '.');
+          parsedAmount = parseFloat(normalized) || 0;
         } else {
-          // If it's a simple number string, parse as reais
-          // Examples: "2" -> 2.00, "500" -> 500.00, "1999" -> 1999.00
+          // If it's a simple number string
           parsedAmount = parseFloat(amount);
         }
       } else {
-        // If it's already a number, use as reais
+        // If it's already a number
         parsedAmount = parseFloat(amount);
       }
       
