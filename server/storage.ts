@@ -306,10 +306,13 @@ export class DatabaseStorage implements IStorage {
           }
         }
         
+        const storeNameFromDb = store?.name || 'Loja não especificada';
+        console.log(`[DEBUG Storage] Serviço ID ${service.id}: store.name = "${store?.name}", storeName = "${storeNameFromDb}"`);
+        
         return {
           ...service,
           projectFiles,
-          storeName: store?.name || 'Loja não especificada',
+          storeName: storeNameFromDb,
           // Garantir que todos os campos estejam disponíveis
           description: service.description || '',
           materialType: service.materialType || '',
