@@ -3799,6 +3799,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         comment: comment || null
       });
 
+      // Atualizar a avaliação média do usuário que foi avaliado
+      if (toUserType === 'montador') {
+        // Atualizar rating do montador
+        const assembler = await storage.getAssemblerByUserId(toUserId);
+        if (assembler) {
+          const newAverageRating = await storage.getAverageRatingForUser(toUserId);
+          await storage.updateAssembler(assembler.id, { rating: newAverageRating });
+        }
+      } else if (toUserType === 'lojista') {
+        // Para lojistas, o rating é calculado dinamicamente via getAverageRatingForUser
+        // Não precisamos atualizar nada na tabela stores
+      }
+
       // Verificar se ambas as partes já avaliaram (avaliação mútua)
       const allRatings = await storage.getRatingsByServiceId(serviceId);
       const hasStoreRating = allRatings.some(r => r.fromUserType === 'lojista');
@@ -3834,21 +3847,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Verificar se há serviços que precisam de avaliação obrigatória
   app.get("/api/services/pending-ratings", async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
+      if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Usuário não autenticado" });
       }
 
-      const user = await storage.getUser(userId);
+      const user = req.user;
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
+
+      console.log("[DEBUG] Pending ratings - user:", user.id, user.userType);
 
       let pendingServices = [];
 
       if (user.userType === 'montador') {
         // Para montadores: buscar serviços completados onde ainda não avaliaram a loja
-        const assembler = await storage.getAssemblerByUserId(userId);
+        const assembler = await storage.getAssemblerByUserId(user.id);
         if (!assembler) {
           return res.status(404).json({ message: "Montador não encontrado" });
         }
@@ -3883,7 +3897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       } else if (user.userType === 'lojista') {
         // Para lojistas: buscar serviços completados onde ainda não avaliaram o montador
-        const store = await storage.getStoreByUserId(userId);
+        const store = await storage.getStoreByUserId(user.id);
         if (!store) {
           return res.status(404).json({ message: "Loja não encontrada" });
         }
