@@ -1935,6 +1935,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const serviceId = parseInt(id);
 
+      // Validar se o ID é um número válido
+      if (isNaN(serviceId)) {
+        return res.status(400).json({ message: "ID de serviço inválido" });
+      }
+
       // Verificar se o serviço existe
       const service = await storage.getServiceById(serviceId);
       if (!service) {
