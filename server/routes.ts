@@ -3858,14 +3858,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("[DEBUG] Pending ratings - user:", user.id, user.userType);
 
-      let pendingServices = [];
+      let pendingServices: any[] = [];
 
       if (user.userType === 'montador') {
         // Para montadores: buscar serviços completados onde ainda não avaliaram a loja
         const assembler = await storage.getAssemblerByUserId(user.id);
         if (!assembler) {
-          return res.status(404).json({ message: "Montador não encontrado" });
+          console.log("[DEBUG] Assembler not found for user:", user.id);
+          return res.json({
+            pendingRatings: [],
+            hasPendingRatings: false
+          });
         }
+
+        console.log("[DEBUG] Found assembler:", assembler.id);
 
         const completedServices = await db
           .select()
@@ -3881,6 +3887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               eq(services.assemblerRatingCompleted, false)
             )
           );
+
+        console.log("[DEBUG] Completed services found:", completedServices.length);
 
         pendingServices = await Promise.all(
           completedServices.map(async (item) => {
@@ -3938,7 +3946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Erro ao buscar avaliações pendentes:", error);
-      res.status(500).json({ message: "Erro ao buscar avaliações pendentes" });
+      res.status(400).json({ message: "ID de serviço inválido" });
     }
   });
 
