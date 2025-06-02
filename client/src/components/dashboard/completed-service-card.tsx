@@ -8,7 +8,7 @@ interface ServiceProps {
   location: string;
   date: string;
   price: string;
-  store: string;
+  store: string | { name: string; id?: number; logoUrl?: string; userId?: number; user?: any };
   type: string;
   rated?: boolean;
   completedAt?: string; // Nova propriedade para data de finalização
@@ -76,7 +76,7 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
         <div className="flex justify-between">
           <div className="flex items-center">
             <Building className="h-4 w-4 mr-1 text-gray-400" />
-            <span>{service.store}</span>
+            <span>{typeof service.store === 'string' ? service.store : service.store?.name || 'Loja não especificada'}</span>
           </div>
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
