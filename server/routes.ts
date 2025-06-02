@@ -3834,13 +3834,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (user.userType === 'montador') {
         // Para montadores: buscar serviços completados onde ainda não avaliaram a loja
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (!assembler) {
+          return res.status(404).json({ message: "Montador não encontrado" });
+        }
+
         const completedServices = await db
           .select()
           .from(services)
           .innerJoin(applications, eq(services.id, applications.serviceId))
           .where(
             and(
-              eq(applications.assemblerId, userId),
+              eq(applications.assemblerId, assembler.id),
               eq(applications.status, 'accepted'),
               eq(services.status, 'completed'),
               eq(services.paymentStatus, 'confirmed'),
