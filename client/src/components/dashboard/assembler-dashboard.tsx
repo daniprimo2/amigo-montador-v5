@@ -450,6 +450,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   console.log("[AssemblerDashboard] Serviços em andamento detalhados:", inProgressServices.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
   console.log("[AssemblerDashboard] Serviços finalizados detalhados:", completedServicesFromActive.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
   
+  // Debug completo do activeServices para entender todos os status
+  console.log("[AssemblerDashboard] Todos os activeServices com status:", activeServices?.map((s: any) => ({ id: s.id, title: s.title, status: s.status })) || []);
+  
   // Calculate service counts by status
   const serviceCounts = {
     // Disponíveis: apenas serviços com status 'open' do rawServices
