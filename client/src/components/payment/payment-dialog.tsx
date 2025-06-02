@@ -47,7 +47,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
       }
       return response.json();
     },
-    enabled: !!serviceId && paymentStatus === "success",
+    enabled: !!serviceId,
   });
   
   // Quando os dados do serviço estiverem disponíveis, buscar detalhes do montador
@@ -65,6 +65,7 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
 
   // Simulação de pagamento - na implementação real, isso seria verificado pelo backend
   const simulatePayment = () => {
+    console.log("[PaymentDialog] Simulando pagamento para serviço:", serviceId);
     setPaymentStatus("success");
   };
 
@@ -82,17 +83,24 @@ export const PaymentDialog: React.FC<PaymentDialogProps> = ({
       
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[PaymentDialog] Serviço finalizado com sucesso:", data);
+      
       // Atualizar os dados da aplicação após finalizar o serviço
       queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       queryClient.invalidateQueries({ queryKey: ["/api/services/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/services/pending-evaluations"] });
+      
       toast({
         title: "Serviço finalizado com sucesso!",
         description: "O pagamento foi confirmado e o serviço foi marcado como concluído.",
       });
       
-      // Abrir a tela de avaliação automaticamente
-      setShowRatingDialog(true);
+      // Abrir a tela de avaliação automaticamente após um pequeno delay
+      setTimeout(() => {
+        console.log("[PaymentDialog] Abrindo tela de avaliação obrigatória");
+        setShowRatingDialog(true);
+      }, 1000);
     },
     onError: (error) => {
       console.error("Erro ao finalizar serviço:", error);
