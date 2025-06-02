@@ -52,6 +52,12 @@ export const assemblers = pgTable("assemblers", {
   rgBackUrl: text("rg_back_url").notNull(), // RG/CNH verso (obrigatório)
   proofOfAddressUrl: text("proof_of_address_url").notNull(), // Comprovante de residência (obrigatório)
   certificatesUrls: jsonb("certificates_urls"), // Certificados profissionais (opcional)
+  // Novos campos para perfil completo
+  experienceYears: integer("experience_years").default(0), // Anos de experiência numérico
+  serviceTypes: jsonb("service_types"), // ['residencial', 'corporativo', 'lojas_parceiras']
+  availability: jsonb("availability"), // { dias: ['seg', 'ter', ...], horarios: { inicio: '08:00', fim: '18:00' } }
+  hasOwnTools: boolean("has_own_tools").default(true), // Se possui ferramentas próprias
+  professionalDescription: text("professional_description"), // Descrição profissional mais detalhada
 });
 
 // Serviços
