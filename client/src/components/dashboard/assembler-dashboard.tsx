@@ -1147,6 +1147,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       }
     }
   }, [lastMessage, dashboardSection, queryClient, toast]);
+
+  const renderRankingSection = () => (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-responsive-lg font-semibold">Ranking de Avaliações</h2>
+      </div>
+      
+      <div className="padding-responsive">
+        <RankingSection />
+      </div>
+    </div>
+  );
   
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
