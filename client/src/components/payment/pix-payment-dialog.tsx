@@ -120,6 +120,7 @@ export function PixPaymentDialog({
   // Create PIX payment
   const createPixMutation = useMutation({
     mutationFn: async (token: string) => {
+      console.log("[Frontend PIX] Enviando para backend:", { serviceId, amount, tipo: typeof amount });
       const response = await apiRequest({
         method: 'POST',
         url: '/api/payment/pix/create',

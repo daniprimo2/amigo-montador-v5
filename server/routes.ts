@@ -3052,6 +3052,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { serviceId, amount, description, token } = req.body;
 
+      console.log("[PIX Create] Dados recebidos do frontend:", { serviceId, amount, description, token: token ? "presente" : "ausente" });
+
       if (!serviceId || !amount || !token) {
         return res.status(400).json({ message: "Dados obrigatórios não fornecidos" });
       }
