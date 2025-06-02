@@ -3821,13 +3821,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (type === 'lojista') {
         // Buscar top lojistas
-        const stores = await db
+        const storesData = await db
           .select()
           .from(stores)
           .innerJoin(users, eq(stores.userId, users.id));
 
         const storesWithRating = await Promise.all(
-          stores.map(async (storeData) => {
+          storesData.map(async (storeData) => {
             const rating = await storage.getAverageRatingForUser(storeData.users.id);
             return {
               id: storeData.stores.id,
