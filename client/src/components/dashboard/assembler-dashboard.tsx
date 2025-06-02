@@ -441,11 +441,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const serviceCounts = {
     // Disponíveis: apenas serviços com status 'open'
     available: rawServices?.filter(s => s.status === 'open').length || 0,
-    // Em andamento: apenas contar serviços do activeServices (que são os que o montador tem participação)
+    // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
     inProgress: activeServices?.filter((s: any) => s.status === 'in-progress').length || 0,
-    // Finalizados: somar serviços completos do rawServices + activeServices (sem duplicar)
-    completed: (rawServices?.filter(s => s.status === 'completed').length || 0) + 
-               (activeServices?.filter((s: any) => s.status === 'completed').length || 0)
+    // Finalizados: apenas serviços do activeServices com status 'completed' (não duplicar do rawServices)
+    completed: activeServices?.filter((s: any) => s.status === 'completed').length || 0
   };
   
   // Handle applying for a service
@@ -685,8 +684,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   <p>Nenhum serviço em andamento.</p>
                 </div>
               ) : (
-                // Show in-progress services
-                inProgressServices.map((service: any) => (
+                // Show only truly in-progress services (not completed ones)
+                inProgressServices.filter((service: any) => service.status === 'in-progress').map((service: any) => (
                   <div 
                     key={service.id} 
                     className="p-4 hover:bg-gray-50 cursor-pointer"
