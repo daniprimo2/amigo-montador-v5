@@ -386,6 +386,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Verificar se existem mensagens não lidas para este serviço
         const hasUnreadMessages = await storage.hasUnreadMessages(service.id, req.user.id);
         
+        // Verificar se o montador já avaliou este serviço
+        const hasRated = await db
+          .select()
+          .from(ratings)
+          .where(
+            and(
+              eq(ratings.serviceId, service.id),
+              eq(ratings.fromUserId, req.user.id),
+              eq(ratings.fromUserType, 'montador')
+            )
+          )
+          .limit(1);
+        
         return {
           ...service,
           store: storeResult.length > 0 ? {
@@ -398,7 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } : null,
           applicationStatus: application ? application.status : null,
           hasAcceptedApplication: application ? application.status === 'accepted' : false,
-          hasUnreadMessages: hasUnreadMessages
+          hasUnreadMessages: hasUnreadMessages,
+          rated: hasRated.length > 0
         };
       }));
 
@@ -4178,9 +4192,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Marcar avaliação como concluída para este usuário no serviço
-      await storage.updateService(serviceId, {
-        ratingCompleted: true
-      });
+      const updateData: any = {};
+      if (fromUserType === 'montador') {
+        updateData.assemblerRatingCompleted = true;
+      } else if (fromUserType === 'lojista') {
+        updateData.storeRatingCompleted = true;
+      }
+      
+      await storage.updateService(serviceId, updateData);
       
       // Notificar o usuário avaliado via WebSocket
       sendNotification(toUserId!, {
