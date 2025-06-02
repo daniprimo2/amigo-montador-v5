@@ -4073,7 +4073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const serviceId = Number(req.params.id);
-      const { rating, comment } = req.body;
+      const { rating, comment, emojiRating } = req.body;
       
       if (!rating) {
         return res.status(400).json({ message: "Avaliação é obrigatória" });
@@ -4167,6 +4167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         toUserId: toUserId!,
         rating,
         comment,
+        emojiRating,
         fromUserType,
         toUserType
       });

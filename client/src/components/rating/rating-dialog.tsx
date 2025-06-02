@@ -151,6 +151,23 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
 
             <FormField
               control={form.control}
+              name="emojiRating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <EmojiFeedback
+                      onEmojiSelect={(emoji) => field.onChange(emoji)}
+                      selectedEmoji={field.value}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="comment"
               render={({ field }) => (
                 <FormItem>
