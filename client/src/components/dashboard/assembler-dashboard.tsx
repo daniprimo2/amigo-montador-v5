@@ -13,6 +13,8 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { ProfileDialog } from './profile-dialog';
+import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dialog';
+import { useMandatoryRatings } from '@/hooks/use-mandatory-ratings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RankingSection } from '@/components/ranking/ranking-section';
@@ -127,6 +129,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
   const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
   const { connected, lastMessage } = useWebSocket();
+  
+  // Hook para gerenciar avaliações obrigatórias
+  const {
+    currentRating,
+    isRatingDialogOpen: isMandatoryRatingOpen,
+    handleRatingCompleted,
+  } = useMandatoryRatings();
 
   // Lista de cidades brasileiras principais para filtro
   const brazilianCities = [
@@ -1275,6 +1284,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         onOpenChange={setIsProfileDialogOpen}
         onLogout={onLogout}
       />
+      
+      {/* Diálogo de Avaliação Obrigatória */}
+      {currentRating && (
+        <MandatoryRatingDialog
+          open={isMandatoryRatingOpen}
+          serviceId={currentRating.serviceId}
+          serviceName={currentRating.serviceName}
+          otherUserName={currentRating.otherUserName}
+          userType={currentRating.userType}
+          onSuccess={handleRatingCompleted}
+        />
+      )}
     </div>
   );
 };
