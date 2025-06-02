@@ -432,7 +432,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Filtrar serviços por status para cada aba
   const availableServices = filteredServices.filter(service => service.status === 'open');
   const inProgressServices = activeServices?.filter((service: any) => 
-    service.status === 'in-progress' || service.status === 'hired'
+    service.status === 'in-progress'
   ) || [];
   const completedServicesFromRaw = rawServices?.filter(s => s.status === 'completed') || [];
   const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
@@ -442,7 +442,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     // Disponíveis: apenas serviços com status 'open'
     available: rawServices?.filter(s => s.status === 'open').length || 0,
     // Em andamento: apenas contar serviços do activeServices (que são os que o montador tem participação)
-    inProgress: activeServices?.filter((s: any) => s.status === 'in-progress' || s.status === 'hired').length || 0,
+    inProgress: activeServices?.filter((s: any) => s.status === 'in-progress').length || 0,
     // Finalizados: somar serviços completos do rawServices + activeServices (sem duplicar)
     completed: (rawServices?.filter(s => s.status === 'completed').length || 0) + 
                (activeServices?.filter((s: any) => s.status === 'completed').length || 0)
