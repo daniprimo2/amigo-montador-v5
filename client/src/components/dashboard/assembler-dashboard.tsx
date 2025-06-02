@@ -392,7 +392,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Fetch available services
   const { data: services, isLoading, error } = useQuery({
     queryKey: ['/api/services'],
-    select: (data: ServiceData[]) => data.map(formatServiceForDisplay)
+    select: (data: ServiceData[]) => data.map(formatServiceForDisplay),
+    staleTime: 0, // Force fresh data
+    cacheTime: 0 // Don't cache
   });
   
   // Fetch available services
