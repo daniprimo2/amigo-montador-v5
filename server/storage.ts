@@ -251,7 +251,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     try {
-      // Obter todos os serviços (removendo filtro de status para mostrar todos)
+      // Obter apenas serviços com status 'open' (disponíveis para candidatura)
       const servicesList = await db.select({
         services: {
           id: services.id,
@@ -280,6 +280,7 @@ export class DatabaseStorage implements IStorage {
       })
         .from(services)
         .leftJoin(stores, eq(services.storeId, stores.id))
+        .where(eq(services.status, 'open'))
         .orderBy(desc(services.createdAt));
       
       // Log para depuração
