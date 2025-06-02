@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Building, CalendarIcon, MapPin, Loader2, FileText, Download } from 'lucide-react';
+import { Building, CalendarIcon, MapPin, Loader2, FileText, Download, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ServiceDetailsDialog } from './service-details-dialog';
@@ -132,7 +132,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   };
 
   // Check if this service is already in the active services (user already applied)
-  const hasApplied = activeServices.some(activeService => activeService.id === service.id);
+  const hasApplied = activeServices.some(activeService => activeService.id === service.id) || service.hasApplied;
+  const applicationStatus = service.applicationStatus;
+  const isPendingApproval = applicationStatus === 'pending';
 
   return (
     <div className="p-3 sm:p-4">
@@ -143,6 +145,13 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
             <span className="truncate">{service.location} ({service.distance})</span>
           </div>
+          {/* Status de candidatura pendente */}
+          {isPendingApproval && (
+            <div className="flex items-center text-xs text-orange-600 mt-1 font-medium">
+              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span>Aguardando Confirmação do Lojista</span>
+            </div>
+          )}
         </div>
         <div className="text-right flex-shrink-0">
           <div className="font-medium text-primary text-sm sm:text-base">{formatPrice(service.price)}</div>
@@ -179,12 +188,20 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       
       <Button 
         onClick={handleViewServiceDetails}
-        disabled={service.status === 'in-progress' || hasApplied}
-        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${hasApplied ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-primary hover:bg-opacity-90'} text-white`}
+        disabled={service.status === 'in-progress' || (hasApplied && !isPendingApproval)}
+        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${
+          isPendingApproval 
+            ? 'bg-orange-500 hover:bg-orange-600' 
+            : hasApplied 
+              ? 'bg-yellow-500 hover:bg-yellow-600' 
+              : 'bg-primary hover:bg-opacity-90'
+        } text-white`}
       >
         {service.status === 'in-progress' ? 
           'Serviço em andamento' : 
-          hasApplied ? 'Em andamento' : 'Ver detalhes do serviço'}
+          isPendingApproval ?
+            'Aguardando Confirmação' :
+            hasApplied ? 'Em andamento' : 'Ver detalhes do serviço'}
       </Button>
       
       {/* Diálogo para detalhes do serviço e candidatura */}

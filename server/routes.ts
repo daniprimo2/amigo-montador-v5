@@ -163,6 +163,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Buscando serviços disponíveis para o montador (id: ${assembler.id})`);
         // Buscar serviços disponíveis para montador (incluindo nome da loja)
         servicesList = await storage.getAvailableServicesForAssembler(assembler);
+        
+        // Buscar candidaturas do montador para incluir status de aplicação
+        const assemblerApplications = await db
+          .select()
+          .from(applications)
+          .where(eq(applications.assemblerId, assembler.id));
+        
+        // Adicionar status de aplicação aos serviços
+        servicesList = servicesList.map(service => {
+          const application = assemblerApplications.find(app => app.serviceId === service.id);
+          return {
+            ...service,
+            applicationStatus: application ? application.status : null,
+            hasApplied: !!application
+          };
+        });
       } else {
         // Tipo de usuário não reconhecido
         return res.status(403).json({ message: "Tipo de usuário não autorizado" });
@@ -217,6 +233,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`[DEBUG] Serviço ${service.id}: storeName = "${storeName}"`);
           
+          // Verificar status de aplicação para este serviço
+          const serviceWithApp = service as any;
+          
           return {
             id: service.id,
             title: service.title,
@@ -235,7 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             store: storeName,
             type: service.materialType || 'Material não especificado',
             status: service.status,
-            projectFiles: projectFiles
+            projectFiles: projectFiles,
+            applicationStatus: serviceWithApp.applicationStatus || null,
+            hasApplied: serviceWithApp.hasApplied || false
           };
         });
         
