@@ -399,6 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
           .limit(1);
         
+        console.log(`[DEBUG] Service ${service.id} (${service.title}) - User ${req.user.id} rated: ${hasRated.length > 0}`);
+        
         return {
           ...service,
           store: storeResult.length > 0 ? {
