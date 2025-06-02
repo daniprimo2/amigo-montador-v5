@@ -33,10 +33,13 @@ interface ServiceData {
   storeId: number;
   store?: {
     name: string;
-  };
+  } | string;
   status: string;
   createdAt: string;
   completedAt?: string; // Data de finalização do serviço
+  startDate?: string;
+  endDate?: string;
+  projectFiles?: any[];
 }
 
 interface ChatMessage {
@@ -75,8 +78,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ serviceId, onClose }) => {
         </div>
         <div className="flex-1">
           <ChatInterface 
-            serviceId={serviceId} 
-            onClose={onClose}
+            serviceId={serviceId}
+            onBack={onClose}
           />
         </div>
       </div>
@@ -125,74 +128,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
   // Configurar WebSocket para notificações em tempo real
-  const socket = useWebSocket();
-
-  // Função para lidar com as mensagens do WebSocket
-  useEffect(() => {
-    if (socket) {
-      const handleMessage = (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('[WebSocket] Mensagem recebida:', data.type, data);
-          
-          if (data.type === 'new_message') {
-            // Invalidar consultas relacionadas a mensagens
-            queryClient.invalidateQueries({ queryKey: ['/api/messages/unread-count'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-            
-            // Mostrar notificação
-            toast({
-              title: "Nova mensagem",
-              description: `Nova mensagem de ${data.storeName}`,
-            });
-          } else if (data.type === 'new_application') {
-            // Invalidar serviços quando há nova candidatura
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-            
-            toast({
-              title: "Nova candidatura",
-              description: data.message,
-            });
-          } else if (data.type === 'service_completed') {
-            // Invalidar serviços quando um serviço é finalizado
-            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-            
-            toast({
-              title: "Serviço finalizado",
-              description: data.message,
-            });
-          } else if (data.type === 'service_confirmed') {
-            // Invalidar serviços quando um serviço é confirmado
-            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-            
-            toast({
-              title: "Serviço confirmado",
-              description: data.message,
-            });
-          } else if (data.type === 'payment_ready') {
-            // Invalidar serviços quando pagamento está pronto
-            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-            
-            toast({
-              title: "Pagamento disponível",
-              description: data.message,
-            });
-          }
-        } catch (error) {
-          console.error('[WebSocket] Erro ao processar mensagem:', error);
-        }
-      };
-
-      socket.addEventListener('message', handleMessage);
-
-      return () => {
-        socket.removeEventListener('message', handleMessage);
-      };
-    }
-  }, [socket, queryClient, toast]);
+  useWebSocket();
 
   // Carregar os serviços disponíveis para candidatura
   const { data: rawServices = [], isLoading, error } = useQuery({
@@ -244,8 +180,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   });
 
   // Separar serviços ativos por status
-  const inProgressServices = activeServices.filter((service: any) => service.status === 'in-progress');
-  const completedServicesFromActive = activeServices.filter((service: any) => service.status === 'completed');
+  const inProgressServices = Array.isArray(activeServices) ? activeServices.filter((service: any) => service.status === 'in-progress') : [];
+  const completedServicesFromActive = Array.isArray(activeServices) ? activeServices.filter((service: any) => service.status === 'completed') : [];
 
   // Calculate service counts by status
   const serviceCounts = {
