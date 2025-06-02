@@ -1233,10 +1233,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Tipo de usuário não autorizado" });
       }
 
-      // Atualizar status para 'completed' e gravar data de finalização
+      // Atualizar status para 'completed', gravar data de finalização e marcar como requerendo avaliação
       const updatedService = await storage.updateService(serviceId, {
         status: 'completed',
-        completedAt: new Date()
+        completedAt: new Date(),
+        ratingRequired: true,
+        ratingCompleted: false
       });
       
       // Enviar notificação sobre a finalização do serviço
@@ -3810,13 +3812,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .slice(0, 10);
       } else {
         // Buscar top montadores
-        const assemblers = await db
+        const assemblers2 = await db
           .select()
           .from(assemblers)
           .innerJoin(users, eq(assemblers.userId, users.id));
 
         const assemblersWithRating = await Promise.all(
-          assemblers.map(async (assemblerData) => {
+          assemblers2.map(async (assemblerData) => {
             const rating = await storage.getAverageRatingForUser(assemblerData.users.id);
             return {
               id: assemblerData.assemblers.id,
