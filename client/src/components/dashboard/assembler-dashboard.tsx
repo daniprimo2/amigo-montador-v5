@@ -888,12 +888,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </TabsContent>
       </Tabs>
       
-      <h3 className="text-lg font-semibold mb-4">Próximos Serviços</h3>
-      
-      <div className="bg-white rounded-lg p-4">
-        <p className="text-gray-500 text-center">
-          Visualização de próximos serviços disponível na aba "Início"
-        </p>
+      {/* Ranking de Avaliações */}
+      <div className="mt-6">
+        <RankingSection />
       </div>
     </>
   );
