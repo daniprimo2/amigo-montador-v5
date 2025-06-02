@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { RatingList } from '@/components/rating/rating-list';
 import { PendingEvaluationsModal } from './pending-evaluations-modal';
+import { RankingSection } from '@/components/ranking/ranking-section';
 
 interface StoreDashboardProps {
   onLogout: () => void;

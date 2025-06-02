@@ -62,10 +62,9 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
 
   const onSubmit = async (data: RatingFormValues) => {
     try {
-      await apiRequest({
+      await apiRequest(`/api/services/${serviceId}/rate`, {
         method: 'POST',
-        url: `/api/services/${serviceId}/rate`,
-        data: {
+        body: {
           rating: data.rating,
           comment: data.comment,
         }

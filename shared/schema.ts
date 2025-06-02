@@ -117,6 +117,8 @@ export const ratings = pgTable("ratings", {
   serviceId: integer("service_id").notNull().references(() => services.id),
   fromUserId: integer("from_user_id").notNull().references(() => users.id),
   toUserId: integer("to_user_id").notNull().references(() => users.id),
+  fromUserType: text("from_user_type").notNull(), // 'lojista' ou 'montador'
+  toUserType: text("to_user_type").notNull(), // 'lojista' ou 'montador'
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
