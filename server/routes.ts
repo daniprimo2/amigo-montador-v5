@@ -3892,7 +3892,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
           
           if (acceptedApplications.length > 0) {
-            const serviceIds = acceptedApplications.map(app => app.serviceId).filter(id => id && !isNaN(id));
+            // Filtrar apenas IDs válidos e converter para número
+            const serviceIds = acceptedApplications
+              .map(app => app.serviceId)
+              .filter(id => id !== null && id !== undefined && !isNaN(Number(id)))
+              .map(id => Number(id));
+            
             if (serviceIds.length > 0) {
               pendingServices = await db
                 .select()
