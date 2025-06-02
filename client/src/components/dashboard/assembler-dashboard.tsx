@@ -445,14 +445,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   console.log("[AssemblerDashboard] Total rawServices:", rawServices?.length || 0);
   console.log("[AssemblerDashboard] Total activeServices:", activeServices?.length || 0);
   
+  // Debug detalhado dos serviços por status
+  console.log("[AssemblerDashboard] Serviços disponíveis detalhados:", availableServices.map(s => ({ id: s.id, title: s.title, status: s.status })));
+  console.log("[AssemblerDashboard] Serviços em andamento detalhados:", inProgressServices.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
+  console.log("[AssemblerDashboard] Serviços finalizados detalhados:", completedServicesFromActive.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
+  
   // Calculate service counts by status
   const serviceCounts = {
-    // Disponíveis: apenas serviços com status 'open'
-    available: rawServices?.filter(s => s.status === 'open').length || 0,
+    // Disponíveis: apenas serviços com status 'open' do rawServices
+    available: availableServices.length,
     // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
-    inProgress: activeServices?.filter((s: any) => s.status === 'in-progress').length || 0,
-    // Finalizados: apenas serviços do activeServices com status 'completed' (não duplicar do rawServices)
-    completed: activeServices?.filter((s: any) => s.status === 'completed').length || 0
+    inProgress: inProgressServices.length,
+    // Finalizados: apenas serviços do activeServices com status 'completed'
+    completed: completedServicesFromActive.length
   };
   
   // Handle applying for a service
