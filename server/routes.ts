@@ -3354,7 +3354,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateService(serviceId, {
           paymentStatus: 'completed',
           status: 'completed',
-          completedAt: new Date()
+          completedAt: new Date(),
+          ratingRequired: true,
+          ratingCompleted: false
         });
         
         // Buscar informações do pagador (lojista que está pagando)
@@ -3633,6 +3635,214 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false, 
         message: "Erro ao processar aprovação de pagamento" 
       });
+    }
+  });
+
+  // Criar avaliação para um serviço
+  app.post("/api/services/:id/rate", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { id } = req.params;
+      const serviceId = parseInt(id);
+      const { rating, comment } = req.body;
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Avaliação deve ser entre 1 e 5 estrelas" });
+      }
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se o serviço está completo
+      if (service.status !== 'completed') {
+        return res.status(400).json({ message: "Só é possível avaliar serviços concluídos" });
+      }
+
+      const fromUserId = req.user!.id;
+      const fromUserType = req.user!.userType;
+      let toUserId = null;
+      let toUserType = null;
+
+      // Determinar quem está sendo avaliado
+      if (fromUserType === 'lojista') {
+        // Lojista avaliando montador
+        const store = await storage.getStoreByUserId(fromUserId);
+        if (!store || store.id !== service.storeId) {
+          return res.status(403).json({ message: "Você não tem permissão para avaliar este serviço" });
+        }
+
+        // Encontrar o montador aceito para este serviço
+        const acceptedApplications = await db
+          .select()
+          .from(applications)
+          .innerJoin(assemblers, eq(applications.assemblerId, assemblers.id))
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+
+        if (acceptedApplications.length === 0) {
+          return res.status(400).json({ message: "Nenhum montador encontrado para este serviço" });
+        }
+
+        toUserId = acceptedApplications[0].assemblers.userId;
+        toUserType = 'montador';
+      } else if (fromUserType === 'montador') {
+        // Montador avaliando lojista
+        const assembler = await storage.getAssemblerByUserId(fromUserId);
+        if (!assembler) {
+          return res.status(403).json({ message: "Montador não encontrado" });
+        }
+
+        // Verificar se o montador está vinculado a este serviço
+        const acceptedApplication = await db
+          .select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.assemblerId, assembler.id),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+
+        if (acceptedApplication.length === 0) {
+          return res.status(403).json({ message: "Você não tem permissão para avaliar este serviço" });
+        }
+
+        const store = await storage.getStore(service.storeId);
+        if (!store) {
+          return res.status(400).json({ message: "Loja não encontrada" });
+        }
+
+        toUserId = store.userId;
+        toUserType = 'lojista';
+      } else {
+        return res.status(403).json({ message: "Tipo de usuário inválido" });
+      }
+
+      // Verificar se já avaliou este serviço
+      const existingRating = await storage.getRatingByServiceIdAndUser(serviceId, fromUserId, toUserId);
+      if (existingRating) {
+        return res.status(400).json({ message: "Você já avaliou este serviço" });
+      }
+
+      // Criar a avaliação
+      const newRating = await storage.createRating({
+        serviceId,
+        fromUserId,
+        toUserId,
+        fromUserType,
+        toUserType,
+        rating,
+        comment: comment || null
+      });
+
+      // Verificar se ambas as partes já avaliaram (avaliação mútua)
+      const allRatings = await storage.getRatingsByServiceId(serviceId);
+      const hasStoreRating = allRatings.some(r => r.fromUserType === 'lojista');
+      const hasAssemblerRating = allRatings.some(r => r.fromUserType === 'montador');
+
+      // Se ambas as partes avaliaram, marcar como concluído
+      if (hasStoreRating && hasAssemblerRating) {
+        await storage.updateService(serviceId, {
+          ratingCompleted: true
+        });
+      }
+
+      res.status(201).json({
+        success: true,
+        rating: newRating,
+        message: "Avaliação criada com sucesso"
+      });
+    } catch (error) {
+      console.error("Erro ao criar avaliação:", error);
+      res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
+  // Buscar ranking de usuários (top 10 com melhores avaliações)
+  app.get("/api/ranking", async (req, res) => {
+    try {
+      const { type } = req.query; // 'lojista' ou 'montador'
+
+      if (!type || (type !== 'lojista' && type !== 'montador')) {
+        return res.status(400).json({ message: "Tipo deve ser 'lojista' ou 'montador'" });
+      }
+
+      let rankingData = [];
+
+      if (type === 'lojista') {
+        // Buscar top lojistas
+        const stores = await db
+          .select()
+          .from(stores)
+          .innerJoin(users, eq(stores.userId, users.id));
+
+        const storesWithRating = await Promise.all(
+          stores.map(async (storeData) => {
+            const rating = await storage.getAverageRatingForUser(storeData.users.id);
+            return {
+              id: storeData.stores.id,
+              name: storeData.stores.name,
+              city: storeData.stores.city,
+              state: storeData.stores.state,
+              logoUrl: storeData.stores.logoUrl,
+              rating: rating,
+              userType: 'lojista'
+            };
+          })
+        );
+
+        rankingData = storesWithRating
+          .filter(store => store.rating > 0)
+          .sort((a, b) => b.rating - a.rating)
+          .slice(0, 10);
+      } else {
+        // Buscar top montadores
+        const assemblers = await db
+          .select()
+          .from(assemblers)
+          .innerJoin(users, eq(assemblers.userId, users.id));
+
+        const assemblersWithRating = await Promise.all(
+          assemblers.map(async (assemblerData) => {
+            const rating = await storage.getAverageRatingForUser(assemblerData.users.id);
+            return {
+              id: assemblerData.assemblers.id,
+              name: assemblerData.users.name,
+              city: assemblerData.assemblers.city,
+              state: assemblerData.assemblers.state,
+              specialties: assemblerData.assemblers.specialties,
+              rating: rating,
+              userType: 'montador'
+            };
+          })
+        );
+
+        rankingData = assemblersWithRating
+          .filter(assembler => assembler.rating > 0)
+          .sort((a, b) => b.rating - a.rating)
+          .slice(0, 10);
+      }
+
+      res.json({
+        type,
+        ranking: rankingData
+      });
+    } catch (error) {
+      console.error("Erro ao buscar ranking:", error);
+      res.status(500).json({ message: "Erro ao buscar ranking" });
     }
   });
 
