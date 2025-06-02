@@ -93,11 +93,20 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       // Fechar o diálogo de detalhes após o envio bem-sucedido
       setIsServiceDetailsOpen(false);
       
-      toast({
-        title: "Candidatura enviada",
-        description: "Sua candidatura foi enviada com sucesso! Em breve o lojista entrará em contato.",
-        duration: 5000
-      });
+      // Verificar se a resposta contém informações sobre candidatura existente
+      if (response.application && response.message) {
+        toast({
+          title: "Status da candidatura",
+          description: response.message,
+          duration: 5000
+        });
+      } else {
+        toast({
+          title: "Candidatura enviada",
+          description: "Sua candidatura foi enviada com sucesso! Em breve o lojista entrará em contato.",
+          duration: 5000
+        });
+      }
     } catch (error) {
       console.error("[AvailableServiceCard] Erro ao candidatar-se:", error);
       

@@ -1381,8 +1381,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se já se candidatou
       const existingApplication = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
       if (existingApplication) {
-        console.log("Erro de candidatura: Montador já se candidatou");
-        return res.status(400).json({ message: "Você já se candidatou para este serviço" });
+        console.log("Candidatura já existe com status:", existingApplication.status);
+        
+        // Se a candidatura foi aceita, verificar se o serviço já está em andamento
+        if (existingApplication.status === 'accepted') {
+          // Verificar se o serviço já está em progresso ou finalizado
+          if (service.status === 'in-progress' || service.status === 'completed') {
+            return res.status(200).json({
+              application: existingApplication,
+              message: "Você já foi aceito para este serviço",
+              serviceStatus: service.status
+            });
+          } else {
+            // Se foi aceito mas o serviço ainda não está em progresso, atualizar
+            await storage.updateServiceStatus(service.id, 'in-progress');
+            return res.status(200).json({
+              application: existingApplication,
+              message: "Sua candidatura foi aceita e o serviço está em andamento",
+              serviceStatus: 'in-progress'
+            });
+          }
+        } else {
+          // Se ainda está pendente ou foi rejeitada
+          return res.status(200).json({
+            application: existingApplication,
+            message: existingApplication.status === 'pending' 
+              ? "Sua candidatura está sendo analisada pelo lojista" 
+              : "Sua candidatura foi rejeitada",
+            serviceStatus: service.status
+          });
+        }
       }
 
       // Criar candidatura

@@ -474,12 +474,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           url
         });
         
+        const result = await response.json();
+        
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Falha ao enviar candidatura");
+          // Se não foi OK mas temos informações sobre candidatura existente
+          if (result.application && result.message) {
+            console.log('Status da candidatura existente:', result);
+            return result; // Retornar resultado mesmo com status não OK
+          }
+          throw new Error(result.message || "Falha ao enviar candidatura");
         }
         
-        return await response.json();
+        return result;
       } catch (error) {
         console.error("Erro na candidatura:", error);
         throw error; // Propagando o erro para o onError
