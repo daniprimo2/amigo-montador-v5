@@ -1180,6 +1180,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         return renderExploreSection();
       case 'chat':
         return renderChatSection();
+      case 'ranking':
+        return renderRankingSection();
       default:
         return renderHomeSection();
     }

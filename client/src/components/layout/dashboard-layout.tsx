@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import amigoMontadorLogo from '@assets/Logo - Amigo Montador.jpg';
-import { Bell, Home, List, MessageSquare, Map, LogOut, User } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { lastMessage } = useWebSocket();
   const queryClient = useQueryClient();
   // Define the tabs with a state to track which tab is active
-  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore' | 'ranking'>('home');
   
   // Buscar contagem de mensagens não lidas do servidor
   const { data: unreadData = { count: 0 }, refetch: refetchUnreadCount } = useQuery({
@@ -68,7 +68,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
   
   // Function to handle tab changes and communicate with parent components
-  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'explore') => {
+  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'explore' | 'ranking') => {
     setActiveTab(tab);
     
     // Não navega para outra rota, apenas emite o evento para mudar a aba
@@ -119,7 +119,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       );
     } else {
       return (
-        <div className="grid grid-cols-3 gap-1 sm:gap-2">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
@@ -133,6 +133,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           >
             <Map className="h-5 w-5 sm:h-6 sm:w-6" />
             <span className="text-xs sm:text-sm mt-1 font-medium">Explorar</span>
+          </button>
+          <button 
+            onClick={() => handleTabChange('ranking')}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'ranking' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+          >
+            <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm mt-1 font-medium">Ranking</span>
           </button>
           <ChatButton />
         </div>
