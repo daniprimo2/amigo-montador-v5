@@ -847,6 +847,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         </div>
       </div>
       
+      {/* Ranking Section */}
+      <div className="mb-6">
+        <RankingSection />
+      </div>
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-responsive-lg font-semibold">Serviços Recentes</h3>
         <Button 
