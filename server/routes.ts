@@ -208,10 +208,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (assembler && assembler.cep && service.cep) {
             try {
+              console.log(`[DEBUG] Calculando distância: Montador CEP ${assembler.cep} -> Serviço CEP ${service.cep}`);
+              
               // Obter coordenadas do montador
               const assemblerCoords = await geocodeFromCEP(assembler.cep);
+              console.log(`[DEBUG] Coordenadas do montador:`, assemblerCoords);
+              
               // Obter coordenadas do serviço
               const serviceCoords = await geocodeFromCEP(service.cep);
+              console.log(`[DEBUG] Coordenadas do serviço:`, serviceCoords);
               
               // Calcular distância usando a fórmula de Haversine
               const distance = calculateDistance(
@@ -221,7 +226,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 parseFloat(serviceCoords.longitude)
               );
               
-              calculatedDistance = `${distance.toFixed(1)} km`;
+              console.log(`[DEBUG] Distância calculada: ${distance} km`);
+              
+              // Se a distância for menor que 1km, mostrar em metros
+              if (distance < 1) {
+                calculatedDistance = `${(distance * 1000).toFixed(0)}m`;
+              } else {
+                calculatedDistance = `${distance.toFixed(1)} km`;
+              }
             } catch (error) {
               console.error(`Erro ao calcular distância para serviço ${service.id}:`, error);
               // Fallback para coordenadas aproximadas baseadas na cidade
