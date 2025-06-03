@@ -18,13 +18,19 @@ const bankAccountSchema = z.object({
   accountType: z.enum(['corrente', 'poupança'], {
     required_error: 'Tipo de conta é obrigatório',
   }),
-  accountNumber: z.string().min(1, 'Número da conta é obrigatório'),
-  agency: z.string().min(1, 'Agência é obrigatória'),
+  accountNumber: z.string()
+    .min(1, 'Número da conta é obrigatório')
+    .regex(/^[\d\-]+$/, 'Número da conta deve conter apenas números e hífens'),
+  agency: z.string()
+    .min(1, 'Agência é obrigatória')
+    .regex(/^[\d\-]+$/, 'Agência deve conter apenas números e hífens'),
   holderName: z.string().min(1, 'Nome do titular é obrigatório'),
   holderDocumentType: z.enum(['cpf', 'cnpj'], {
     required_error: 'Tipo de documento é obrigatório',
   }),
-  holderDocumentNumber: z.string().min(1, 'Número do documento é obrigatório'),
+  holderDocumentNumber: z.string()
+    .min(1, 'Número do documento é obrigatório')
+    .regex(/^[\d\.\-\/]+$/, 'Documento deve conter apenas números, pontos, hífens e barras'),
   pixKey: z.string().optional(),
   pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória']).optional(),
 });
@@ -366,7 +372,15 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                     <FormItem>
                       <FormLabel>Agência</FormLabel>
                       <FormControl>
-                        <Input placeholder="Exemplo: 1234" {...field} />
+                        <Input 
+                          placeholder="Exemplo: 1234" 
+                          {...field}
+                          onChange={(e) => {
+                            // Permite apenas números e hífens
+                            const value = e.target.value.replace(/[^\d\-]/g, '');
+                            field.onChange(value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -380,7 +394,15 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                     <FormItem>
                       <FormLabel>Número da Conta</FormLabel>
                       <FormControl>
-                        <Input placeholder="Exemplo: 12345-6" {...field} />
+                        <Input 
+                          placeholder="Exemplo: 12345-6" 
+                          {...field}
+                          onChange={(e) => {
+                            // Permite apenas números e hífens
+                            const value = e.target.value.replace(/[^\d\-]/g, '');
+                            field.onChange(value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -437,7 +459,12 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                       <FormControl>
                         <Input 
                           placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
-                          {...field} 
+                          {...field}
+                          onChange={(e) => {
+                            // Permite apenas números, pontos, hífens e barras
+                            const value = e.target.value.replace(/[^\d\.\-\/]/g, '');
+                            field.onChange(value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
