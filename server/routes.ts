@@ -1828,7 +1828,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileData = { 
           ...req.user, 
           store,
-          rating: averageRating // Incluir avaliação média para o lojista
+          rating: averageRating, // Incluir avaliação média para o lojista
+          profilePhotoUrl: req.user.profilePhotoUrl // Garantir que a foto de perfil seja incluída
         };
       } else if (userType === 'montador') {
         const assembler = await storage.getAssemblerByUserId(id);
@@ -1836,7 +1837,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (assembler) {
           assembler.rating = averageRating;
         }
-        profileData = { ...req.user, assembler };
+        profileData = { 
+          ...req.user, 
+          assembler,
+          profilePhotoUrl: req.user.profilePhotoUrl // Garantir que a foto de perfil seja incluída
+        };
+      } else {
+        // Fallback para outros tipos de usuário
+        profileData = {
+          ...req.user,
+          profilePhotoUrl: req.user.profilePhotoUrl
+        };
       }
 
       res.json(profileData);
