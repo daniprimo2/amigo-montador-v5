@@ -83,6 +83,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [activeTab, setActiveTab] = useState('dados-pessoais');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -113,12 +114,16 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       phone: '',
     },
   });
-  
+
+
   // Dados do montador (se for montador)
   const assemblerForm = useForm<AssemblerFormValues>({
     resolver: zodResolver(assemblerSchema),
     defaultValues: {
       address: '',
+      addressNumber: '',
+      neighborhood: '',
+      cep: '',
       city: '',
       state: '',
       workRadius: 20,
@@ -131,6 +136,43 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       technicalAssistance: false,
     },
   });
+
+  // Função para buscar endereço por CEP
+  const handleCepLookup = async (cep: string) => {
+    if (cep.length !== 8) return;
+    
+    setIsLoadingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        assemblerForm.setValue('address', data.logradouro || '');
+        assemblerForm.setValue('neighborhood', data.bairro || '');
+        assemblerForm.setValue('city', data.localidade || '');
+        assemblerForm.setValue('state', data.uf || '');
+        
+        toast({
+          title: 'CEP encontrado',
+          description: 'Endereço preenchido automaticamente',
+        });
+      } else {
+        toast({
+          title: 'CEP não encontrado',
+          description: 'Verifique o CEP e tente novamente',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro ao buscar CEP',
+        description: 'Não foi possível buscar o endereço',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingCep(false);
+    }
+  };
   
   // Buscar dados do perfil ao abrir o diálogo
   useEffect(() => {
@@ -198,6 +240,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       if (user?.userType === 'montador' && data.assembler) {
         assemblerForm.reset({
           address: data.assembler.address || '',
+          addressNumber: data.assembler.addressNumber || '',
+          neighborhood: data.assembler.neighborhood || '',
+          cep: data.assembler.cep || '',
           city: data.assembler.city || '',
           state: data.assembler.state || '',
           workRadius: data.assembler.workRadius || 20,

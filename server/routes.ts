@@ -1990,7 +1990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const assembler = await storage.getAssemblerByUserId(id);
         if (assembler) {
           // Campos que o montador pode atualizar
-          const allowedFields = ['cep', 'address', 'city', 'state', 'radius', 'specialties', 'profileImage'];
+          const allowedFields = ['cep', 'address', 'addressNumber', 'neighborhood', 'city', 'state', 'workRadius', 'experience', 'hasOwnTools', 'technicalAssistance'];
           const updateData: Partial<Assembler> = {};
           
           allowedFields.forEach(field => {
