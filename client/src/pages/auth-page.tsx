@@ -23,8 +23,10 @@ export default function AuthPage() {
   
   // Dados de registro para guardar entre passos
   const [storeStep1Data, setStoreStep1Data] = useState({});
+  const [storeStep2Data, setStoreStep2Data] = useState({});
   const [assemblerStep1Data, setAssemblerStep1Data] = useState({});
   const [assemblerStep2Data, setAssemblerStep2Data] = useState({});
+  const [assemblerStep3Data, setAssemblerStep3Data] = useState({});
 
   // Redirecionar se o usuário já estiver logado
   React.useEffect(() => {
@@ -67,6 +69,7 @@ export default function AuthPage() {
   };
 
   const handleStoreStep2 = (data: any) => {
+    setStoreStep2Data(data);
     // Processado pelo componente
   };
 
@@ -82,6 +85,7 @@ export default function AuthPage() {
   };
 
   const handleAssemblerStep3 = (data: any) => {
+    setAssemblerStep3Data(data);
     // Processado pelo componente
   };
 
@@ -121,21 +125,25 @@ export default function AuthPage() {
       ) : currentView === 'register-store' ? (
         <RegisterStoreStep1 
           onNext={handleStoreStep1} 
+          defaultValues={storeStep1Data}
         />
       ) : currentView === 'register-store-step2' ? (
         <RegisterStoreStep2 
           onBack={() => setCurrentView('register-store' as AuthView)} 
           onComplete={handleStoreStep2}
           step1Data={storeStep1Data}
+          defaultValues={storeStep2Data}
         />
       ) : currentView === 'register-assembler' ? (
         <RegisterAssemblerStep1 
           onNext={handleAssemblerStep1} 
+          defaultValues={assemblerStep1Data}
         />
       ) : currentView === 'register-assembler-step2' ? (
         <RegisterAssemblerStep2 
           onNext={handleAssemblerStep2}
           onBack={() => setCurrentView('register-assembler' as AuthView)} 
+          defaultValues={assemblerStep2Data}
         />
       ) : currentView === 'register-assembler-step3' ? (
         <RegisterAssemblerStep3 
@@ -143,6 +151,7 @@ export default function AuthPage() {
           onComplete={handleAssemblerStep3}
           step1Data={assemblerStep1Data}
           step2Data={assemblerStep2Data}
+          defaultValues={assemblerStep3Data}
         />
       ) : null}
     </AuthLayout>
