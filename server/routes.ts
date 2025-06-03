@@ -1380,9 +1380,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (assemblerApp.length > 0) {
           // Buscar dados completos do serviço com detalhes da loja e montador para enviar nas notificações
           const serviceData = await storage.getServiceById(serviceId);
+          if (!serviceData) return;
+          
           const assemblerId = assemblerApp[0].assemblerId;
           const assemblerData = await storage.getAssemblerById(assemblerId);
+          if (!assemblerData) return;
+          
           const storeData = await storage.getStore(serviceData.storeId);
+          if (!storeData) return;
           
           // Buscar usuários para obter IDs para as notificações WebSocket
           const assemblerUser = assemblerData ? await storage.getUser(assemblerData.userId) : null;
@@ -1409,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const notifyMessage = "Serviço finalizado com sucesso! Por favor, avalie o montador.";
             
             // Enviar para a loja
-            const storeWs = clients.get(storeUser.id.toString());
+            const storeWs = clients.get(storeUser.id);
             if (storeWs) {
               storeWs.send(JSON.stringify({
                 type: 'service_completed',
@@ -1421,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Enviar para o montador
-            const assemblerWs = clients.get(assemblerUser.id.toString());
+            const assemblerWs = clients.get(assemblerUser.id);
             if (assemblerWs) {
               assemblerWs.send(JSON.stringify({
                 type: 'service_completed',
