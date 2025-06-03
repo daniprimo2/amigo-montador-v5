@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { getBanksOrderedByName } from '@/lib/brazilian-banks';
 
 // Schema para validação dos dados bancários
 const bankAccountSchema = z.object({
@@ -310,9 +311,23 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nome do Banco</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Exemplo: Banco do Brasil" {...field} />
-                    </FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione seu banco..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-60">
+                        {getBanksOrderedByName().map((bank) => (
+                          <SelectItem key={bank.code} value={bank.name}>
+                            {bank.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

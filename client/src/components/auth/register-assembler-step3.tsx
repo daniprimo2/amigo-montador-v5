@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import { baseBankAccountSchema } from '@/lib/bank-account-schema';
+import { getBanksOrderedByName } from '@/lib/brazilian-banks';
 
 const assemblerStep3Schema = z.object({
   identityFront: z.any().refine((files) => files && files.length > 0, {
@@ -408,9 +409,23 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
             render={({ field }) => (
               <FormItem className="form-field">
                 <FormLabel>Nome do Banco</FormLabel>
-                <FormControl>
-                  <Input placeholder="Exemplo: Banco do Brasil" {...field} />
-                </FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione seu banco..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-60">
+                    {getBanksOrderedByName().map((bank) => (
+                      <SelectItem key={bank.code} value={bank.name}>
+                        {bank.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

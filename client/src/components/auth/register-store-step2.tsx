@@ -13,6 +13,7 @@ import { useLocation } from 'wouter';
 import InputMask from 'react-input-mask';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { baseBankAccountSchema } from '@/lib/bank-account-schema';
+import { getBanksOrderedByName } from '@/lib/brazilian-banks';
 
 // Função para validar CEP
 const validateZipCode = (zipCode: string): boolean => {
@@ -532,9 +533,23 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
             render={({ field }) => (
               <FormItem className="form-field">
                 <FormLabel>Nome do Banco</FormLabel>
-                <FormControl>
-                  <Input placeholder="Exemplo: Banco do Brasil" {...field} />
-                </FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione seu banco..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-60">
+                    {getBanksOrderedByName().map((bank) => (
+                      <SelectItem key={bank.code} value={bank.name}>
+                        {bank.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
