@@ -677,20 +677,58 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       if (locationParts.length >= 2) {
         const cityStatePart = locationParts[1]; // "City, State"
         const cityName = cityStatePart.split(',')[0].trim(); // Extract just the city name
+        const statePart = cityStatePart.split(',')[1]?.trim(); // Extract state abbreviation
         
         console.log(`[CityFilter] Extracted city: "${cityName}"`);
+        console.log(`[CityFilter] Extracted state: "${statePart}"`);
         console.log(`[CityFilter] City-State part: "${cityStatePart}"`);
         
-        // Check if the selected city matches the service city using equivalence
-        const equiv1 = areCitiesEquivalent(selectedCity, cityName);
-        const equiv2 = areCitiesEquivalent(selectedCity, cityStatePart);
-        const stringMatch = service.location.toLowerCase().includes(selectedCity.toLowerCase());
+        // Extract selected city and state from filter
+        const selectedParts = selectedCity.split(',');
+        const selectedCityName = selectedParts[0]?.trim();
+        const selectedStateName = selectedParts[1]?.trim();
         
-        console.log(`[CityFilter] Equivalence check 1 (selected vs city): ${equiv1}`);
-        console.log(`[CityFilter] Equivalence check 2 (selected vs city-state): ${equiv2}`);
-        console.log(`[CityFilter] String match: ${stringMatch}`);
+        console.log(`[CityFilter] Selected city name: "${selectedCityName}"`);
+        console.log(`[CityFilter] Selected state name: "${selectedStateName}"`);
         
-        const result = equiv1 || equiv2 || stringMatch;
+        // Check city name equivalence
+        const cityMatches = areCitiesEquivalent(selectedCityName, cityName);
+        
+        // Check state equivalence (map full state names to abbreviations)
+        const stateAbbreviationMap: Record<string, string> = {
+          'São Paulo': 'SP',
+          'Rio de Janeiro': 'RJ',
+          'Distrito Federal': 'DF',
+          'Bahia': 'BA',
+          'Ceará': 'CE',
+          'Minas Gerais': 'MG',
+          'Amazonas': 'AM',
+          'Paraná': 'PR',
+          'Pernambuco': 'PE',
+          'Goiás': 'GO',
+          'Pará': 'PA',
+          'Rio Grande do Sul': 'RS',
+          'Maranhão': 'MA',
+          'Alagoas': 'AL',
+          'Rio Grande do Norte': 'RN',
+          'Piauí': 'PI',
+          'Mato Grosso do Sul': 'MS',
+          'Paraíba': 'PB',
+          'Sergipe': 'SE',
+          'Mato Grosso': 'MT',
+          'Santa Catarina': 'SC',
+          'Espírito Santo': 'ES'
+        };
+        
+        const expectedStateAbbrev = stateAbbreviationMap[selectedStateName];
+        const stateMatches = statePart === expectedStateAbbrev;
+        
+        console.log(`[CityFilter] City matches: ${cityMatches}`);
+        console.log(`[CityFilter] Expected state abbrev: ${expectedStateAbbrev}`);
+        console.log(`[CityFilter] State matches: ${stateMatches}`);
+        
+        // For city filtering, we need both city and state to match
+        const result = cityMatches && stateMatches;
         console.log(`[CityFilter] Final result: ${result}`);
         
         return result;
