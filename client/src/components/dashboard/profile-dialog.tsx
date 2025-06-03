@@ -49,6 +49,9 @@ const storeSchema = z.object({
 
 const assemblerSchema = z.object({
   address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
+  addressNumber: z.string().optional(),
+  neighborhood: z.string().optional(),
+  cep: z.string().optional(),
   city: z.string().min(2, 'A cidade deve ter pelo menos 2 caracteres'),
   state: z.string().min(2, 'O estado deve ter pelo menos 2 caracteres'),
   workRadius: z.number().min(1, 'O raio de atendimento deve ser pelo menos 1 km'),
@@ -756,6 +759,54 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   {isEditingProfessional ? (
                     <Form {...assemblerForm}>
                       <form onSubmit={assemblerForm.handleSubmit(onAssemblerSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={assemblerForm.control}
+                            name="cep"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>CEP</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input 
+                                      placeholder="00000-000" 
+                                      {...field}
+                                      onChange={async (e) => {
+                                        const cep = e.target.value.replace(/\D/g, '');
+                                        const formattedCep = cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+                                        field.onChange(formattedCep);
+                                        
+                                        if (cep.length === 8) {
+                                          await handleCepLookup(cep);
+                                        }
+                                      }}
+                                      maxLength={9}
+                                    />
+                                    {isLoadingCep && (
+                                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
+                                    )}
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={assemblerForm.control}
+                            name="addressNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Número</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="123" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
                         <FormField
                           control={assemblerForm.control}
                           name="address"
@@ -763,7 +814,21 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                             <FormItem>
                               <FormLabel>Endereço</FormLabel>
                               <FormControl>
-                                <Input placeholder="Seu endereço completo" {...field} />
+                                <Input placeholder="Rua, Avenida..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={assemblerForm.control}
+                          name="neighborhood"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bairro</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nome do bairro" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

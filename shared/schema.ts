@@ -37,6 +37,9 @@ export const assemblers = pgTable("assemblers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   address: text("address").notNull(),
+  addressNumber: text("address_number"), // Número do endereço
+  neighborhood: text("neighborhood"), // Bairro
+  cep: text("cep"), // CEP formatado
   city: text("city").notNull(),
   state: text("state").notNull(),
   specialties: jsonb("specialties"), // ['marcenaria', 'plano-corte', 'fabrica']
