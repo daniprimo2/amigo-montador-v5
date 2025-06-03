@@ -25,7 +25,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, User, Camera, Upload, Star, LogOut } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, User, Camera, Upload, Star, LogOut, Edit } from 'lucide-react';
 import { BankAccountDialog } from '../banking/bank-account-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RatingStars } from '@/components/rating/rating-stars';
@@ -44,8 +47,23 @@ const storeSchema = z.object({
   phone: z.string().min(10, 'Telefone da loja inválido'),
 });
 
+const assemblerSchema = z.object({
+  address: z.string().min(5, 'O endereço deve ter pelo menos 5 caracteres'),
+  city: z.string().min(2, 'A cidade deve ter pelo menos 2 caracteres'),
+  state: z.string().min(2, 'O estado deve ter pelo menos 2 caracteres'),
+  workRadius: z.number().min(1, 'O raio de atendimento deve ser pelo menos 1 km'),
+  experienceYears: z.number().min(0, 'Anos de experiência não pode ser negativo'),
+  professionalDescription: z.string().optional(),
+  experience: z.string().optional(),
+  specialties: z.array(z.string()).min(1, 'Selecione pelo menos uma especialidade'),
+  serviceTypes: z.array(z.string()).optional(),
+  hasOwnTools: z.boolean(),
+  technicalAssistance: z.boolean(),
+});
+
 type UserFormValues = z.infer<typeof userSchema>;
 type StoreFormValues = z.infer<typeof storeSchema>;
+type AssemblerFormValues = z.infer<typeof assemblerSchema>;
 
 interface ProfileDialogProps {
   open: boolean;
@@ -67,6 +85,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
   const [profileData, setProfileData] = useState<any>(null);
+  const [isEditingProfessional, setIsEditingProfessional] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
   
@@ -648,174 +667,254 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             {/* Dados Profissionais do Montador */}
             {user?.userType === 'montador' && (
               <TabsContent value="dados-profissionais" className="mt-4">
-                <div className="space-y-6">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <>
-                      {/* Localização e Área de Atendimento */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                          <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                          </svg>
-                          Localização e Área de Atendimento
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <label className="text-gray-600 font-medium">Cidade</label>
-                            <p className="text-gray-900">{profileData?.assembler?.city || 'Não informado'}</p>
-                          </div>
-                          <div>
-                            <label className="text-gray-600 font-medium">Estado</label>
-                            <p className="text-gray-900">{profileData?.assembler?.state || 'Não informado'}</p>
-                          </div>
-                          <div>
-                            <label className="text-gray-600 font-medium">Raio de Atendimento</label>
-                            <p className="text-gray-900">{profileData?.assembler?.workRadius || '0'} km</p>
-                          </div>
-                        </div>
-                      </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Dados Profissionais</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingProfessional(!isEditingProfessional)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      {isEditingProfessional ? 'Cancelar' : 'Editar'}
+                    </Button>
+                  </div>
 
-                      {/* Experiência Profissional */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Experiência Profissional
-                        </h3>
-                        <div className="space-y-4 text-sm">
-                          {profileData?.assembler?.experienceYears && (
-                            <div>
-                              <label className="text-gray-600 font-medium">Anos de Experiência</label>
-                              <p className="text-gray-900">{profileData.assembler.experienceYears} anos</p>
-                            </div>
-                          )}
-                          
-                          {profileData?.assembler?.professionalDescription && (
-                            <div>
-                              <label className="text-gray-600 font-medium">Descrição Profissional</label>
-                              <p className="text-gray-900 whitespace-pre-wrap">
-                                {profileData.assembler.professionalDescription}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {profileData?.assembler?.experience && (
-                            <div>
-                              <label className="text-gray-600 font-medium">Experiência Detalhada</label>
-                              <p className="text-gray-900 whitespace-pre-wrap">
-                                {profileData.assembler.experience}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Especialidades */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Especialidades
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {profileData?.assembler?.specialties?.map((specialty: string, index: number) => (
-                            <span 
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                            >
-                              {specialty}
-                            </span>
-                          )) || <p className="text-gray-500 text-sm">Nenhuma especialidade informada</p>}
-                        </div>
-                      </div>
-
-                      {/* Tipos de Atendimento */}
-                      {profileData?.assembler?.serviceTypes && profileData.assembler.serviceTypes.length > 0 && (
-                        <div className="bg-white rounded-lg border p-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Tipos de Atendimento
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {profileData.assembler.serviceTypes.map((type: string, index: number) => (
-                              <span 
-                                key={index}
-                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
-                              >
-                                {type === 'residencial' ? 'Residencial' : 
-                                 type === 'corporativo' ? 'Corporativo' :
-                                 type === 'lojas_parceiras' ? 'Lojas Parceiras' : type}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Disponibilidade */}
-                      {profileData?.assembler?.availability && (
-                        <div className="bg-white rounded-lg border p-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Disponibilidade
-                          </h3>
-                          <div className="space-y-3 text-sm">
-                            <div>
-                              <label className="text-gray-600 font-medium">Dias da Semana</label>
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {profileData.assembler.availability.dias?.map((dia: string, index: number) => (
-                                  <span 
-                                    key={index}
-                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                  >
-                                    {dia === 'seg' ? 'Segunda' :
-                                     dia === 'ter' ? 'Terça' :
-                                     dia === 'qua' ? 'Quarta' :
-                                     dia === 'qui' ? 'Quinta' :
-                                     dia === 'sex' ? 'Sexta' :
-                                     dia === 'sab' ? 'Sábado' :
-                                     dia === 'dom' ? 'Domingo' : dia}
-                                  </span>
-                                )) || <p className="text-gray-500">Dias não informados</p>}
-                              </div>
-                            </div>
-                            
-                            {profileData.assembler.availability.horarios && (
-                              <div>
-                                <label className="text-gray-600 font-medium">Horário de Trabalho</label>
-                                <p className="text-gray-900">
-                                  {profileData.assembler.availability.horarios.inicio} às {profileData.assembler.availability.horarios.fim}
-                                </p>
-                              </div>
+                  {isEditingProfessional ? (
+                    <Form>
+                      <form className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Cidade</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Sua cidade" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
                             )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Ferramentas e Recursos */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Ferramentas e Recursos
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                              profileData?.assembler?.hasOwnTools 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {profileData?.assembler?.hasOwnTools ? 'Possui ferramentas próprias' : 'Não possui ferramentas próprias'}
-                            </span>
-                          </div>
+                          />
                           
-                          {profileData?.assembler?.technicalAssistance && (
-                            <div className="flex items-center">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                Oferece Assistência Técnica
-                              </span>
-                            </div>
-                          )}
+                          <FormField
+                            name="state"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Estado</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Seu estado" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            name="workRadius"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Raio de Atendimento (km)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="10" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      </div>
-                    </>
+
+                        <FormField
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Endereço</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Seu endereço completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          name="experienceYears"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Anos de Experiência</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="0" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          name="professionalDescription"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descrição Profissional</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Descreva sua experiência profissional..."
+                                  rows={3}
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            name="hasOwnTools"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>Possui ferramentas próprias</FormLabel>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            name="technicalAssistance"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>Oferece assistência técnica</FormLabel>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => setIsEditingProfessional(false)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button type="submit">
+                            Salvar Alterações
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  ) : (
+                    <div className="space-y-6">
+                      {isLoading ? (
+                        <div className="flex justify-center items-center py-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <>
+                          {/* Localização e Área de Atendimento */}
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="text-md font-semibold text-gray-900 mb-3">
+                              Localização e Área de Atendimento
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <label className="text-gray-600 font-medium">Cidade</label>
+                                <p className="text-gray-900">{profileData?.assembler?.city || 'Não informado'}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 font-medium">Estado</label>
+                                <p className="text-gray-900">{profileData?.assembler?.state || 'Não informado'}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 font-medium">Raio de Atendimento</label>
+                                <p className="text-gray-900">{profileData?.assembler?.workRadius || '0'} km</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Experiência Profissional */}
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="text-md font-semibold text-gray-900 mb-3">
+                              Experiência Profissional
+                            </h4>
+                            <div className="space-y-3 text-sm">
+                              {profileData?.assembler?.experienceYears && (
+                                <div>
+                                  <label className="text-gray-600 font-medium">Anos de Experiência</label>
+                                  <p className="text-gray-900">{profileData.assembler.experienceYears} anos</p>
+                                </div>
+                              )}
+                              
+                              {profileData?.assembler?.professionalDescription && (
+                                <div>
+                                  <label className="text-gray-600 font-medium">Descrição Profissional</label>
+                                  <p className="text-gray-900 whitespace-pre-wrap">
+                                    {profileData.assembler.professionalDescription}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Especialidades */}
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="text-md font-semibold text-gray-900 mb-3">
+                              Especialidades
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {profileData?.assembler?.specialties?.map((specialty: string, index: number) => (
+                                <span 
+                                  key={index}
+                                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                                >
+                                  {specialty}
+                                </span>
+                              )) || <p className="text-gray-500 text-sm">Nenhuma especialidade informada</p>}
+                            </div>
+                          </div>
+
+                          {/* Ferramentas e Recursos */}
+                          <div className="bg-white rounded-lg border p-4">
+                            <h4 className="text-md font-semibold text-gray-900 mb-3">
+                              Ferramentas e Recursos
+                            </h4>
+                            <div className="space-y-3">
+                              <div className="flex items-center">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                  profileData?.assembler?.hasOwnTools 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {profileData?.assembler?.hasOwnTools ? 'Possui ferramentas próprias' : 'Não possui ferramentas próprias'}
+                                </span>
+                              </div>
+                              
+                              {profileData?.assembler?.technicalAssistance && (
+                                <div className="flex items-center">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                    Oferece Assistência Técnica
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </TabsContent>
