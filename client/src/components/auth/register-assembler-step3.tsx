@@ -237,9 +237,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         documentNumber: step1Data.documentNumber,
         
         // Dados específicos do montador (endereço vem do step1)
-        address: step1Data?.address || 'Endereço não informado',
-        city: step1Data?.city || 'Cidade não informada',
-        state: step1Data?.state || 'Estado não informado',
+        address: step1Data?.address || '',
+        city: step1Data?.city || '',
+        state: step1Data?.state || '',
         specialties: step2Data?.specialties || [],
         technicalAssistance: step2Data?.technicalAssistance || false,
         experience: step2Data?.experience || '',

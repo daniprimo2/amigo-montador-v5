@@ -111,6 +111,24 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     },
   });
   
+  // Dados do montador (se for montador)
+  const assemblerForm = useForm<AssemblerFormValues>({
+    resolver: zodResolver(assemblerSchema),
+    defaultValues: {
+      address: '',
+      city: '',
+      state: '',
+      workRadius: 20,
+      experienceYears: 0,
+      professionalDescription: '',
+      experience: '',
+      specialties: [],
+      serviceTypes: [],
+      hasOwnTools: false,
+      technicalAssistance: false,
+    },
+  });
+  
   // Buscar dados do perfil ao abrir o diálogo
   useEffect(() => {
     if (open) {
@@ -171,6 +189,23 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         } else {
           setLogoUrl(null);
         }
+      }
+      
+      // Se for montador, atualizar formulário do montador
+      if (user?.userType === 'montador' && data.assembler) {
+        assemblerForm.reset({
+          address: data.assembler.address || '',
+          city: data.assembler.city || '',
+          state: data.assembler.state || '',
+          workRadius: data.assembler.workRadius || 20,
+          experienceYears: data.assembler.experienceYears || 0,
+          professionalDescription: data.assembler.professionalDescription || '',
+          experience: data.assembler.experience || '',
+          specialties: data.assembler.specialties || [],
+          serviceTypes: data.assembler.serviceTypes || [],
+          hasOwnTools: data.assembler.hasOwnTools || false,
+          technicalAssistance: data.assembler.technicalAssistance || false,
+        });
       }
     } catch (error) {
       console.error('Erro ao buscar dados do perfil:', error);
