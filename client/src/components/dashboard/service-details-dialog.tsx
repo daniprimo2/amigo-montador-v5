@@ -45,6 +45,8 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   const serviceHasApplied = service.hasApplied || hasApplied;
   const serviceApplicationStatus = service.applicationStatus || applicationStatus;
   const isPendingApproval = serviceApplicationStatus === 'pending';
+  const isAccepted = serviceApplicationStatus === 'accepted';
+  const isRejected = serviceApplicationStatus === 'rejected';
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
     path: string;
@@ -310,31 +312,63 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                 <>
                   <div className="text-sm text-orange-600 font-medium flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Aguardando Confirmação do Lojista
+                    Aguardando resposta do lojista
                   </div>
                   <div className="text-xs text-orange-600 font-medium bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
-                    📋 Sua candidatura foi enviada e está sendo analisada
+                    Sua candidatura foi enviada e está sendo analisada
                   </div>
                   <Button
                     disabled={true}
                     className="bg-orange-500 text-white cursor-not-allowed opacity-75"
                   >
-                    Aguardando Confirmação
+                    Aguardando resposta do lojista
                   </Button>
                 </>
-              ) : (
+              ) : isAccepted ? (
                 <>
-                  <div className="text-sm text-green-600 font-medium">
-                    ✓ Candidatura já enviada
+                  <div className="text-sm text-green-600 font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Candidatura aceita
                   </div>
-                  <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
-                    📋 Processo de contrato enviado para o lojista
+                  <div className="text-xs text-green-600 font-medium bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                    Sua candidatura foi aceita pelo lojista
                   </div>
                   <Button
                     disabled={true}
                     className="bg-green-500 text-white cursor-not-allowed opacity-75"
                   >
-                    Candidatura Enviada
+                    Candidatura aceita
+                  </Button>
+                </>
+              ) : isRejected ? (
+                <>
+                  <div className="text-sm text-red-600 font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Candidatura rejeitada
+                  </div>
+                  <div className="text-xs text-red-600 font-medium bg-red-50 px-3 py-2 rounded-lg border border-red-200">
+                    Sua candidatura foi rejeitada pelo lojista
+                  </div>
+                  <Button
+                    disabled={true}
+                    className="bg-red-500 text-white cursor-not-allowed opacity-75"
+                  >
+                    Candidatura rejeitada
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Candidatura já enviada
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+                    Não é possível candidatar-se novamente
+                  </div>
+                  <Button
+                    disabled={true}
+                    className="bg-gray-400 text-white cursor-not-allowed opacity-75"
+                  >
+                    Já candidatado
                   </Button>
                 </>
               )}

@@ -149,11 +149,23 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
             <span className="truncate">{service.location} ({service.distance})</span>
           </div>
-          {/* Status de candidatura pendente */}
+          {/* Status de candidatura */}
           {isPendingApproval && (
             <div className="flex items-center text-xs text-orange-600 mt-1 font-medium">
               <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span>Aguardando Confirmação do Lojista</span>
+              <span>Aguardando resposta do lojista</span>
+            </div>
+          )}
+          {isAccepted && (
+            <div className="flex items-center text-xs text-green-600 mt-1 font-medium">
+              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span>Candidatura aceita</span>
+            </div>
+          )}
+          {isRejected && (
+            <div className="flex items-center text-xs text-red-600 mt-1 font-medium">
+              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span>Candidatura rejeitada</span>
             </div>
           )}
         </div>
@@ -192,20 +204,28 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       
       <Button 
         onClick={handleViewServiceDetails}
-        disabled={service.status === 'in-progress' || (hasApplied && !isPendingApproval)}
+        disabled={service.status === 'in-progress' || hasApplied}
         className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${
           isPendingApproval 
             ? 'bg-orange-500 hover:bg-orange-600' 
-            : hasApplied 
-              ? 'bg-yellow-500 hover:bg-yellow-600' 
-              : 'bg-primary hover:bg-opacity-90'
+            : isAccepted
+              ? 'bg-green-500 hover:bg-green-600'
+              : isRejected
+                ? 'bg-red-500 hover:bg-red-600'
+                : hasApplied 
+                  ? 'bg-gray-400' 
+                  : 'bg-primary hover:bg-opacity-90'
         } text-white`}
       >
         {service.status === 'in-progress' ? 
           'Serviço em andamento' : 
           isPendingApproval ?
-            'Aguardando Confirmação' :
-            hasApplied ? 'Em andamento' : 'Ver detalhes do serviço'}
+            'Aguardando resposta do lojista' :
+            isAccepted ?
+              'Candidatura aceita' :
+              isRejected ?
+                'Candidatura rejeitada' :
+                hasApplied ? 'Já candidatado' : 'Ver detalhes do serviço'}
       </Button>
       
       {/* Diálogo para detalhes do serviço e candidatura */}
