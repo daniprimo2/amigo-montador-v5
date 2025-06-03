@@ -45,18 +45,18 @@ const skillsUpdateSchema = z.object({
 type SkillsUpdateFormValues = z.infer<typeof skillsUpdateSchema>;
 
 const AVAILABLE_SPECIALTIES = [
-  { id: 'marcenaria', label: 'Marcenaria', icon: '🔨' },
-  { id: 'eletrica', label: 'Elétrica', icon: '⚡' },
-  { id: 'hidraulica', label: 'Hidráulica', icon: '🔧' },
-  { id: 'pintura', label: 'Pintura', icon: '🎨' },
-  { id: 'gesso', label: 'Gesso', icon: '🏗️' },
-  { id: 'piso', label: 'Pisos', icon: '🧱' },
-  { id: 'azulejo', label: 'Azulejos', icon: '⬜' },
-  { id: 'moveis', label: 'Móveis Planejados', icon: '🪑' },
-  { id: 'vidro', label: 'Vidros', icon: '🪟' },
-  { id: 'jardim', label: 'Jardinagem', icon: '🌱' },
-  { id: 'limpeza', label: 'Limpeza', icon: '🧹' },
-  { id: 'decoracao', label: 'Decoração', icon: '🎭' },
+  { id: 'moveis-planejados', label: 'Móveis Planejados', icon: '🪑' },
+  { id: 'armarios-cozinha', label: 'Armários de Cozinha', icon: '🏠' },
+  { id: 'guarda-roupas', label: 'Guarda-roupas', icon: '👔' },
+  { id: 'estantes-prateleiras', label: 'Estantes e Prateleiras', icon: '📚' },
+  { id: 'mesa-cadeiras', label: 'Mesas e Cadeiras', icon: '🪑' },
+  { id: 'camas-beliches', label: 'Camas e Beliches', icon: '🛏️' },
+  { id: 'home-office', label: 'Home Office', icon: '💻' },
+  { id: 'moveis-banheiro', label: 'Móveis de Banheiro', icon: '🚿' },
+  { id: 'montagem-eletrodomesticos', label: 'Instalação de Eletrodomésticos', icon: '🔌' },
+  { id: 'painel-tv', label: 'Painéis para TV', icon: '📺' },
+  { id: 'closets', label: 'Closets', icon: '👗' },
+  { id: 'moveis-comerciais', label: 'Móveis Comerciais', icon: '🏢' },
 ];
 
 const SERVICE_TYPES = [
