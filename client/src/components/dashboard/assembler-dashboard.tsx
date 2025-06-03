@@ -668,18 +668,38 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     const matchesCity = selectedCity === 'Todas as cidades' || (() => {
       // Extract city name from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
       const locationParts = service.location.split(' - ');
+      
+      console.log(`[CityFilter] Processing service ${service.id}:`);
+      console.log(`[CityFilter] Selected city: "${selectedCity}"`);
+      console.log(`[CityFilter] Service location: "${service.location}"`);
+      console.log(`[CityFilter] Location parts:`, locationParts);
+      
       if (locationParts.length >= 2) {
         const cityStatePart = locationParts[1]; // "City, State"
         const cityName = cityStatePart.split(',')[0].trim(); // Extract just the city name
         
+        console.log(`[CityFilter] Extracted city: "${cityName}"`);
+        console.log(`[CityFilter] City-State part: "${cityStatePart}"`);
+        
         // Check if the selected city matches the service city using equivalence
-        return areCitiesEquivalent(selectedCity, cityName) ||
-               areCitiesEquivalent(selectedCity, cityStatePart) ||
-               service.location.toLowerCase().includes(selectedCity.toLowerCase());
+        const equiv1 = areCitiesEquivalent(selectedCity, cityName);
+        const equiv2 = areCitiesEquivalent(selectedCity, cityStatePart);
+        const stringMatch = service.location.toLowerCase().includes(selectedCity.toLowerCase());
+        
+        console.log(`[CityFilter] Equivalence check 1 (selected vs city): ${equiv1}`);
+        console.log(`[CityFilter] Equivalence check 2 (selected vs city-state): ${equiv2}`);
+        console.log(`[CityFilter] String match: ${stringMatch}`);
+        
+        const result = equiv1 || equiv2 || stringMatch;
+        console.log(`[CityFilter] Final result: ${result}`);
+        
+        return result;
       }
       
       // Fallback to original string matching if location format is unexpected
-      return service.location.toLowerCase().includes(selectedCity.toLowerCase());
+      const fallbackResult = service.location.toLowerCase().includes(selectedCity.toLowerCase());
+      console.log(`[CityFilter] Fallback result: ${fallbackResult}`);
+      return fallbackResult;
     })();
     
     return matchesSearch && matchesCity;
