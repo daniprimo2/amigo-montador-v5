@@ -11,6 +11,7 @@ import path from 'path';
 import fileUpload from 'express-fileupload';
 import axios from 'axios';
 import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
+import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
 
 // Function to generate payment proof image as SVG
 function generatePaymentProofImage(data: {
@@ -198,9 +199,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Formatar dados para o frontend (especialmente para montadores)
       if (req.user?.userType === 'montador') {
-        const formattedServices = servicesList.map(service => {
-          // Calcular distância simulada (em uma implementação real, usaria geolocalização)
-          const mockDistance = "2.5 km";
+        // Buscar dados do montador para calcular distâncias
+        const assembler = await storage.getAssemblerByUserId(req.user.id);
+        
+        const formattedServices = await Promise.all(servicesList.map(async service => {
+          // Calcular distância real baseada no endereço do montador
+          let calculatedDistance = "Distância não calculada";
+          
+          if (assembler && assembler.cep && service.cep) {
+            try {
+              // Obter coordenadas do montador
+              const assemblerCoords = await geocodeFromCEP(assembler.cep);
+              // Obter coordenadas do serviço
+              const serviceCoords = await geocodeFromCEP(service.cep);
+              
+              // Calcular distância usando a fórmula de Haversine
+              const distance = calculateDistance(
+                parseFloat(assemblerCoords.latitude),
+                parseFloat(assemblerCoords.longitude),
+                parseFloat(serviceCoords.latitude),
+                parseFloat(serviceCoords.longitude)
+              );
+              
+              calculatedDistance = `${distance.toFixed(1)} km`;
+            } catch (error) {
+              console.error(`Erro ao calcular distância para serviço ${service.id}:`, error);
+              // Fallback para coordenadas aproximadas baseadas na cidade
+              if (assembler.city && assembler.state && service.location) {
+                try {
+                  const assemblerCityCoords = getCityCoordinates(assembler.city, assembler.state);
+                  // Tentar extrair cidade do location do serviço
+                  const locationParts = service.location.split(',');
+                  if (locationParts.length >= 2) {
+                    const serviceCity = locationParts[0].trim();
+                    const serviceState = locationParts[1].trim();
+                    const serviceCityCoords = getCityCoordinates(serviceCity, serviceState);
+                    
+                    const distance = calculateDistance(
+                      assemblerCityCoords.lat,
+                      assemblerCityCoords.lng,
+                      serviceCityCoords.lat,
+                      serviceCityCoords.lng
+                    );
+                    
+                    calculatedDistance = `~${distance.toFixed(1)} km`;
+                  }
+                } catch (fallbackError) {
+                  console.error(`Erro no fallback de distância para serviço ${service.id}:`, fallbackError);
+                  calculatedDistance = "Distância não disponível";
+                }
+              }
+            }
+          }
           
           // Criar endereço completo quando disponível
           let fullAddress = service.location || 'Localização não especificada';
@@ -244,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             address: service.address || '',
             addressNumber: service.addressNumber || '',
             cep: service.cep || '',
-            distance: mockDistance,
+            distance: calculatedDistance,
             date: service.startDate && service.endDate 
               ? `${service.startDate.toISOString().split('T')[0]} - ${service.endDate.toISOString().split('T')[0]}`
               : 'Data não especificada',
@@ -258,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             applicationStatus: serviceWithApp.applicationStatus || null,
             hasApplied: serviceWithApp.hasApplied || false
           };
-        });
+        }));
         
         console.log(`[DEBUG] Dados formatados para o frontend:`, JSON.stringify(formattedServices, null, 2));
         
