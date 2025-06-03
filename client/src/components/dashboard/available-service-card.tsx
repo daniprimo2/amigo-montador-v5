@@ -4,6 +4,7 @@ import { Building, CalendarIcon, MapPin, Loader2, FileText, Download, Clock } fr
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ServiceDetailsDialog } from './service-details-dialog';
+import ApplicationStatusIndicator from '@/components/ui/application-status-indicator';
 
 export interface ServiceProps {
   id: number;
@@ -81,6 +82,17 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   
   const handleApply = async () => {
     if (!onApply) return;
+    
+    // Verificar se já existe candidatura para este serviço
+    if (hasApplied || isPendingApproval || isAccepted) {
+      toast({
+        title: "Candidatura já realizada",
+        description: "Você já se candidatou para este serviço. Aguarde a resposta do lojista.",
+        variant: "default",
+        duration: 5000
+      });
+      return;
+    }
     
     try {
       setIsApplying(true);
