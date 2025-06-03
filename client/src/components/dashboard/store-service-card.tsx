@@ -132,11 +132,11 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                 serviceData: {
                   id: service.id, 
                   title: service.title,
-                  assemblerData: {
+                  assemblerData: service.assembler ? {
                     id: service.assembler.id,
                     userId: service.assembler.userId,
                     name: service.assembler.name
-                  }
+                  } : null
                 }
               }
             });
@@ -403,7 +403,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             cep: service.cep,
             address: service.address,
             addressNumber: service.addressNumber,
-            status: service.status,
+            status: service.status === 'hired' ? 'in_progress' : service.status,
             startDate: service.startDate,
             endDate: service.endDate,
             projectFiles: service.projectFiles

@@ -652,14 +652,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           </div>
           
           {/* Exibir avaliação média do montador */}
-          {user?.assembler && 'rating' in user.assembler && (
+          {assembler && 'rating' in assembler && (
             <div className="flex items-center mt-1">
               <div className="flex items-center text-yellow-500">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
                     className={`h-4 w-4 ${
-                      star <= (user.assembler?.rating || 0)
+                      star <= (assembler?.rating || 0)
                         ? 'text-yellow-500 fill-yellow-500'
                         : 'text-gray-300'
                     }`}
