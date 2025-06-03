@@ -140,6 +140,203 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     handleRatingCompleted,
   } = useMandatoryRatings();
 
+  // Mapeamento de equivalências de cidades para normalização
+  const cityEquivalences: Record<string, string[]> = {
+    // São Paulo
+    'são paulo': ['sp', 'são paulo sp', 'sao paulo', 'sampa'],
+    'sp': ['são paulo', 'são paulo sp', 'sao paulo', 'sampa'],
+    
+    // Rio de Janeiro
+    'rio de janeiro': ['rj', 'rio de janeiro rj', 'rio'],
+    'rj': ['rio de janeiro', 'rio de janeiro rj', 'rio'],
+    'rio': ['rio de janeiro', 'rj', 'rio de janeiro rj'],
+    
+    // Brasília
+    'brasília': ['df', 'brasilia', 'brasília df'],
+    'df': ['brasília', 'brasilia', 'brasília df'],
+    'brasilia': ['brasília', 'df', 'brasília df'],
+    
+    // Belo Horizonte
+    'belo horizonte': ['mg', 'bh', 'belo horizonte mg'],
+    'bh': ['belo horizonte', 'mg', 'belo horizonte mg'],
+    
+    // Salvador
+    'salvador': ['ba', 'salvador ba'],
+    
+    // Fortaleza
+    'fortaleza': ['ce', 'fortaleza ce'],
+    
+    // Curitiba
+    'curitiba': ['pr', 'curitiba pr'],
+    
+    // Recife
+    'recife': ['pe', 'recife pe'],
+    
+    // Porto Alegre
+    'porto alegre': ['rs', 'porto alegre rs', 'poa'],
+    'poa': ['porto alegre', 'rs', 'porto alegre rs'],
+    
+    // Manaus
+    'manaus': ['am', 'manaus am'],
+    
+    // Goiânia
+    'goiânia': ['go', 'goiania', 'goiânia go'],
+    'goiania': ['goiânia', 'go', 'goiânia go'],
+    
+    // Belém
+    'belém': ['pa', 'belem', 'belém pa'],
+    'belem': ['belém', 'pa', 'belém pa'],
+    
+    // Guarulhos
+    'guarulhos': ['guarulhos sp'],
+    
+    // Campinas
+    'campinas': ['campinas sp'],
+    
+    // São Luís
+    'são luís': ['ma', 'sao luis', 'são luís ma'],
+    'sao luis': ['são luís', 'ma', 'são luís ma'],
+    
+    // Maceió
+    'maceió': ['al', 'maceio', 'maceió al'],
+    'maceio': ['maceió', 'al', 'maceió al'],
+    
+    // Natal
+    'natal': ['rn', 'natal rn'],
+    
+    // Teresina
+    'teresina': ['pi', 'teresina pi'],
+    
+    // Campo Grande
+    'campo grande': ['ms', 'campo grande ms'],
+    
+    // João Pessoa
+    'joão pessoa': ['pb', 'joao pessoa', 'joão pessoa pb'],
+    'joao pessoa': ['joão pessoa', 'pb', 'joão pessoa pb'],
+    
+    // Florianópolis
+    'florianópolis': ['sc', 'florianopolis', 'floripa', 'florianópolis sc'],
+    'florianopolis': ['florianópolis', 'sc', 'floripa', 'florianópolis sc'],
+    'floripa': ['florianópolis', 'sc', 'florianopolis', 'florianópolis sc'],
+    
+    // Cuiabá
+    'cuiabá': ['mt', 'cuiaba', 'cuiabá mt'],
+    'cuiaba': ['cuiabá', 'mt', 'cuiabá mt'],
+    
+    // Aracaju
+    'aracaju': ['se', 'aracaju se'],
+    
+    // Vitória
+    'vitória': ['es', 'vitoria', 'vitória es'],
+    'vitoria': ['vitória', 'es', 'vitória es'],
+    
+    // Osasco
+    'osasco': ['osasco sp'],
+    
+    // Santo André
+    'santo andré': ['santo andre', 'santo andré sp'],
+    'santo andre': ['santo andré', 'santo andré sp'],
+    
+    // São Bernardo do Campo
+    'são bernardo do campo': ['sao bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
+    'sao bernardo do campo': ['são bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
+    'são bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'sao bernardo', 'são bernardo do campo sp'],
+    'sao bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'são bernardo', 'são bernardo do campo sp'],
+    
+    // Santos
+    'santos': ['santos sp'],
+    
+    // Sorocaba
+    'sorocaba': ['sorocaba sp'],
+    
+    // Ribeirão Preto
+    'ribeirão preto': ['ribeirao preto', 'ribeirão preto sp'],
+    'ribeirao preto': ['ribeirão preto', 'ribeirão preto sp'],
+    
+    // São José dos Campos
+    'são josé dos campos': ['sao jose dos campos', 'sjc', 'são josé dos campos sp'],
+    'sao jose dos campos': ['são josé dos campos', 'sjc', 'são josé dos campos sp'],
+    'sjc': ['são josé dos campos', 'sao jose dos campos', 'são josé dos campos sp'],
+    
+    // Joinville
+    'joinville': ['joinville sc'],
+    
+    // Londrina
+    'londrina': ['londrina pr'],
+    
+    // Contagem
+    'contagem': ['contagem mg'],
+    
+    // Uberlândia
+    'uberlândia': ['uberlandia', 'uberlândia mg'],
+    'uberlandia': ['uberlândia', 'uberlândia mg'],
+    
+    // Juiz de Fora
+    'juiz de fora': ['juiz de fora mg'],
+    
+    // Feira de Santana
+    'feira de santana': ['feira de santana ba'],
+    
+    // Caxias do Sul
+    'caxias do sul': ['caxias do sul rs'],
+    
+    // Aparecida de Goiânia
+    'aparecida de goiânia': ['aparecida de goiania', 'aparecida de goiânia go'],
+    'aparecida de goiania': ['aparecida de goiânia', 'aparecida de goiânia go'],
+    
+    // Niterói
+    'niterói': ['niteroi', 'niterói rj'],
+    'niteroi': ['niterói', 'niterói rj'],
+    
+    // Carapicuíba
+    'carapicuíba': ['carapicuiba', 'carapicuíba sp'],
+    'carapicuiba': ['carapicuíba', 'carapicuíba sp'],
+    
+    // Itapecerica da Serra
+    'itapecerica da serra': ['itapecerica', 'itapecerica da serra sp'],
+    'itapecerica': ['itapecerica da serra', 'itapecerica da serra sp'],
+    
+    // São Roque
+    'são roque': ['sao roque', 'são roque sp'],
+    'sao roque': ['são roque', 'são roque sp']
+  };
+
+  // Função para normalizar nome da cidade
+  const normalizeCityName = (cityName: string): string => {
+    const normalized = cityName.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .replace(/[^a-z0-9\s]/g, '') // Remove caracteres especiais
+      .trim();
+    
+    return normalized;
+  };
+
+  // Função para verificar se duas cidades são equivalentes
+  const areCitiesEquivalent = (city1: string, city2: string): boolean => {
+    const norm1 = normalizeCityName(city1);
+    const norm2 = normalizeCityName(city2);
+    
+    // Verificação direta
+    if (norm1 === norm2) return true;
+    
+    // Verificação por equivalências mapeadas
+    const equivalents1: string[] = cityEquivalences[norm1] || [];
+    const equivalents2: string[] = cityEquivalences[norm2] || [];
+    
+    // Verifica se city2 está nas equivalências de city1
+    if (equivalents1.some((eq: string) => normalizeCityName(eq) === norm2)) return true;
+    
+    // Verifica se city1 está nas equivalências de city2
+    if (equivalents2.some((eq: string) => normalizeCityName(eq) === norm1)) return true;
+    
+    // Verifica se ambas têm equivalências em comum
+    const normalizedEquiv1: string[] = equivalents1.map((eq: string) => normalizeCityName(eq));
+    const normalizedEquiv2: string[] = equivalents2.map((eq: string) => normalizeCityName(eq));
+    
+    return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq));
+  };
+
   // Lista de cidades brasileiras principais para filtro
   const brazilianCities = [
     'Todas as cidades',
@@ -467,8 +664,23 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
       service.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCity = selectedCity === 'Todas as cidades' || 
-      service.location.toLowerCase().includes(selectedCity.toLowerCase());
+    // Improved city filtering with equivalence checking
+    const matchesCity = selectedCity === 'Todas as cidades' || (() => {
+      // Extract city name from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
+      const locationParts = service.location.split(' - ');
+      if (locationParts.length >= 2) {
+        const cityStatePart = locationParts[1]; // "City, State"
+        const cityName = cityStatePart.split(',')[0].trim(); // Extract just the city name
+        
+        // Check if the selected city matches the service city using equivalence
+        return areCitiesEquivalent(selectedCity, cityName) ||
+               areCitiesEquivalent(selectedCity, cityStatePart) ||
+               service.location.toLowerCase().includes(selectedCity.toLowerCase());
+      }
+      
+      // Fallback to original string matching if location format is unexpected
+      return service.location.toLowerCase().includes(selectedCity.toLowerCase());
+    })();
     
     return matchesSearch && matchesCity;
   }) || [];
