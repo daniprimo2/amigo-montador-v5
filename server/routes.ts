@@ -4116,17 +4116,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .map(id => Number(id));
             
             if (serviceIds.length > 0) {
-              pendingServices = await db
-                .select()
-                .from(services)
-                .where(
-                  and(
-                    eq(services.status, 'completed'),
-                    eq(services.ratingRequired, true),
-                    eq(services.ratingCompleted, false),
-                    inArray(services.id, serviceIds)
-                  )
-                );
+              try {
+                pendingServices = await db
+                  .select()
+                  .from(services)
+                  .where(
+                    and(
+                      eq(services.status, 'completed'),
+                      eq(services.ratingRequired, true),
+                      eq(services.ratingCompleted, false),
+                      inArray(services.id, serviceIds)
+                    )
+                  );
+              } catch (error) {
+                console.error("Erro ao buscar serviços pendentes para montador:", error);
+                pendingServices = [];
+              }
             }
           }
         }
