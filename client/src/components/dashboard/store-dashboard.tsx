@@ -712,21 +712,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       return {
         id: service.id,
         title: service.title,
-        description: service.description,
         location: service.location,
         date: service.date,
         startDate: service.startDate,
         endDate: service.endDate,
         price: service.price,
+        // Contagem de candidaturas será implementada posteriormente
+        candidates: 0,
+        status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled',
+        // Keep all original fields for the service card
+        description: service.description,
         materialType: service.materialType,
         cep: service.cep,
         address: service.address,
         addressNumber: service.addressNumber,
         projectFiles: service.projectFiles,
-        assembler: service.assembler,
-        // Contagem de candidaturas será implementada posteriormente
-        candidates: 0,
-        status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled'
+        assembler: service.assembler
       };
     });
     
