@@ -403,7 +403,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             cep: service.cep,
             address: service.address,
             addressNumber: service.addressNumber,
-            status: service.status === 'hired' ? 'in_progress' : service.status,
+            status: service.status === 'hired' ? 'in-progress' : service.status,
             startDate: service.startDate,
             endDate: service.endDate,
             projectFiles: service.projectFiles

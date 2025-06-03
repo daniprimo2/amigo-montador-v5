@@ -652,14 +652,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           </div>
           
           {/* Exibir avaliação média do montador */}
-          {assembler && 'rating' in assembler && (
+          {assemblerProfile && assemblerProfile.rating && (
             <div className="flex items-center mt-1">
               <div className="flex items-center text-yellow-500">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
                     className={`h-4 w-4 ${
-                      star <= (assembler?.rating || 0)
+                      star <= (assemblerProfile?.rating || 0)
                         ? 'text-yellow-500 fill-yellow-500'
                         : 'text-gray-300'
                     }`}
@@ -667,7 +667,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 ))}
               </div>
               <span className="text-sm ml-2 text-gray-600">
-                {user.assembler?.rating ? user.assembler.rating.toFixed(1) : '0.0'} Avaliação média
+                {assemblerProfile?.rating ? assemblerProfile.rating.toFixed(1) : '0.0'} Avaliação média
               </span>
             </div>
           )}
@@ -1153,7 +1153,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
       console.log("[AssemblerDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-      console.log("[AssemblerDashboard] ID do montador do perfil:", user?.assembler?.id);
+      console.log("[AssemblerDashboard] ID do montador do perfil:", assemblerProfile?.id);
       
       // Atualizar as listas relevantes para refletir nova mensagem
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
@@ -1206,7 +1206,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     
     // Se estivermos na seção de chat E houver um serviço selecionado, mostrar a interface de chat
     if (dashboardSection === 'chat' && selectedChatService !== null) {
-      const assemblerId = user?.assembler?.id;
+      const assemblerId = assemblerProfile?.id;
       console.log(`Abrindo chat para serviço ${selectedChatService} com montador ID: ${assemblerId}`);
       
       return (
