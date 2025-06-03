@@ -381,6 +381,44 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Salvar dados do montador
+  const onAssemblerSubmit = async (data: AssemblerFormValues) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assembler: data,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar dados profissionais');
+      }
+      
+      // Recarregar dados do perfil
+      await fetchProfileData();
+      setIsEditingProfessional(false);
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Dados profissionais atualizados com sucesso!',
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar dados do montador:', error);
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao atualizar os dados profissionais',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -716,61 +754,158 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   </div>
 
                   {isEditingProfessional ? (
-                    <div className="space-y-4">
+                    <Form {...assemblerForm}>
+                      <form onSubmit={assemblerForm.handleSubmit(onAssemblerSubmit)} className="space-y-4">
+                        <FormField
+                          control={assemblerForm.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Endereço</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Seu endereço completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-sm font-medium">Cidade</label>
-                            <Input placeholder="Sua cidade" defaultValue={profileData?.assembler?.city || ''} />
-                          </div>
+                          <FormField
+                            control={assemblerForm.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Cidade</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Sua cidade" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                           
-                          <div>
-                            <label className="text-sm font-medium">Estado</label>
-                            <Input placeholder="Seu estado" defaultValue={profileData?.assembler?.state || ''} />
-                          </div>
+                          <FormField
+                            control={assemblerForm.control}
+                            name="state"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Estado</FormLabel>
+                                <FormControl>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecione o estado" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="AC">Acre</SelectItem>
+                                      <SelectItem value="AL">Alagoas</SelectItem>
+                                      <SelectItem value="AP">Amapá</SelectItem>
+                                      <SelectItem value="AM">Amazonas</SelectItem>
+                                      <SelectItem value="BA">Bahia</SelectItem>
+                                      <SelectItem value="CE">Ceará</SelectItem>
+                                      <SelectItem value="DF">Distrito Federal</SelectItem>
+                                      <SelectItem value="ES">Espírito Santo</SelectItem>
+                                      <SelectItem value="GO">Goiás</SelectItem>
+                                      <SelectItem value="MA">Maranhão</SelectItem>
+                                      <SelectItem value="MT">Mato Grosso</SelectItem>
+                                      <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
+                                      <SelectItem value="MG">Minas Gerais</SelectItem>
+                                      <SelectItem value="PA">Pará</SelectItem>
+                                      <SelectItem value="PB">Paraíba</SelectItem>
+                                      <SelectItem value="PR">Paraná</SelectItem>
+                                      <SelectItem value="PE">Pernambuco</SelectItem>
+                                      <SelectItem value="PI">Piauí</SelectItem>
+                                      <SelectItem value="RJ">Rio de Janeiro</SelectItem>
+                                      <SelectItem value="RN">Rio Grande do Norte</SelectItem>
+                                      <SelectItem value="RS">Rio Grande do Sul</SelectItem>
+                                      <SelectItem value="RO">Rondônia</SelectItem>
+                                      <SelectItem value="RR">Roraima</SelectItem>
+                                      <SelectItem value="SC">Santa Catarina</SelectItem>
+                                      <SelectItem value="SP">São Paulo</SelectItem>
+                                      <SelectItem value="SE">Sergipe</SelectItem>
+                                      <SelectItem value="TO">Tocantins</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                           
-                          <div>
-                            <label className="text-sm font-medium">Raio de Atendimento (km)</label>
-                            <Input type="number" placeholder="10" defaultValue={profileData?.assembler?.workRadius || ''} />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium">Endereço</label>
-                          <Input placeholder="Seu endereço completo" defaultValue={profileData?.assembler?.address || ''} />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium">Anos de Experiência</label>
-                          <Input type="number" placeholder="0" defaultValue={profileData?.assembler?.experienceYears || ''} />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium">Descrição Profissional</label>
-                          <Textarea 
-                            placeholder="Descreva sua experiência profissional..."
-                            rows={3}
-                            defaultValue={profileData?.assembler?.professionalDescription || ''}
+                          <FormField
+                            control={assemblerForm.control}
+                            name="workRadius"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Raio de Atendimento (km)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="10" 
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex flex-row items-start space-x-3 space-y-0">
-                            <Checkbox
-                              defaultChecked={profileData?.assembler?.hasOwnTools || false}
-                            />
-                            <div className="space-y-1 leading-none">
-                              <label className="text-sm font-medium">Possui ferramentas próprias</label>
-                            </div>
-                          </div>
+                        <FormField
+                          control={assemblerForm.control}
+                          name="experience"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descrição da Experiência</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Descreva sua experiência profissional..."
+                                  rows={3}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                          <div className="flex flex-row items-start space-x-3 space-y-0">
-                            <Checkbox
-                              defaultChecked={profileData?.assembler?.technicalAssistance || false}
-                            />
-                            <div className="space-y-1 leading-none">
-                              <label className="text-sm font-medium">Oferece assistência técnica</label>
-                            </div>
-                          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={assemblerForm.control}
+                            name="hasOwnTools"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>Possui ferramentas próprias</FormLabel>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={assemblerForm.control}
+                            name="technicalAssistance"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>Oferece assistência técnica</FormLabel>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
                         </div>
 
                         <div className="flex justify-end space-x-2">
@@ -781,11 +916,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                           >
                             Cancelar
                           </Button>
-                          <Button type="button">
+                          <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Salvar Alterações
                           </Button>
                         </div>
-                    </div>
+                      </form>
+                    </Form>
                   ) : (
                     <div className="space-y-6">
                       {isLoading ? (
