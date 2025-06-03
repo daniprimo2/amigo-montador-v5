@@ -1420,6 +1420,16 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     );
   };
 
+  // Renderiza a seção de ranking
+  const renderRankingSection = () => (
+    <div className="padding-responsive">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-responsive-lg font-semibold">Ranking de Montadores</h2>
+      </div>
+      <RankingSection />
+    </div>
+  );
+
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
     switch(dashboardSection) {
@@ -1429,6 +1439,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         return renderServicesSection();
       case 'chat':
         return renderChatSection();
+      case 'ranking':
+        return renderRankingSection();
       default:
         return renderHomeSection();
     }

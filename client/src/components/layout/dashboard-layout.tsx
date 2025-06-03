@@ -103,10 +103,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
               activeTab === 'home' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
@@ -117,7 +117,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </button>
           <button 
             onClick={() => handleTabChange('services')}
-            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
               activeTab === 'services' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
@@ -125,6 +125,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           >
             <List className="h-6 w-6 mb-1" />
             <span className="text-xs font-medium">Serviços</span>
+          </button>
+          <button 
+            onClick={() => handleTabChange('ranking')}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'ranking' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
+          >
+            <Trophy className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
         </div>
