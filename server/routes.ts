@@ -1414,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const notifyMessage = "Serviço finalizado com sucesso! Por favor, avalie o montador.";
             
             // Enviar para a loja
-            const storeWs = clients.get(storeUser.id.toString());
+            const storeWs = clients.get(storeUser.id);
             if (storeWs) {
               storeWs.send(JSON.stringify({
                 type: 'service_completed',
@@ -1426,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Enviar para o montador
-            const assemblerWs = clients.get(assemblerUser.id.toString());
+            const assemblerWs = clients.get(assemblerUser.id);
             if (assemblerWs) {
               assemblerWs.send(JSON.stringify({
                 type: 'service_completed',
@@ -3722,7 +3722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (userType === 'lojista') {
         // Find the assembler working on this service
-        const applications = await db
+        const applicationResults = await db
           .select({ assemblerId: applications.assemblerId })
           .from(applications)
           .where(
@@ -3733,8 +3733,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
           .limit(1);
 
-        if (applications.length > 0) {
-          const assemblerData = await storage.getAssemblerById(applications[0].assemblerId);
+        if (applicationResults.length > 0) {
+          const assemblerData = await storage.getAssemblerById(applicationResults[0].assemblerId);
           if (assemblerData) {
             targetUserId = assemblerData.userId;
           }
