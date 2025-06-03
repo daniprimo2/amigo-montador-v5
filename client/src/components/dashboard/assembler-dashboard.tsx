@@ -402,15 +402,26 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     };
   }, []);
   
-  // Fetch available services with real distance calculation
-  const { data: services, isLoading, error } = useQuery({
+  // Fetch available services with real distance calculation - force fresh data
+  const { data: services, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/services'],
+    queryFn: async () => {
+      const response = await fetch('/api/services', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch services');
+      }
+      return response.json();
+    },
     select: (data: ServiceData[]) => data.map(formatServiceForDisplay),
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    // Add artificial delay to better demonstrate loading skeletons
     refetchInterval: false
   });
   
