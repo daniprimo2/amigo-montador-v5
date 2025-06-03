@@ -139,6 +139,16 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const isPendingApproval = applicationStatus === 'pending';
   const isAccepted = applicationStatus === 'accepted';
   const isRejected = applicationStatus === 'rejected';
+  
+  // Debug logging
+  console.log(`[AvailableServiceCard] Service ${service.id}:`, {
+    hasApplied: service.hasApplied,
+    applicationStatus: service.applicationStatus,
+    computedHasApplied: hasApplied,
+    isPendingApproval,
+    isAccepted,
+    isRejected
+  });
 
   return (
     <div className="p-3 sm:p-4">
