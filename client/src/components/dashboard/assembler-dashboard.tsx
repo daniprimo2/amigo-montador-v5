@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
@@ -55,7 +55,7 @@ const formatServiceForDisplay = (service: ServiceData & { startDate?: string; en
     startDate: service.startDate || null, // Incluir startDate do backend
     endDate: service.endDate || null, // Incluir endDate do backend
     price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
-    store: service.store || 'Loja não especificada',
+    store: typeof service.store === 'object' && service.store?.name ? service.store.name : (service.store || 'Loja não especificada'),
     type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
     status: service.status, // Passar o status do serviço para o componente
     projectFiles: service.projectFiles || [], // Incluir os arquivos do projeto
@@ -949,7 +949,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 availableServices.map(service => (
                   <AvailableServiceCard 
                     key={service.id} 
-                    service={service} 
+                    service={formatServiceForDisplay(service)} 
                     onApply={handleApply}
                     activeServices={activeServices || []}
                   />
@@ -1272,24 +1272,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       );
     }
     
-    // Mostrar serviços onde o montador tem conversas
-    // Incluir serviços onde há candidatura (qualquer status) ou está em andamento
-    // MANTER serviços completados visíveis nas conversas ativas independente de mensagens lidas/não lidas
+    // Mostrar serviços onde o montador tem conversas aceitas ou em andamento
     const activeChats = activeServices ? activeServices.filter((service: any) => {
-      // Mostrar se tem candidatura ou está em andamento (excluir apenas os que nunca tiveram interação)
-      return service.applicationStatus || service.status === 'in-progress';
+      return service.applicationStatus === 'accepted' || service.status === 'in-progress' || service.status === 'completed';
     }) : [];
     
-    // Conversas finalizadas ficam vazias - todas as conversas aparecem na seção ativa
-    const completedChats: any[] = [];
+    // Mostrar serviços onde o montador se candidatou mas ainda está pendente
+    const pendingChats = rawServices ? rawServices.filter((service: any) => {
+      return service.applicationStatus === 'pending' && service.hasApplied;
+    }) : [];
     
-    console.log('[AssemblerDashboard] Serviços disponíveis para chat:', activeChats);
+    console.log('[AssemblerDashboard] Serviços com candidaturas aceitas:', activeChats);
+    console.log('[AssemblerDashboard] Serviços com candidaturas pendentes:', pendingChats);
     
     return (
       <div className="mt-2">
-        <h3 className="text-lg font-semibold mb-4">Conversas</h3>
+        <h3 className="text-lg font-semibold mb-4">Conversas e Candidaturas</h3>
         
-        {isLoadingActiveServices ? (
+        {isLoading || isLoadingActiveServices ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-xl shadow-md p-4">
@@ -1298,29 +1298,26 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               </div>
             ))}
           </div>
-        ) : (activeChats.length === 0) ? (
-          <div className="bg-white rounded-xl shadow-md p-6 text-center">
-            <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-            <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
-            <p className="text-gray-500 mb-4">Quando você tiver mensagens de lojas ou clientes, elas aparecerão aqui.</p>
-          </div>
         ) : (
           <div className="space-y-6">
-            {/* Seção de conversas ativas */}
+            {/* Seção de conversas ativas (candidaturas aceitas) */}
             {activeChats.length > 0 && (
               <div>
-                <h4 className="text-md font-medium mb-3">Conversas Ativas</h4>
+                <h4 className="text-md font-medium mb-3 text-green-600">Conversas Ativas</h4>
                 <div className="space-y-3">
                   {activeChats.map((service: any) => (
                     <div 
                       key={service.id} 
-                      className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer ${service.hasUnreadMessages ? 'border-l-4 border-primary' : ''}`}
+                      className={`bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer border-l-4 border-green-500 ${service.hasUnreadMessages ? 'animate-pulse' : ''}`}
                       onClick={() => setSelectedChatService(service.id)}
                     >
                       <div className="flex justify-between items-center">
                         <div>
                           <div className="flex items-center">
                             <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Aceita
+                            </span>
                             {service.hasUnreadMessages && (
                               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
                                 Nova mensagem
@@ -1331,15 +1328,64 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                             Loja: {service.store?.name || 'Não especificada'}
                           </p>
                         </div>
-                        <MessageSquare className={`h-5 w-5 ${service.hasUnreadMessages ? 'text-primary' : 'text-gray-400'}`} />
+                        <MessageSquare className={`h-5 w-5 ${service.hasUnreadMessages ? 'text-primary' : 'text-green-500'}`} />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            
-            {/* Removido a seção de conversas finalizadas - movidas para a aba "Finalizados" */}
+
+            {/* Seção de candidaturas pendentes */}
+            {pendingChats.length > 0 && (
+              <div>
+                <h4 className="text-md font-medium mb-3 text-orange-600">Candidaturas Pendentes</h4>
+                <div className="space-y-3">
+                  {pendingChats.map((service: any) => (
+                    <div 
+                      key={service.id} 
+                      className="bg-white rounded-xl shadow-md p-4 border-l-4 border-orange-500"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center">
+                            <h4 className="font-medium">{service.title}</h4>
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              Aguardando resposta
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Loja: {service.store || 'Não especificada'}
+                          </p>
+                          <p className="text-sm text-gray-400 mt-1">
+                            Sua candidatura está sendo analisada pelo lojista
+                          </p>
+                        </div>
+                        <Clock className="h-5 w-5 text-orange-500" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Estado vazio quando não há conversas nem candidaturas */}
+            {activeChats.length === 0 && pendingChats.length === 0 && (
+              <div className="bg-white rounded-xl shadow-md p-6 text-center">
+                <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h4 className="text-lg font-medium mb-2">Nenhuma conversa disponível</h4>
+                <p className="text-gray-500 mb-4">
+                  Candidate-se a serviços na seção "Explorar" para começar conversas com lojas.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDashboardSection('explore')}
+                  className="text-primary border-primary hover:bg-primary hover:text-white"
+                >
+                  Explorar Serviços
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
