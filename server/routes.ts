@@ -1414,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const notifyMessage = "Serviço finalizado com sucesso! Por favor, avalie o montador.";
             
             // Enviar para a loja
-            const storeWs = clients.get(storeUser.id);
+            const storeWs = clients.get(storeUser.id.toString());
             if (storeWs) {
               storeWs.send(JSON.stringify({
                 type: 'service_completed',
@@ -1426,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Enviar para o montador
-            const assemblerWs = clients.get(assemblerUser.id);
+            const assemblerWs = clients.get(assemblerUser.id.toString());
             if (assemblerWs) {
               assemblerWs.send(JSON.stringify({
                 type: 'service_completed',
@@ -1509,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se a candidatura foi aceita, verificar se o serviço já está em andamento
         if (existingApplication.status === 'accepted') {
           // Verificar se o serviço já está em progresso ou finalizado
-          if (service.status === 'in-progress' || service.status === 'completed') {
+          if (service.status === 'in_progress' || service.status === 'completed') {
             return res.status(200).json({
               application: existingApplication,
               message: "Você já foi aceito para este serviço",
@@ -1517,11 +1517,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           } else {
             // Se foi aceito mas o serviço ainda não está em progresso, atualizar
-            await storage.updateServiceStatus(service.id, 'in-progress');
+            await storage.updateServiceStatus(service.id, 'in_progress');
             return res.status(200).json({
               application: existingApplication,
               message: "Sua candidatura foi aceita e o serviço está em andamento",
-              serviceStatus: 'in-progress'
+              serviceStatus: 'in_progress'
             });
           }
         } else {
@@ -2753,9 +2753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.price = ensureBrazilianFormat(price);
       }
       
-      if (date !== undefined) {
-        updateData.date = date;
-      }
+      // Note: 'date' field removed from schema - using startDate/endDate instead
       
       if (materialType !== undefined) {
         updateData.materialType = materialType;
@@ -2848,7 +2846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (title) updateData.title = title;
       if (description !== undefined) updateData.description = description;
-      if (date) updateData.date = date;
+      // Note: 'date' field removed from schema - using startDate/endDate instead
       if (price) updateData.price = price.toString();
       if (materialType) updateData.materialType = materialType;
       
@@ -3422,7 +3420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt: expirationDate.toISOString(),
         paymentId: paymentId
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar pagamento PIX:", error);
       console.error("Detalhes do erro:", error.response?.data);
       res.status(500).json({ 
@@ -3555,11 +3553,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Notificar via WebSocket sobre o pagamento confirmado
-        const clients = global.wsClients || new Map();
+        const clients = (global as any).wsClients || new Map();
         
-        // Notificar o montador
-        if (service.acceptedAssemblerId) {
-          const assemblerClients = clients.get(service.acceptedAssemblerId);
+        // Notificar o montador - buscar ID do montador aceito através das candidaturas
+        const acceptedApps = await db
+          .select({ assemblerId: applications.assemblerId })
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, service.id),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+          
+        if (acceptedApps.length > 0) {
+          const assemblerId = acceptedApps[0].assemblerId;
+          const assemblerClients = clients.get(assemblerId);
           if (assemblerClients && assemblerClients.length > 0) {
             assemblerClients.forEach((ws: WebSocket) => {
               if (ws.readyState === WebSocket.OPEN) {
