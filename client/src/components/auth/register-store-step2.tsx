@@ -721,7 +721,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               )}
             />
             
-            {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
+            {form.watch('pixKeyType') && (
               <FormField
                 control={form.control}
                 name="pixKey"

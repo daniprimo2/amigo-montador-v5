@@ -448,9 +448,9 @@ export const SkillsUpdateWizard: React.FC<SkillsUpdateWizardProps> = ({
                                   checked={field.value?.includes(type.id)}
                                   onCheckedChange={(checked) => {
                                     return checked
-                                      ? field.onChange([...field.value, type.id])
+                                      ? field.onChange([...(field.value || []), type.id])
                                       : field.onChange(
-                                          field.value?.filter(
+                                          (field.value || []).filter(
                                             (value) => value !== type.id
                                           )
                                         )

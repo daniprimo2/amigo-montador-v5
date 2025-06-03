@@ -503,7 +503,7 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
                   )}
                 />
                 
-                {form.watch('pixKeyType') && form.watch('pixKeyType') !== 'nenhuma' && (
+                {form.watch('pixKeyType') && (
                   <FormField
                     control={form.control}
                     name="pixKey"

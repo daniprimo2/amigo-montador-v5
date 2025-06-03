@@ -1509,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se a candidatura foi aceita, verificar se o serviço já está em andamento
         if (existingApplication.status === 'accepted') {
           // Verificar se o serviço já está em progresso ou finalizado
-          if (service.status === 'in_progress' || service.status === 'completed') {
+          if (service.status === 'in-progress' || service.status === 'completed') {
             return res.status(200).json({
               application: existingApplication,
               message: "Você já foi aceito para este serviço",
