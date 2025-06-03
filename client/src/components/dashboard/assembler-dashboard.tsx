@@ -45,12 +45,12 @@ interface ServiceData {
 }
 
 // Format data for display in the UI
-const formatServiceForDisplay = (service: ServiceData & { startDate?: string; endDate?: string; projectFiles?: any }) => {
+const formatServiceForDisplay = (service: ServiceData & { startDate?: string; endDate?: string; projectFiles?: any; distance?: string }) => {
   return {
     id: service.id,
     title: service.title,
     location: service.location,
-    distance: '5 km', // This would be calculated based on user location
+    distance: service.distance || 'Distância não calculada', // Use calculated distance from backend
     date: service.date || 'Data não informada', // Manter o formato original do backend
     startDate: service.startDate || null, // Incluir startDate do backend
     endDate: service.endDate || null, // Incluir endDate do backend
