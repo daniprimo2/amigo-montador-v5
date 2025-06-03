@@ -97,36 +97,37 @@ export function setupAuth(app: Express) {
       // Hash da senha
       const hashedPassword = await hashPassword(req.body.password);
 
-      // Processar foto de perfil se fornecida, caso contrário usar avatar padrão
-      let profilePhotoUrl = '/default-avatar.svg'; // Valor padrão obrigatório
-      if (req.files && req.files.profilePicture) {
-        const profileFile = req.files.profilePicture as any;
-        
-        // Verificar tipo de arquivo
-        if (!profileFile.mimetype.startsWith('image/')) {
-          return res.status(400).json({ message: "O arquivo deve ser uma imagem" });
-        }
-        
-        // Verificar tamanho (max 5MB)
-        if (profileFile.size > 5 * 1024 * 1024) {
-          return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
-        }
-        
-        // Gerar nome de arquivo único
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${profileFile.name}`;
-        const profileUploadsDir = path.join(process.cwd(), 'uploads', 'profiles');
-        
-        // Criar diretório se não existir
-        if (!fs.existsSync(profileUploadsDir)) {
-          fs.mkdirSync(profileUploadsDir, { recursive: true });
-        }
-        
-        const uploadPath = path.join(profileUploadsDir, fileName);
-        
-        // Mover arquivo para diretório de uploads
-        await profileFile.mv(uploadPath);
-        profilePhotoUrl = `/uploads/profiles/${fileName}`;
+      // Verificar se a foto de perfil foi fornecida (obrigatória)
+      if (!req.files || !req.files.profilePicture) {
+        return res.status(400).json({ message: "Foto de perfil é obrigatória" });
       }
+
+      const profileFile = req.files.profilePicture as any;
+      
+      // Verificar tipo de arquivo
+      if (!profileFile.mimetype.startsWith('image/')) {
+        return res.status(400).json({ message: "O arquivo deve ser uma imagem" });
+      }
+      
+      // Verificar tamanho (max 5MB)
+      if (profileFile.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
+      }
+      
+      // Gerar nome de arquivo único
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${profileFile.name}`;
+      const profileUploadsDir = path.join(process.cwd(), 'uploads', 'profiles');
+      
+      // Criar diretório se não existir
+      if (!fs.existsSync(profileUploadsDir)) {
+        fs.mkdirSync(profileUploadsDir, { recursive: true });
+      }
+      
+      const uploadPath = path.join(profileUploadsDir, fileName);
+      
+      // Mover arquivo para diretório de uploads
+      await profileFile.mv(uploadPath);
+      const profilePhotoUrl = `/uploads/profiles/${fileName}`;
 
       // Separar dados baseados no tipo de usuário
       const { userType } = req.body;
