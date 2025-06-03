@@ -60,9 +60,6 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
   // Inicializar e reinicializar o formulário sempre que o serviço mudar
   useEffect(() => {
-    console.log('[EditServiceDialog] Inicializando com serviço:', service);
-    console.log('[EditServiceDialog] ProjectFiles do serviço:', service.projectFiles);
-    
     // Função para converter data ISO para formato YYYY-MM-DD do input
     const formatISODateForInput = (isoDate: string): string => {
       try {
@@ -108,7 +105,6 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
     // Resetar arquivos do projeto
     const files = service.projectFiles || [];
-    console.log('[EditServiceDialog] Definindo projectFiles:', files);
     setProjectFiles(files);
     
     // Resetar outros estados
