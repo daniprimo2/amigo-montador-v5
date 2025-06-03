@@ -126,7 +126,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Verificar se há avaliações pendentes quando a dashboard carrega
   useEffect(() => {
-    if (pendingEvaluationsQuery.data?.hasPendingEvaluations) {
+    if (pendingEvaluationsQuery.data && 'hasPendingEvaluations' in pendingEvaluationsQuery.data && pendingEvaluationsQuery.data.hasPendingEvaluations) {
       setShowPendingEvaluations(true);
     }
   }, [pendingEvaluationsQuery.data]);
