@@ -137,9 +137,10 @@ export const SkillsUpdateWizard: React.FC<SkillsUpdateWizardProps> = ({
   const onSubmit = async (data: SkillsUpdateFormValues) => {
     setIsLoading(true);
     try {
-      await apiRequest(`/api/assemblers/${user?.id}`, {
+      await apiRequest({
         method: 'PATCH',
-        body: JSON.stringify({
+        url: `/api/assemblers/${user?.id}`,
+        data: {
           specialties: data.specialties,
           experienceYears: data.experienceYears,
           workRadius: data.workRadius,
@@ -147,7 +148,7 @@ export const SkillsUpdateWizard: React.FC<SkillsUpdateWizardProps> = ({
           technicalAssistance: data.technicalAssistance,
           professionalDescription: data.professionalDescription,
           serviceTypes: data.serviceTypes,
-        }),
+        },
       });
 
       // Invalidar cache
