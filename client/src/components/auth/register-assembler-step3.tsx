@@ -488,7 +488,15 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 <FormItem>
                   <FormLabel>Número da Conta</FormLabel>
                   <FormControl>
-                    <Input placeholder="Exemplo: 12345-6" {...field} />
+                    <Input 
+                      placeholder="Exemplo: 12345-6" 
+                      {...field}
+                      onChange={(e) => {
+                        // Permite apenas números e hífens
+                        const value = e.target.value.replace(/[^\d\-]/g, '');
+                        field.onChange(value);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -545,7 +553,12 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                   <FormControl>
                     <Input 
                       placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
-                      {...field} 
+                      {...field}
+                      onChange={(e) => {
+                        // Permite apenas números, pontos, hífens e barras
+                        const value = e.target.value.replace(/[^\d\.\-\/]/g, '');
+                        field.onChange(value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
