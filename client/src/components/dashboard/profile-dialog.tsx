@@ -681,126 +681,61 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                   </div>
 
                   {isEditingProfessional ? (
-                    <Form>
-                      <form className="space-y-4">
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            name="city"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Cidade</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Sua cidade" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div>
+                            <label className="text-sm font-medium">Cidade</label>
+                            <Input placeholder="Sua cidade" defaultValue={profileData?.assembler?.city || ''} />
+                          </div>
                           
-                          <FormField
-                            name="state"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Estado</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Seu estado" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div>
+                            <label className="text-sm font-medium">Estado</label>
+                            <Input placeholder="Seu estado" defaultValue={profileData?.assembler?.state || ''} />
+                          </div>
                           
-                          <FormField
-                            name="workRadius"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Raio de Atendimento (km)</FormLabel>
-                                <FormControl>
-                                  <Input type="number" placeholder="10" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                          <div>
+                            <label className="text-sm font-medium">Raio de Atendimento (km)</label>
+                            <Input type="number" placeholder="10" defaultValue={profileData?.assembler?.workRadius || ''} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium">Endereço</label>
+                          <Input placeholder="Seu endereço completo" defaultValue={profileData?.assembler?.address || ''} />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium">Anos de Experiência</label>
+                          <Input type="number" placeholder="0" defaultValue={profileData?.assembler?.experienceYears || ''} />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium">Descrição Profissional</label>
+                          <Textarea 
+                            placeholder="Descreva sua experiência profissional..."
+                            rows={3}
+                            defaultValue={profileData?.assembler?.professionalDescription || ''}
                           />
                         </div>
 
-                        <FormField
-                          name="address"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Endereço</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Seu endereço completo" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          name="experienceYears"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Anos de Experiência</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="0" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          name="professionalDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Descrição Profissional</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Descreva sua experiência profissional..."
-                                  rows={3}
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            name="hasOwnTools"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>Possui ferramentas próprias</FormLabel>
-                                </div>
-                              </FormItem>
-                            )}
-                          />
+                          <div className="flex flex-row items-start space-x-3 space-y-0">
+                            <Checkbox
+                              defaultChecked={profileData?.assembler?.hasOwnTools || false}
+                            />
+                            <div className="space-y-1 leading-none">
+                              <label className="text-sm font-medium">Possui ferramentas próprias</label>
+                            </div>
+                          </div>
 
-                          <FormField
-                            name="technicalAssistance"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>Oferece assistência técnica</FormLabel>
-                                </div>
-                              </FormItem>
-                            )}
-                          />
+                          <div className="flex flex-row items-start space-x-3 space-y-0">
+                            <Checkbox
+                              defaultChecked={profileData?.assembler?.technicalAssistance || false}
+                            />
+                            <div className="space-y-1 leading-none">
+                              <label className="text-sm font-medium">Oferece assistência técnica</label>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex justify-end space-x-2">
@@ -811,12 +746,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                           >
                             Cancelar
                           </Button>
-                          <Button type="submit">
+                          <Button type="button">
                             Salvar Alterações
                           </Button>
                         </div>
-                      </form>
-                    </Form>
+                    </div>
                   ) : (
                     <div className="space-y-6">
                       {isLoading ? (
