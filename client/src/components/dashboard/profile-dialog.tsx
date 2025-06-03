@@ -66,6 +66,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
+  const [profileData, setProfileData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
   
@@ -110,6 +111,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       
       const data = await response.json();
       console.log("Perfil do usuário carregado:", data);
+      
+      // Armazenar dados do perfil para uso no componente
+      setProfileData(data);
       
       // Atualizar formulário de dados do usuário
       userForm.reset({
@@ -347,10 +351,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             onValueChange={setActiveTab}
             className="mt-4"
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${user?.userType === 'montador' ? 'grid-cols-3' : user?.userType === 'lojista' ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
               {user?.userType === 'lojista' && (
                 <TabsTrigger value="dados-loja">Dados da Loja</TabsTrigger>
+              )}
+              {user?.userType === 'montador' && (
+                <TabsTrigger value="dados-profissionais">Dados Profissionais</TabsTrigger>
               )}
               <TabsTrigger value="dados-bancarios">Dados Bancários</TabsTrigger>
             </TabsList>
@@ -635,6 +642,182 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                     </DialogFooter>
                   </form>
                 </Form>
+              </TabsContent>
+            )}
+
+            {/* Dados Profissionais do Montador */}
+            {user?.userType === 'montador' && (
+              <TabsContent value="dados-profissionais" className="mt-4">
+                <div className="space-y-6">
+                  {isLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <>
+                      {/* Localização e Área de Atendimento */}
+                      <div className="bg-white rounded-lg border p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                          <svg className="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          Localização e Área de Atendimento
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <label className="text-gray-600 font-medium">Cidade</label>
+                            <p className="text-gray-900">{profileData?.assembler?.city || 'Não informado'}</p>
+                          </div>
+                          <div>
+                            <label className="text-gray-600 font-medium">Estado</label>
+                            <p className="text-gray-900">{profileData?.assembler?.state || 'Não informado'}</p>
+                          </div>
+                          <div>
+                            <label className="text-gray-600 font-medium">Raio de Atendimento</label>
+                            <p className="text-gray-900">{profileData?.assembler?.workRadius || '0'} km</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Experiência Profissional */}
+                      <div className="bg-white rounded-lg border p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Experiência Profissional
+                        </h3>
+                        <div className="space-y-4 text-sm">
+                          {profileData?.assembler?.experienceYears && (
+                            <div>
+                              <label className="text-gray-600 font-medium">Anos de Experiência</label>
+                              <p className="text-gray-900">{profileData.assembler.experienceYears} anos</p>
+                            </div>
+                          )}
+                          
+                          {profileData?.assembler?.professionalDescription && (
+                            <div>
+                              <label className="text-gray-600 font-medium">Descrição Profissional</label>
+                              <p className="text-gray-900 whitespace-pre-wrap">
+                                {profileData.assembler.professionalDescription}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {profileData?.assembler?.experience && (
+                            <div>
+                              <label className="text-gray-600 font-medium">Experiência Detalhada</label>
+                              <p className="text-gray-900 whitespace-pre-wrap">
+                                {profileData.assembler.experience}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Especialidades */}
+                      <div className="bg-white rounded-lg border p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Especialidades
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {profileData?.assembler?.specialties?.map((specialty: string, index: number) => (
+                            <span 
+                              key={index}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                            >
+                              {specialty}
+                            </span>
+                          )) || <p className="text-gray-500 text-sm">Nenhuma especialidade informada</p>}
+                        </div>
+                      </div>
+
+                      {/* Tipos de Atendimento */}
+                      {profileData?.assembler?.serviceTypes && profileData.assembler.serviceTypes.length > 0 && (
+                        <div className="bg-white rounded-lg border p-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Tipos de Atendimento
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {profileData.assembler.serviceTypes.map((type: string, index: number) => (
+                              <span 
+                                key={index}
+                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                              >
+                                {type === 'residencial' ? 'Residencial' : 
+                                 type === 'corporativo' ? 'Corporativo' :
+                                 type === 'lojas_parceiras' ? 'Lojas Parceiras' : type}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Disponibilidade */}
+                      {profileData?.assembler?.availability && (
+                        <div className="bg-white rounded-lg border p-4">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Disponibilidade
+                          </h3>
+                          <div className="space-y-3 text-sm">
+                            <div>
+                              <label className="text-gray-600 font-medium">Dias da Semana</label>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {profileData.assembler.availability.dias?.map((dia: string, index: number) => (
+                                  <span 
+                                    key={index}
+                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                                  >
+                                    {dia === 'seg' ? 'Segunda' :
+                                     dia === 'ter' ? 'Terça' :
+                                     dia === 'qua' ? 'Quarta' :
+                                     dia === 'qui' ? 'Quinta' :
+                                     dia === 'sex' ? 'Sexta' :
+                                     dia === 'sab' ? 'Sábado' :
+                                     dia === 'dom' ? 'Domingo' : dia}
+                                  </span>
+                                )) || <p className="text-gray-500">Dias não informados</p>}
+                              </div>
+                            </div>
+                            
+                            {profileData.assembler.availability.horarios && (
+                              <div>
+                                <label className="text-gray-600 font-medium">Horário de Trabalho</label>
+                                <p className="text-gray-900">
+                                  {profileData.assembler.availability.horarios.inicio} às {profileData.assembler.availability.horarios.fim}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Ferramentas e Recursos */}
+                      <div className="bg-white rounded-lg border p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                          Ferramentas e Recursos
+                        </h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                              profileData?.assembler?.hasOwnTools 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {profileData?.assembler?.hasOwnTools ? 'Possui ferramentas próprias' : 'Não possui ferramentas próprias'}
+                            </span>
+                          </div>
+                          
+                          {profileData?.assembler?.technicalAssistance && (
+                            <div className="flex items-center">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                Oferece Assistência Técnica
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </TabsContent>
             )}
 
