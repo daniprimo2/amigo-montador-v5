@@ -265,11 +265,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(formattedServices);
       } else {
         // Formatar dados também para lojistas, incluindo startDate e endDate
-        const formattedServices = servicesList.map(service => ({
-          ...service,
-          startDate: service.startDate ? service.startDate.toISOString() : null,
-          endDate: service.endDate ? service.endDate.toISOString() : null
-        }));
+        const formattedServices = servicesList.map(service => {
+          // Processar projectFiles para garantir que sejam incluídos corretamente
+          let projectFiles = [];
+          if (service.projectFiles) {
+            try {
+              // Se projectFiles estiver como string JSON, fazer parse
+              if (typeof service.projectFiles === 'string') {
+                projectFiles = JSON.parse(service.projectFiles);
+              } else if (Array.isArray(service.projectFiles)) {
+                projectFiles = service.projectFiles;
+              }
+            } catch (error) {
+              console.error(`Erro ao processar projectFiles para serviço ${service.id}:`, error);
+              projectFiles = [];
+            }
+          }
+          
+          return {
+            ...service,
+            startDate: service.startDate ? service.startDate.toISOString() : null,
+            endDate: service.endDate ? service.endDate.toISOString() : null,
+            projectFiles: projectFiles
+          };
+        });
         
         res.json(formattedServices);
       }
