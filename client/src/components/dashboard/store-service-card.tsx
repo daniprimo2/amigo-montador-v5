@@ -422,7 +422,10 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             cep: service.cep,
             address: service.address,
             addressNumber: service.addressNumber,
-            status: service.status
+            status: service.status,
+            startDate: service.startDate,
+            endDate: service.endDate,
+            projectFiles: service.projectFiles
           }}
         />
       )}

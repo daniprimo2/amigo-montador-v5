@@ -14,7 +14,9 @@ interface EditableServiceProps {
   title: string;
   description?: string;
   location: string;
-  date: string;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
   price: string;
   materialType?: string;
   cep?: string;
@@ -58,14 +60,47 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
   // Inicializar e reinicializar o formulário sempre que o serviço mudar
   useEffect(() => {
+    // Função para converter data ISO para formato YYYY-MM-DD do input
+    const formatISODateForInput = (isoDate: string): string => {
+      try {
+        const date = new Date(isoDate);
+        return date.toISOString().split('T')[0];
+      } catch {
+        return '';
+      }
+    };
+
+    // Processar datas - priorizar startDate/endDate diretos se disponíveis
+    let startDateFormatted = '';
+    let endDateFormatted = '';
+
+    if (service.startDate) {
+      startDateFormatted = formatISODateForInput(service.startDate);
+    }
+    
+    if (service.endDate) {
+      endDateFormatted = formatISODateForInput(service.endDate);
+    }
+
+    // Se não há startDate/endDate diretos, tentar extrair da propriedade date
+    if (!startDateFormatted && !endDateFormatted && service.date) {
+      if (service.date.includes('-')) {
+        const [startDateStr, endDateStr] = service.date.split('-').map((d: string) => d.trim());
+        startDateFormatted = formatDateForInput(startDateStr);
+        endDateFormatted = formatDateForInput(endDateStr);
+      } else {
+        startDateFormatted = formatDateForInput(service.date);
+      }
+    }
+
     // Resetar o estado do formulário com os dados do serviço
     setEditedService({
       title: service.title || '',
       description: service.description || '',
       price: service.price || '',
       materialType: service.materialType || '',
-      startDate: '',
-      endDate: '',
+      startDate: startDateFormatted,
+      endDate: endDateFormatted,
     });
 
     // Resetar arquivos do projeto
@@ -75,27 +110,6 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
     setNewFiles(null);
     setFilesToDelete([]);
     setDateError(null);
-
-    // Extrair e formatar datas do período do serviço
-    if (service.date && service.date.includes('-')) {
-      const [startDateStr, endDateStr] = service.date.split('-').map((d: string) => d.trim());
-      const startDate = formatDateForInput(startDateStr);
-      const endDate = formatDateForInput(endDateStr);
-      
-      setEditedService(prev => ({
-        ...prev,
-        startDate,
-        endDate
-      }));
-    } else if (service.date) {
-      // Se há apenas uma data, usar como data de início
-      const startDate = formatDateForInput(service.date);
-      setEditedService(prev => ({
-        ...prev,
-        startDate,
-        endDate: ''
-      }));
-    }
   }, [service]);
 
   // Função para formatar data de DD/MM/YYYY para YYYY-MM-DD (formato de input date)
