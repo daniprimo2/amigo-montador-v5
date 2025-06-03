@@ -260,25 +260,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </div>
         )}
 
-        {/* Arquivos PDF anexados */}
-        {service.projectFiles && service.projectFiles.length > 0 && (
-          <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center mb-2">
-              <FileText className="h-5 w-5 text-green-600 mr-2" />
-              <span className="text-sm font-semibold text-green-800">
-                {service.projectFiles.length} arquivo{service.projectFiles.length > 1 ? 's' : ''} PDF anexado{service.projectFiles.length > 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {service.projectFiles.map((file, index) => (
-                <div key={index} className="text-sm text-green-700 bg-green-100 px-3 py-2 rounded-md flex items-center border border-green-300">
-                  <FileText className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
-                  <span className="truncate font-medium">{file.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Datas de início e fim, e preço */}
         <div className="space-y-2 mb-3">
