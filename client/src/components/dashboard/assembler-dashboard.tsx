@@ -669,7 +669,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       return false;
     })();
     
-    return matchesSearch && matchesCity;
+    return matchesSearch && matchesState;
   }) || [];
 
   // Filtrar serviços por status para cada aba
