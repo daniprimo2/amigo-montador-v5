@@ -70,11 +70,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterUserData) => {
-      const res = await apiRequest({
-        method: "POST", 
-        url: "/api/register", 
-        data: userData
+      // Criar FormData para enviar arquivos
+      const formData = new FormData();
+      
+      // Adicionar todos os campos de texto
+      Object.keys(userData).forEach(key => {
+        if (key !== 'profilePicture' && key !== 'logoFile') {
+          const value = userData[key];
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (value !== null && value !== undefined) {
+            formData.append(key, String(value));
+          }
+        }
       });
+      
+      // Adicionar arquivos se existirem
+      if (userData.profilePicture && userData.profilePicture instanceof FileList && userData.profilePicture.length > 0) {
+        formData.append('profilePicture', userData.profilePicture[0]);
+      }
+      
+      if (userData.logoFile && userData.logoFile instanceof FileList && userData.logoFile.length > 0) {
+        formData.append('logoFile', userData.logoFile[0]);
+      }
+      
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Erro no cadastro');
+      }
+      
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
