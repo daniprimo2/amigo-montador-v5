@@ -600,11 +600,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
     <>
-      {/* Ranking de Avaliações no topo */}
-      <div className="mb-6">
-        <RankingSection />
-      </div>
-
       <div className="bg-white rounded-xl shadow-md p-4 mb-4">
         <div className="flex flex-col mb-4">
           <div className="flex items-center justify-between">
@@ -1028,11 +1023,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             </div>
           )}
         </div>
-      </div>
-      
-      {/* Ranking de Avaliações */}
-      <div className="mt-4">
-        <RankingSection />
       </div>
     </>
   );
