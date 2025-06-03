@@ -401,18 +401,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     };
   }, []);
   
-  // Fetch available services
+  // Fetch available services with real distance calculation
   const { data: services, isLoading, error } = useQuery({
-    queryKey: ['/api/services'],
+    queryKey: ['/api/services', Date.now()], // Force unique key
     select: (data: ServiceData[]) => data.map(formatServiceForDisplay),
-    staleTime: 0, // Force fresh data
-    cacheTime: 0 // Don't cache
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
   
   // Fetch available services
   const { data: rawServices } = useQuery({
     queryKey: ['/api/services'],
-    select: (data: ServiceData[]) => data
+    select: (data: ServiceData[]) => data,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always'
   });
   
   // Buscar serviços em andamento que o montador está participando
