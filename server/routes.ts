@@ -1251,8 +1251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db
         .update(services)
         .set({ 
-          status: 'confirmed',
-          updatedAt: new Date()
+          status: 'confirmed'
         })
         .where(eq(services.id, serviceId));
       
@@ -1358,7 +1357,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'completed',
         completedAt: new Date(),
         ratingRequired: true,
-        ratingCompleted: false
+        storeRatingCompleted: false,
+        assemblerRatingCompleted: false
       });
       
       // Enviar notificação sobre a finalização do serviço
@@ -2204,7 +2204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Obter mensagens
-      let messages;
+      let messages: any[];
       
       // Se for montador, sempre mostramos apenas as mensagens entre ele e o lojista
       if (req.user?.userType === 'montador' && userAssemblerId) {
@@ -3523,7 +3523,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: 'completed',
           completedAt: new Date(),
           ratingRequired: true,
-          ratingCompleted: false
+          storeRatingCompleted: false,
+          assemblerRatingCompleted: false
         });
         
         // Buscar informações do pagador (lojista que está pagando)
@@ -4075,13 +4076,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const userType = req.user!.userType;
       
-      let pendingServices = [];
+      let pendingServices: any[] = [];
       
       if (userType === 'lojista') {
         // Buscar serviços da loja que precisam de avaliação
         const store = await storage.getStoreByUserId(userId);
         if (store) {
-          const services = await db
+          const storeServices = await db
             .select()
             .from(services)
             .where(
@@ -4089,10 +4090,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 eq(services.storeId, store.id),
                 eq(services.status, 'completed'),
                 eq(services.ratingRequired, true),
-                eq(services.ratingCompleted, false)
+                eq(services.storeRatingCompleted, false)
               )
             );
-          pendingServices = services;
+          pendingServices = storeServices;
         }
       } else if (userType === 'montador') {
         // Buscar serviços do montador que precisam de avaliação
@@ -4124,7 +4125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     and(
                       eq(services.status, 'completed'),
                       eq(services.ratingRequired, true),
-                      eq(services.ratingCompleted, false),
+                      eq(services.assemblerRatingCompleted, false),
                       inArray(services.id, serviceIds)
                     )
                   );
@@ -4538,7 +4539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Tipo de ranking inválido. Use 'lojista' ou 'montador'" });
       }
 
-      let ranking = [];
+      let ranking: any[] = [];
       
       if (type === 'montador') {
         // Ranking de montadores baseado na média de avaliações recebidas
