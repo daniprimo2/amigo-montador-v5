@@ -114,7 +114,7 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
       }
       
-      // Gerar nome de arquivo único
+      // Gerar nome de arquivo único para foto de perfil
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${profileFile.name}`;
       const profileUploadsDir = path.join(process.cwd(), 'uploads', 'profiles');
       
@@ -128,6 +128,41 @@ export function setupAuth(app: Express) {
       // Mover arquivo para diretório de uploads
       await profileFile.mv(uploadPath);
       const profilePhotoUrl = `/uploads/profiles/${fileName}`;
+
+      // Para lojistas, também verificar se o logo foi fornecido (obrigatório)
+      let logoUrl = '';
+      if (req.body.userType === 'lojista') {
+        if (!req.files || !req.files.logoFile) {
+          return res.status(400).json({ message: "Logo da loja é obrigatório" });
+        }
+
+        const logoFile = req.files.logoFile as any;
+        
+        // Verificar tipo de arquivo do logo
+        if (!logoFile.mimetype.startsWith('image/')) {
+          return res.status(400).json({ message: "O logo deve ser uma imagem" });
+        }
+        
+        // Verificar tamanho (max 10MB)
+        if (logoFile.size > 10 * 1024 * 1024) {
+          return res.status(400).json({ message: "O logo deve ter menos de 10MB" });
+        }
+        
+        // Gerar nome de arquivo único para logo
+        const logoFileName = `logo-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${logoFile.name}`;
+        const logoUploadsDir = path.join(process.cwd(), 'uploads', 'logos');
+        
+        // Criar diretório se não existir
+        if (!fs.existsSync(logoUploadsDir)) {
+          fs.mkdirSync(logoUploadsDir, { recursive: true });
+        }
+        
+        const logoUploadPath = path.join(logoUploadsDir, logoFileName);
+        
+        // Mover arquivo para diretório de uploads
+        await logoFile.mv(logoUploadPath);
+        logoUrl = `/uploads/logos/${logoFileName}`;
+      }
 
       // Separar dados baseados no tipo de usuário
       const { userType } = req.body;
@@ -156,7 +191,7 @@ export function setupAuth(app: Express) {
           city: req.body.city,
           state: req.body.state,
           phone: req.body.storePhone,
-          logoUrl: req.body.logoUrl || '',
+          logoUrl: logoUrl,
           materialTypes: req.body.materialTypes || []
         };
         await storage.createStore(storeData);
