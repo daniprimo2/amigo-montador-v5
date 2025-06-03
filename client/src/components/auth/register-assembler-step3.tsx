@@ -138,7 +138,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
       // Upload dos documentos obrigatórios
       console.log('Iniciando upload dos documentos...');
-      let documentUrls: Record<string, string> = {};
+      let documentUrls: Record<string, string | string[]> = {};
 
       try {
 
@@ -233,10 +233,10 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         documentType: step1Data.documentType,
         documentNumber: step1Data.documentNumber,
         
-        // Dados específicos do montador
-        address: step2Data?.address || 'Endereço não informado',
-        city: step2Data?.city || 'Cidade não informada',
-        state: step2Data?.state || 'Estado não informado',
+        // Dados específicos do montador (endereço vem do step1)
+        address: step1Data?.address || 'Endereço não informado',
+        city: step1Data?.city || 'Cidade não informada',
+        state: step1Data?.state || 'Estado não informado',
         specialties: step2Data?.specialties || [],
         technicalAssistance: step2Data?.technicalAssistance || false,
         experience: step2Data?.experience || '',
@@ -247,10 +247,10 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         termsAgreed: data.termsAgreed,
         
         // URLs dos documentos obrigatórios
-        rgFrontUrl: documentUrls.rgFrontUrl,
-        rgBackUrl: documentUrls.rgBackUrl,
-        proofOfAddressUrl: documentUrls.proofOfAddressUrl,
-        certificatesUrls: documentUrls.certificatesUrls,
+        rgFrontUrl: documentUrls.rgFrontUrl as string,
+        rgBackUrl: documentUrls.rgBackUrl as string,
+        proofOfAddressUrl: documentUrls.proofOfAddressUrl as string,
+        certificatesUrls: documentUrls.certificatesUrls as string[] | undefined,
         
         // Dados bancários (apenas se estiverem preenchidos)
         bankName: data.bankName || undefined,
@@ -275,8 +275,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         formData.append('profilePicture', step1Data.profilePicture[0]);
         
         // Adicionar todos os outros dados como JSON
-        Object.keys(userData).forEach(key => {
-          const value = userData[key];
+        Object.entries(userData).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             if (typeof value === 'object') {
               formData.append(key, JSON.stringify(value));
