@@ -600,10 +600,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
     <>
-      <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-        <div className="flex flex-col mb-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex flex-col mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
               Olá, <span className="text-primary">{user?.name || 'Montador'}</span>
             </h2>
             <div className="flex items-center gap-2">
@@ -1225,7 +1225,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   };
 
   return (
-    <div className="p-4">
+    <div className="px-4 py-6 min-h-full">
       {renderDashboardContent()}
       
       {/* Diálogo de Avaliação */}

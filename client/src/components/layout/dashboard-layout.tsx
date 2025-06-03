@@ -83,63 +83,87 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const ChatButton = () => (
     <button 
       onClick={() => handleTabChange('chat')}
-      className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'chat' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+      className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+        activeTab === 'chat' 
+          ? 'text-primary bg-primary/10 scale-105' 
+          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+      }`}
     >
       <NotificationBadge
         count={unreadCount}
         type="message"
-        size="md"
+        size="lg"
         className={activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}
         showPulse={false}
       />
-      <span className="text-xs sm:text-sm mt-1 font-medium">Chat</span>
+      <span className="text-xs font-medium mt-1">Chat</span>
     </button>
   );
 
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-3 gap-1 sm:gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'home' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
           >
-            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Início</span>
+            <Home className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('services')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'services' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'services' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
           >
-            <List className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Serviços</span>
+            <List className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Serviços</span>
           </button>
           <ChatButton />
         </div>
       );
     } else {
       return (
-        <div className="grid grid-cols-4 gap-1 sm:gap-2">
+        <div className="grid grid-cols-4 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'home' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'home' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
           >
-            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Início</span>
+            <Home className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('explore')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'explore' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'explore' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
           >
-            <Map className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Explorar</span>
+            <Map className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Explorar</span>
           </button>
           <button 
             onClick={() => handleTabChange('ranking')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors touch-target ${activeTab === 'ranking' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'ranking' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
           >
-            <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-xs sm:text-sm mt-1 font-medium">Ranking</span>
+            <Trophy className="h-6 w-6 mb-1" />
+            <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
         </div>
@@ -183,52 +207,52 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   }, [user]);
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header - Responsive */}
-      <div className="bg-zinc-800 w-full p-3 sm:p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Header - Mobile First */}
+      <div className="bg-zinc-800 w-full p-4 safe-top">
+        <div className="flex items-center justify-between">
           <div className="flex items-center">
             <img 
               src={amigoMontadorLogo} 
               alt="Amigo Montador" 
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </div>
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-4">
             <button 
-              className="text-white relative touch-target"
+              className="text-white relative p-2 rounded-full hover:bg-white/10 transition-colors"
               onClick={() => handleTabChange('chat')} 
               title="Ir para o chat"
             >
               <NotificationBadge
                 count={unreadCount}
                 type="bell"
-                size="md"
+                size="lg"
                 className="text-white"
                 showPulse={hasUnreadMessage}
               />
             </button>
             <button 
               onClick={handleLogout}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center border-2 border-white touch-target"
+              className="w-12 h-12 rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors"
               title="Sair"
             >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+              <LogOut className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         </div>
       </div>
       
-      {/* Main Content - Responsive */}
-      <div className="flex-1 overflow-auto bg-gray-100">
-        <div className="max-w-7xl mx-auto">
+      {/* Main Content - Mobile optimized */}
+      <div className="flex-1 overflow-auto bg-gray-50">
+        <div className="min-h-full">
           {children}
         </div>
       </div>
       
-      {/* Bottom Navigation - Mobile optimized */}
-      <div className="bg-white border-t border-gray-200 py-2 px-2 sm:py-3">
-        <div className="max-w-7xl mx-auto">
+      {/* Bottom Navigation - iOS/Android style */}
+      <div className="bg-white border-t border-gray-200 pt-2 pb-6 px-4 safe-bottom">
+        <div className="max-w-md mx-auto">
           {renderNavigation()}
         </div>
       </div>
