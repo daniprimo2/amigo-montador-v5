@@ -87,6 +87,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
     try {
       console.log('=== INÍCIO DO SUBMIT ===');
       console.log('Dados do formulário:', data);
+      console.log('step1Data recebido:', step1Data);
+      console.log('step2Data recebido:', step2Data);
+      console.log('Cidade do step1Data:', step1Data?.city);
       console.log('Arquivos selecionados:', {
         idFront: idFrontFiles?.length,
         idBack: idBackFiles?.length,
