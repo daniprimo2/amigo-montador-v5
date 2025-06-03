@@ -764,18 +764,24 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                             <h4 className="text-md font-semibold text-gray-900 mb-3">
                               Localização e Área de Atendimento
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="space-y-3 text-sm">
                               <div>
-                                <label className="text-gray-600 font-medium">Cidade</label>
-                                <p className="text-gray-900">{profileData?.assembler?.city || 'Não informado'}</p>
+                                <label className="text-gray-600 font-medium">Endereço</label>
+                                <p className="text-gray-900">{profileData?.assembler?.address || 'Não informado'}</p>
                               </div>
-                              <div>
-                                <label className="text-gray-600 font-medium">Estado</label>
-                                <p className="text-gray-900">{profileData?.assembler?.state || 'Não informado'}</p>
-                              </div>
-                              <div>
-                                <label className="text-gray-600 font-medium">Raio de Atendimento</label>
-                                <p className="text-gray-900">{profileData?.assembler?.workRadius || '0'} km</p>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <label className="text-gray-600 font-medium">Cidade</label>
+                                  <p className="text-gray-900">{profileData?.assembler?.city || 'Não informado'}</p>
+                                </div>
+                                <div>
+                                  <label className="text-gray-600 font-medium">Estado</label>
+                                  <p className="text-gray-900">{profileData?.assembler?.state || 'Não informado'}</p>
+                                </div>
+                                <div>
+                                  <label className="text-gray-600 font-medium">Raio de Atendimento</label>
+                                  <p className="text-gray-900">{profileData?.assembler?.workRadius || '0'} km</p>
+                                </div>
                               </div>
                             </div>
                           </div>
