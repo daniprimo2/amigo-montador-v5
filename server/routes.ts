@@ -1543,10 +1543,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newApplication = await storage.createApplication(applicationData);
       console.log("Candidatura criada com sucesso:", newApplication);
       
-      // Atualizar status do serviço para 'pending' após primeira candidatura
-      // Isso evita que outros montadores vejam este serviço como disponível
-      await storage.updateServiceStatus(serviceId, 'pending');
-      console.log("Status do serviço atualizado para 'pending' após candidatura");
+      // Não alteramos o status do serviço aqui - ele permanece 'open'
+      // para permitir que outros montadores também se candidatem
+      // O status só será alterado quando o lojista aceitar uma candidatura
       
       // Criar mensagem inicial para iniciar o chat
       const messageData = {
