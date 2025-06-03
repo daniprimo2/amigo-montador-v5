@@ -227,6 +227,9 @@ export function setupAuth(app: Express) {
         const assemblerData = {
           userId,
           address: req.body.address,
+          addressNumber: req.body.addressNumber,
+          neighborhood: req.body.neighborhood,
+          cep: req.body.cep,
           city: req.body.city,
           state: req.body.state,
           specialties: req.body.specialties || [],
