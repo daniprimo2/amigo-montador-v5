@@ -512,48 +512,55 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     mutationFn: async (serviceId: number) => {
       try {
         console.log(`Enviando candidatura para serviço ID: ${serviceId}`);
-        const url = `/api/services/${serviceId}/apply`;
-        const response = await apiRequest({
+        const response = await fetch(`/api/services/${serviceId}/apply`, {
           method: "POST",
-          url
+          headers: {
+            'Content-Type': 'application/json',
+          }
         });
         
         const result = await response.json();
         
-        if (!response.ok) {
-          // Se não foi OK mas temos informações sobre candidatura existente
-          if (result.application && result.message) {
-            console.log('Status da candidatura existente:', result);
-            return result; // Retornar resultado mesmo com status não OK
-          }
-          throw new Error(result.message || "Falha ao enviar candidatura");
-        }
-        
-        return result;
+        // Always return the result - backend handles duplicate detection
+        // and returns appropriate messages for existing applications
+        return {
+          ...result,
+          statusCode: response.status,
+          isExistingApplication: response.status === 200 && result.application && result.message
+        };
       } catch (error) {
         console.error("Erro na candidatura:", error);
-        throw error; // Propagando o erro para o onError
+        throw error;
       }
     },
     onSuccess: (data) => {
-      console.log("Candidatura enviada com sucesso:", data);
+      console.log("Resposta da candidatura:", data);
       
-      // Extrair o ID do serviço da resposta
-      const serviceId = data.application?.serviceId;
-      console.log(`Candidatura aceita para serviço ID: ${serviceId}`);
-      
-      // Refresh services list
+      // Refresh services list to get updated application status
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
       
-      // Atualizar o estado para abrir o chat automaticamente
-      if (serviceId) {
-        // Esperar um momento para a UI atualizar
+      // Handle different response types
+      if (data.isExistingApplication) {
+        // User already applied - show status message
+        console.log("Candidatura já existente:", data.message);
+        
+        // If application is pending, might open chat
+        if (data.application?.status === 'pending') {
+          const serviceId = data.application.serviceId;
+          setTimeout(() => {
+            setSelectedChatService(serviceId);
+            setDashboardSection('chat');
+          }, 500);
+        }
+      } else if (data.application?.serviceId) {
+        // New application created successfully
+        const serviceId = data.application.serviceId;
+        console.log(`Nova candidatura criada para serviço ID: ${serviceId}`);
+        
+        // Open chat automatically for new applications
         setTimeout(() => {
-          // Definir o serviço selecionado para o chat
           setSelectedChatService(serviceId);
-          
-          // Mudar para a seção de chat
           setDashboardSection('chat');
           
           toast({
@@ -566,7 +573,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     },
     onError: (error: any) => {
       console.error("Erro completo ao candidatar-se:", error);
-      // Sem toast aqui, pois já mostramos no componente
+      // Error handling is done in the component
     }
   });
   
