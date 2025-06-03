@@ -20,6 +20,7 @@ import {
   Eye,
   ExternalLink,
 } from "lucide-react";
+import ApplicationStatusIndicator from "@/components/ui/application-status-indicator";
 import type { ServiceProps } from "./available-service-card";
 
 interface ServiceDetailsDialogProps {
@@ -47,6 +48,14 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   const isPendingApproval = serviceApplicationStatus === 'pending';
   const isAccepted = serviceApplicationStatus === 'accepted';
   const isRejected = serviceApplicationStatus === 'rejected';
+  
+  // Determine status for ApplicationStatusIndicator
+  const getApplicationStatus = () => {
+    if (isAccepted) return 'accepted';
+    if (isRejected) return 'rejected';
+    if (isPendingApproval || serviceHasApplied) return 'pending';
+    return 'not_applied';
+  };
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
     path: string;
@@ -97,6 +106,15 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
           {/* Título e informações básicas */}
           <div>
             <h3 className="text-lg font-semibold">{service.title}</h3>
+            
+            {/* Status da candidatura */}
+            <div className="mt-3">
+              <ApplicationStatusIndicator 
+                status={getApplicationStatus()}
+                size="md"
+                showText={true}
+              />
+            </div>
 
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div className="flex items-center text-sm text-gray-600">

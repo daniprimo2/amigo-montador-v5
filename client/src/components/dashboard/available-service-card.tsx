@@ -152,6 +152,14 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const isAccepted = applicationStatus === 'accepted';
   const isRejected = applicationStatus === 'rejected';
   
+  // Determine status for ApplicationStatusIndicator
+  const getApplicationStatus = () => {
+    if (isAccepted) return 'accepted';
+    if (isRejected) return 'rejected';
+    if (isPendingApproval || hasApplied) return 'pending';
+    return 'not_applied';
+  };
+  
   // Debug logging
   console.log(`[AvailableServiceCard] Service ${service.id} FULL DATA:`, service);
   console.log(`[AvailableServiceCard] Service ${service.id} STATUS:`, {
@@ -173,24 +181,13 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
             <span className="truncate">{service.location} ({service.distance})</span>
           </div>
           {/* Status de candidatura */}
-          {isPendingApproval && (
-            <div className="flex items-center text-xs text-orange-600 mt-1 font-medium">
-              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span>Aguardando resposta do lojista</span>
-            </div>
-          )}
-          {isAccepted && (
-            <div className="flex items-center text-xs text-green-600 mt-1 font-medium">
-              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span>Candidatura aceita</span>
-            </div>
-          )}
-          {isRejected && (
-            <div className="flex items-center text-xs text-red-600 mt-1 font-medium">
-              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span>Candidatura rejeitada</span>
-            </div>
-          )}
+          <div className="mt-2">
+            <ApplicationStatusIndicator 
+              status={getApplicationStatus()}
+              size="sm"
+              showText={true}
+            />
+          </div>
         </div>
         <div className="text-right flex-shrink-0">
           <div className="font-medium text-primary text-sm sm:text-base">{formatPrice(service.price)}</div>
@@ -227,28 +224,10 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       
       <Button 
         onClick={handleViewServiceDetails}
-        disabled={service.status === 'in-progress' || hasApplied}
-        className={`w-full py-2 px-4 font-medium rounded-full shadow-sm transition ${
-          isPendingApproval 
-            ? 'bg-orange-500 hover:bg-orange-600' 
-            : isAccepted
-              ? 'bg-green-500 hover:bg-green-600'
-              : isRejected
-                ? 'bg-red-500 hover:bg-red-600'
-                : hasApplied 
-                  ? 'bg-gray-400' 
-                  : 'bg-primary hover:bg-opacity-90'
-        } text-white`}
+        variant="outline"
+        className="w-full py-2 px-4 font-medium rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
       >
-        {service.status === 'in-progress' ? 
-          'Serviço em andamento' : 
-          isPendingApproval ?
-            'Aguardando resposta do lojista' :
-            isAccepted ?
-              'Candidatura aceita' :
-              isRejected ?
-                'Candidatura rejeitada' :
-                hasApplied ? 'Já candidatado' : 'Ver detalhes do serviço'}
+        Ver detalhes do serviço
       </Button>
       
       {/* Diálogo para detalhes do serviço e candidatura */}
