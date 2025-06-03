@@ -141,7 +141,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const isRejected = applicationStatus === 'rejected';
   
   // Debug logging
-  console.log(`[AvailableServiceCard] Service ${service.id}:`, {
+  console.log(`[AvailableServiceCard] Service ${service.id} FULL DATA:`, service);
+  console.log(`[AvailableServiceCard] Service ${service.id} STATUS:`, {
     hasApplied: service.hasApplied,
     applicationStatus: service.applicationStatus,
     computedHasApplied: hasApplied,
