@@ -3,57 +3,57 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ServiceCardSkeleton() {
   return (
-    <Card className="w-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="w-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow animate-pulse">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-6 w-32 animate-pulse" />
             <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-4 animate-pulse" />
+              <Skeleton className="h-4 w-24 animate-pulse" />
             </div>
           </div>
-          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-16 animate-pulse" />
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
         {/* Location and distance */}
         <div className="flex items-start gap-2">
-          <Skeleton className="h-4 w-4 mt-0.5" />
+          <Skeleton className="h-4 w-4 mt-0.5 animate-pulse" />
           <div className="space-y-1">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-4 w-48 animate-pulse" />
+            <Skeleton className="h-3 w-24 animate-pulse" />
           </div>
         </div>
         
         {/* Date */}
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-4 animate-pulse" />
+          <Skeleton className="h-4 w-32 animate-pulse" />
         </div>
         
         {/* Price */}
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-4 animate-pulse" />
+          <Skeleton className="h-4 w-20 animate-pulse" />
         </div>
         
         {/* Store */}
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-4 animate-pulse" />
+          <Skeleton className="h-4 w-28 animate-pulse" />
         </div>
         
         {/* Project files */}
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-4 animate-pulse" />
+          <Skeleton className="h-4 w-36 animate-pulse" />
         </div>
         
         {/* Action button */}
         <div className="pt-2">
-          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full animate-pulse" />
         </div>
       </CardContent>
     </Card>
