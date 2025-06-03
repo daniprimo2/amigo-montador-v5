@@ -119,8 +119,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState('Todas as cidades');
-  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState('Todos os estados');
+  const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
   const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
@@ -337,58 +337,36 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq));
   };
 
-  // Lista de cidades brasileiras principais para filtro
-  const brazilianCities = [
-    'Todas as cidades',
-    'São Paulo, São Paulo',
-    'Rio de Janeiro, Rio de Janeiro',
-    'Brasília, Distrito Federal',
-    'Salvador, Bahia',
-    'Fortaleza, Ceará',
-    'Belo Horizonte, Minas Gerais',
-    'Manaus, Amazonas',
-    'Curitiba, Paraná',
-    'Recife, Pernambuco',
-    'Goiânia, Goiás',
-    'Belém, Pará',
-    'Porto Alegre, Rio Grande do Sul',
-    'Guarulhos, São Paulo',
-    'Campinas, São Paulo',
-    'São Luís, Maranhão',
-    'São Gonçalo, Rio de Janeiro',
-    'Maceió, Alagoas',
-    'Duque de Caxias, Rio de Janeiro',
-    'Natal, Rio Grande do Norte',
-    'Teresina, Piauí',
-    'Campo Grande, Mato Grosso do Sul',
-    'Nova Iguaçu, Rio de Janeiro',
-    'São Bernardo do Campo, São Paulo',
-    'João Pessoa, Paraíba',
-    'Santo André, São Paulo',
-    'Osasco, São Paulo',
-    'Jaboatão dos Guararapes, Pernambuco',
-    'São José dos Campos, São Paulo',
-    'Ribeirão Preto, São Paulo',
-    'Uberlândia, Minas Gerais',
-    'Sorocaba, São Paulo',
-    'Contagem, Minas Gerais',
-    'Aracaju, Sergipe',
-    'Feira de Santana, Bahia',
-    'Cuiabá, Mato Grosso',
-    'Joinville, Santa Catarina',
-    'Juiz de Fora, Minas Gerais',
-    'Londrina, Paraná',
-    'Aparecida de Goiânia, Goiás',
-    'Niterói, Rio de Janeiro',
-    'Ananindeua, Pará',
-    'Belford Roxo, Rio de Janeiro',
-    'Caxias do Sul, Rio Grande do Sul',
-    'Campos dos Goytacazes, Rio de Janeiro',
-    'São João de Meriti, Rio de Janeiro',
-    'Vila Velha, Espírito Santo',
-    'Florianópolis, Santa Catarina',
-    'Santos, São Paulo',
-    'Carapicuíba, São Paulo'
+  // Lista de estados brasileiros para filtro
+  const brazilianStates = [
+    'Todos os estados',
+    'AC', // Acre
+    'AL', // Alagoas
+    'AP', // Amapá
+    'AM', // Amazonas
+    'BA', // Bahia
+    'CE', // Ceará
+    'DF', // Distrito Federal
+    'ES', // Espírito Santo
+    'GO', // Goiás
+    'MA', // Maranhão
+    'MT', // Mato Grosso
+    'MS', // Mato Grosso do Sul
+    'MG', // Minas Gerais
+    'PA', // Pará
+    'PB', // Paraíba
+    'PR', // Paraná
+    'PE', // Pernambuco
+    'PI', // Piauí
+    'RJ', // Rio de Janeiro
+    'RN', // Rio Grande do Norte
+    'RS', // Rio Grande do Sul
+    'RO', // Rondônia
+    'RR', // Roraima
+    'SC', // Santa Catarina
+    'SP', // São Paulo
+    'SE', // Sergipe
+    'TO'  // Tocantins
   ];
   
   // Reagir a mensagens de WebSocket
@@ -664,80 +642,31 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
       service.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Improved city filtering with equivalence checking
-    const matchesCity = selectedCity === 'Todas as cidades' || (() => {
-      // Extract city name from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
+    // State filtering based on abbreviations
+    const matchesState = selectedState === 'Todos os estados' || (() => {
+      // Extract state from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
       const locationParts = service.location.split(' - ');
       
-      console.log(`[CityFilter] Processing service ${service.id}:`);
-      console.log(`[CityFilter] Selected city: "${selectedCity}"`);
-      console.log(`[CityFilter] Service location: "${service.location}"`);
-      console.log(`[CityFilter] Location parts:`, locationParts);
+      console.log(`[StateFilter] Processing service ${service.id}:`);
+      console.log(`[StateFilter] Selected state: "${selectedState}"`);
+      console.log(`[StateFilter] Service location: "${service.location}"`);
       
       if (locationParts.length >= 2) {
         const cityStatePart = locationParts[1]; // "City, State"
-        const cityName = cityStatePart.split(',')[0].trim(); // Extract just the city name
         const statePart = cityStatePart.split(',')[1]?.trim(); // Extract state abbreviation
         
-        console.log(`[CityFilter] Extracted city: "${cityName}"`);
-        console.log(`[CityFilter] Extracted state: "${statePart}"`);
-        console.log(`[CityFilter] City-State part: "${cityStatePart}"`);
+        console.log(`[StateFilter] Extracted state: "${statePart}"`);
         
-        // Extract selected city and state from filter
-        const selectedParts = selectedCity.split(',');
-        const selectedCityName = selectedParts[0]?.trim();
-        const selectedStateName = selectedParts[1]?.trim();
+        // Check if the extracted state matches the selected state
+        const stateMatches = statePart === selectedState;
         
-        console.log(`[CityFilter] Selected city name: "${selectedCityName}"`);
-        console.log(`[CityFilter] Selected state name: "${selectedStateName}"`);
+        console.log(`[StateFilter] State match result: ${stateMatches}`);
         
-        // Check city name equivalence
-        const cityMatches = areCitiesEquivalent(selectedCityName, cityName);
-        
-        // Check state equivalence (map full state names to abbreviations)
-        const stateAbbreviationMap: Record<string, string> = {
-          'São Paulo': 'SP',
-          'Rio de Janeiro': 'RJ',
-          'Distrito Federal': 'DF',
-          'Bahia': 'BA',
-          'Ceará': 'CE',
-          'Minas Gerais': 'MG',
-          'Amazonas': 'AM',
-          'Paraná': 'PR',
-          'Pernambuco': 'PE',
-          'Goiás': 'GO',
-          'Pará': 'PA',
-          'Rio Grande do Sul': 'RS',
-          'Maranhão': 'MA',
-          'Alagoas': 'AL',
-          'Rio Grande do Norte': 'RN',
-          'Piauí': 'PI',
-          'Mato Grosso do Sul': 'MS',
-          'Paraíba': 'PB',
-          'Sergipe': 'SE',
-          'Mato Grosso': 'MT',
-          'Santa Catarina': 'SC',
-          'Espírito Santo': 'ES'
-        };
-        
-        const expectedStateAbbrev = stateAbbreviationMap[selectedStateName];
-        const stateMatches = statePart === expectedStateAbbrev;
-        
-        console.log(`[CityFilter] City matches: ${cityMatches}`);
-        console.log(`[CityFilter] Expected state abbrev: ${expectedStateAbbrev}`);
-        console.log(`[CityFilter] State matches: ${stateMatches}`);
-        
-        // For city filtering, we need both city and state to match
-        const result = cityMatches && stateMatches;
-        console.log(`[CityFilter] Final result: ${result}`);
-        
-        return result;
+        return stateMatches;
       }
       
-      // Fallback to original string matching if location format is unexpected
-      const fallbackResult = service.location.toLowerCase().includes(selectedCity.toLowerCase());
-      console.log(`[CityFilter] Fallback result: ${fallbackResult}`);
-      return fallbackResult;
+      console.log(`[StateFilter] Location format not recognized`);
+      return false;
     })();
     
     return matchesSearch && matchesCity;
@@ -1215,35 +1144,35 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <div className="p-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Serviços Próximos</h3>
-            <Popover open={isCityDropdownOpen} onOpenChange={setIsCityDropdownOpen}>
+            <Popover open={isStateDropdownOpen} onOpenChange={setIsStateDropdownOpen}>
               <PopoverTrigger asChild>
                 <button className="text-sm text-primary flex items-center hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span className="max-w-[120px] truncate">{selectedCity}</span>
+                  <span className="max-w-[120px] truncate">{selectedState}</span>
                   <ChevronDown className="h-4 w-4 ml-1" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end">
                 <div className="max-h-64 overflow-y-auto">
                   <div className="p-2 border-b">
-                    <p className="text-sm font-medium text-gray-700">Filtrar por cidade</p>
+                    <p className="text-sm font-medium text-gray-700">Filtrar por estado</p>
                   </div>
                   <div className="py-2">
-                    {brazilianCities.map((city) => (
+                    {brazilianStates.map((state) => (
                       <button
-                        key={city}
+                        key={state}
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                          selectedCity === city ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                          selectedState === state ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
                         }`}
                         onClick={() => {
-                          setSelectedCity(city);
-                          setIsCityDropdownOpen(false);
+                          setSelectedState(state);
+                          setIsStateDropdownOpen(false);
                         }}
                       >
                         <div className="flex items-center">
                           <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                          {city}
-                          {selectedCity === city && (
+                          {state}
+                          {selectedState === state && (
                             <CheckCheck className="h-4 w-4 ml-auto text-blue-600" />
                           )}
                         </div>
