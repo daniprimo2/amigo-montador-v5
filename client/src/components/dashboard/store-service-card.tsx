@@ -246,17 +246,16 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         
         {/* Descrição do serviço */}
         {service.description && service.description.trim() && (
-          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <h5 className="text-sm font-semibold text-blue-800 mb-2">Descrição:</h5>
-            <p className="text-sm text-blue-700 leading-relaxed">{service.description}</p>
+          <div className="mb-2">
+            <p className="text-sm text-gray-600">{service.description}</p>
           </div>
         )}
 
         {/* Material */}
         {service.materialType && service.materialType.trim() && (
-          <div className="mb-3 p-2 bg-purple-50 border border-purple-200 rounded-lg">
-            <span className="text-sm font-semibold text-purple-800">Material: </span>
-            <span className="text-sm text-purple-700 bg-purple-100 px-3 py-1 rounded-full font-medium">{service.materialType}</span>
+          <div className="mb-2">
+            <span className="text-sm text-gray-600">Material: </span>
+            <span className="text-sm text-gray-800 font-medium">{service.materialType}</span>
           </div>
         )}
 
