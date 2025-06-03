@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ServiceCardSkeletonGrid } from '@/components/ui/service-card-skeleton';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { RatingDialog } from '@/components/rating/rating-dialog';
@@ -403,13 +404,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Fetch available services with real distance calculation
   const { data: services, isLoading, error } = useQuery({
-    queryKey: ['/api/services', Date.now()], // Force unique key
+    queryKey: ['/api/services'],
     select: (data: ServiceData[]) => data.map(formatServiceForDisplay),
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchOnWindowFocus: true
   });
   
   // Fetch available services
@@ -446,18 +446,27 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
   });
   
+  // Debug: Log services data
+  console.log("[AssemblerDashboard] Services data:", services);
+  console.log("[AssemblerDashboard] Search term:", searchTerm);
+  console.log("[AssemblerDashboard] Selected city:", selectedCity);
+
   // Filter services by search term and selected city
   const filteredServices = services?.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = searchTerm === '' || 
+      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      service.store.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
       service.location.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCity = selectedCity === 'Todas as cidades' || 
       service.location.toLowerCase().includes(selectedCity.toLowerCase());
     
+    console.log(`[Filter] Service ${service.id}: search=${matchesSearch}, city=${matchesCity}`);
     return matchesSearch && matchesCity;
   }) || [];
+
+  console.log("[AssemblerDashboard] Filtered services:", filteredServices.length);
 
   // Filtrar serviços por status para cada aba
   const availableServices = filteredServices.filter(service => service.status === 'open');
@@ -715,15 +724,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
             <div className="divide-y">
               {isLoading ? (
-                // Show loading skeletons
-                Array(2).fill(0).map((_, index) => (
-                  <div key={index} className="p-4">
-                    <Skeleton className="h-5 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2 mb-3" />
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-10 w-full rounded-full" />
-                  </div>
-                ))
+                // Show animated service card skeletons
+                <div className="p-4">
+                  <ServiceCardSkeletonGrid count={3} />
+                </div>
               ) : error ? (
                 // Show error message
                 <div className="p-8 text-center text-red-500">
