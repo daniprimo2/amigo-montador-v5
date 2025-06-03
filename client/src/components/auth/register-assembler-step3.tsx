@@ -94,6 +94,16 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         certificates: certFiles?.length
       });
 
+      // Verificar se a foto de perfil foi fornecida no step1
+      if (!step1Data.profilePicture || step1Data.profilePicture.length === 0) {
+        toast({
+          title: 'Erro na validação',
+          description: 'Foto de perfil é obrigatória',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Verificar se todos os documentos obrigatórios foram enviados
       if (!idFrontFiles || idFrontFiles.length === 0) {
         toast({
@@ -131,6 +141,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
       let documentUrls: Record<string, string> = {};
 
       try {
+
         // Upload RG/CNH frente
         const rgFrontFormData = new FormData();
         rgFrontFormData.append('file', idFrontFiles[0]);
@@ -255,15 +266,29 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
       console.log('Dados do usuário para registro:', userData);
 
-      // Fazer registro diretamente com fetch para melhor controle de erro
+      // Fazer registro usando FormData para incluir a foto de perfil
       try {
         console.log('Fazendo requisição de registro...');
+        const formData = new FormData();
+        
+        // Adicionar a foto de perfil
+        formData.append('profilePicture', step1Data.profilePicture[0]);
+        
+        // Adicionar todos os outros dados como JSON
+        Object.keys(userData).forEach(key => {
+          const value = userData[key];
+          if (value !== undefined && value !== null) {
+            if (typeof value === 'object') {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value.toString());
+            }
+          }
+        });
+        
         const response = await fetch('/api/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
+          body: formData,
         });
 
         console.log('Status da resposta:', response.status);
