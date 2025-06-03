@@ -1344,10 +1344,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   {pendingChats.map((service: any) => (
                     <div 
                       key={service.id} 
-                      className="bg-white rounded-xl shadow-md p-4 border-l-4 border-orange-500"
+                      className="bg-white rounded-xl shadow-md p-4 border-l-4 border-orange-500 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedChatService(service.id)}
                     >
                       <div className="flex justify-between items-center">
-                        <div>
+                        <div className="flex-1">
                           <div className="flex items-center">
                             <h4 className="font-medium">{service.title}</h4>
                             <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -1358,10 +1359,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                             Loja: {service.store || 'Não especificada'}
                           </p>
                           <p className="text-sm text-gray-400 mt-1">
-                            Sua candidatura está sendo analisada pelo lojista
+                            Converse com o lojista sobre os detalhes do serviço
                           </p>
                         </div>
-                        <Clock className="h-5 w-5 text-orange-500" />
+                        <div className="flex items-center space-x-2">
+                          <MessageSquare className="h-5 w-5 text-orange-500" />
+                          <Clock className="h-5 w-5 text-orange-400" />
+                        </div>
                       </div>
                     </div>
                   ))}
