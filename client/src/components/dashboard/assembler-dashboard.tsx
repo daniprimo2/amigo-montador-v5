@@ -13,6 +13,7 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { ProfileDialog } from './profile-dialog';
+import { SkillsUpdateWizard } from './skills-update-wizard';
 import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dialog';
 import { useMandatoryRatings } from '@/hooks/use-mandatory-ratings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -123,6 +124,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isSkillsWizardOpen, setIsSkillsWizardOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
@@ -609,12 +611,22 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <h2 className="text-lg font-semibold">
               Olá, <span className="text-primary">{user?.name || 'Montador'}</span>
             </h2>
-            <button 
-              className="text-primary text-sm font-medium"
-              onClick={() => setIsProfileDialogOpen(true)}
-            >
-              Ver Perfil
-            </button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSkillsWizardOpen(true)}
+                className="text-xs px-2 py-1 h-7"
+              >
+                🚀 Atualizar Habilidades
+              </Button>
+              <button 
+                className="text-primary text-sm font-medium"
+                onClick={() => setIsProfileDialogOpen(true)}
+              >
+                Ver Perfil
+              </button>
+            </div>
           </div>
           
           {/* Exibir avaliação média do montador */}
@@ -1297,6 +1309,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         open={isProfileDialogOpen}
         onOpenChange={setIsProfileDialogOpen}
         onLogout={onLogout}
+      />
+      
+      {/* Assistente de Atualização de Habilidades */}
+      <SkillsUpdateWizard
+        open={isSkillsWizardOpen}
+        onOpenChange={setIsSkillsWizardOpen}
       />
       
       {/* Diálogo de Avaliação Obrigatória */}
