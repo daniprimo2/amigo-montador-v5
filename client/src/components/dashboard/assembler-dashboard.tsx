@@ -19,6 +19,7 @@ import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dial
 import { useMandatoryRatings } from '@/hooks/use-mandatory-ratings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
 import { RankingSection } from '@/components/ranking/ranking-section';
 
 interface AssemblerDashboardProps {
@@ -121,6 +122,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('Todos os estados');
   const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+  const [maxDistance, setMaxDistance] = useState(50); // Default 50km
+  const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
   const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
@@ -634,7 +637,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
   });
   
-  // Filter services by search term and selected city
+  // Filter services by search term, selected city, and distance
   const filteredServices = services?.filter(service => {
     const matchesSearch = searchTerm === '' || 
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -669,7 +672,23 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       return false;
     })();
     
-    return matchesSearch && matchesState;
+    // Distance filtering
+    const matchesDistance = (() => {
+      if (!service.distance || service.distance === 'Distância não calculada') {
+        return true; // Include services without distance data
+      }
+      
+      // Extract numeric distance from string like "21.7 km"
+      const distanceMatch = service.distance.match(/^(\d+\.?\d*)\s*km$/);
+      if (distanceMatch) {
+        const serviceDistance = parseFloat(distanceMatch[1]);
+        return serviceDistance <= maxDistance;
+      }
+      
+      return true; // Include if distance format is unexpected
+    })();
+    
+    return matchesSearch && matchesState && matchesDistance;
   }) || [];
 
   // Filtrar serviços por status para cada aba
@@ -1196,9 +1215,81 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               </div>
             </div>
             <div className="absolute top-0 right-0">
-              <button className="bg-gray-100 p-2 rounded-full">
-                <SlidersHorizontal className="h-4 w-4 text-gray-600" />
-              </button>
+              <Popover open={isDistanceFilterOpen} onOpenChange={setIsDistanceFilterOpen}>
+                <PopoverTrigger asChild>
+                  <button className={`p-2 rounded-full transition-colors ${maxDistance < 50 ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Filtrar por distância</h4>
+                      <p className="text-xs text-gray-500 mb-4">
+                        Mostrando serviços até {maxDistance} km de distância
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>0 km</span>
+                        <span className="font-medium text-primary">{maxDistance} km</span>
+                        <span>100 km</span>
+                      </div>
+                      
+                      <Slider
+                        value={[maxDistance]}
+                        onValueChange={(value) => setMaxDistance(value[0])}
+                        max={100}
+                        min={1}
+                        step={1}
+                        className="w-full"
+                      />
+                      
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMaxDistance(10)}
+                          className={maxDistance === 10 ? 'bg-primary text-white' : ''}
+                        >
+                          10 km
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMaxDistance(25)}
+                          className={maxDistance === 25 ? 'bg-primary text-white' : ''}
+                        >
+                          25 km
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMaxDistance(50)}
+                          className={maxDistance === 50 ? 'bg-primary text-white' : ''}
+                        >
+                          50 km
+                        </Button>
+                      </div>
+                      
+                      <div className="pt-2 border-t">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setMaxDistance(50);
+                            setIsDistanceFilterOpen(false);
+                          }}
+                          className="w-full text-gray-500"
+                        >
+                          Limpar filtro
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
