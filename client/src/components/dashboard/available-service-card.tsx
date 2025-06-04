@@ -154,9 +154,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   };
 
   // Check if this service is already in the active services (user already applied)
-  const hasApplied = activeServices.some(activeService => activeService.id === service.id) || service.hasApplied;
+  const hasApplied = service.hasApplied || activeServices.some(activeService => activeService.id === service.id);
   const applicationStatus = service.applicationStatus;
-  const isPendingApproval = applicationStatus === 'pending';
+  const isPendingApproval = applicationStatus === 'pending' || (hasApplied && !applicationStatus);
   const isAccepted = applicationStatus === 'accepted';
   const isRejected = applicationStatus === 'rejected';
   
@@ -178,6 +178,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     isAccepted,
     isRejected
   });
+  
+  // Verificar se o preço está sendo processado corretamente
+  const formattedPrice = formatPrice(service.price || '0');
 
   return (
     <div className="p-3 sm:p-4">
@@ -198,7 +201,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <div className="font-medium text-primary text-sm sm:text-base">{formatPrice(service.price)}</div>
+          <div className="font-medium text-primary text-sm sm:text-base">{formattedPrice}</div>
           <div className="text-xs text-gray-500">{service.type}</div>
         </div>
       </div>
