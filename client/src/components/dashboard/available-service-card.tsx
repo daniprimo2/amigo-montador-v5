@@ -98,22 +98,30 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       setIsApplying(true);
       console.log(`[AvailableServiceCard] Iniciando candidatura para serviço ID: ${service.id}`);
       
-      // Add a small delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       const response = await onApply(service.id);
       console.log(`[AvailableServiceCard] Resposta da candidatura:`, response);
       
       // Fechar o diálogo de detalhes após o envio bem-sucedido
       setIsServiceDetailsOpen(false);
       
-      // Verificar se a resposta contém informações sobre candidatura existente
+      // Verificar se a resposta indica candidatura duplicada
       if (response && response.application && response.message) {
-        toast({
-          title: "Status da candidatura",
-          description: response.message,
-          duration: 5000
-        });
+        // Se já existe candidatura, mostrar mensagem informativa
+        if (response.message.includes("já se candidatou") || 
+            response.message.includes("candidatura está sendo analisada") ||
+            response.message.includes("já foi aceito")) {
+          toast({
+            title: "Candidatura já existe",
+            description: response.message,
+            duration: 5000
+          });
+        } else {
+          toast({
+            title: "Status da candidatura",
+            description: response.message,
+            duration: 5000
+          });
+        }
       } else {
         toast({
           title: "Candidatura enviada",

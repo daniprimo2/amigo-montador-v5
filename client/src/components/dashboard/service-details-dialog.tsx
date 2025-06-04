@@ -19,6 +19,8 @@ import {
   DollarSign,
   Eye,
   ExternalLink,
+  CheckCircle,
+  X,
 } from "lucide-react";
 import ApplicationStatusIndicator from "@/components/ui/application-status-indicator";
 import type { ServiceProps } from "./available-service-card";
@@ -376,17 +378,18 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
                 </>
               ) : (
                 <>
-                  <div className="text-sm text-gray-600 font-medium">
-                    Candidatura já enviada
+                  <div className="text-sm text-blue-600 font-medium flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Você já se candidatou
                   </div>
-                  <div className="text-xs text-gray-600 font-medium bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                    Não é possível candidatar-se novamente
+                  <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                    Sua candidatura foi enviada. Aguarde a resposta do lojista.
                   </div>
                   <Button
                     disabled={true}
-                    className="bg-gray-400 text-white cursor-not-allowed opacity-75"
+                    className="bg-blue-500 text-white cursor-not-allowed opacity-75"
                   >
-                    Já candidatado
+                    Você já se candidatou
                   </Button>
                 </>
               )}
