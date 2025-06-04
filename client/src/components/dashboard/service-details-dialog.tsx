@@ -33,6 +33,8 @@ interface ServiceDetailsDialogProps {
   isApplying: boolean;
   hasApplied?: boolean;
   applicationStatus?: string;
+  localApplicationStatus?: string | null;
+  localHasApplied?: boolean;
 }
 
 export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
@@ -43,10 +45,12 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
   isApplying,
   hasApplied = false,
   applicationStatus = '',
+  localApplicationStatus = null,
+  localHasApplied = false,
 }) => {
   // Usar status da candidatura diretamente do serviço se disponível
-  const serviceHasApplied = service.hasApplied || hasApplied;
-  const serviceApplicationStatus = service.applicationStatus || applicationStatus;
+  const serviceHasApplied = service.hasApplied || hasApplied || localHasApplied;
+  const serviceApplicationStatus = localApplicationStatus || service.applicationStatus || applicationStatus;
   const isPendingApproval = serviceApplicationStatus === 'pending';
   const isAccepted = serviceApplicationStatus === 'accepted';
   const isRejected = serviceApplicationStatus === 'rejected';

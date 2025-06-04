@@ -47,6 +47,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const [isFilesDialogOpen, setIsFilesDialogOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  const [localApplicationStatus, setLocalApplicationStatus] = useState<string | null>(null);
+  const [localHasApplied, setLocalHasApplied] = useState(false);
   const { toast } = useToast();
 
   // Função para formatar o preço corretamente
@@ -87,7 +89,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     if (!onApply) return;
     
     // Verificar se já existe candidatura para este serviço
-    if (hasApplied || isPendingApproval || isAccepted) {
+    if (hasApplied || isPendingApproval || isAccepted || localHasApplied) {
       toast({
         title: "Candidatura já realizada",
         description: "Você já se candidatou para este serviço. Aguarde a resposta do lojista.",
@@ -103,6 +105,10 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       
       const response = await onApply(service.id);
       console.log(`[AvailableServiceCard] Resposta da candidatura:`, response);
+      
+      // Immediately update local state to show pending status
+      setLocalHasApplied(true);
+      setLocalApplicationStatus('pending');
       
       // Fechar o diálogo de detalhes após o envio bem-sucedido
       setIsServiceDetailsOpen(false);
@@ -135,6 +141,10 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     } catch (error) {
       console.error("[AvailableServiceCard] Erro ao candidatar-se:", error);
       
+      // Reset local state on error
+      setLocalHasApplied(false);
+      setLocalApplicationStatus(null);
+      
       let errorMessage = "Falha ao enviar candidatura. Tente novamente.";
       
       if (error instanceof Error) {
@@ -157,8 +167,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   };
 
   // Check if this service is already in the active services (user already applied)
-  const hasApplied = service.hasApplied || activeServices.some(activeService => activeService.id === service.id);
-  const applicationStatus = service.applicationStatus;
+  const hasApplied = service.hasApplied || activeServices.some(activeService => activeService.id === service.id) || localHasApplied;
+  const applicationStatus = localApplicationStatus || service.applicationStatus;
   const isPendingApproval = applicationStatus === 'pending' || (hasApplied && !applicationStatus);
   const isAccepted = applicationStatus === 'accepted';
   const isRejected = applicationStatus === 'rejected';
@@ -169,7 +179,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     if (isRejected) return 'rejected';
     if (isPendingApproval || hasApplied) {
       // Se tem candidatura pendente mas ainda não há mensagens no chat, mostrar status específico
-      if (!service.hasChatMessages) {
+      if (!service.hasChatMessages && !localApplicationStatus) {
         return 'awaiting_chat';
       }
       return 'pending';
@@ -261,6 +271,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
         onApply={handleApply}
         isApplying={isApplying}
         hasApplied={hasApplied}
+        localApplicationStatus={localApplicationStatus}
+        localHasApplied={localHasApplied}
       />
       
       {/* Diálogo para visualizar arquivos PDF */}

@@ -15,7 +15,7 @@ const statusConfig = {
     color: 'text-orange-500',
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
-    text: 'Aguardando resposta',
+    text: 'Candidatura enviada. Aguardando resposta do lojista.',
     description: 'Sua candidatura está sendo analisada pelo lojista'
   },
   awaiting_chat: {
