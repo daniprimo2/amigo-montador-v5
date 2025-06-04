@@ -122,7 +122,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('Todos os estados');
   const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
-  const [maxDistance, setMaxDistance] = useState(50); // Default 50km
+  const [maxDistance, setMaxDistance] = useState(1000); // Default 1000km - mostrar todos os serviços
   const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
   const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
@@ -637,43 +637,43 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
   });
   
-  // Filter services by search term, selected city, and distance
+  // Filter services - MONTADORES DEVEM VER TODOS OS SERVIÇOS DISPONÍVEIS
+  // Only apply filters if user has actively searched or selected specific filters
+  const hasActiveFilters = searchTerm !== '' || selectedState !== 'Todos os estados' || maxDistance < 500;
+  
   const filteredServices = services?.filter(service => {
+    // Se não há filtros ativos, mostrar TODOS os serviços para montadores
+    if (!hasActiveFilters) {
+      return true; // Mostrar todos os serviços disponíveis
+    }
+    
+    // Aplicar filtros apenas quando o usuário especificamente pesquisar/filtrar
     const matchesSearch = searchTerm === '' || 
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
       service.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // State filtering based on abbreviations
+    // State filtering based on abbreviations (only when state is specifically selected)
     const matchesState = selectedState === 'Todos os estados' || (() => {
       // Extract state from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
       const locationParts = service.location.split(' - ');
-      
-      console.log(`[StateFilter] Processing service ${service.id}:`);
-      console.log(`[StateFilter] Selected state: "${selectedState}"`);
-      console.log(`[StateFilter] Service location: "${service.location}"`);
       
       if (locationParts.length >= 2) {
         const cityStatePart = locationParts[1]; // "City, State"
         const statePart = cityStatePart.split(',')[1]?.trim(); // Extract state abbreviation
         
-        console.log(`[StateFilter] Extracted state: "${statePart}"`);
-        
         // Check if the extracted state matches the selected state
         const stateMatches = statePart === selectedState;
-        
-        console.log(`[StateFilter] State match result: ${stateMatches}`);
         
         return stateMatches;
       }
       
-      console.log(`[StateFilter] Location format not recognized`);
       return false;
     })();
     
-    // Distance filtering
-    const matchesDistance = (() => {
+    // Distance filtering (only when distance is specifically limited)
+    const matchesDistance = maxDistance >= 500 || (() => {
       if (!service.distance || service.distance === 'Distância não calculada') {
         return true; // Include services without distance data
       }
