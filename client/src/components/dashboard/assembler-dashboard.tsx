@@ -737,7 +737,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     // Disponíveis: apenas serviços com status 'open' do rawServices
     available: availableServices.length,
     // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
-    pending: availableServices.filter(service => 
+    pending: (rawServices || []).filter((service: any) => 
       service.applicationStatus === 'pending' && service.hasApplied
     ).length,
     // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
@@ -1074,7 +1074,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         </div>
                       </div>
                       <div className="text-sm text-gray-500 mb-2">
-                        <p>Loja: {service.store || 'Não especificada'}</p>
+                        <p>Loja: {typeof service.store === 'object' && service.store?.name ? service.store.name : (service.store || 'Não especificada')}</p>
                         <p>Local: {service.location || 'Não especificado'}</p>
                         <p>Data: {service.date || 'Não especificada'}</p>
                       </div>
