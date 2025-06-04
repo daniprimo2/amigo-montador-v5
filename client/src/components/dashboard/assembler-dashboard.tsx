@@ -639,7 +639,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Filter services - MONTADORES DEVEM VER TODOS OS SERVIÇOS DISPONÍVEIS
   // Only apply filters if user has actively searched or selected specific filters
-  const hasActiveFilters = searchTerm !== '' || selectedState !== 'Todos os estados' || maxDistance < 500;
+  const hasActiveFilters = searchTerm !== '' || selectedState !== 'Todos os estados' || maxDistance < 1000;
   
   const filteredServices = services?.filter(service => {
     // Se não há filtros ativos, mostrar TODOS os serviços para montadores
