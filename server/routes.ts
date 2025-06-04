@@ -3588,10 +3588,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Enviar comprovante no chat automaticamente (somente se temos um usuário válido)
         if (storeUser?.id) {
-          const paymentMessage = await storage.createMessage({
+          // Criar mensagem de confirmação de pagamento
+          const confirmationMessage = await storage.createMessage({
             serviceId,
             senderId: storeUser.id,
-            content: `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${identificador_externo}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*`
+            content: `✅ **PAGAMENTO CONFIRMADO AUTOMATICAMENTE**\n\n💰 Valor: R$ ${service.price}\n🔗 Referência: ${identificador_externo}\n📅 Data: ${new Date().toLocaleString('pt-BR')}\n\n*Comprovante gerado automaticamente pelo sistema PIX*`,
+            messageType: 'text'
+          });
+
+          // Criar mensagem com comprovante visual
+          const receiptMessage = await storage.createMessage({
+            serviceId,
+            senderId: storeUser.id,
+            content: proofImageUrl,
+            messageType: 'image'
+          });
+
+          console.log("[PIX Webhook] Mensagens de comprovante criadas:", {
+            confirmationId: confirmationMessage.id,
+            receiptId: receiptMessage.id
           });
         }
         
