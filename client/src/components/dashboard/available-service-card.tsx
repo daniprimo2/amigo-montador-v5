@@ -169,7 +169,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   // Check if this service is already in the active services (user already applied)
   const hasApplied = service.hasApplied || activeServices.some(activeService => activeService.id === service.id) || localHasApplied;
   const applicationStatus = localApplicationStatus || service.applicationStatus;
-  const isPendingApproval = applicationStatus === 'pending' || (hasApplied && !applicationStatus);
+  const isPendingApproval = applicationStatus === 'pending';
   const isAccepted = applicationStatus === 'accepted';
   const isRejected = applicationStatus === 'rejected';
   
