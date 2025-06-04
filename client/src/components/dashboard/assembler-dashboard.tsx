@@ -709,7 +709,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   }) || [];
 
   // Filtrar serviços por status para cada aba
-  const availableServices = filteredServices.filter(service => service.status === 'open');
+  // Pending services: services where user has applied but waiting for store approval
+  const pendingServices = (rawServices || []).filter((service: any) => 
+    service.applicationStatus === 'pending' && service.hasApplied
+  );
+  
+  // Available services: open status but not yet applied (excluding pending ones)
+  const availableServicesRaw = (rawServices || []).filter((service: any) => 
+    service.status === 'open' && !service.hasApplied && service.applicationStatus !== 'pending'
+  );
+  
+  // Format available services for display
+  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service));
   const inProgressServices = activeServices?.filter((service: any) => 
     service.status === 'in-progress'
   ) || [];
@@ -718,11 +729,21 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Debug logs para entender a categorização
   console.log("[AssemblerDashboard] Serviços disponíveis:", availableServices.length);
+  console.log("[AssemblerDashboard] Serviços pendentes:", pendingServices.length);
   console.log("[AssemblerDashboard] Serviços em andamento:", inProgressServices.length);
   console.log("[AssemblerDashboard] Serviços finalizados (raw):", completedServicesFromRaw.length);
   console.log("[AssemblerDashboard] Serviços finalizados (active):", completedServicesFromActive.length);
   console.log("[AssemblerDashboard] Total rawServices:", rawServices?.length || 0);
   console.log("[AssemblerDashboard] Total activeServices:", activeServices?.length || 0);
+  
+  // Debug detalhado para serviços pendentes
+  console.log("[AssemblerDashboard] Detalhes dos serviços pendentes:", pendingServices.map((s: any) => ({
+    id: s.id,
+    title: s.title,
+    applicationStatus: s.applicationStatus,
+    hasApplied: s.hasApplied,
+    status: s.status
+  })));
   
   // Debug detalhado dos serviços por status
   console.log("[AssemblerDashboard] Serviços disponíveis detalhados:", availableServices.map(s => ({ id: s.id, title: s.title, status: s.status })));
@@ -734,12 +755,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // Calculate service counts by status
   const serviceCounts = {
-    // Disponíveis: apenas serviços com status 'open' do rawServices
+    // Disponíveis: serviços abertos onde o montador ainda não se candidatou
     available: availableServices.length,
     // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
-    pending: (rawServices || []).filter((service: any) => 
-      service.applicationStatus === 'pending' && service.hasApplied
-    ).length,
+    pending: pendingServices.length,
     // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
     inProgress: inProgressServices.length,
     // Finalizados: apenas serviços do activeServices com status 'completed'
