@@ -3309,19 +3309,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Remove any existing formatting
         const cleanNumber = number.replace(/[^\d]/g, '');
         
-        if (type === 'cpf' && cleanNumber.length === 11) {
+        // Auto-detect document type based on length if type doesn't match
+        let actualType = type;
+        if (cleanNumber.length === 11) {
+          actualType = 'cpf';
+        } else if (cleanNumber.length === 14) {
+          actualType = 'cnpj';
+        }
+        
+        if (actualType === 'cpf' && cleanNumber.length === 11) {
           // Format CPF: XXX.XXX.XXX-XX
           return cleanNumber.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-        } else if (type === 'cnpj' && cleanNumber.length === 14) {
+        } else if (actualType === 'cnpj' && cleanNumber.length === 14) {
           // Format CNPJ: XX.XXX.XXX/XXXX-XX
           return cleanNumber.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
         }
         
-        // Return original if formatting fails
-        return number;
+        // Return null for invalid document numbers
+        return null;
       };
 
       const formattedDocumentNumber = formatDocumentNumber(documentNumber, documentType);
+      
+      // Validate document number format
+      if (!formattedDocumentNumber) {
+        const cleanNumber = documentNumber.replace(/[^\d]/g, '');
+        console.log("[PIX Create] ERRO: Número de documento inválido:", {
+          original: documentNumber,
+          clean: cleanNumber,
+          length: cleanNumber.length,
+          expectedType: documentType
+        });
+        
+        return res.status(400).json({ 
+          message: `Número de documento inválido. CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos. Documento fornecido: ${cleanNumber.length} dígitos.` 
+        });
+      }
+
+      // Update document type based on actual number length for API call
+      const cleanNumber = documentNumber.replace(/[^\d]/g, '');
+      const actualDocumentType = cleanNumber.length === 11 ? 'cpf' : 'cnpj';
 
       // Generate unique reference for this payment
       const uniqueReference = `service_${serviceId}_${Date.now()}`;
@@ -3382,7 +3409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
         cliente: {
           nome: user.name,
-          tipo_documento: documentType === 'cpf' ? 'cpf' : 'cnpj',
+          tipo_documento: actualDocumentType,
           numero_documento: formattedDocumentNumber,
           "e-mail": user.email
         }
