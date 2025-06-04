@@ -142,7 +142,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [maxDistance, setMaxDistance] = useState(1000); // Default 1000km - mostrar todos os serviços
   const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
   const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
-  const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed'>('available');
+  const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed' | 'pending'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isSkillsWizardOpen, setIsSkillsWizardOpen] = useState(false);
@@ -736,6 +736,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const serviceCounts = {
     // Disponíveis: apenas serviços com status 'open' do rawServices
     available: availableServices.length,
+    // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
+    pending: availableServices.filter(service => 
+      service.applicationStatus === 'pending' && service.hasApplied
+    ).length,
     // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
     inProgress: inProgressServices.length,
     // Finalizados: apenas serviços do activeServices com status 'completed'
@@ -907,7 +911,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
           <div 
             className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
               serviceCounts.available > 0 
@@ -920,6 +924,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               🔵 {serviceCounts.available}
             </div>
             <div className="text-xs text-gray-600 font-medium">Disponíveis</div>
+          </div>
+          <div 
+            className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
+              serviceCounts.pending > 0 
+                ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 shadow-sm hover:shadow-md hover:from-yellow-100 hover:to-amber-100' 
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
+            }`}
+            onClick={() => {
+              if (serviceCounts.pending > 0) {
+                setDashboardSection('home');
+                setActiveTab('pending');
+              }
+            }}
+          >
+            <div className={`font-bold text-xl ${serviceCounts.pending > 0 ? 'text-yellow-700' : 'text-gray-500'}`}>
+              ⏳ {serviceCounts.pending}
+            </div>
+            <div className="text-xs text-gray-600 font-medium">Aguardando</div>
           </div>
           <div 
             className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
@@ -960,9 +982,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
       </div>
       
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'available' | 'in-progress' | 'completed')} className="mt-4">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'available' | 'in-progress' | 'completed' | 'pending')} className="mt-4">
+        <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="available">Disponíveis</TabsTrigger>
+          <TabsTrigger value="pending">Aguardando Lojista</TabsTrigger>
           <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
           <TabsTrigger value="completed">Finalizados</TabsTrigger>
         </TabsList>
@@ -996,6 +1019,95 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                   Nenhum serviço disponível no momento.
                 </div>
               )}
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="pending">
+          <div className="dashboard-card bg-white rounded-xl shadow-md mb-4">
+            <div className="divide-y">
+              {isLoading ? (
+                // Show animated service card skeletons
+                <div className="p-4">
+                  <ServiceCardSkeletonGrid count={2} />
+                </div>
+              ) : error ? (
+                // Show error message
+                <div className="p-8 text-center text-red-500">
+                  Erro ao carregar serviços. Por favor, tente novamente.
+                </div>
+              ) : (() => {
+                // Filter services with pending application status
+                const pendingServices = (rawServices || []).filter((service: any) => 
+                  service.applicationStatus === 'pending' && service.hasApplied
+                );
+                
+                return pendingServices.length > 0 ? (
+                  // Show pending services
+                  pendingServices.map(service => (
+                    <div 
+                      key={service.id} 
+                      className="p-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => {
+                        setSelectedChatService(service.id);
+                        setDashboardSection('chat');
+                      }}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-lg">{service.title}</h4>
+                        <div className="flex items-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
+                            style={{ 
+                              backgroundColor: '#fef3c7',
+                              color: '#92400e'
+                            }}>
+                            Aguardando Aprovação
+                          </span>
+                          {service.hasChatMessages ? (
+                            <div className="relative">
+                              <MessageSquare className="h-5 w-5 text-primary" />
+                              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full animate-pulse">!</span>
+                            </div>
+                          ) : (
+                            <MessageSquare className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500 mb-2">
+                        <p>Loja: {service.store || 'Não especificada'}</p>
+                        <p>Local: {service.location || 'Não especificado'}</p>
+                        <p>Data: {service.date || 'Não especificada'}</p>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <div className="text-primary font-semibold">
+                          {service.price ? (() => {
+                            const normalizedPrice = service.price.replace(',', '.');
+                            const numericPrice = parseFloat(normalizedPrice);
+                            if (isNaN(numericPrice)) return `R$ ${service.price}`;
+                            return new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            }).format(numericPrice);
+                          })() : 'Preço não especificado'}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm text-yellow-600 font-medium">Pendente</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Show empty state
+                  <div className="p-8 text-center text-gray-500">
+                    <Clock className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                    <p>Nenhuma candidatura aguardando aprovação.</p>
+                    <p className="text-sm mt-2">Suas candidaturas aparecerão aqui quando estiverem pendentes.</p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </TabsContent>
