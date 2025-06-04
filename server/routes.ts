@@ -2106,6 +2106,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verificar se há avaliações pendentes para o usuário (DEVE VIR ANTES do endpoint genérico)
+  app.get("/api/services/pending-evaluations", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const userId = req.user!.id;
+      const userType = req.user!.userType;
+      
+      let pendingServices: any[] = [];
+      
+      if (userType === 'lojista') {
+        // Buscar serviços da loja que precisam de avaliação
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          const storeServices = await db
+            .select()
+            .from(services)
+            .where(
+              and(
+                eq(services.storeId, store.id),
+                eq(services.status, 'completed'),
+                eq(services.ratingRequired, true),
+                eq(services.storeRatingCompleted, false)
+              )
+            );
+          pendingServices = storeServices;
+        }
+      } else if (userType === 'montador') {
+        // Buscar serviços do montador que precisam de avaliação
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          const acceptedApplications = await db
+            .select({ serviceId: applications.serviceId })
+            .from(applications)
+            .where(
+              and(
+                eq(applications.assemblerId, assembler.id),
+                eq(applications.status, 'accepted')
+              )
+            );
+          
+          if (acceptedApplications.length > 0) {
+            // Filtrar apenas IDs válidos e converter para número
+            const serviceIds = acceptedApplications
+              .map(app => app.serviceId)
+              .filter(id => id !== null && id !== undefined && !isNaN(Number(id)))
+              .map(id => Number(id));
+            
+            if (serviceIds.length > 0) {
+              try {
+                pendingServices = await db
+                  .select()
+                  .from(services)
+                  .where(
+                    and(
+                      eq(services.status, 'completed'),
+                      eq(services.ratingRequired, true),
+                      eq(services.assemblerRatingCompleted, false),
+                      inArray(services.id, serviceIds)
+                    )
+                  );
+              } catch (error) {
+                console.error("Erro ao buscar serviços pendentes para montador:", error);
+                pendingServices = [];
+              }
+            }
+          }
+        }
+      }
+      
+      res.json({
+        hasPendingEvaluations: pendingServices.length > 0,
+        pendingServices: pendingServices.map(service => ({
+          id: service.id,
+          title: service.title,
+          completedAt: service.completedAt
+        }))
+      });
+    } catch (error) {
+      console.error("Erro ao verificar avaliações pendentes:", error);
+      res.status(500).json({ message: "Erro ao verificar avaliações pendentes" });
+    }
+  });
+
   // Obter um serviço específico por ID
   app.get("/api/services/:id", async (req, res) => {
     try {
@@ -4139,91 +4225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verificar se há avaliações pendentes para o usuário
-  app.get("/api/services/pending-evaluations", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-      
-      const userId = req.user!.id;
-      const userType = req.user!.userType;
-      
-      let pendingServices: any[] = [];
-      
-      if (userType === 'lojista') {
-        // Buscar serviços da loja que precisam de avaliação
-        const store = await storage.getStoreByUserId(userId);
-        if (store) {
-          const storeServices = await db
-            .select()
-            .from(services)
-            .where(
-              and(
-                eq(services.storeId, store.id),
-                eq(services.status, 'completed'),
-                eq(services.ratingRequired, true),
-                eq(services.storeRatingCompleted, false)
-              )
-            );
-          pendingServices = storeServices;
-        }
-      } else if (userType === 'montador') {
-        // Buscar serviços do montador que precisam de avaliação
-        const assembler = await storage.getAssemblerByUserId(userId);
-        if (assembler) {
-          const acceptedApplications = await db
-            .select({ serviceId: applications.serviceId })
-            .from(applications)
-            .where(
-              and(
-                eq(applications.assemblerId, assembler.id),
-                eq(applications.status, 'accepted')
-              )
-            );
-          
-          if (acceptedApplications.length > 0) {
-            // Filtrar apenas IDs válidos e converter para número
-            const serviceIds = acceptedApplications
-              .map(app => app.serviceId)
-              .filter(id => id !== null && id !== undefined && !isNaN(Number(id)))
-              .map(id => Number(id));
-            
-            if (serviceIds.length > 0) {
-              try {
-                pendingServices = await db
-                  .select()
-                  .from(services)
-                  .where(
-                    and(
-                      eq(services.status, 'completed'),
-                      eq(services.ratingRequired, true),
-                      eq(services.assemblerRatingCompleted, false),
-                      inArray(services.id, serviceIds)
-                    )
-                  );
-              } catch (error) {
-                console.error("Erro ao buscar serviços pendentes para montador:", error);
-                pendingServices = [];
-              }
-            }
-          }
-        }
-      }
-      
-      res.json({
-        hasPendingEvaluations: pendingServices.length > 0,
-        pendingServices: pendingServices.map(service => ({
-          id: service.id,
-          title: service.title,
-          completedAt: service.completedAt
-        }))
-      });
-    } catch (error) {
-      console.error("Erro ao verificar avaliações pendentes:", error);
-      res.status(500).json({ message: "Erro ao verificar avaliações pendentes" });
-    }
-  });
+
 
   // Criar avaliação para um serviço
   app.post("/api/services/:id/rate", async (req, res) => {
