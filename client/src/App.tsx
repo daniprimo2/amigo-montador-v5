@@ -5,6 +5,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import StoreDashboardPage from "@/pages/store-dashboard-page";
 import AssemblerDashboardPage from "@/pages/assembler-dashboard-page";
+import UserProfilePage from "@/pages/user-profile-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/lojista" component={StoreDashboardPage} />
       <ProtectedRoute path="/montador" component={AssemblerDashboardPage} />
+      <Route path="/profile/:userId" component={UserProfilePage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/register" component={AuthPage} />
       <Route path="/login" component={AuthPage} />

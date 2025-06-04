@@ -4729,6 +4729,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao buscar ranking de avaliações" });
     }
   });
+
+  // Buscar perfil detalhado de usuário com avaliações
+  app.get("/api/users/:userId/profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+
+      // Buscar o usuário
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Buscar todas as avaliações recebidas por este usuário
+      const ratingsQuery = await db
+        .select({
+          id: ratings.id,
+          rating: ratings.rating,
+          comment: ratings.comment,
+          createdAt: ratings.createdAt,
+          fromUserName: sql<string>`from_user.name`,
+          fromUserType: ratings.fromUserType,
+          punctualityRating: ratings.punctualityRating,
+          qualityRating: ratings.qualityRating,
+          complianceRating: ratings.complianceRating,
+          serviceRegion: ratings.serviceRegion,
+          isLatest: ratings.isLatest,
+          emojiRating: ratings.emojiRating
+        })
+        .from(ratings)
+        .innerJoin(sql`users as from_user`, sql`from_user.id = ${ratings.fromUserId}`)
+        .where(eq(ratings.toUserId, userId))
+        .orderBy(desc(ratings.createdAt));
+
+      // Calcular média das avaliações
+      const averageRating = await storage.getAverageRatingForUser(userId);
+      const totalRatings = ratingsQuery.length;
+
+      // Buscar dados específicos do tipo de usuário
+      let userProfile: any = {
+        id: user.id,
+        name: user.name,
+        userType: user.userType,
+        profilePhotoUrl: user.profilePhotoUrl || '/default-avatar.svg',
+        averageRating,
+        totalRatings,
+        ratings: ratingsQuery.map(rating => ({
+          id: rating.id,
+          rating: rating.rating,
+          comment: rating.comment || '',
+          createdAt: rating.createdAt?.toISOString() || new Date().toISOString(),
+          fromUserName: rating.fromUserName,
+          fromUserType: rating.fromUserType,
+          punctualityRating: rating.punctualityRating || 5,
+          qualityRating: rating.qualityRating || 5,
+          complianceRating: rating.complianceRating || 5,
+          serviceRegion: rating.serviceRegion || 'Região não informada',
+          isLatest: rating.isLatest || false,
+          emojiRating: rating.emojiRating || 'satisfied'
+        }))
+      };
+
+      if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          userProfile.city = assembler.city;
+          userProfile.state = assembler.state;
+          userProfile.specialties = assembler.specialties || [];
+        }
+      } else if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          userProfile.city = store.city;
+          userProfile.state = store.state;
+          userProfile.specialties = []; // Lojas não têm especialidades
+        }
+      }
+
+      res.json(userProfile);
+    } catch (error) {
+      console.error("Erro ao buscar perfil do usuário:", error);
+      res.status(500).json({ message: "Erro ao buscar perfil do usuário" });
+    }
+  });
   
   return httpServer;
 }

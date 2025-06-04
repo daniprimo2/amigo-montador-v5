@@ -133,6 +133,11 @@ export const ratings = pgTable("ratings", {
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
   emojiRating: text("emoji_rating"), // Emoji escolhido para feedback rápido
+  punctualityRating: integer("punctuality_rating").default(5), // Avaliação de pontualidade (1-5)
+  qualityRating: integer("quality_rating").default(5), // Avaliação de qualidade (1-5)
+  complianceRating: integer("compliance_rating").default(5), // Avaliação de cumprimento de acordos (1-5)
+  serviceRegion: text("service_region"), // Região onde o serviço foi realizado
+  isLatest: boolean("is_latest").default(false), // Marca se é a avaliação mais recente
   createdAt: timestamp("created_at").defaultNow(),
 });
 

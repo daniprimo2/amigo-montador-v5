@@ -5,7 +5,7 @@ import { Star, StarHalf } from 'lucide-react';
 interface RatingStarsProps {
   rating: number;
   maxRating?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   interactive?: boolean;
   onRatingChange?: (rating: number) => void;
   className?: string;
@@ -23,6 +23,7 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
   
   // Tamanhos de estrelas para diferentes variantes
   const starSizes = {
+    xs: 'w-3 h-3',
     sm: 'w-4 h-4',
     md: 'w-5 h-5',
     lg: 'w-6 h-6'
