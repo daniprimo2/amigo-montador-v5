@@ -4480,6 +4480,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
+      // Validate document number format before creating account
+      const { holderDocumentType, holderDocumentNumber } = req.body;
+      
+      if (holderDocumentType && holderDocumentNumber) {
+        const cleanDocumentNumber = holderDocumentNumber.replace(/[^\d]/g, '');
+        
+        if (holderDocumentType === 'cpf' && cleanDocumentNumber.length !== 11) {
+          return res.status(400).json({ 
+            message: "CPF deve ter exatamente 11 dígitos. Documento fornecido possui " + cleanDocumentNumber.length + " dígitos." 
+          });
+        } else if (holderDocumentType === 'cnpj' && cleanDocumentNumber.length !== 14) {
+          return res.status(400).json({ 
+            message: "CNPJ deve ter exatamente 14 dígitos. Documento fornecido possui " + cleanDocumentNumber.length + " dígitos." 
+          });
+        }
+      }
+
       const bankAccountData: InsertBankAccount = {
         userId: req.user.id,
         bankName: req.body.bankName,
@@ -4524,6 +4541,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Você não tem permissão para atualizar esta conta bancária" });
       }
       
+      // Validate document number format if being updated
+      const { holderDocumentType, holderDocumentNumber } = req.body;
+      
+      if (holderDocumentType && holderDocumentNumber) {
+        const cleanDocumentNumber = holderDocumentNumber.replace(/[^\d]/g, '');
+        
+        if (holderDocumentType === 'cpf' && cleanDocumentNumber.length !== 11) {
+          return res.status(400).json({ 
+            message: "CPF deve ter exatamente 11 dígitos. Documento fornecido possui " + cleanDocumentNumber.length + " dígitos." 
+          });
+        } else if (holderDocumentType === 'cnpj' && cleanDocumentNumber.length !== 14) {
+          return res.status(400).json({ 
+            message: "CNPJ deve ter exatamente 14 dígitos. Documento fornecido possui " + cleanDocumentNumber.length + " dígitos." 
+          });
+        }
+      }
+
       // Campos que podem ser atualizados
       const allowedFields = [
         'bankName',

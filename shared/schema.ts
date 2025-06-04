@@ -164,14 +164,65 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profileData: true,
 });
 
-export const insertStoreSchema = createInsertSchema(stores);
-export const insertAssemblerSchema = createInsertSchema(assemblers);
+// Custom validation functions
+const validateCPF = (cpf: string): boolean => {
+  const cleanCPF = cpf.replace(/[^\d]/g, '');
+  return cleanCPF.length === 11;
+};
+
+const validateCNPJ = (cnpj: string): boolean => {
+  const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+  return cleanCNPJ.length === 14;
+};
+
+const validateDocumentNumber = (documentNumber: string, documentType: string): boolean => {
+  const cleanNumber = documentNumber.replace(/[^\d]/g, '');
+  if (documentType === 'cpf') {
+    return cleanNumber.length === 11;
+  } else if (documentType === 'cnpj') {
+    return cleanNumber.length === 14;
+  }
+  return false;
+};
+
+export const insertStoreSchema = createInsertSchema(stores).refine(
+  (data) => validateDocumentNumber(data.documentNumber, data.documentType),
+  {
+    message: "CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos",
+    path: ["documentNumber"]
+  }
+);
+
+export const insertAssemblerSchema = createInsertSchema(assemblers).extend({
+  documentType: z.enum(['cpf', 'cnpj']).optional(),
+  documentNumber: z.string().optional(),
+}).refine(
+  (data) => {
+    // If documentType and documentNumber are provided, validate them
+    if (data.documentType && data.documentNumber) {
+      return validateDocumentNumber(data.documentNumber, data.documentType);
+    }
+    return true; // Allow empty documents for now
+  },
+  {
+    message: "CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos",
+    path: ["documentNumber"]
+  }
+);
+
 export const insertServiceSchema = createInsertSchema(services);
 export const insertApplicationSchema = createInsertSchema(applications);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertMessageReadSchema = createInsertSchema(messageReads);
 export const insertRatingSchema = createInsertSchema(ratings);
-export const insertBankAccountSchema = createInsertSchema(bankAccounts);
+
+export const insertBankAccountSchema = createInsertSchema(bankAccounts).refine(
+  (data) => validateDocumentNumber(data.holderDocumentNumber, data.holderDocumentType),
+  {
+    message: "CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos",
+    path: ["holderDocumentNumber"]
+  }
+);
 
 // Tipos de inserção
 export type InsertUser = z.infer<typeof insertUserSchema>;
