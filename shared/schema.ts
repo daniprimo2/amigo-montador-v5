@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, primaryKey, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -136,7 +136,7 @@ export const ratings = pgTable("ratings", {
   punctualityRating: integer("punctuality_rating").default(5), // Avaliação de pontualidade (1-5)
   qualityRating: integer("quality_rating").default(5), // Avaliação de qualidade (1-5)
   complianceRating: integer("compliance_rating").default(5), // Avaliação de cumprimento de acordos (1-5)
-  serviceRegion: text("service_region"), // Região onde o serviço foi realizado
+  serviceRegion: varchar("service_region", { length: 255 }), // Região onde o serviço foi realizado
   isLatest: boolean("is_latest").default(false), // Marca se é a avaliação mais recente
   createdAt: timestamp("created_at").defaultNow(),
 });

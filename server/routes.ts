@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, not, isNotNull, or, sql, inArray } from "drizzle-orm";
+import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
 import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
@@ -4172,7 +4172,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           storesData.map(async (storeData) => {
             const rating = await storage.getAverageRatingForUser(storeData.users.id);
             return {
-              id: storeData.stores.id,
+              id: storeData.users.id, // User ID for profile link
+              storeId: storeData.stores.id,
               name: storeData.stores.name,
               city: storeData.stores.city,
               state: storeData.stores.state,
@@ -4198,7 +4199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           assemblers2.map(async (assemblerData) => {
             const rating = await storage.getAverageRatingForUser(assemblerData.users.id);
             return {
-              id: assemblerData.assemblers.id,
+              id: assemblerData.users.id, // User ID for profile link
+              assemblerId: assemblerData.assemblers.id,
               name: assemblerData.users.name,
               city: assemblerData.assemblers.city,
               state: assemblerData.assemblers.state,
