@@ -29,6 +29,7 @@ export interface ServiceProps {
   }>;
   applicationStatus?: string | null; // Status da candidatura do montador
   hasApplied?: boolean; // Se o montador já se candidatou
+  hasChatMessages?: boolean; // Se há mensagens no chat entre montador e loja
 }
 
 interface AvailableServiceCardProps {
@@ -166,7 +167,13 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const getApplicationStatus = () => {
     if (isAccepted) return 'accepted';
     if (isRejected) return 'rejected';
-    if (isPendingApproval || hasApplied) return 'pending';
+    if (isPendingApproval || hasApplied) {
+      // Se tem candidatura pendente mas ainda não há mensagens no chat, mostrar status específico
+      if (!service.hasChatMessages) {
+        return 'awaiting_chat';
+      }
+      return 'pending';
+    }
     return 'not_applied';
   };
   

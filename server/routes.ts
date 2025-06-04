@@ -298,6 +298,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Verificar status de aplicação para este serviço
           const serviceWithApp = service as any;
           
+          // Verificar se há mensagens no chat para este serviço e este montador
+          let hasChatMessages = false;
+          try {
+            const chatMessages = await db
+              .select({ id: messages.id })
+              .from(messages)
+              .where(eq(messages.serviceId, service.id))
+              .limit(1);
+            
+            hasChatMessages = chatMessages.length > 0;
+          } catch (error) {
+            console.error(`Erro ao verificar mensagens do chat para serviço ${service.id}:`, error);
+            hasChatMessages = false;
+          }
+          
           return {
             id: service.id,
             title: service.title,
@@ -318,7 +333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: service.status,
             projectFiles: projectFiles,
             applicationStatus: serviceWithApp.applicationStatus || null,
-            hasApplied: serviceWithApp.hasApplied || false
+            hasApplied: serviceWithApp.hasApplied || false,
+            hasChatMessages: hasChatMessages
           };
         }));
         

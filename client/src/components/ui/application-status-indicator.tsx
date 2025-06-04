@@ -3,7 +3,7 @@ import { Clock, CheckCircle, XCircle, AlertCircle, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ApplicationStatusIndicatorProps {
-  status: 'pending' | 'accepted' | 'rejected' | 'not_applied';
+  status: 'pending' | 'accepted' | 'rejected' | 'not_applied' | 'awaiting_chat';
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
   className?: string;
@@ -17,6 +17,14 @@ const statusConfig = {
     borderColor: 'border-orange-200',
     text: 'Aguardando resposta',
     description: 'Sua candidatura está sendo analisada pelo lojista'
+  },
+  awaiting_chat: {
+    icon: AlertCircle,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    text: 'Aguardando retorno no chat',
+    description: 'Serviço aguardando resposta do lojista. Aguarde o retorno no chat.'
   },
   accepted: {
     icon: CheckCircle,
