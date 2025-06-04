@@ -181,15 +181,13 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     }
     
     // Se foi rejeitado
-    if (isRejected) return 'rejected';
+    if (service.applicationStatus === 'rejected') return 'rejected';
     
     // Se foi aceito mas ainda não está em andamento
-    if (isAccepted) return 'accepted';
+    if (service.applicationStatus === 'accepted') return 'accepted';
     
-    // Se tem candidatura pendente ou já se candidatou
-    if (isPendingApproval || hasApplied) {
-      // Status "Em processo" quando candidatura foi enviada
-      // Mantém esse status mesmo quando o chat é iniciado
+    // Se tem candidatura pendente (enviada) - status "Em processo"
+    if (service.applicationStatus === 'pending' || service.hasApplied || localHasApplied) {
       return 'in_process';
     }
     
@@ -203,6 +201,8 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   console.log(`[AvailableServiceCard] Service ${service.id} STATUS:`, {
     hasApplied: service.hasApplied,
     applicationStatus: service.applicationStatus,
+    localApplicationStatus,
+    localHasApplied,
     hasChatMessages: service.hasChatMessages,
     computedHasApplied: hasApplied,
     isPendingApproval,
