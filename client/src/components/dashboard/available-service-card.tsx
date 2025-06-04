@@ -55,12 +55,14 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       return price;
     }
     
-    // Converte string para número - o valor já vem correto da API
-    const numericPrice = parseFloat(price);
+    // Converte string brasileira (vírgula como decimal) para número
+    // Substitui vírgula por ponto para conversão correta
+    const normalizedPrice = price.replace(',', '.');
+    const numericPrice = parseFloat(normalizedPrice);
     
-    // Se o valor for inválido, retorna o valor original
+    // Se o valor for inválido, retorna o valor original formatado
     if (isNaN(numericPrice)) {
-      return price;
+      return `R$ ${price}`;
     }
     
     // Formata como moeda brasileira
