@@ -115,7 +115,7 @@ export default function UserProfilePage() {
     );
   }
 
-  const latestRating = userProfile.ratings.find(r => r.isLatest);
+  const latestRating = userProfile.ratings?.find(r => r.isLatest);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -264,7 +264,7 @@ export default function UserProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {userProfile.ratings.length === 0 ? (
+                  {!userProfile.ratings || userProfile.ratings.length === 0 ? (
                     <div className="text-center py-8">
                       <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">Ainda não há avaliações para este usuário.</p>
