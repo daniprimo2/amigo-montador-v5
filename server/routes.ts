@@ -332,8 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: service.materialType || 'Material não especificado',
             status: service.status,
             projectFiles: projectFiles,
-            applicationStatus: service.applicationStatus || null,
-            hasApplied: service.hasApplied || false,
+            applicationStatus: (service as any).applicationStatus || null,
+            hasApplied: (service as any).hasApplied || false,
             hasChatMessages: hasChatMessages
           };
         }));
