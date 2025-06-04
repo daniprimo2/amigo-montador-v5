@@ -55,7 +55,24 @@ const formatServiceForDisplay = (service: ServiceData & { startDate?: string; en
     date: service.date || 'Data não informada', // Manter o formato original do backend
     startDate: service.startDate || null, // Incluir startDate do backend
     endDate: service.endDate || null, // Incluir endDate do backend
-    price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
+    price: (() => {
+      // Handle Brazilian decimal format (comma as separator)
+      const normalizedPrice = service.price.replace(',', '.');
+      const numericPrice = parseFloat(normalizedPrice);
+      
+      // If parsing fails, return the original price formatted
+      if (isNaN(numericPrice)) {
+        return `R$ ${service.price}`;
+      }
+      
+      // Format as Brazilian currency
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(numericPrice);
+    })(),
     store: typeof service.store === 'object' && service.store?.name ? service.store.name : (service.store || 'Loja não especificada'),
     type: service.materialType || service.type || 'Não especificado', // Garantir que nunca seja undefined
     status: service.status, // Passar o status do serviço para o componente
@@ -1032,7 +1049,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                     </div>
                     <div className="flex justify-between items-center mt-3">
                       <div className="text-primary font-semibold">
-                        {service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : 'Preço não especificado'}
+                        {service.price ? (() => {
+                          const normalizedPrice = service.price.replace(',', '.');
+                          const numericPrice = parseFloat(normalizedPrice);
+                          if (isNaN(numericPrice)) return `R$ ${service.price}`;
+                          return new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(numericPrice);
+                        })() : 'Preço não especificado'}
                       </div>
                       <Button
                         variant="outline"
@@ -1079,7 +1106,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         title: service.title,
                         location: service.location || '',
                         date: new Date(service.date).toLocaleDateString('pt-BR'),
-                        price: `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`,
+                        price: (() => {
+                          const normalizedPrice = service.price.replace(',', '.');
+                          const numericPrice = parseFloat(normalizedPrice);
+                          if (isNaN(numericPrice)) return `R$ ${service.price}`;
+                          return new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(numericPrice);
+                        })(),
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || service.type || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
@@ -1099,7 +1136,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         title: service.title,
                         location: service.location || '',
                         date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não especificada',
-                        price: service.price ? `R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}` : '',
+                        price: service.price ? (() => {
+                          const normalizedPrice = service.price.replace(',', '.');
+                          const numericPrice = parseFloat(normalizedPrice);
+                          if (isNaN(numericPrice)) return `R$ ${service.price}`;
+                          return new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          }).format(numericPrice);
+                        })() : '',
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
