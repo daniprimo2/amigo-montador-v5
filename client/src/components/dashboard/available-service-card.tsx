@@ -199,16 +199,21 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   const finalStatus = getApplicationStatus();
   console.log(`[AvailableServiceCard] Service ${service.id} FULL DATA:`, service);
   console.log(`[AvailableServiceCard] Service ${service.id} STATUS:`, {
-    hasApplied: service.hasApplied,
-    applicationStatus: service.applicationStatus,
+    'service.hasApplied': service.hasApplied,
+    'service.applicationStatus': service.applicationStatus,
     localApplicationStatus,
     localHasApplied,
-    hasChatMessages: service.hasChatMessages,
+    'service.hasChatMessages': service.hasChatMessages,
     computedHasApplied: hasApplied,
     isPendingApproval,
     isAccepted,
     isRejected,
-    finalStatus: finalStatus
+    finalStatus: finalStatus,
+    'Raw service object': {
+      id: service.id,
+      hasApplied: service.hasApplied,
+      applicationStatus: service.applicationStatus
+    }
   });
   
   // Verificar se o preço está sendo processado corretamente
