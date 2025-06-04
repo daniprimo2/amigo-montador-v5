@@ -175,15 +175,25 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   
   // Determine status for ApplicationStatusIndicator
   const getApplicationStatus = () => {
-    if (isAccepted) return 'accepted';
-    if (isRejected) return 'rejected';
-    if (isPendingApproval || hasApplied) {
-      // Se tem candidatura pendente mas ainda não há mensagens no chat, mostrar status específico
-      if (!service.hasChatMessages && !localApplicationStatus) {
-        return 'awaiting_chat';
-      }
-      return 'pending';
+    // Se o serviço está em andamento (contratado)
+    if (service.status === 'in-progress' || service.status === 'accepted') {
+      return 'in_progress';
     }
+    
+    // Se foi rejeitado
+    if (isRejected) return 'rejected';
+    
+    // Se foi aceito mas ainda não está em andamento
+    if (isAccepted) return 'accepted';
+    
+    // Se tem candidatura pendente ou já se candidatou
+    if (isPendingApproval || hasApplied) {
+      // Status "Em processo" quando candidatura foi enviada
+      // Mantém esse status mesmo quando o chat é iniciado
+      return 'in_process';
+    }
+    
+    // Se ainda não se candidatou
     return 'not_applied';
   };
   

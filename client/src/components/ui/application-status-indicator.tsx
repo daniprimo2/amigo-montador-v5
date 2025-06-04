@@ -1,9 +1,9 @@
 import React from 'react';
-import { Clock, CheckCircle, XCircle, AlertCircle, Send } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle, Send, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ApplicationStatusIndicatorProps {
-  status: 'pending' | 'accepted' | 'rejected' | 'not_applied' | 'awaiting_chat';
+  status: 'pending' | 'accepted' | 'rejected' | 'not_applied' | 'awaiting_chat' | 'in_process' | 'in_progress';
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
   className?: string;
@@ -17,6 +17,22 @@ const statusConfig = {
     borderColor: 'border-orange-200',
     text: 'Candidatura enviada. Aguardando resposta do lojista.',
     description: 'Sua candidatura está sendo analisada pelo lojista'
+  },
+  in_process: {
+    icon: Clock,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    text: 'Em processo',
+    description: 'Candidatura enviada. Aguardando análise do lojista.'
+  },
+  in_progress: {
+    icon: Play,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    text: 'Em andamento',
+    description: 'Serviço contratado e em andamento'
   },
   awaiting_chat: {
     icon: AlertCircle,
