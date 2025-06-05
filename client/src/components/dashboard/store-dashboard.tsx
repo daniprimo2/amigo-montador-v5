@@ -878,38 +878,36 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </Button>
         </div>
         
-        {/* Barra de status fixa - Layout com 4 cards */}
+        {/* Barra de status fixa - Layout padronizado com 4 cards */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 -mx-6 px-6 py-4 mb-6">
+          {/* Cards de contadores */}
           <div className="grid grid-cols-4 gap-4 mb-4">
+            {/* Disponíveis */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                  <ClipboardList className="h-4 w-4 text-white" />
-                </div>
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-2">
+                <ClipboardList className="h-4 w-4 text-white" />
               </div>
               <div className="text-2xl font-bold text-blue-600">
-                {services.filter(s => s.status === 'open').length}
+                {services.filter(s => s.status === 'open' && s.candidates === 0).length}
               </div>
               <div className="text-sm text-blue-600">Disponíveis</div>
             </div>
 
+            {/* Aguardando */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-white" />
-                </div>
+              <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mx-auto mb-2">
+                <Clock className="h-4 w-4 text-white" />
               </div>
               <div className="text-2xl font-bold text-yellow-600">
-                {services.filter(s => s.status === 'applied' || (s.status === 'open' && s.candidates > 0)).length}
+                {services.filter(s => s.status === 'open' && s.candidates > 0).length}
               </div>
               <div className="text-sm text-yellow-600">Aguardando</div>
             </div>
 
+            {/* Em Andamento */}
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                  <PlayCircle className="h-4 w-4 text-white" />
-                </div>
+              <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center mx-auto mb-2">
+                <PlayCircle className="h-4 w-4 text-white" />
               </div>
               <div className="text-2xl font-bold text-orange-600">
                 {services.filter(s => s.status === 'in-progress').length}
@@ -917,11 +915,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               <div className="text-sm text-orange-600">Em Andamento</div>
             </div>
 
+            {/* Finalizados */}
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-white" />
-                </div>
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-2">
+                <CheckCircle className="h-4 w-4 text-white" />
               </div>
               <div className="text-2xl font-bold text-green-600">
                 {services.filter(s => s.status === 'completed').length}
@@ -930,14 +927,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
 
-          {/* Barra de filtros */}
+          {/* Barra de filtros navegável */}
           <div className="grid grid-cols-4 gap-4">
             <button
               onClick={() => setActiveTab('open')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'open'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               Disponíveis
@@ -947,19 +944,19 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               onClick={() => setActiveTab('waiting')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'waiting'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
-              Aguardando Lojista
+              Aguardando
             </button>
             
             <button
               onClick={() => setActiveTab('in-progress')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'in-progress'
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               Em Andamento
@@ -969,8 +966,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               onClick={() => setActiveTab('completed')}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'completed'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-green-100 text-green-700 border border-green-200'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               Finalizados
@@ -1089,6 +1086,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 <div className="p-6 text-center">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
                   <p className="text-gray-500">Carregando serviços...</p>
+                </div>
+              ) : services.filter(service => service.status === 'open' && service.candidates > 0).length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500 mb-2">Nenhum serviço aguardando aprovação</p>
                 </div>
               ) : (
                 services.filter(service => service.status === 'open' && service.candidates > 0).map(service => (
