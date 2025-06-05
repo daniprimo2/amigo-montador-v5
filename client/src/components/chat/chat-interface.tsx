@@ -906,6 +906,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                     <p className="text-base capitalize">{userProfile.userType === 'lojista' ? 'Lojista' : 'Montador'}</p>
                   </div>
                   
+                  {/* Informações de localização para ambos os tipos de usuário */}
+                  {(userProfile.city || userProfile.state) && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Localização</h3>
+                      <p className="text-base">
+                        {userProfile.city && userProfile.state 
+                          ? `${userProfile.city}, ${userProfile.state}`
+                          : userProfile.city || userProfile.state}
+                      </p>
+                    </div>
+                  )}
+                  
                   {userProfile.userType === 'lojista' && userProfile.store && (
                     <>
                       <div className="pt-2 border-t">
@@ -913,24 +925,86 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                         <p className="text-base">{userProfile.store.name}</p>
                       </div>
 
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500">Localidade</h3>
-                        <p className="text-base">
-                          {userProfile.store.city} - {userProfile.store.state}
-                        </p>
-                      </div>
+                      {userProfile.store.address && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Endereço da Loja</h3>
+                          <p className="text-base">{userProfile.store.address}</p>
+                        </div>
+                      )}
+
+                      {(userProfile.store.city || userProfile.store.state) && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Localidade da Loja</h3>
+                          <p className="text-base">
+                            {userProfile.store.city && userProfile.store.state 
+                              ? `${userProfile.store.city}, ${userProfile.store.state}`
+                              : userProfile.store.city || userProfile.store.state}
+                          </p>
+                        </div>
+                      )}
                     </>
                   )}
                   
-                  {userProfile.userType === 'montador' && userProfile.assembler && (
+                  {userProfile.userType === 'montador' && (
                     <>
-                      <div className="pt-2 border-t">
-                        <h3 className="text-sm font-medium text-gray-500">Especialidades</h3>
-                        <p className="text-base">
-                          {userProfile.assembler.specialties.join(', ')}
-                        </p>
-                      </div>
+                      {/* Especialidades do montador */}
+                      {userProfile.specialties && userProfile.specialties.length > 0 && (
+                        <div className="pt-2 border-t">
+                          <h3 className="text-sm font-medium text-gray-500">Especialidades</h3>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {userProfile.specialties.map((specialty, index) => (
+                              <span 
+                                key={index}
+                                className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                              >
+                                {specialty}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Informações adicionais do montador se disponíveis */}
+                      {userProfile.assembler && (
+                        <>
+                          {userProfile.assembler.experience && (
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-500">Experiência</h3>
+                              <p className="text-base">{userProfile.assembler.experience}</p>
+                            </div>
+                          )}
+
+                          {userProfile.assembler.description && (
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
+                              <p className="text-base">{userProfile.assembler.description}</p>
+                            </div>
+                          )}
+
+                          {userProfile.assembler.availability && (
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-500">Disponibilidade</h3>
+                              <p className="text-base">{userProfile.assembler.availability}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </>
+                  )}
+
+                  {/* Informações de contato */}
+                  {userProfile.email && (
+                    <div className="pt-2 border-t">
+                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                      <p className="text-base">{userProfile.email}</p>
+                    </div>
+                  )}
+
+                  {userProfile.phone && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Telefone</h3>
+                      <p className="text-base">{userProfile.phone}</p>
+                    </div>
                   )}
                 </div>
               </div>
