@@ -933,7 +933,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
           <div 
             className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md hover:bg-blue-100"
-            onClick={() => serviceCounts.available > 0 && setDashboardSection('explore')}
+            onClick={() => {
+              setDashboardSection('home');
+              setActiveTab('available');
+            }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-blue-500 rounded-full mx-auto mb-2">
               <span className="text-white font-bold text-xl">🔵</span>
@@ -944,10 +947,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <div 
             className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-yellow-50 border border-yellow-200 shadow-sm hover:shadow-md hover:bg-yellow-100"
             onClick={() => {
-              if (serviceCounts.pending > 0) {
-                setDashboardSection('home');
-                setActiveTab('pending');
-              }
+              setDashboardSection('home');
+              setActiveTab('pending');
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-yellow-500 rounded-full mx-auto mb-2">
@@ -959,10 +960,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <div 
             className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-orange-50 border border-orange-200 shadow-sm hover:shadow-md hover:bg-orange-100"
             onClick={() => {
-              if (serviceCounts.inProgress > 0) {
-                setDashboardSection('home');
-                setActiveTab('in-progress');
-              }
+              setDashboardSection('home');
+              setActiveTab('in-progress');
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full mx-auto mb-2">
@@ -974,10 +973,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           <div 
             className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-green-50 border border-green-200 shadow-sm hover:shadow-md hover:bg-green-100"
             onClick={() => {
-              if (serviceCounts.completed > 0) {
-                setDashboardSection('home');
-                setActiveTab('completed');
-              }
+              setDashboardSection('home');
+              setActiveTab('completed');
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
