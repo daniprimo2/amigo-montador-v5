@@ -89,6 +89,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const [chatPartnerProfile, setChatPartnerProfile] = useState<UserProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Query para buscar dados do serviço
+  const serviceQuery = useQuery<Service>({
+    queryKey: [`/api/services/${serviceId}`],
+    refetchOnWindowFocus: false
+  });
+  
   // Mutation para atualizar o status do serviço para "em andamento"
   const startServiceMutation = useMutation({
     mutationFn: async () => {
@@ -196,7 +202,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   };
   
   // Buscar mensagens do chat
-  const { data: messages = [], isLoading } = useQuery<Message[]>({
+  const messagesQuery = useQuery<Message[]>({
     queryKey: [`/api/services/${serviceId}/messages`, assemblerId], // Incluir assemblerId na query key
     queryFn: async () => {
       // Construir URL com ou sem o parâmetro assemblerId
@@ -226,11 +232,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
   });
+
+  const { data: messages = [], isLoading } = messagesQuery;
   
   // Recuperar detalhes do serviço (para o título e status)
-  const { data: service = { id: 0, title: 'Serviço', status: 'open' as const, price: '0' } } = useQuery<Service>({
-    queryKey: [`/api/services/${serviceId}`]
-  });
+  const { data: service } = serviceQuery;
 
   // Buscar perfil do parceiro de conversa baseado nas mensagens
   useEffect(() => {
@@ -718,7 +724,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         )}
         
         {/* Verificar se o serviço está finalizado para desabilitar envio de mensagens */}
-        {serviceQuery.data?.status === 'completed' ? (
+        {service?.status === 'completed' ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
             <div className="flex items-center justify-center gap-2 text-yellow-700">
               <CheckSquare className="h-5 w-5" />
