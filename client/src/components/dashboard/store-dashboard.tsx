@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck } from 'lucide-react';
+import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck, FolderOpen, PlayCircle, CheckCircle } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ProfileDialog from './profile-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,6 +20,7 @@ import { RatingDialog } from '@/components/rating/rating-dialog';
 import { RatingList } from '@/components/rating/rating-list';
 import { PendingEvaluationsModal } from './pending-evaluations-modal';
 import { RankingSection } from '@/components/ranking/ranking-section';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -776,260 +777,136 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
-    <div className="padding-responsive">
-      <div className="dashboard-card p-3 sm:p-4 lg:p-6 mb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-          <h2 className="text-responsive-lg font-semibold">
-            Olá, <span className="text-primary">{user?.name || 'Lojista'}</span>
-          </h2>
-          <button 
-            className="text-primary text-responsive-sm font-medium hover:underline self-start sm:self-auto touch-target"
-            onClick={() => setIsProfileOpen(true)}
-          >
-            Ver Perfil
-          </button>
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex flex-col mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+              Olá, <span className="text-primary">{user?.name || 'Lojista'}</span>
+            </h2>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setIsNewServiceOpen(true)}
+                className="text-xs px-3 py-1 h-7 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1"
+              >
+                <Plus className="h-3 w-3" />
+                Novo Serviço
+              </Button>
+              <button 
+                className="text-primary text-sm font-medium"
+                onClick={() => setIsProfileOpen(true)}
+              >
+                Ver Perfil
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-4">
           <div 
-            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-              allServices.filter(service => service.status === 'open').length > 0 
-                ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm hover:shadow-md hover:from-blue-100 hover:to-indigo-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md hover:bg-blue-100"
             onClick={() => {
-              if (allServices.filter(service => service.status === 'open').length > 0) {
-                setDashboardSection('services');
-                setActiveTab('open');
-              }
+              setDashboardSection('services');
+              setActiveTab('open');
             }}
           >
-            <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
-              allServices.filter(service => service.status === 'open').length > 0 ? 'text-blue-700' : 'text-gray-500'
-            }`}>
-              🔵 {allServices.filter(service => service.status === 'open').length}
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-500 rounded-full mx-auto mb-2">
+              <FolderOpen className="h-5 w-5 text-white" />
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Em Aberto</div>
+            <div className="text-lg font-bold text-blue-700 mb-1">{allServices.filter(service => service.status === 'open').length}</div>
+            <div className="text-sm font-semibold text-gray-700">Em Aberto</div>
           </div>
           <div 
-            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-              inProgressCount > 0 
-                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-orange-50 border border-orange-200 shadow-sm hover:shadow-md hover:bg-orange-100"
             onClick={() => {
-              if (inProgressCount > 0) {
-                setDashboardSection('services');
-                setActiveTab('in-progress');
-              }
+              setDashboardSection('services');
+              setActiveTab('in-progress');
             }}
           >
-            <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
-              inProgressCount > 0 ? 'text-amber-700' : 'text-gray-500'
-            }`}>
-              🟠 {inProgressCount}
+            <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full mx-auto mb-2">
+              <PlayCircle className="h-5 w-5 text-white" />
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Em Andamento</div>
+            <div className="text-lg font-bold text-orange-700 mb-1">{inProgressCount}</div>
+            <div className="text-sm font-semibold text-gray-700">Em Andamento</div>
           </div>
           <div 
-            className={`rounded-lg p-3 sm:p-4 text-center transition-all duration-300 cursor-pointer ${
-              allServices.filter(service => service.status === 'completed').length > 0 
-                ? 'bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 shadow-sm hover:shadow-md hover:from-emerald-100 hover:to-green-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-green-50 border border-green-200 shadow-sm hover:shadow-md hover:bg-green-100"
             onClick={() => {
-              if (allServices.filter(service => service.status === 'completed').length > 0) {
-                setDashboardSection('services');
-                setActiveTab('completed');
-              }
+              setDashboardSection('services');
+              setActiveTab('completed');
             }}
           >
-            <div className={`font-bold text-xl sm:text-2xl lg:text-3xl ${
-              allServices.filter(service => service.status === 'completed').length > 0 ? 'text-emerald-700' : 'text-gray-500'
-            }`}>
-              ✅ {allServices.filter(service => service.status === 'completed').length}
+            <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
+              <CheckCircle className="h-5 w-5 text-white" />
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 font-medium mt-1">Finalizados</div>
+            <div className="text-lg font-bold text-green-700 mb-1">{allServices.filter(service => service.status === 'completed').length}</div>
+            <div className="text-sm font-semibold text-gray-700">Finalizados</div>
           </div>
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h3 className="text-responsive-lg font-semibold">Serviços Recentes</h3>
-        <Button 
-          variant="default" 
-          className="mobile-button bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1.5 font-medium w-full sm:w-auto"
-          onClick={() => setIsNewServiceOpen(true)}
-        >
-          <Plus className="h-4 w-4" /> Novo Serviço
-        </Button>
-      </div>
-      
-      <div className="dashboard-card overflow-hidden mb-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Serviços Recentes</h3>
         <div className="divide-y">
           {allServices.slice(0, 3).map(service => (
             <StoreServiceCard key={service.id} service={service} />
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 
   const renderServicesSection = () => (
-    <div className="padding-responsive">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <h3 className="text-responsive-lg font-semibold">Todos os Serviços</h3>
-        <Button 
-          variant="default" 
-          className="mobile-button bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1.5 font-medium w-full sm:w-auto"
-          onClick={() => setIsNewServiceOpen(true)}
-        >
-          <Plus className="h-4 w-4" /> Novo Serviço
-        </Button>
-      </div>
-      
-      <div className="dashboard-card overflow-hidden mb-4">
-        <div className="flex border-b">
-          <div 
-            onClick={() => setActiveTab('open')}
-            className={cn(
-              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
-              activeTab === 'open' 
-                ? "text-primary border-b-2 border-primary" 
-                : "text-gray-500 hover:text-primary"
-            )}
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Meus Serviços</h2>
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={() => setIsNewServiceOpen(true)}
+            className="text-xs px-3 py-1 h-7 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center gap-1"
           >
-            <span className="text-xs sm:text-sm lg:text-base">Em Aberto</span>
-          </div>
-          <div 
-            onClick={() => setActiveTab('in-progress')}
-            className={cn(
-              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
-              activeTab === 'in-progress' 
-                ? "text-primary border-b-2 border-primary" 
-                : "text-gray-500 hover:text-primary"
-            )}
-          >
-            <span className="text-xs sm:text-sm lg:text-base">Em Andamento</span>
-          </div>
-          <div 
-            onClick={() => setActiveTab('completed')}
-            className={cn(
-              "flex-1 py-3 px-2 text-center font-medium cursor-pointer transition-colors touch-target",
-              activeTab === 'completed' 
-                ? "text-primary border-b-2 border-primary" 
-                : "text-gray-500 hover:text-primary"
-            )}
-          >
-            <span className="text-xs sm:text-sm lg:text-base">Finalizados</span>
-          </div>
+            <Plus className="h-3 w-3" />
+            Novo Serviço
+          </Button>
         </div>
         
-        <div className="divide-y">
-          {servicesQuery.isLoading ? (
-            // Estado de carregamento
-            <div className="p-6 text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-              <p className="text-gray-500">Carregando serviços...</p>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="mt-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="open">Em Aberto</TabsTrigger>
+            <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+            <TabsTrigger value="completed">Finalizados</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="open">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="divide-y">
+                {renderServicesList()}
+              </div>
             </div>
-          ) : servicesQuery.error ? (
-            // Estado de erro
-            <div className="p-6 text-center">
-              <p className="text-red-500 mb-2">Erro ao carregar serviços</p>
-              <Button 
-                variant="outline" 
-                onClick={() => servicesQuery.refetch()}
-                className="mx-auto"
-              >
-                Tentar novamente
-              </Button>
+          </TabsContent>
+          
+          <TabsContent value="in-progress">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="divide-y">
+                {renderServicesList()}
+              </div>
             </div>
-          ) : services.length === 0 ? (
-            // Sem serviços
-            <div className="p-6 text-center">
-              <p className="text-gray-500 mb-2">Nenhum serviço encontrado para este status</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsNewServiceOpen(true)}
-                className="mx-auto"
-              >
-                Criar novo serviço
-              </Button>
+          </TabsContent>
+          
+          <TabsContent value="completed">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="divide-y">
+                {renderServicesList()}
+              </div>
             </div>
-          ) : (
-            // Lista de serviços
-            services.map(service => (
-              <StoreServiceCard 
-                key={service.id} 
-                service={{
-                  id: service.id,
-                  title: service.title,
-                  description: service.description,
-                  location: service.location,
-                  date: service.date,
-                  startDate: service.startDate,
-                  endDate: service.endDate,
-                  price: service.price,
-                  candidates: service.candidates || 0,
-                  materialType: service.materialType,
-                  cep: service.cep,
-                  address: service.address,
-                  addressNumber: service.addressNumber,
-                  status: service.status,
-                  projectFiles: service.projectFiles,
-                  assembler: service.assembler
-                }} 
-                onClick={async (serviceId) => {
-                  // Se o serviço estiver em andamento ou finalizado, redirecionar para o chat
-                  if ((service.status === 'in-progress' || service.status === 'completed') && service.assembler) {
-                    console.log(`Redirecionando para chat do serviço ${serviceId} com montador ${service.assembler.id}`);
-                    
-                    // Garantir que os dados estejam carregados antes de mudar para a seção de chat
-                    if (!activeServices) {
-                      await queryClient.prefetchQuery({
-                        queryKey: ['/api/store/services/with-applications'],
-                        queryFn: async () => {
-                          const response = await fetch('/api/store/services/with-applications');
-                          if (!response.ok) {
-                            throw new Error('Falha ao buscar serviços com candidaturas aceitas');
-                          }
-                          return response.json();
-                        }
-                      });
-                    }
-                    
-                    // Atualizar os estados para abrir o chat corretamente
-                    setSelectedChatService(serviceId);
-                    setSelectedAssemblerId(service.assembler.id);
-                    
-                    // Mudar para a seção de chat após garantir que os estados foram atualizados
-                    setTimeout(() => {
-                      setDashboardSection('chat');
-                    }, 100);
-                  }
-                }}
-                onRateClick={(serviceToRate) => {
-                  // Configurar o serviço para avaliação
-                  if (serviceToRate.assembler) {
-                    setSelectedServiceForRating({
-                      id: serviceToRate.id,
-                      title: serviceToRate.title,
-                      assembler: serviceToRate.assembler
-                    });
-                    // Abrir o diálogo de avaliação
-                    setIsRatingDialogOpen(true);
-                  }
-                }}
-                onChatClick={(serviceId) => {
-                  // Abrir o chat para o serviço selecionado
-                  setSelectedChatService(serviceId);
-                  setDashboardSection('chat');
-                }}
-              />
-            ))
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </>
   );
 
   // Estado para o serviço de chat selecionado
