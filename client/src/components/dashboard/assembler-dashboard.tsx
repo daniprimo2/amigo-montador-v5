@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown, Clock } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown, Clock, Circle, Timer, Loader, CheckCircle, FolderOpen, PlayCircle, Trophy, Wrench } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
@@ -898,7 +898,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 onClick={() => setIsSkillsWizardOpen(true)}
                 className="text-xs px-2 py-1 h-7"
               >
-                🚀 Atualizar Habilidades
+                <Wrench className="h-3 w-3 mr-1" />
+                Atualizar Habilidades
               </Button>
               <button 
                 className="text-primary text-sm font-medium"
@@ -939,7 +940,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-blue-500 rounded-full mx-auto mb-2">
-              <span className="text-white font-bold text-xl">🔵</span>
+              <FolderOpen className="h-5 w-5 text-white" />
             </div>
             <div className="text-lg font-bold text-blue-700 mb-1">{serviceCounts.available}</div>
             <div className="text-sm font-semibold text-gray-700">Disponíveis</div>
@@ -952,7 +953,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-yellow-500 rounded-full mx-auto mb-2">
-              <span className="text-white font-bold text-xl">⏳</span>
+              <Timer className="h-5 w-5 text-white" />
             </div>
             <div className="text-lg font-bold text-yellow-700 mb-1">{serviceCounts.pending}</div>
             <div className="text-sm font-semibold text-gray-700">Aguardando</div>
@@ -965,7 +966,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full mx-auto mb-2">
-              <span className="text-white font-bold text-xl">🟠</span>
+              <PlayCircle className="h-5 w-5 text-white" />
             </div>
             <div className="text-lg font-bold text-orange-700 mb-1">{serviceCounts.inProgress}</div>
             <div className="text-sm font-semibold text-gray-700">Em Andamento</div>
@@ -978,7 +979,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             }}
           >
             <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
-              <span className="text-white font-bold text-xl">✅</span>
+              <CheckCircle className="h-5 w-5 text-white" />
             </div>
             <div className="text-lg font-bold text-green-700 mb-1">{serviceCounts.completed}</div>
             <div className="text-sm font-semibold text-gray-700">Finalizados</div>
