@@ -194,7 +194,7 @@ export const LoginForm: React.FC = () => {
             disabled={loginMutation.isPending}
           >
             <span className="flex items-center justify-center space-x-2">
-              <span>{loginMutation.isPending ? 'Conectando...' : 'Acessar Sistema'}</span>
+              <span>{loginMutation.isPending ? 'Conectando...' : 'Entrar'}</span>
               {!loginMutation.isPending && (
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               )}
