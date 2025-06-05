@@ -252,7 +252,7 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
           <div className="relative pt-1">
             <div className="flex mb-2 items-center justify-between">
               <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary bg-opacity-10">
+                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-[#2c3139] text-[#f5f6f8]">
                   Passo 1 de 3
                 </span>
               </div>
@@ -263,10 +263,8 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
           </div>
         </div>
       </div>
-      
       <h2 className="text-xl font-semibold text-foreground mb-1">Dados Pessoais</h2>
       <p className="text-sm text-muted-foreground mb-6">Preencha seus dados pessoais para continuar.</p>
-      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
