@@ -50,13 +50,15 @@ interface Service {
 interface UserProfile {
   id: number;
   name: string;
-  email: string;
-  phone: string;
+  email?: string;
+  phone?: string;
   userType: string;
-  profileData?: {
-    photoUrl?: string;
-  };
-  rating?: number; // Avaliação para lojistas
+  profilePhotoUrl?: string;
+  averageRating?: number;
+  totalRatings?: number;
+  city?: string;
+  state?: string;
+  specialties?: string[];
   store?: {
     name: string;
     address: string;
@@ -814,9 +816,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                 <div className="flex flex-col items-center justify-center mb-4">
                   {/* Use Avatar component for profile photo */}
                   <div className="h-20 w-20 mb-2">
-                    {userProfile.profileData?.photoUrl ? (
+                    {(userProfile as any).profilePhotoUrl && (userProfile as any).profilePhotoUrl !== '/default-avatar.svg' ? (
                       <img 
-                        src={userProfile.profileData.photoUrl} 
+                        src={(userProfile as any).profilePhotoUrl} 
                         alt={`Foto de ${userProfile.name}`}
                         className="h-full w-full rounded-full object-cover"
                         onError={(e) => {
@@ -860,20 +862,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   </div>
                   
                   {/* Exibir avaliação logo após a foto de perfil para montadores e lojistas */}
-                  {((userProfile.userType === 'montador' && userProfile.assembler && 'rating' in userProfile.assembler) || 
-                    (userProfile.userType === 'lojista' && 'rating' in userProfile)) && (
+                  {(userProfile as any).averageRating !== undefined && (userProfile as any).averageRating > 0 && (
                     <div className="flex flex-col items-center mt-1">
                       <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
                         <div className="flex items-center text-yellow-500">
                           {[1, 2, 3, 4, 5].map((star) => {
-                            const rating = userProfile.userType === 'montador' 
-                              ? (userProfile.assembler?.rating || 0) 
-                              : (userProfile.rating || 0);
                             return (
                               <Star
                                 key={star}
                                 className={`h-3 w-3 ${
-                                  star <= rating
+                                  star <= (userProfile as any).averageRating
                                     ? 'text-yellow-500 fill-yellow-500'
                                     : 'text-gray-300'
                                 }`}
@@ -882,15 +880,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                           })}
                         </div>
                         <span className="font-medium text-yellow-700 text-sm">
-                          {userProfile.userType === 'montador' 
-                            ? (userProfile.assembler?.rating ? userProfile.assembler.rating.toFixed(1) : '0.0')
-                            : (userProfile.rating ? userProfile.rating.toFixed(1) : '0.0')}
+                          {(userProfile as any).averageRating.toFixed(1)}
                         </span>
                       </div>
                       <span className="text-xs text-gray-500 mt-1">
                         {userProfile.userType === 'lojista' 
                           ? 'Avaliação dos montadores' 
                           : 'Avaliação média'}
+                        {(userProfile as any).totalRatings && (
+                          <span> ({(userProfile as any).totalRatings} {(userProfile as any).totalRatings === 1 ? 'avaliação' : 'avaliações'})</span>
+                        )}
                       </span>
                     </div>
                   )}
