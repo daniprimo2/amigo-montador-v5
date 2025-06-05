@@ -90,6 +90,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [userRating, setUserRating] = useState<number>(0);
   const [profileData, setProfileData] = useState<any>(null);
   const [isEditingProfessional, setIsEditingProfessional] = useState(false);
+  const [showBankDialog, setShowBankDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
   
@@ -1145,15 +1146,24 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             {/* Seção de informações bancárias */}
             <TabsContent value="dados-bancarios" className="mt-4">
               {user && (
-                <BankAccountDialog 
-                  userId={user.id} 
-                  userType={user.userType as 'lojista' | 'montador'} 
-                />
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Gerencie suas contas bancárias para receber pagamentos.
+                  </p>
+                  <Button onClick={() => setShowBankDialog(true)}>
+                    Gerenciar Contas Bancárias
+                  </Button>
+                </div>
               )}
             </TabsContent>
           </Tabs>
         )}
       </DialogContent>
+
+      <BankAccountDialog
+        open={showBankDialog}
+        onOpenChange={setShowBankDialog}
+      />
     </Dialog>
   );
 };

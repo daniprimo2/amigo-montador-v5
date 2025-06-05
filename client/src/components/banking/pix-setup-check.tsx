@@ -156,8 +156,8 @@ export const PixSetupCheck: React.FC<PixSetupCheckProps> = ({ userId, userType }
       </Card>
 
       <BankAccountDialog 
-        userId={userId} 
-        userType={userType}
+        open={showBankDialog}
+        onOpenChange={setShowBankDialog}
       />
     </>
   );
