@@ -1240,7 +1240,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         rated: false // Será atualizado pelo backend
                       }}
                       onRateClick={handleRateClick}
-                      onChatClick={(serviceId) => setSelectedChatService(serviceId)}
+                      onChatClick={(serviceId) => {
+                        setSelectedChatService(serviceId);
+                        setDashboardSection('chat');
+                      }}
                     />
                   ))}
                   
@@ -1270,7 +1273,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         rated: !!service.rated
                       }}
                       onRateClick={handleRateClick}
-                      onChatClick={(serviceId) => setSelectedChatService(serviceId)}
+                      onChatClick={(serviceId) => {
+                        setSelectedChatService(serviceId);
+                        setDashboardSection('chat');
+                      }}
                     />
                   ))}
                   
