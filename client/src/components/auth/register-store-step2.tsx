@@ -848,8 +848,8 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                           // Detecção automática de tipo se não estiver definido
                           if (!pixKeyType && value) {
                             const detectedType = detectPixKeyType(value);
-                            if (detectedType) {
-                              form.setValue('pixKeyType', detectedType);
+                            if (detectedType && ['cpf', 'cnpj', 'email', 'telefone', 'aleatória'].includes(detectedType)) {
+                              form.setValue('pixKeyType', detectedType as 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatória');
                             }
                           }
                         }}
