@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck, FolderOpen, PlayCircle, CheckCircle } from 'lucide-react';
+import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck, FolderOpen, PlayCircle, CheckCircle, ClipboardList, Clock } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ProfileDialog from './profile-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
