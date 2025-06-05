@@ -561,7 +561,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
             {/* Botão de Pagamento PIX - aparece quando o serviço está contratado */}
-            {(service.status === 'accepted' || service.status === 'in-progress' || service.status === 'hired') && service.price && (
+            {service && (service.status === 'accepted' || service.status === 'in-progress' || service.status === 'hired') && service.price && (
               <Button
                 variant="outline"
                 size="sm"
@@ -574,7 +574,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
             )}
             
             {/* Botão de Contratar Montador - aparece apenas quando serviço não está contratado */}
-            {service.status === 'open' && (
+            {service && service.status === 'open' && (
               <Button
                 variant="outline"
                 size="sm"
@@ -607,13 +607,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         ) : messages && messages.length > 0 ? (
           // Mensagens
           <div className="space-y-3">
-            {console.log(`[ChatInterface] Renderizando ${messages.length} mensagens no chat`)}
-            {console.log(`[ChatInterface] User ID atual: ${user?.id}`)}
-            {messages.map((msg) => {
-              const isCurrentUser = msg.senderId === user?.id;
-              console.log(`[ChatInterface] Renderizando mensagem ID ${msg.id}, senderId: ${msg.senderId}, isCurrentUser: ${isCurrentUser}`);
-              
-              return (
+            {(() => {
+              console.log(`[ChatInterface] Renderizando ${messages.length} mensagens no chat`);
+              console.log(`[ChatInterface] User ID atual: ${user?.id}`);
+              return messages.map((msg) => {
+                const isCurrentUser = msg.senderId === user?.id;
+                console.log(`[ChatInterface] Renderizando mensagem ID ${msg.id}, senderId: ${msg.senderId}, isCurrentUser: ${isCurrentUser}`);
+                
+                return (
                 <div key={msg.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                   <div 
                     className={`max-w-[80%] rounded-lg p-3 transition-all duration-200 ${
@@ -667,7 +668,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
                   </div>
                 </div>
               );
-            })}
+              });
+            })()}
             <div ref={messagesEndRef} />
           </div>
         ) : (
