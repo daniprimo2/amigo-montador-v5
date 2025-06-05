@@ -127,7 +127,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   // Verificar se há avaliações pendentes quando a dashboard carrega
   useEffect(() => {
-    if (pendingEvaluationsQuery.data && 'hasPendingEvaluations' in pendingEvaluationsQuery.data && pendingEvaluationsQuery.data.hasPendingEvaluations) {
+    if (pendingEvaluationsQuery.data && 
+        typeof pendingEvaluationsQuery.data === 'object' && 
+        pendingEvaluationsQuery.data !== null &&
+        'hasPendingEvaluations' in pendingEvaluationsQuery.data && 
+        pendingEvaluationsQuery.data.hasPendingEvaluations) {
       setShowPendingEvaluations(true);
     }
   }, [pendingEvaluationsQuery.data]);
@@ -884,7 +888,38 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           <TabsContent value="open">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
-                {renderServicesList()}
+                {servicesQuery.isLoading ? (
+                  <div className="p-6 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                    <p className="text-gray-500">Carregando serviços...</p>
+                  </div>
+                ) : servicesQuery.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-red-500 mb-2">Erro ao carregar serviços</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => servicesQuery.refetch()}
+                      className="mx-auto"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="text-gray-500 mb-2">Nenhum serviço em aberto</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsNewServiceOpen(true)}
+                      className="mx-auto"
+                    >
+                      Criar novo serviço
+                    </Button>
+                  </div>
+                ) : (
+                  services.map(service => (
+                    <StoreServiceCard key={service.id} service={service} />
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>
@@ -892,7 +927,31 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           <TabsContent value="in-progress">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
-                {renderServicesList()}
+                {servicesQuery.isLoading ? (
+                  <div className="p-6 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                    <p className="text-gray-500">Carregando serviços...</p>
+                  </div>
+                ) : servicesQuery.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-red-500 mb-2">Erro ao carregar serviços</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => servicesQuery.refetch()}
+                      className="mx-auto"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="text-gray-500 mb-2">Nenhum serviço em andamento</p>
+                  </div>
+                ) : (
+                  services.map(service => (
+                    <StoreServiceCard key={service.id} service={service} />
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>
@@ -900,7 +959,31 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           <TabsContent value="completed">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
-                {renderServicesList()}
+                {servicesQuery.isLoading ? (
+                  <div className="p-6 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                    <p className="text-gray-500">Carregando serviços...</p>
+                  </div>
+                ) : servicesQuery.error ? (
+                  <div className="p-6 text-center">
+                    <p className="text-red-500 mb-2">Erro ao carregar serviços</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => servicesQuery.refetch()}
+                      className="mx-auto"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="text-gray-500 mb-2">Nenhum serviço finalizado</p>
+                  </div>
+                ) : (
+                  services.map(service => (
+                    <StoreServiceCard key={service.id} service={service} />
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>
@@ -909,7 +992,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     </>
   );
 
-  // Estado para o serviço de chat selecionado
   // Estado para controlar qual serviço e montador estão selecionados para chat
   const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
   const [selectedAssemblerId, setSelectedAssemblerId] = useState<number | undefined>(undefined);
@@ -1327,7 +1409,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="p-4">
+    <div className="px-4 py-6 min-h-full">
       {renderDashboardContent()}
       
       {/* Modal de Novo Serviço */}
