@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck, FolderOpen, PlayCircle, CheckCircle, ClipboardList, Clock } from 'lucide-react';
+import { ChevronRight, Plus, MessageSquare, Loader2, FileDown, Wifi, Star, User, CheckCheck, FolderOpen, PlayCircle, CheckCircle } from 'lucide-react';
 import StoreServiceCard from './store-service-card';
 import ProfileDialog from './profile-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -34,7 +34,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'open' | 'waiting' | 'in-progress' | 'completed'>('open');
+  const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'ranking'>('home');
   const [showPendingEvaluations, setShowPendingEvaluations] = useState(false);
   const { connected, lastMessage } = useWebSocket();
@@ -878,129 +878,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </Button>
         </div>
         
-        {/* Barra de status única e fixa */}
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 -mx-6 px-6 py-4 mb-6">
-          <div className="grid grid-cols-4 gap-4">
-            <button
-              onClick={() => setActiveTab('open')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'open'
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-blue-100 hover:bg-blue-25'
-              }`}
-            >
-              <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'open' ? 'bg-blue-500' : 'bg-gray-400'
-                }`}>
-                  <ClipboardList className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'open' ? 'text-blue-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'open' && s.candidates === 0).length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'open' ? 'text-blue-600' : 'text-gray-500'
-                }`}>
-                  Disponíveis
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('waiting')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'waiting'
-                  ? 'border-yellow-200 bg-yellow-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-yellow-100 hover:bg-yellow-25'
-              }`}
-            >
-              <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'waiting' ? 'bg-yellow-500' : 'bg-gray-400'
-                }`}>
-                  <Clock className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'waiting' ? 'text-yellow-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'open' && s.candidates > 0).length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'waiting' ? 'text-yellow-600' : 'text-gray-500'
-                }`}>
-                  Aguardando
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('in-progress')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'in-progress'
-                  ? 'border-orange-200 bg-orange-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-orange-100 hover:bg-orange-25'
-              }`}
-            >
-              <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'in-progress' ? 'bg-orange-500' : 'bg-gray-400'
-                }`}>
-                  <PlayCircle className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'in-progress' ? 'text-orange-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'in-progress').length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'in-progress' ? 'text-orange-600' : 'text-gray-500'
-                }`}>
-                  Em Andamento
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'completed'
-                  ? 'border-green-200 bg-green-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-green-100 hover:bg-green-25'
-              }`}
-            >
-              <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'completed' ? 'bg-green-500' : 'bg-gray-400'
-                }`}>
-                  <CheckCircle className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'completed' ? 'text-green-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'completed').length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'completed' ? 'text-green-600' : 'text-gray-500'
-                }`}>
-                  Finalizados
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-        
-        {/* Conteúdo baseado na aba ativa */}
-        {activeTab === 'open' && (
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="mt-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="open">Em Aberto</TabsTrigger>
+            <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+            <TabsTrigger value="completed">Finalizados</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="open">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -1037,9 +922,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-          )}
+          </TabsContent>
           
-          {activeTab === 'in-progress' && (
+          <TabsContent value="in-progress">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -1069,9 +954,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-          )}
+          </TabsContent>
           
-          {activeTab === 'completed' && (
+          <TabsContent value="completed">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -1101,62 +986,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-        )}
-        
-        {activeTab === 'waiting' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="divide-y">
-              {servicesQuery.isLoading ? (
-                <div className="p-6 text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-                  <p className="text-gray-500">Carregando serviços...</p>
-                </div>
-              ) : services.filter(service => service.status === 'open' && service.candidates > 0).length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-gray-500 mb-2">Nenhum serviço aguardando aprovação</p>
-                </div>
-              ) : (
-                services.filter(service => service.status === 'open' && service.candidates > 0).map(service => (
-                  <StoreServiceCard key={service.id} service={service} />
-                ))
-              )}
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'in-progress' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="divide-y">
-              {servicesQuery.isLoading ? (
-                <div className="p-6 text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-                  <p className="text-gray-500">Carregando serviços...</p>
-                </div>
-              ) : (
-                services.filter(service => service.status === 'in-progress').map(service => (
-                  <StoreServiceCard key={service.id} service={service} />
-                ))
-              )}
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'completed' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="divide-y">
-              {servicesQuery.isLoading ? (
-                <div className="p-6 text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-                  <p className="text-gray-500">Carregando serviços...</p>
-                </div>
-              ) : (
-                services.filter(service => service.status === 'completed').map(service => (
-                  <StoreServiceCard key={service.id} service={service} />
-                ))
-              )}
-            </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   );
@@ -1579,28 +1410,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="px-4 py-6 min-h-full">
-      {/* Barra de Status Fixa - sempre visível */}
-      {dashboardSection === 'services' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 sticky top-0 z-10">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="open" className="text-xs sm:text-sm">
-                <FolderOpen className="h-4 w-4 mr-1" />
-                Em Aberto
-              </TabsTrigger>
-              <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
-                <PlayCircle className="h-4 w-4 mr-1" />
-                Em Andamento
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="text-xs sm:text-sm">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Finalizados
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      )}
-      
       {renderDashboardContent()}
       
       {/* Modal de Novo Serviço */}
