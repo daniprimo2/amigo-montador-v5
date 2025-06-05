@@ -11,28 +11,78 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
+import { bankAccountSchema as importedBankAccountSchema, validateCPF, validateCNPJ, formatCPF, formatCNPJ, formatPhone, detectPixKeyType } from '@/lib/bank-account-schema';
 
-// Schema para validação dos dados bancários
+// Schema para validação dos dados bancários com validações completas
 const bankAccountSchema = z.object({
-  bankName: z.string().min(1, 'Nome do banco é obrigatório'),
+  bankName: z.string()
+    .min(1, 'Nome do banco é obrigatório')
+    .max(100, 'Nome do banco deve ter no máximo 100 caracteres'),
   accountType: z.enum(['corrente', 'poupança'], {
     required_error: 'Tipo de conta é obrigatório',
   }),
   accountNumber: z.string()
     .min(1, 'Número da conta é obrigatório')
-    .regex(/^[\d\-]+$/, 'Número da conta deve conter apenas números e hífens'),
+    .max(20, 'Número da conta deve ter no máximo 20 caracteres')
+    .regex(/^[0-9\-]+$/, 'Número da conta deve conter apenas números e hífens'),
   agency: z.string()
     .min(1, 'Agência é obrigatória')
-    .regex(/^[\d\-]+$/, 'Agência deve conter apenas números e hífens'),
-  holderName: z.string().min(1, 'Nome do titular é obrigatório'),
+    .max(10, 'Agência deve ter no máximo 10 caracteres')
+    .regex(/^[0-9\-]+$/, 'Agência deve conter apenas números e hífens'),
+  holderName: z.string()
+    .min(3, 'Nome do titular deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome do titular deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome do titular deve conter apenas letras e espaços'),
   holderDocumentType: z.enum(['cpf', 'cnpj'], {
     required_error: 'Tipo de documento é obrigatório',
   }),
   holderDocumentNumber: z.string()
     .min(1, 'Número do documento é obrigatório')
-    .regex(/^[\d\.\-\/]+$/, 'Documento deve conter apenas números, pontos, hífens e barras'),
+    .refine((val) => val.replace(/\D/g, '').length >= 11, {
+      message: 'Número do documento deve ter pelo menos 11 dígitos'
+    }),
   pixKey: z.string().optional(),
   pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória']).optional(),
+}).refine((data) => {
+  // Validar documento do titular apenas se fornecido
+  if (data.holderDocumentNumber) {
+    if (data.holderDocumentType === 'cpf') {
+      return validateCPF(data.holderDocumentNumber);
+    } else if (data.holderDocumentType === 'cnpj') {
+      return validateCNPJ(data.holderDocumentNumber);
+    }
+  }
+  return true;
+}, {
+  message: "CPF ou CNPJ do titular inválido. Verifique os dígitos verificadores.",
+  path: ["holderDocumentNumber"],
+}).refine((data) => {
+  // Validar chave PIX apenas se fornecida
+  if (data.pixKey && data.pixKeyType) {
+    switch (data.pixKeyType) {
+      case 'cpf':
+        return validateCPF(data.pixKey);
+      case 'cnpj':
+        return validateCNPJ(data.pixKey);
+      case 'email':
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.pixKey) && data.pixKey.length <= 254;
+      case 'telefone':
+        const cleanPhone = data.pixKey.replace(/\D/g, '');
+        if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
+        const ddd = parseInt(cleanPhone.substring(0, 2));
+        if (ddd < 11 || ddd > 99) return false;
+        if (cleanPhone.length === 11 && parseInt(cleanPhone.charAt(2)) !== 9) return false;
+        return true;
+      case 'aleatória':
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.pixKey);
+      default:
+        return true;
+    }
+  }
+  return true;
+}, {
+  message: "Chave PIX inválida para o tipo selecionado",
+  path: ["pixKey"],
 });
 
 type BankAccountFormValues = z.infer<typeof bankAccountSchema>;
