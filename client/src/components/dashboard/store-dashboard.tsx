@@ -864,7 +864,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   const renderServicesSection = () => (
     <>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+      {/* Header fixo com contadores de status */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Meus Serviços</h2>
           <Button 
@@ -878,12 +879,56 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="open">Em Aberto</TabsTrigger>
-            <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-            <TabsTrigger value="completed">Finalizados</TabsTrigger>
-          </TabsList>
+        {/* Status Cards - Always visible */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div 
+            className={`rounded-xl p-4 text-center transition-all duration-300 cursor-pointer border shadow-sm hover:shadow-md ${
+              activeTab === 'open' 
+                ? 'bg-blue-100 border-blue-300 scale-105' 
+                : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+            }`}
+            onClick={() => setActiveTab('open')}
+          >
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-500 rounded-full mx-auto mb-2">
+              <FolderOpen className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-lg font-bold text-blue-700 mb-1">{allServices.filter(service => service.status === 'open').length}</div>
+            <div className="text-sm font-semibold text-gray-700">Em Aberto</div>
+          </div>
+          <div 
+            className={`rounded-xl p-4 text-center transition-all duration-300 cursor-pointer border shadow-sm hover:shadow-md ${
+              activeTab === 'in-progress' 
+                ? 'bg-orange-100 border-orange-300 scale-105' 
+                : 'bg-orange-50 border-orange-200 hover:bg-orange-100'
+            }`}
+            onClick={() => setActiveTab('in-progress')}
+          >
+            <div className="flex items-center justify-center w-10 h-10 bg-orange-500 rounded-full mx-auto mb-2">
+              <PlayCircle className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-lg font-bold text-orange-700 mb-1">{inProgressCount}</div>
+            <div className="text-sm font-semibold text-gray-700">Em Andamento</div>
+          </div>
+          <div 
+            className={`rounded-xl p-4 text-center transition-all duration-300 cursor-pointer border shadow-sm hover:shadow-md ${
+              activeTab === 'completed' 
+                ? 'bg-green-100 border-green-300 scale-105' 
+                : 'bg-green-50 border-green-200 hover:bg-green-100'
+            }`}
+            onClick={() => setActiveTab('completed')}
+          >
+            <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
+              <CheckCircle className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-lg font-bold text-green-700 mb-1">{allServices.filter(service => service.status === 'completed').length}</div>
+            <div className="text-sm font-semibold text-gray-700">Finalizados</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content area for tabs */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="w-full">
           
           <TabsContent value="open">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
