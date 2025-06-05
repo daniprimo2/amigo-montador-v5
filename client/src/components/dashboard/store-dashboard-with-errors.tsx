@@ -490,10 +490,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               </div>
             )}
 
-            {/* Conversas ativas */}
+            {/* Conversas */}
             {activeChats.length > 0 && (
               <div>
-                <h4 className="text-md font-medium mb-3 text-blue-600">Conversas Ativas</h4>
+                <h4 className="text-md font-medium mb-3 text-blue-600">Conversas</h4>
                 <div className="space-y-3">
                   {activeChats.map((service: any) => (
                     <div
@@ -548,10 +548,10 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
               </div>
             )}
 
-            {/* Conversas finalizadas */}
+            {/* Conversas concluídas */}
             {completedChats.length > 0 && (
               <div>
-                <h4 className="text-md font-medium mb-3 text-green-600">Conversas Finalizadas</h4>
+                <h4 className="text-md font-medium mb-3 text-green-600">Conversas Concluídas</h4>
                 <div className="space-y-3">
                   {completedChats.map((service: any) => (
                     <div

@@ -1561,10 +1561,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Seção de conversas ativas (candidaturas aceitas) */}
+            {/* Seção de conversas */}
             {activeChats.length > 0 && (
               <div>
-                <h4 className="text-md font-medium mb-3 text-green-600">Conversas Ativas</h4>
+                <h4 className="text-md font-medium mb-3 text-green-600">Conversas</h4>
                 <div className="space-y-3">
                   {activeChats.map((service: any) => (
                     <div 
