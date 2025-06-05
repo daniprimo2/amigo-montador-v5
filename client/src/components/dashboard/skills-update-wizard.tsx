@@ -234,7 +234,7 @@ export const SkillsUpdateWizard: React.FC<SkillsUpdateWizardProps> = ({
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                 ${step <= currentStep 
-                  ? 'bg-blue-600 text-white' 
+                  ? 'bg-black text-white' 
                   : 'bg-gray-200 text-gray-600'
                 }
               `}>
@@ -243,7 +243,7 @@ export const SkillsUpdateWizard: React.FC<SkillsUpdateWizardProps> = ({
               {step < 4 && (
                 <div className={`
                   w-12 h-1 mx-2
-                  ${step < currentStep ? 'bg-blue-600' : 'bg-gray-200'}
+                  ${step < currentStep ? 'bg-black' : 'bg-gray-200'}
                 `} />
               )}
             </div>
