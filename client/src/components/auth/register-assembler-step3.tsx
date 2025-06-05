@@ -417,13 +417,13 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           <div className="relative pt-1">
             <div className="flex mb-2 items-center justify-between">
               <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary bg-opacity-10">
+                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-black bg-gray-100">
                   Passo 3 de 3
                 </span>
               </div>
             </div>
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '100%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+              <div style={{width: '100%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-black"></div>
             </div>
           </div>
         </div>
