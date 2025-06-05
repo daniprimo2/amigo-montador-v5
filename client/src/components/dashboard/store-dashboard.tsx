@@ -878,14 +878,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="open">Em Aberto</TabsTrigger>
-            <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-            <TabsTrigger value="completed">Finalizados</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="open">
+        {/* Conteúdo baseado na aba ativa */}
+        {activeTab === 'open' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -922,9 +916,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-          </TabsContent>
+          )}
           
-          <TabsContent value="in-progress">
+          {activeTab === 'in-progress' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -954,9 +948,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-          </TabsContent>
+          )}
           
-          <TabsContent value="completed">
+          {activeTab === 'completed' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="divide-y">
                 {servicesQuery.isLoading ? (
@@ -986,8 +980,41 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+        )}
+        
+        {activeTab === 'in-progress' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="divide-y">
+              {servicesQuery.isLoading ? (
+                <div className="p-6 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                  <p className="text-gray-500">Carregando serviços...</p>
+                </div>
+              ) : (
+                services.filter(service => service.status === 'in-progress').map(service => (
+                  <StoreServiceCard key={service.id} service={service} />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'completed' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="divide-y">
+              {servicesQuery.isLoading ? (
+                <div className="p-6 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                  <p className="text-gray-500">Carregando serviços...</p>
+                </div>
+              ) : (
+                services.filter(service => service.status === 'completed').map(service => (
+                  <StoreServiceCard key={service.id} service={service} />
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
@@ -1410,6 +1437,28 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
 
   return (
     <div className="px-4 py-6 min-h-full">
+      {/* Barra de Status Fixa - sempre visível */}
+      {dashboardSection === 'services' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 sticky top-0 z-10">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'open' | 'in-progress' | 'completed')} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="open" className="text-xs sm:text-sm">
+                <FolderOpen className="h-4 w-4 mr-1" />
+                Em Aberto
+              </TabsTrigger>
+              <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
+                <PlayCircle className="h-4 w-4 mr-1" />
+                Em Andamento
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Finalizados
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      )}
+      
       {renderDashboardContent()}
       
       {/* Modal de Novo Serviço */}
