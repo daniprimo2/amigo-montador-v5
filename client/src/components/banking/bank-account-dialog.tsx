@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
-import { bankAccountSchema, validateCPF, validateCNPJ, formatCPF, formatCNPJ, formatPhone, detectPixKeyType, BankAccountFormValues } from '@/lib/bank-account-schema';
+import { bankAccountSchema, validateCPF, validateCNPJ, formatCPF, formatCNPJ, formatPhone, formatAgency, formatAccountNumber, detectPixKeyType, BankAccountFormValues } from '@/lib/bank-account-schema';
 
 interface BankAccount {
   id: number;
@@ -162,6 +162,21 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
     return formatPhone(value);
   };
 
+  const getPixKeyMaxLength = (pixKeyType: string): number => {
+    switch (pixKeyType) {
+      case 'cpf_cnpj':
+        return 18; // CNPJ formatado: 00.000.000/0000-00
+      case 'email':
+        return 77; // Máximo permitido para email PIX
+      case 'telefone':
+        return 15; // (00) 00000-0000
+      case 'uuid':
+        return 36; // 00000000-0000-0000-0000-000000000000
+      default:
+        return 77;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -239,8 +254,8 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                         placeholder="0000"
                         maxLength={4}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          field.onChange(value);
+                          const formatted = formatAgency(e.target.value);
+                          field.onChange(formatted);
                         }}
                       />
                     </FormControl>
@@ -259,11 +274,11 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="00000-0"
+                        placeholder="12345-6"
+                        maxLength={14}
                         onChange={(e) => {
-                          // Permitir números e hífen
-                          const value = e.target.value.replace(/[^\d-]/g, '');
-                          field.onChange(value);
+                          const formatted = formatAccountNumber(e.target.value);
+                          field.onChange(formatted);
                         }}
                       />
                     </FormControl>
@@ -331,10 +346,31 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                       <Input
                         {...field}
                         placeholder={form.watch('holderDocumentType') === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                        maxLength={form.watch('holderDocumentType') === 'cpf' ? 14 : 18}
                         onChange={(e) => {
                           const documentType = form.watch('holderDocumentType');
-                          const formatted = handleDocumentNumberChange(e.target.value, documentType);
+                          const formatted = documentType === 'cpf' 
+                            ? formatCPF(e.target.value) 
+                            : formatCNPJ(e.target.value);
                           field.onChange(formatted);
+                        }}
+                        onBlur={() => {
+                          // Validar em tempo real
+                          const value = field.value;
+                          const documentType = form.watch('holderDocumentType');
+                          if (value) {
+                            const isValid = documentType === 'cpf' 
+                              ? validateCPF(value) 
+                              : validateCNPJ(value);
+                            if (!isValid) {
+                              form.setError('holderDocumentNumber', {
+                                type: 'manual',
+                                message: 'CPF/CNPJ inválido.'
+                              });
+                            } else {
+                              form.clearErrors('holderDocumentNumber');
+                            }
+                          }
                         }}
                       />
                     </FormControl>
@@ -393,6 +429,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                       <Input
                         {...field}
                         placeholder={getPixKeyPlaceholder(form.watch('pixKeyType'))}
+                        maxLength={getPixKeyMaxLength(form.watch('pixKeyType'))}
                         onChange={(e) => {
                           const value = e.target.value;
                           const pixKeyType = form.watch('pixKeyType');
@@ -408,11 +445,52 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                               formattedValue = formatCNPJ(value);
                             }
                           } else if (pixKeyType === 'telefone') {
-                            formattedValue = handlePhoneFormat(value);
+                            formattedValue = formatPhone(value);
+                          } else if (pixKeyType === 'email') {
+                            // Manter formato original para email
+                            formattedValue = value.toLowerCase();
+                          } else if (pixKeyType === 'uuid') {
+                            // Manter formato original para UUID
+                            formattedValue = value.toLowerCase();
                           }
                           
                           field.onChange(formattedValue);
                           handlePixKeyChange(formattedValue);
+                        }}
+                        onBlur={() => {
+                          // Validar PIX key em tempo real
+                          const value = field.value;
+                          const pixKeyType = form.watch('pixKeyType');
+                          if (value && pixKeyType) {
+                            let isValid = false;
+                            switch (pixKeyType) {
+                              case 'cpf_cnpj':
+                                const clean = value.replace(/\D/g, '');
+                                isValid = (clean.length === 11 && validateCPF(value)) || 
+                                         (clean.length === 14 && validateCNPJ(value));
+                                break;
+                              case 'email':
+                                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                                break;
+                              case 'telefone':
+                                const cleanPhone = value.replace(/\D/g, '');
+                                isValid = (cleanPhone.length === 10 || cleanPhone.length === 11) && 
+                                         parseInt(cleanPhone.substring(0, 2)) >= 11;
+                                break;
+                              case 'uuid':
+                                isValid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+                                break;
+                            }
+                            
+                            if (!isValid) {
+                              form.setError('pixKey', {
+                                type: 'manual',
+                                message: 'Chave PIX inválida para o tipo selecionado.'
+                              });
+                            } else {
+                              form.clearErrors('pixKey');
+                            }
+                          }
                         }}
                       />
                     </FormControl>
@@ -452,5 +530,20 @@ function getPixKeyPlaceholder(pixKeyType: string): string {
       return '00000000-0000-0000-0000-000000000000';
     default:
       return 'Digite sua chave PIX';
+  }
+}
+
+function getPixKeyMaxLength(pixKeyType: string): number {
+  switch (pixKeyType) {
+    case 'cpf_cnpj':
+      return 18; // CNPJ formatado: 00.000.000/0000-00
+    case 'email':
+      return 77; // Máximo permitido para email PIX
+    case 'telefone':
+      return 15; // (00) 00000-0000
+    case 'uuid':
+      return 36; // 00000000-0000-0000-0000-000000000000
+    default:
+      return 77;
   }
 }

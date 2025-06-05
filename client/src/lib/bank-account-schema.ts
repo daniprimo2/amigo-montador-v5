@@ -195,31 +195,57 @@ export const getPixValidationMessage = (pixKeyType: string): string => {
   }
 };
 
-// Funções utilitárias para formatação
+// Funções utilitárias para formatação com máscaras melhoradas
 export const formatCPF = (cpf: string): string => {
   const clean = cpf.replace(/\D/g, '');
-  if (clean.length <= 11) {
-    return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  }
-  return cpf;
+  if (clean.length === 0) return '';
+  if (clean.length <= 3) return clean;
+  if (clean.length <= 6) return clean.replace(/(\d{3})(\d+)/, '$1.$2');
+  if (clean.length <= 9) return clean.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+  if (clean.length <= 11) return clean.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+  return clean.substring(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 };
 
 export const formatCNPJ = (cnpj: string): string => {
   const clean = cnpj.replace(/\D/g, '');
-  if (clean.length <= 14) {
-    return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-  }
-  return cnpj;
+  if (clean.length === 0) return '';
+  if (clean.length <= 2) return clean;
+  if (clean.length <= 5) return clean.replace(/(\d{2})(\d+)/, '$1.$2');
+  if (clean.length <= 8) return clean.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+  if (clean.length <= 12) return clean.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+  if (clean.length <= 14) return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, '$1.$2.$3/$4-$5');
+  return clean.substring(0, 14).replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 };
 
 export const formatPhone = (phone: string): string => {
   const clean = phone.replace(/\D/g, '');
-  if (clean.length === 10) {
-    return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  } else if (clean.length === 11) {
-    return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  if (clean.length === 0) return '';
+  if (clean.length <= 2) return `(${clean}`;
+  if (clean.length <= 6) return clean.replace(/(\d{2})(\d+)/, '($1) $2');
+  if (clean.length <= 10) return clean.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+  if (clean.length === 11) return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  return clean.substring(0, 11).replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+};
+
+// Formatação para agência
+export const formatAgency = (agency: string): string => {
+  const clean = agency.replace(/\D/g, '');
+  return clean.substring(0, 4);
+};
+
+// Formatação para número da conta
+export const formatAccountNumber = (accountNumber: string): string => {
+  const clean = accountNumber.replace(/[^\d-]/g, '');
+  // Permitir números e um hífen opcional no final
+  if (clean.includes('-')) {
+    const parts = clean.split('-');
+    if (parts.length === 2) {
+      const mainPart = parts[0].substring(0, 12);
+      const dvPart = parts[1].substring(0, 1);
+      return `${mainPart}-${dvPart}`;
+    }
   }
-  return phone;
+  return clean.substring(0, 12);
 };
 
 // Função para detectar automaticamente o tipo de chave PIX
