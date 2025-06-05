@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import InputMask from 'react-input-mask';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { baseBankAccountSchema } from '@/lib/bank-account-schema';
+import { bankAccountSchema, validateCPF, validateCNPJ, detectPixKeyType, formatCPF, formatCNPJ, formatPhone } from '@/lib/bank-account-schema';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
 
 // Função para validar CEP
@@ -65,16 +65,76 @@ const storeStep2Schema = z.object({
   }, {
     message: "Logo deve ser uma imagem (JPG, PNG, GIF, WEBP) de até 10MB"
   }),
-  // Dados bancários
-  bankName: baseBankAccountSchema.shape.bankName,
-  accountType: baseBankAccountSchema.shape.accountType,
-  accountNumber: baseBankAccountSchema.shape.accountNumber,
-  agency: baseBankAccountSchema.shape.agency,
-  holderName: baseBankAccountSchema.shape.holderName,
-  holderDocumentType: baseBankAccountSchema.shape.holderDocumentType,
-  holderDocumentNumber: baseBankAccountSchema.shape.holderDocumentNumber,
-  pixKey: baseBankAccountSchema.shape.pixKey,
-  pixKeyType: baseBankAccountSchema.shape.pixKeyType,
+  // Dados bancários - usando validações completas
+  bankName: z.string()
+    .min(1, 'Nome do banco é obrigatório')
+    .max(100, 'Nome do banco deve ter no máximo 100 caracteres'),
+  accountType: z.enum(['corrente', 'poupança'], {
+    required_error: 'Tipo de conta é obrigatório',
+  }),
+  accountNumber: z.string()
+    .min(1, 'Número da conta é obrigatório')
+    .max(20, 'Número da conta deve ter no máximo 20 caracteres')
+    .regex(/^[0-9\-]+$/, 'Número da conta deve conter apenas números e hífens'),
+  agency: z.string()
+    .min(1, 'Agência é obrigatória')
+    .max(10, 'Agência deve ter no máximo 10 caracteres')
+    .regex(/^[0-9\-]+$/, 'Agência deve conter apenas números e hífens'),
+  holderName: z.string()
+    .min(3, 'Nome do titular deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome do titular deve ter no máximo 100 caracteres')
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome do titular deve conter apenas letras e espaços'),
+  holderDocumentType: z.enum(['cpf', 'cnpj'], {
+    required_error: 'Tipo de documento é obrigatório',
+  }),
+  holderDocumentNumber: z.string()
+    .min(1, 'Número do documento é obrigatório')
+    .refine((val) => val.replace(/\D/g, '').length >= 11, {
+      message: 'Número do documento deve ter pelo menos 11 dígitos'
+    }),
+  pixKey: z.string()
+    .min(1, 'Chave PIX é obrigatória para receber pagamentos')
+    .max(77, 'Chave PIX deve ter no máximo 77 caracteres'),
+  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória'], {
+    required_error: 'Tipo de chave PIX é obrigatório',
+  }),
+}).refine((data) => {
+  // Validar documento do titular
+  if (data.holderDocumentType === 'cpf') {
+    return validateCPF(data.holderDocumentNumber);
+  } else if (data.holderDocumentType === 'cnpj') {
+    return validateCNPJ(data.holderDocumentNumber);
+  }
+  return false;
+}, {
+  message: "CPF ou CNPJ do titular inválido. Verifique os dígitos verificadores.",
+  path: ["holderDocumentNumber"],
+}).refine((data) => {
+  // Validar chave PIX - obrigatória e deve ser compatível com o tipo
+  if (!data.pixKey || !data.pixKeyType) return false;
+  
+  switch (data.pixKeyType) {
+    case 'cpf':
+      return validateCPF(data.pixKey);
+    case 'cnpj':
+      return validateCNPJ(data.pixKey);
+    case 'email':
+      return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.pixKey) && data.pixKey.length <= 254;
+    case 'telefone':
+      const cleanPhone = data.pixKey.replace(/\D/g, '');
+      if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
+      const ddd = parseInt(cleanPhone.substring(0, 2));
+      if (ddd < 11 || ddd > 99) return false;
+      if (cleanPhone.length === 11 && parseInt(cleanPhone.charAt(2)) !== 9) return false;
+      return true;
+    case 'aleatória':
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.pixKey);
+    default:
+      return false;
+  }
+}, {
+  message: "Chave PIX inválida para o tipo selecionado",
+  path: ["pixKey"],
 });
 
 export type StoreStep2Data = z.infer<typeof storeStep2Schema>;
@@ -679,8 +739,15 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                       placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
                       {...field}
                       onChange={(e) => {
-                        // Permite apenas números, pontos, hífens e barras
-                        const value = e.target.value.replace(/[^\d\.\-\/]/g, '');
+                        let value = e.target.value.replace(/[^\d]/g, '');
+                        
+                        // Formatação automática baseada no tipo
+                        if (form.watch('holderDocumentType') === 'cpf') {
+                          value = formatCPF(value);
+                        } else if (form.watch('holderDocumentType') === 'cnpj') {
+                          value = formatCNPJ(value);
+                        }
+                        
                         field.onChange(value);
                       }}
                     />
@@ -697,10 +764,14 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               name="pixKeyType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo de Chave PIX (opcional)</FormLabel>
+                  <FormLabel>Tipo de Chave PIX</FormLabel>
                   <Select
-                    value={field.value || ''}
-                    onValueChange={field.onChange}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Limpar a chave PIX quando o tipo mudar
+                      form.setValue('pixKey', '');
+                    }}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -708,7 +779,6 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="nenhuma">Nenhuma</SelectItem>
                       <SelectItem value="cpf">CPF</SelectItem>
                       <SelectItem value="cnpj">CNPJ</SelectItem>
                       <SelectItem value="email">E-mail</SelectItem>
@@ -721,24 +791,75 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               )}
             />
             
-            {form.watch('pixKeyType') && (
-              <FormField
-                control={form.control}
-                name="pixKey"
-                render={({ field }) => (
+            <FormField
+              control={form.control}
+              name="pixKey"
+              render={({ field }) => {
+                const pixKeyType = form.watch('pixKeyType');
+                
+                const getPlaceholder = () => {
+                  switch (pixKeyType) {
+                    case 'cpf': return '123.456.789-00';
+                    case 'cnpj': return '12.345.678/0001-90';
+                    case 'email': return 'exemplo@email.com';
+                    case 'telefone': return '(11) 99999-9999';
+                    case 'aleatória': return '12345678-1234-1234-1234-123456789012';
+                    default: return 'Selecione o tipo de chave primeiro';
+                  }
+                };
+                
+                return (
                   <FormItem>
                     <FormLabel>Chave PIX</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder={`Digite sua chave ${form.watch('pixKeyType')}`} 
-                        {...field} 
+                        placeholder={getPlaceholder()}
+                        disabled={!pixKeyType}
+                        {...field}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          
+                          // Formatação automática baseada no tipo
+                          switch (pixKeyType) {
+                            case 'cpf':
+                              value = value.replace(/[^\d]/g, '');
+                              value = formatCPF(value);
+                              break;
+                            case 'cnpj':
+                              value = value.replace(/[^\d]/g, '');
+                              value = formatCNPJ(value);
+                              break;
+                            case 'telefone':
+                              value = value.replace(/[^\d]/g, '');
+                              value = formatPhone(value);
+                              break;
+                            case 'email':
+                              // Apenas remover espaços para email
+                              value = value.replace(/\s/g, '');
+                              break;
+                            case 'aleatória':
+                              // Permitir apenas caracteres válidos para UUID
+                              value = value.replace(/[^0-9a-fA-F\-]/g, '');
+                              break;
+                          }
+                          
+                          field.onChange(value);
+                          
+                          // Detecção automática de tipo se não estiver definido
+                          if (!pixKeyType && value) {
+                            const detectedType = detectPixKeyType(value);
+                            if (detectedType) {
+                              form.setValue('pixKeyType', detectedType);
+                            }
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-            )}
+                );
+              }}
+            />
           </div>
           
           <div className="flex gap-4 mt-8">
