@@ -67,12 +67,12 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
             <div className="flex mb-2 items-center justify-between">
               <div>
                 <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary bg-opacity-10">
-                  PASSO 2 DE 2
+                  Passo 2 de 3
                 </span>
               </div>
             </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '100%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+              <div style={{width: '66%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
               Voltar
             </Button>
             <Button type="submit" className="auth-button flex-1">
-              Concluir Cadastro
+              Próximo
             </Button>
           </div>
         </form>

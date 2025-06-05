@@ -7,11 +7,11 @@ import RegisterStoreStep1 from '@/components/auth/register-store-step1';
 import RegisterStoreStep2 from '@/components/auth/register-store-step2';
 import RegisterAssemblerStep1 from '@/components/auth/register-assembler-step1';
 import RegisterAssemblerStep2 from '@/components/auth/register-assembler-step2';
-
+import RegisterAssemblerStep3 from '@/components/auth/register-assembler-step3';
 import { useAuth } from '@/hooks/use-auth';
 
 type UserType = 'lojista' | 'montador' | null;
-type AuthView = 'login' | 'register' | 'register-store' | 'register-store-step2' | 'register-assembler' | 'register-assembler-step2';
+type AuthView = 'login' | 'register' | 'register-store' | 'register-store-step2' | 'register-assembler' | 'register-assembler-step2' | 'register-assembler-step3';
 
 export default function AuthPage() {
   const { user } = useAuth();
@@ -26,7 +26,7 @@ export default function AuthPage() {
   const [storeStep2Data, setStoreStep2Data] = useState({});
   const [assemblerStep1Data, setAssemblerStep1Data] = useState({});
   const [assemblerStep2Data, setAssemblerStep2Data] = useState({});
-
+  const [assemblerStep3Data, setAssemblerStep3Data] = useState({});
 
   // Redirecionar se o usuário já estiver logado
   React.useEffect(() => {
@@ -81,11 +81,18 @@ export default function AuthPage() {
 
   const handleAssemblerStep2 = (data: any) => {
     setAssemblerStep2Data(data);
-    // This is now the final step - completed by the component
+    setCurrentView('register-assembler-step3' as AuthView);
+  };
+
+  const handleAssemblerStep3 = (data: any) => {
+    setAssemblerStep3Data(data);
+    // Processado pelo componente
   };
 
   const handleAssemblerBack = () => {
-    if (currentView === 'register-assembler-step2') {
+    if (currentView === 'register-assembler-step3') {
+      setCurrentView('register-assembler-step2' as AuthView);
+    } else if (currentView === 'register-assembler-step2') {
       setCurrentView('register-assembler' as AuthView);
     }
   };
@@ -137,6 +144,14 @@ export default function AuthPage() {
           onNext={handleAssemblerStep2}
           onBack={() => setCurrentView('register-assembler' as AuthView)} 
           defaultValues={assemblerStep2Data}
+        />
+      ) : currentView === 'register-assembler-step3' ? (
+        <RegisterAssemblerStep3 
+          onBack={handleAssemblerBack}
+          onComplete={handleAssemblerStep3}
+          step1Data={assemblerStep1Data}
+          step2Data={assemblerStep2Data}
+          defaultValues={assemblerStep3Data}
         />
       ) : null}
     </AuthLayout>
