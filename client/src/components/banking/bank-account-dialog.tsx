@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,81 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
-import { bankAccountSchema as importedBankAccountSchema, validateCPF, validateCNPJ, formatCPF, formatCNPJ, formatPhone, detectPixKeyType } from '@/lib/bank-account-schema';
-
-// Schema para validação dos dados bancários com validações completas
-const bankAccountSchema = z.object({
-  bankName: z.string()
-    .min(1, 'Nome do banco é obrigatório')
-    .max(100, 'Nome do banco deve ter no máximo 100 caracteres'),
-  accountType: z.enum(['corrente', 'poupança'], {
-    required_error: 'Tipo de conta é obrigatório',
-  }),
-  accountNumber: z.string()
-    .min(1, 'Número da conta é obrigatório')
-    .max(20, 'Número da conta deve ter no máximo 20 caracteres')
-    .regex(/^[0-9\-]+$/, 'Número da conta deve conter apenas números e hífens'),
-  agency: z.string()
-    .min(1, 'Agência é obrigatória')
-    .max(10, 'Agência deve ter no máximo 10 caracteres')
-    .regex(/^[0-9\-]+$/, 'Agência deve conter apenas números e hífens'),
-  holderName: z.string()
-    .min(3, 'Nome do titular deve ter pelo menos 3 caracteres')
-    .max(100, 'Nome do titular deve ter no máximo 100 caracteres')
-    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome do titular deve conter apenas letras e espaços'),
-  holderDocumentType: z.enum(['cpf', 'cnpj'], {
-    required_error: 'Tipo de documento é obrigatório',
-  }),
-  holderDocumentNumber: z.string()
-    .min(1, 'Número do documento é obrigatório')
-    .refine((val) => val.replace(/\D/g, '').length >= 11, {
-      message: 'Número do documento deve ter pelo menos 11 dígitos'
-    }),
-  pixKey: z.string().optional(),
-  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória']).optional(),
-}).refine((data) => {
-  // Validar documento do titular apenas se fornecido
-  if (data.holderDocumentNumber) {
-    if (data.holderDocumentType === 'cpf') {
-      return validateCPF(data.holderDocumentNumber);
-    } else if (data.holderDocumentType === 'cnpj') {
-      return validateCNPJ(data.holderDocumentNumber);
-    }
-  }
-  return true;
-}, {
-  message: "CPF ou CNPJ do titular inválido. Verifique os dígitos verificadores.",
-  path: ["holderDocumentNumber"],
-}).refine((data) => {
-  // Validar chave PIX apenas se fornecida
-  if (data.pixKey && data.pixKeyType) {
-    switch (data.pixKeyType) {
-      case 'cpf':
-        return validateCPF(data.pixKey);
-      case 'cnpj':
-        return validateCNPJ(data.pixKey);
-      case 'email':
-        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.pixKey) && data.pixKey.length <= 254;
-      case 'telefone':
-        const cleanPhone = data.pixKey.replace(/\D/g, '');
-        if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
-        const ddd = parseInt(cleanPhone.substring(0, 2));
-        if (ddd < 11 || ddd > 99) return false;
-        if (cleanPhone.length === 11 && parseInt(cleanPhone.charAt(2)) !== 9) return false;
-        return true;
-      case 'aleatória':
-        return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.pixKey);
-      default:
-        return true;
-    }
-  }
-  return true;
-}, {
-  message: "Chave PIX inválida para o tipo selecionado",
-  path: ["pixKey"],
-});
-
-type BankAccountFormValues = z.infer<typeof bankAccountSchema>;
+import { bankAccountSchema, validateCPF, validateCNPJ, formatCPF, formatCNPJ, formatPhone, detectPixKeyType, BankAccountFormValues } from '@/lib/bank-account-schema';
 
 interface BankAccount {
   id: number;
@@ -99,28 +24,20 @@ interface BankAccount {
   holderDocumentNumber: string;
   pixKey?: string;
   pixKeyType?: string;
-  createdAt: string;
 }
 
 interface BankAccountDialogProps {
-  userId: number;
-  userType: 'lojista' | 'montador';
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  account?: BankAccount;
+  onSuccess?: () => void;
 }
 
-export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, userType }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+export default function BankAccountDialog({ open, onOpenChange, account, onSuccess }: BankAccountDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [pixKeyAutoDetect, setPixKeyAutoDetect] = useState(false);
 
-  // Buscar as contas bancárias do usuário
-  const { data: bankAccounts, isLoading } = useQuery({
-    queryKey: ['/api/bank-accounts'],
-    select: (data) => data as BankAccount[],
-  });
-
-  // Form para adicionar/editar conta bancária
   const form = useForm<BankAccountFormValues>({
     resolver: zodResolver(bankAccountSchema),
     defaultValues: {
@@ -132,468 +49,406 @@ export const BankAccountDialog: React.FC<BankAccountDialogProps> = ({ userId, us
       holderDocumentType: 'cpf',
       holderDocumentNumber: '',
       pixKey: '',
-      pixKeyType: undefined,
+      pixKeyType: 'cpf_cnpj',
     },
   });
 
-  // Mutation para criar conta bancária
-  const createBankAccountMutation = useMutation({
-    mutationFn: (data: BankAccountFormValues) => {
-      return apiRequest({
-        url: '/api/bank-accounts',
-        method: 'POST',
-        data,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Conta bancária adicionada',
-        description: 'Sua conta bancária foi adicionada com sucesso.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      form.reset();
-      setIsOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao adicionar conta bancária',
-        description: error.message || 'Ocorreu um erro ao adicionar a conta bancária.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Mutation para atualizar conta bancária
-  const updateBankAccountMutation = useMutation({
-    mutationFn: (data: BankAccountFormValues & { id: number }) => {
-      const { id, ...formData } = data;
-      return apiRequest({
-        url: `/api/bank-accounts/${id}`,
-        method: 'PATCH',
-        data: formData,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Conta bancária atualizada',
-        description: 'Sua conta bancária foi atualizada com sucesso.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      form.reset();
-      setIsEditing(false);
-      setSelectedAccountId(null);
-      setIsOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao atualizar conta bancária',
-        description: error.message || 'Ocorreu um erro ao atualizar a conta bancária.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Mutation para excluir conta bancária
-  const deleteBankAccountMutation = useMutation({
-    mutationFn: (id: number) => {
-      return apiRequest({
-        url: `/api/bank-accounts/${id}`,
-        method: 'DELETE',
-        data: undefined,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Conta bancária excluída',
-        description: 'Sua conta bancária foi excluída com sucesso.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erro ao excluir conta bancária',
-        description: error.message || 'Ocorreu um erro ao excluir a conta bancária.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Função para editar uma conta bancária
-  const handleEditAccount = (account: BankAccount) => {
-    setIsEditing(true);
-    setSelectedAccountId(account.id);
-    form.reset({
-      bankName: account.bankName,
-      accountType: account.accountType as 'corrente' | 'poupança',
-      accountNumber: account.accountNumber,
-      agency: account.agency,
-      holderName: account.holderName,
-      holderDocumentType: account.holderDocumentType as 'cpf' | 'cnpj',
-      holderDocumentNumber: account.holderDocumentNumber,
-      pixKey: account.pixKey || '',
-      pixKeyType: account.pixKeyType ? account.pixKeyType as 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatória' : undefined,
-    });
-    setIsOpen(true);
-  };
-
-  // Função para excluir uma conta bancária
-  const handleDeleteAccount = (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta conta bancária?')) {
-      deleteBankAccountMutation.mutate(id);
-    }
-  };
-
-  // Função para limpar o formulário quando o modal é fechado
-  const handleDialogClose = () => {
-    if (!isOpen) {
-      form.reset();
-      setIsEditing(false);
-      setSelectedAccountId(null);
-    }
-  };
-
-  // Efeito para monitorar o estado do diálogo
+  // Resetar form quando account mudar
   useEffect(() => {
-    handleDialogClose();
-  }, [isOpen]);
-
-  // Função para enviar o formulário
-  const onSubmit = (data: BankAccountFormValues) => {
-    if (isEditing && selectedAccountId) {
-      updateBankAccountMutation.mutate({ ...data, id: selectedAccountId });
+    if (account) {
+      form.reset({
+        bankName: account.bankName,
+        accountType: account.accountType as 'corrente' | 'poupança',
+        accountNumber: account.accountNumber,
+        agency: account.agency,
+        holderName: account.holderName,
+        holderDocumentType: account.holderDocumentType as 'cpf' | 'cnpj',
+        holderDocumentNumber: account.holderDocumentNumber,
+        pixKey: account.pixKey || '',
+        pixKeyType: (account.pixKeyType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid') || 'cpf_cnpj',
+      });
     } else {
-      createBankAccountMutation.mutate(data);
+      form.reset({
+        bankName: '',
+        accountType: 'corrente',
+        accountNumber: '',
+        agency: '',
+        holderName: '',
+        holderDocumentType: 'cpf',
+        holderDocumentNumber: '',
+        pixKey: '',
+        pixKeyType: 'cpf_cnpj',
+      });
+    }
+  }, [account, form]);
+
+  // Auto-detectar tipo de chave PIX
+  const handlePixKeyChange = (value: string) => {
+    if (value && pixKeyAutoDetect) {
+      const detectedType = detectPixKeyType(value);
+      if (detectedType) {
+        form.setValue('pixKeyType', detectedType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid');
+      }
     }
   };
 
-  // Função para adicionar nova conta
-  const handleAddNewAccount = () => {
-    form.reset({
-      bankName: '',
-      accountType: 'corrente',
-      accountNumber: '',
-      agency: '',
-      holderName: '',
-      holderDocumentType: 'cpf',
-      holderDocumentNumber: '',
-      pixKey: '',
-      pixKeyType: undefined,
-    });
-    setIsEditing(false);
-    setSelectedAccountId(null);
-    setIsOpen(true);
+  const createMutation = useMutation({
+    mutationFn: (data: BankAccountFormValues) => apiRequest('/api/bank-accounts', {
+      method: 'POST',
+      body: data,
+    }),
+    onSuccess: () => {
+      toast({
+        title: "Conta bancária adicionada",
+        description: "Sua conta bancária foi adicionada com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao adicionar conta",
+        description: error.message || "Ocorreu um erro ao adicionar a conta bancária.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: BankAccountFormValues) => apiRequest(`/api/bank-accounts/${account?.id}`, {
+      method: 'PUT',
+      body: data,
+    }),
+    onSuccess: () => {
+      toast({
+        title: "Conta bancária atualizada",
+        description: "Sua conta bancária foi atualizada com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao atualizar conta",
+        description: error.message || "Ocorreu um erro ao atualizar a conta bancária.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: BankAccountFormValues) => {
+    if (account) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const banks = getBanksOrderedByName();
+
+  const handleDocumentNumberChange = (value: string, documentType: 'cpf' | 'cnpj') => {
+    if (documentType === 'cpf') {
+      return formatCPF(value);
+    } else {
+      return formatCNPJ(value);
+    }
+  };
+
+  const handlePhoneFormat = (value: string) => {
+    return formatPhone(value);
   };
 
   return (
-    <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">Informações Bancárias</h3>
-      
-      {isLoading ? (
-        <p>Carregando informações bancárias...</p>
-      ) : (
-        <>
-          {bankAccounts && bankAccounts.length > 0 ? (
-            <div className="space-y-4">
-              {bankAccounts.map((account) => (
-                <div 
-                  key={account.id}
-                  className="border p-4 rounded-md bg-white shadow-sm"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">{account.bankName}</h4>
-                      <p className="text-sm text-gray-500">
-                        Agência: {account.agency} | Conta: {account.accountNumber} ({account.accountType})
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Titular: {account.holderName} ({account.holderDocumentType.toUpperCase()}: {account.holderDocumentNumber})
-                      </p>
-                      {account.pixKey && (
-                        <p className="text-sm text-gray-500">
-                          Chave PIX ({account.pixKeyType}): {account.pixKey}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditAccount(account)}
-                      >
-                        Editar
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDeleteAccount(account.id)}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 mb-4">Você não possui contas bancárias cadastradas.</p>
-          )}
-          
-          <Button 
-            variant="default" 
-            className="mt-4"
-            onClick={handleAddNewAccount}
-          >
-            Adicionar Conta Bancária
-          </Button>
-        </>
-      )}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {account ? 'Editar Conta Bancária' : 'Adicionar Conta Bancária'}
+          </DialogTitle>
+          <DialogDescription>
+            {account ? 'Atualize suas informações bancárias' : 'Adicione uma nova conta bancária para receber pagamentos'}
+          </DialogDescription>
+        </DialogHeader>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? 'Editar Conta Bancária' : 'Adicionar Conta Bancária'}
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing ? 'Atualize os dados da sua conta bancária.' : 'Preencha os dados da sua conta bancária para receber pagamentos.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Banco */}
+            <FormField
+              control={form.control}
+              name="bankName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Banco *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o banco" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {banks.map((bank) => (
+                        <SelectItem key={bank.code} value={bank.name}>
+                          {bank.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Tipo de Conta */}
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Conta *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="corrente">Conta Corrente</SelectItem>
+                      <SelectItem value="poupança">Conta Poupança</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Agência */}
               <FormField
                 control={form.control}
-                name="bankName"
+                name="agency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome do Banco</FormLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
+                    <FormLabel>Agência *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="0000"
+                        maxLength={4}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          field.onChange(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Número da Conta */}
+              <FormField
+                control={form.control}
+                name="accountNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número da Conta *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="00000-0"
+                        onChange={(e) => {
+                          // Permitir números e hífen
+                          const value = e.target.value.replace(/[^\d-]/g, '');
+                          field.onChange(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Nome do Titular */}
+            <FormField
+              control={form.control}
+              name="holderName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Titular *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Nome completo do titular"
+                      onChange={(e) => {
+                        // Permitir apenas letras, acentos e espaços
+                        const value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Tipo de Documento */}
+              <FormField
+                control={form.control}
+                name="holderDocumentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Documento *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione seu banco..." />
+                          <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-60">
-                        {getBanksOrderedByName().map((bank) => (
-                          <SelectItem key={bank.code} value={bank.name}>
-                            {bank.name}
-                          </SelectItem>
-                        ))}
+                      <SelectContent>
+                        <SelectItem value="cpf">CPF</SelectItem>
+                        <SelectItem value="cnpj">CNPJ</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="accountType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Conta</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="corrente">Conta Corrente</SelectItem>
-                          <SelectItem value="poupança">Conta Poupança</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="agency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Agência</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Exemplo: 1234" 
-                          {...field}
-                          onChange={(e) => {
-                            // Permite apenas números e hífens
-                            const value = e.target.value.replace(/[^\d\-]/g, '');
-                            field.onChange(value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="accountNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número da Conta</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Exemplo: 12345-6" 
-                          {...field}
-                          onChange={(e) => {
-                            // Permite apenas números e hífens
-                            const value = e.target.value.replace(/[^\d\-]/g, '');
-                            field.onChange(value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="holderName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome do Titular</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome completo do titular" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="holderDocumentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Documento</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cpf">CPF</SelectItem>
-                          <SelectItem value="cnpj">CNPJ</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="holderDocumentNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número do Documento</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder={form.watch('holderDocumentType') === 'cpf' ? '123.456.789-00' : '12.345.678/0001-90'} 
-                          {...field}
-                          onChange={(e) => {
-                            // Permite apenas números, pontos, hífens e barras
-                            const value = e.target.value.replace(/[^\d\.\-\/]/g, '');
-                            field.onChange(value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="pixKeyType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Chave PIX (opcional)</FormLabel>
-                      <Select
-                        value={field.value || ''}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="nenhuma">Nenhuma</SelectItem>
-                          <SelectItem value="cpf">CPF</SelectItem>
-                          <SelectItem value="cnpj">CNPJ</SelectItem>
-                          <SelectItem value="email">E-mail</SelectItem>
-                          <SelectItem value="telefone">Telefone</SelectItem>
-                          <SelectItem value="aleatória">Chave Aleatória</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {form.watch('pixKeyType') && (
-                  <FormField
-                    control={form.control}
-                    name="pixKey"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Chave PIX</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Digite sua chave PIX" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+              {/* Número do Documento */}
+              <FormField
+                control={form.control}
+                name="holderDocumentNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número do Documento *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder={form.watch('holderDocumentType') === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                        onChange={(e) => {
+                          const documentType = form.watch('holderDocumentType');
+                          const formatted = handleDocumentNumberChange(e.target.value, documentType);
+                          field.onChange(formatted);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+            </div>
+
+            {/* Chave PIX */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Chave PIX *</h4>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={pixKeyAutoDetect}
+                    onChange={(e) => setPixKeyAutoDetect(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>Auto-detectar tipo</span>
+                </label>
               </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={createBankAccountMutation.isPending || updateBankAccountMutation.isPending}
-                >
-                  {createBankAccountMutation.isPending || updateBankAccountMutation.isPending
-                    ? 'Salvando...'
-                    : isEditing
-                      ? 'Atualizar'
-                      : 'Adicionar'
-                  }
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
+
+              <FormField
+                control={form.control}
+                name="pixKeyType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Chave PIX *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cpf_cnpj">CPF/CNPJ</SelectItem>
+                        <SelectItem value="email">E-mail</SelectItem>
+                        <SelectItem value="telefone">Telefone</SelectItem>
+                        <SelectItem value="uuid">Chave Aleatória</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pixKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor da Chave PIX *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder={getPixKeyPlaceholder(form.watch('pixKeyType'))}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const pixKeyType = form.watch('pixKeyType');
+                          
+                          let formattedValue = value;
+                          
+                          // Formatar conforme o tipo
+                          if (pixKeyType === 'cpf_cnpj') {
+                            const clean = value.replace(/\D/g, '');
+                            if (clean.length <= 11) {
+                              formattedValue = formatCPF(value);
+                            } else {
+                              formattedValue = formatCNPJ(value);
+                            }
+                          } else if (pixKeyType === 'telefone') {
+                            formattedValue = handlePhoneFormat(value);
+                          }
+                          
+                          field.onChange(formattedValue);
+                          handlePixKeyChange(formattedValue);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : (account ? 'Atualizar' : 'Adicionar')}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
+
+function getPixKeyPlaceholder(pixKeyType: string): string {
+  switch (pixKeyType) {
+    case 'cpf_cnpj':
+      return '000.000.000-00 ou 00.000.000/0000-00';
+    case 'email':
+      return 'exemplo@dominio.com';
+    case 'telefone':
+      return '(11) 99999-9999';
+    case 'uuid':
+      return '00000000-0000-0000-0000-000000000000';
+    default:
+      return 'Digite sua chave PIX';
+  }
+}

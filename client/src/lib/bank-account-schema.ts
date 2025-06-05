@@ -59,9 +59,14 @@ const validateCNPJ = (cnpj: string): boolean => {
   return result === parseInt(digits.charAt(1));
 };
 
-// Função para validar telefone com DDD
+// Função para validar telefone com DDD (aceita prefixo +55 opcional)
 const validatePhone = (phone: string): boolean => {
-  const cleanPhone = phone.replace(/\D/g, '');
+  let cleanPhone = phone.replace(/\D/g, '');
+  
+  // Remover prefixo +55 se presente
+  if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
+    cleanPhone = cleanPhone.substring(2);
+  }
   
   // Deve ter 10 ou 11 dígitos (DDD + número)
   if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
@@ -79,9 +84,9 @@ const validatePhone = (phone: string): boolean => {
   return true;
 };
 
-// Função para validar email
+// Função para validar email (RFC 5322 simplificada)
 const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) && email.length <= 254;
 };
 
@@ -91,7 +96,7 @@ const validateRandomKey = (key: string): boolean => {
   return uuidRegex.test(key);
 };
 
-// Schema base para validação dos dados bancários (sem refinements para poder usar .shape)
+// Schema base para validação dos dados bancários conforme especificação
 const baseBankAccountSchema = z.object({
   bankName: z.string()
     .min(1, 'Nome do banco é obrigatório')
@@ -100,37 +105,44 @@ const baseBankAccountSchema = z.object({
   accountType: z.enum(['corrente', 'poupança'], {
     required_error: 'Tipo de conta é obrigatório',
   }),
+  // Número da Conta: 5-12 dígitos + opcional DV
   accountNumber: z.string()
-    .min(1, 'Número da conta é obrigatório')
-    .max(20, 'Número da conta deve ter no máximo 20 caracteres')
-    .regex(/^[0-9\-]+$/, 'Número da conta deve conter apenas números e hífens'),
+    .min(1, 'Número de conta inválido.')
+    .regex(/^\d{5,12}(-\d{1})?$/, 'Número de conta inválido.'),
+  // Agência: somente números, 4 dígitos
   agency: z.string()
-    .min(1, 'Agência é obrigatória')
-    .max(10, 'Agência deve ter no máximo 10 caracteres')
-    .regex(/^[0-9\-]+$/, 'Agência deve conter apenas números e hífens'),
+    .min(1, 'Número de agência inválido (use 4 dígitos).')
+    .regex(/^\d{4}$/, 'Número de agência inválido (use 4 dígitos).'),
+  // Nome do Titular: ≥ 3 caracteres, apenas letras/acentos/espaços
   holderName: z.string()
-    .min(3, 'Nome do titular deve ter pelo menos 3 caracteres')
-    .max(100, 'Nome do titular deve ter no máximo 100 caracteres')
-    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome do titular deve conter apenas letras e espaços'),
+    .min(3, 'Informe o nome completo do titular.')
+    .regex(/^[a-zA-ZÀ-ÿ ]{3,}$/, 'Informe o nome completo do titular.')
+    .transform((val) => val.replace(/\s+/g, ' ').trim()), // Normalizar espaços
   holderDocumentType: z.enum(['cpf', 'cnpj'], {
     required_error: 'Tipo de documento é obrigatório',
   }),
+  // Documento: CPF (11 dígitos) ou CNPJ (14 dígitos) válidos
   holderDocumentNumber: z.string()
-    .min(1, 'Número do documento é obrigatório')
-    .refine((val) => val.replace(/\D/g, '').length >= 11, {
-      message: 'Número do documento deve ter pelo menos 11 dígitos'
+    .min(1, 'CPF/CNPJ inválido.')
+    .refine((val) => {
+      const clean = val.replace(/\D/g, '');
+      return clean.length === 11 || clean.length === 14;
+    }, {
+      message: 'CPF/CNPJ inválido.'
     }),
+  // Chave PIX obrigatória
   pixKey: z.string()
-    .min(1, 'Chave PIX é obrigatória para receber pagamentos')
+    .min(1, 'Chave PIX inválida para o tipo selecionado.')
     .max(77, 'Chave PIX deve ter no máximo 77 caracteres'),
-  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória'], {
-    required_error: 'Tipo de chave PIX é obrigatório',
+  // Tipo de Chave PIX
+  pixKeyType: z.enum(['cpf_cnpj', 'email', 'telefone', 'uuid'], {
+    required_error: 'Selecione o tipo de chave PIX.',
   }),
 });
 
-// Schema completo com validações complexas
+// Schema completo com validações conforme especificação
 export const bankAccountSchema = baseBankAccountSchema.refine((data) => {
-  // Validar documento do titular
+  // Validar documento do titular usando algoritmo de dígito verificador
   if (data.holderDocumentType === 'cpf') {
     return validateCPF(data.holderDocumentNumber);
   } else if (data.holderDocumentType === 'cnpj') {
@@ -138,65 +150,45 @@ export const bankAccountSchema = baseBankAccountSchema.refine((data) => {
   }
   return false;
 }, {
-  message: "CPF ou CNPJ do titular inválido. Verifique os dígitos verificadores.",
+  message: "CPF/CNPJ inválido.",
   path: ["holderDocumentNumber"],
 }).refine((data) => {
-  // Validar chave PIX - obrigatória e deve ser compatível com o tipo
+  // Validar chave PIX conforme tipo selecionado
   if (!data.pixKey || !data.pixKeyType) return false;
   
   switch (data.pixKeyType) {
-    case 'cpf':
-      return validateCPF(data.pixKey);
-    case 'cnpj':
-      return validateCNPJ(data.pixKey);
+    case 'cpf_cnpj':
+      const cleanDoc = data.pixKey.replace(/\D/g, '');
+      if (cleanDoc.length === 11) {
+        return validateCPF(data.pixKey);
+      } else if (cleanDoc.length === 14) {
+        return validateCNPJ(data.pixKey);
+      }
+      return false;
     case 'email':
       return validateEmail(data.pixKey);
     case 'telefone':
       return validatePhone(data.pixKey);
-    case 'aleatória':
+    case 'uuid':
       return validateRandomKey(data.pixKey);
     default:
       return false;
   }
 }, {
-  message: "Chave PIX inválida para o tipo selecionado",
-  path: ["pixKey"],
-}).refine((data) => {
-  // Validação adicional: garantir formatação correta baseada no tipo
-  if (!data.pixKey || !data.pixKeyType) return false;
-  
-  switch (data.pixKeyType) {
-    case 'cpf':
-      return data.pixKey.replace(/\D/g, '').length === 11 && validateCPF(data.pixKey);
-    case 'cnpj':
-      return data.pixKey.replace(/\D/g, '').length === 14 && validateCNPJ(data.pixKey);
-    case 'email':
-      return data.pixKey.includes('@') && data.pixKey.includes('.') && validateEmail(data.pixKey);
-    case 'telefone':
-      const cleanPhone = data.pixKey.replace(/\D/g, '');
-      return (cleanPhone.length === 10 || cleanPhone.length === 11) && validatePhone(data.pixKey);
-    case 'aleatória':
-      return data.pixKey.includes('-') && data.pixKey.length === 36 && validateRandomKey(data.pixKey);
-    default:
-      return true;
-  }
-}, {
-  message: "Formato da chave PIX incorreto para o tipo selecionado",
+  message: "Chave PIX inválida para o tipo selecionado.",
   path: ["pixKey"],
 });
 
 // Função para retornar mensagem de erro específica baseada no tipo de chave PIX
 export const getPixValidationMessage = (pixKeyType: string): string => {
   switch (pixKeyType) {
-    case 'cpf':
-      return "CPF inválido. Digite apenas números (11 dígitos) ou no formato XXX.XXX.XXX-XX";
-    case 'cnpj':
-      return "CNPJ inválido. Digite apenas números (14 dígitos) ou no formato XX.XXX.XXX/XXXX-XX";
+    case 'cpf_cnpj':
+      return "CPF/CNPJ inválido. Digite apenas números (11 para CPF ou 14 para CNPJ)";
     case 'email':
       return "E-mail inválido. Digite um endereço de e-mail válido (exemplo@dominio.com)";
     case 'telefone':
       return "Telefone inválido. Digite com DDD: (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo";
-    case 'aleatória':
+    case 'uuid':
       return "Chave aleatória inválida. Deve ser um UUID no formato: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
     default:
       return "Chave PIX inválida para o tipo selecionado";
@@ -236,14 +228,9 @@ export const detectPixKeyType = (key: string): string | null => {
   
   const cleanKey = key.replace(/\D/g, '');
   
-  // CPF (11 dígitos)
-  if (cleanKey.length === 11 && validateCPF(key)) {
-    return 'cpf';
-  }
-  
-  // CNPJ (14 dígitos)
-  if (cleanKey.length === 14 && validateCNPJ(key)) {
-    return 'cnpj';
+  // CPF (11 dígitos) ou CNPJ (14 dígitos)
+  if ((cleanKey.length === 11 && validateCPF(key)) || (cleanKey.length === 14 && validateCNPJ(key))) {
+    return 'cpf_cnpj';
   }
   
   // Email
@@ -258,7 +245,7 @@ export const detectPixKeyType = (key: string): string | null => {
   
   // Chave aleatória (UUID)
   if (key.includes('-') && key.length === 36 && validateRandomKey(key)) {
-    return 'aleatória';
+    return 'uuid';
   }
   
   return null;
