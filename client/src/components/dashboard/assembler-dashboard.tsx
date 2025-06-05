@@ -932,24 +932,16 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
           <div 
-            className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
-              serviceCounts.available > 0 
-                ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm hover:shadow-md hover:from-blue-100 hover:to-indigo-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md hover:bg-blue-100"
             onClick={() => serviceCounts.available > 0 && setDashboardSection('explore')}
           >
-            <div className={`font-bold text-xl ${serviceCounts.available > 0 ? 'text-blue-700' : 'text-gray-500'}`}>
-              🔵 {serviceCounts.available}
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2">
+              <span className="text-white font-bold text-lg">{serviceCounts.available}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Disponíveis</div>
+            <div className="text-sm font-semibold text-gray-700">Disponíveis</div>
           </div>
           <div 
-            className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
-              serviceCounts.pending > 0 
-                ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 shadow-sm hover:shadow-md hover:from-yellow-100 hover:to-amber-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-yellow-50 border border-yellow-200 shadow-sm hover:shadow-md hover:bg-yellow-100"
             onClick={() => {
               if (serviceCounts.pending > 0) {
                 setDashboardSection('home');
@@ -957,17 +949,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               }
             }}
           >
-            <div className={`font-bold text-xl ${serviceCounts.pending > 0 ? 'text-yellow-700' : 'text-gray-500'}`}>
-              ⏳ {serviceCounts.pending}
+            <div className="flex items-center justify-center w-8 h-8 bg-yellow-500 rounded-full mx-auto mb-2">
+              <span className="text-white font-bold text-lg">{serviceCounts.pending}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Aguardando</div>
+            <div className="text-sm font-semibold text-gray-700">Aguardando</div>
           </div>
           <div 
-            className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
-              serviceCounts.inProgress > 0 
-                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-md hover:from-amber-100 hover:to-orange-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-orange-50 border border-orange-200 shadow-sm hover:shadow-md hover:bg-orange-100"
             onClick={() => {
               if (serviceCounts.inProgress > 0) {
                 setDashboardSection('home');
@@ -975,17 +963,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               }
             }}
           >
-            <div className={`font-bold text-xl ${serviceCounts.inProgress > 0 ? 'text-amber-700' : 'text-gray-500'}`}>
-              🟠 {serviceCounts.inProgress}
+            <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded-full mx-auto mb-2">
+              <span className="text-white font-bold text-lg">{serviceCounts.inProgress}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Em Andamento</div>
+            <div className="text-sm font-semibold text-gray-700">Em Andamento</div>
           </div>
           <div 
-            className={`rounded-lg p-3 text-center transition-all duration-300 cursor-pointer ${
-              serviceCounts.completed > 0 
-                ? 'bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 shadow-sm hover:shadow-md hover:from-emerald-100 hover:to-green-100' 
-                : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
-            }`}
+            className="rounded-xl p-4 text-center transition-all duration-300 cursor-pointer bg-green-50 border border-green-200 shadow-sm hover:shadow-md hover:bg-green-100"
             onClick={() => {
               if (serviceCounts.completed > 0) {
                 setDashboardSection('home');
@@ -993,10 +977,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
               }
             }}
           >
-            <div className={`font-bold text-xl ${serviceCounts.completed > 0 ? 'text-emerald-700' : 'text-gray-500'}`}>
-              ✅ {serviceCounts.completed}
+            <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full mx-auto mb-2">
+              <span className="text-white font-bold text-lg">{serviceCounts.completed}</span>
             </div>
-            <div className="text-xs text-gray-600 font-medium">Finalizados</div>
+            <div className="text-sm font-semibold text-gray-700">Finalizados</div>
           </div>
         </div>
       </div>
