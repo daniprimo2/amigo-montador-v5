@@ -4002,16 +4002,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Você já avaliou este serviço" });
       }
 
-      // Criar a avaliação
-      const newRating = await storage.createRating({
-        serviceId,
-        fromUserId,
-        toUserId,
-        fromUserType,
-        toUserType,
-        rating,
-        comment: comment || null
-      });
+      // Criar a avaliação com tratamento de duplicatas
+      let newRating;
+      try {
+        newRating = await storage.createRating({
+          serviceId,
+          fromUserId,
+          toUserId,
+          fromUserType,
+          toUserType,
+          rating,
+          comment: comment || null
+        });
+      } catch (dbError: any) {
+        // Tratar violação de constraint único (duplicata)
+        if (dbError.code === '23505' || dbError.message?.includes('unique_rating_per_service_user')) {
+          return res.status(400).json({ 
+            message: "Você já avaliou este serviço. Cada usuário pode avaliar um serviço apenas uma vez." 
+          });
+        }
+        // Re-lançar outros erros de banco
+        throw dbError;
+      }
 
       // Atualizar a avaliação média do usuário que foi avaliado
       if (toUserType === 'montador') {
@@ -4052,9 +4064,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rating: newRating,
         message: "Avaliação criada com sucesso"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar avaliação:", error);
-      res.status(500).json({ message: "Erro ao criar avaliação" });
+      
+      // Verificar se é erro de duplicata que não foi capturado acima
+      if (error.code === '23505' || error.message?.includes('unique_rating_per_service_user')) {
+        return res.status(400).json({ 
+          message: "Você já avaliou este serviço. Cada usuário pode avaliar um serviço apenas uma vez." 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Erro interno do servidor ao processar avaliação",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 
