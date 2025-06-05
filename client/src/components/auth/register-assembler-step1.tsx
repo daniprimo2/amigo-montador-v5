@@ -253,12 +253,12 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
             <div className="flex mb-2 items-center justify-between">
               <div>
                 <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-primary bg-primary bg-opacity-10">
-                  Passo 1 de 3
+                  PASSO 1 DE 2
                 </span>
               </div>
             </div>
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '33%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+              <div style={{width: '50%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
             </div>
           </div>
         </div>

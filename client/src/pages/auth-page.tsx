@@ -7,11 +7,11 @@ import RegisterStoreStep1 from '@/components/auth/register-store-step1';
 import RegisterStoreStep2 from '@/components/auth/register-store-step2';
 import RegisterAssemblerStep1 from '@/components/auth/register-assembler-step1';
 import RegisterAssemblerStep2 from '@/components/auth/register-assembler-step2';
-import RegisterAssemblerStep3 from '@/components/auth/register-assembler-step3';
+
 import { useAuth } from '@/hooks/use-auth';
 
 type UserType = 'lojista' | 'montador' | null;
-type AuthView = 'login' | 'register' | 'register-store' | 'register-store-step2' | 'register-assembler' | 'register-assembler-step2' | 'register-assembler-step3';
+type AuthView = 'login' | 'register' | 'register-store' | 'register-store-step2' | 'register-assembler' | 'register-assembler-step2';
 
 export default function AuthPage() {
   const { user } = useAuth();
@@ -26,7 +26,7 @@ export default function AuthPage() {
   const [storeStep2Data, setStoreStep2Data] = useState({});
   const [assemblerStep1Data, setAssemblerStep1Data] = useState({});
   const [assemblerStep2Data, setAssemblerStep2Data] = useState({});
-  const [assemblerStep3Data, setAssemblerStep3Data] = useState({});
+
 
   // Redirecionar se o usuário já estiver logado
   React.useEffect(() => {
@@ -81,12 +81,7 @@ export default function AuthPage() {
 
   const handleAssemblerStep2 = (data: any) => {
     setAssemblerStep2Data(data);
-    setCurrentView('register-assembler-step3' as AuthView);
-  };
-
-  const handleAssemblerStep3 = (data: any) => {
-    setAssemblerStep3Data(data);
-    // Processado pelo componente
+    // This is now the final step - completed by the component
   };
 
   const handleAssemblerBack = () => {
