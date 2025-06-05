@@ -258,7 +258,7 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
               </div>
             </div>
             <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '33%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+              <div style={{width: '33%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#2c3139]"></div>
             </div>
           </div>
         </div>
