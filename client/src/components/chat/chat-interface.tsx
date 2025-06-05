@@ -717,26 +717,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="flex gap-2">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1"
-            disabled={sendMessageMutation.isPending}
-          />
-          <Button 
-            type="submit" 
-            disabled={!message.trim() || sendMessageMutation.isPending}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm transition-all duration-200"
-          >
-            {sendMessageMutation.isPending ? (
-              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </Button>
-        </form>
+        {/* Verificar se o serviço está finalizado para desabilitar envio de mensagens */}
+        {serviceQuery.data?.status === 'completed' ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center gap-2 text-yellow-700">
+              <CheckSquare className="h-5 w-5" />
+              <span className="font-medium">Serviço Finalizado</span>
+            </div>
+            <p className="text-sm text-yellow-600 mt-1">
+              Este chat é apenas para visualização. O serviço foi concluído e não é possível enviar novas mensagens.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSendMessage} className="flex gap-2">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Digite sua mensagem..."
+              className="flex-1"
+              disabled={sendMessageMutation.isPending}
+            />
+            <Button 
+              type="submit" 
+              disabled={!message.trim() || sendMessageMutation.isPending}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm transition-all duration-200"
+            >
+              {sendMessageMutation.isPending ? (
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </Button>
+          </form>
+        )}
       </div>
       
       {/* Modal de pagamento */}
