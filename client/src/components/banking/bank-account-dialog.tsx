@@ -33,7 +33,7 @@ interface BankAccountDialogProps {
   onSuccess?: () => void;
 }
 
-export default function BankAccountDialog({ open, onOpenChange, account, onSuccess }: BankAccountDialogProps) {
+export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: BankAccountDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pixKeyAutoDetect, setPixKeyAutoDetect] = useState(false);
@@ -93,9 +93,10 @@ export default function BankAccountDialog({ open, onOpenChange, account, onSucce
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: BankAccountFormValues) => apiRequest('/api/bank-accounts', {
+    mutationFn: (data: BankAccountFormValues) => apiRequest({
       method: 'POST',
-      body: data,
+      url: '/api/bank-accounts',
+      data
     }),
     onSuccess: () => {
       toast({
@@ -116,9 +117,10 @@ export default function BankAccountDialog({ open, onOpenChange, account, onSucce
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: BankAccountFormValues) => apiRequest(`/api/bank-accounts/${account?.id}`, {
+    mutationFn: (data: BankAccountFormValues) => apiRequest({
       method: 'PUT',
-      body: data,
+      url: `/api/bank-accounts/${account?.id}`,
+      data
     }),
     onSuccess: () => {
       toast({
