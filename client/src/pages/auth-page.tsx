@@ -85,9 +85,7 @@ export default function AuthPage() {
   };
 
   const handleAssemblerBack = () => {
-    if (currentView === 'register-assembler-step3') {
-      setCurrentView('register-assembler-step2' as AuthView);
-    } else if (currentView === 'register-assembler-step2') {
+    if (currentView === 'register-assembler-step2') {
       setCurrentView('register-assembler' as AuthView);
     }
   };
@@ -139,14 +137,6 @@ export default function AuthPage() {
           onNext={handleAssemblerStep2}
           onBack={() => setCurrentView('register-assembler' as AuthView)} 
           defaultValues={assemblerStep2Data}
-        />
-      ) : currentView === 'register-assembler-step3' ? (
-        <RegisterAssemblerStep3 
-          onBack={handleAssemblerBack}
-          onComplete={handleAssemblerStep3}
-          step1Data={assemblerStep1Data}
-          step2Data={assemblerStep2Data}
-          defaultValues={assemblerStep3Data}
         />
       ) : null}
     </AuthLayout>

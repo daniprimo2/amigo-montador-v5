@@ -226,7 +226,7 @@ export const RegisterAssemblerStep2: React.FC<RegisterAssemblerStep2Props> = ({
               Voltar
             </Button>
             <Button type="submit" className="auth-button flex-1">
-              Próximo
+              Concluir Cadastro
             </Button>
           </div>
         </form>
