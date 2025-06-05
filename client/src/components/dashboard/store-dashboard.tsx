@@ -34,7 +34,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
+  const [activeTab, setActiveTab] = useState<'open' | 'waiting' | 'in-progress' | 'completed'>('open');
   const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'ranking'>('home');
   const [showPendingEvaluations, setShowPendingEvaluations] = useState(false);
   const { connected, lastMessage } = useWebSocket();
@@ -878,94 +878,102 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           </Button>
         </div>
         
-        {/* Barra de status fixa */}
+        {/* Barra de status fixa - Layout com 4 cards */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 -mx-6 px-6 py-4 mb-6">
-          <div className="grid grid-cols-3 gap-4">
-            <button
-              onClick={() => setActiveTab('open')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'open'
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-blue-100 hover:bg-blue-25'
-              }`}
-            >
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'open' ? 'bg-blue-500' : 'bg-gray-400'
-                }`}>
+                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
                   <ClipboardList className="h-4 w-4 text-white" />
                 </div>
               </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'open' ? 'text-blue-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'open').length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'open' ? 'text-blue-600' : 'text-gray-500'
-                }`}>
-                  Em Aberto
-                </div>
+              <div className="text-2xl font-bold text-blue-600">
+                {services.filter(s => s.status === 'open').length}
               </div>
-            </button>
+              <div className="text-sm text-blue-600">Disponíveis</div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('in-progress')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'in-progress'
-                  ? 'border-orange-200 bg-orange-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-orange-100 hover:bg-orange-25'
-              }`}
-            >
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'in-progress' ? 'bg-orange-500' : 'bg-gray-400'
-                }`}>
+                <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
                   <Clock className="h-4 w-4 text-white" />
                 </div>
               </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'in-progress' ? 'text-orange-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'in-progress').length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'in-progress' ? 'text-orange-600' : 'text-gray-500'
-                }`}>
-                  Em Andamento
+              <div className="text-2xl font-bold text-yellow-600">
+                {services.filter(s => s.status === 'applied' || (s.status === 'open' && s.candidates > 0)).length}
+              </div>
+              <div className="text-sm text-yellow-600">Aguardando</div>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
+                  <PlayCircle className="h-4 w-4 text-white" />
                 </div>
               </div>
-            </button>
+              <div className="text-2xl font-bold text-orange-600">
+                {services.filter(s => s.status === 'in-progress').length}
+              </div>
+              <div className="text-sm text-orange-600">Em Andamento</div>
+            </div>
 
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                activeTab === 'completed'
-                  ? 'border-green-200 bg-green-50'
-                  : 'border-gray-100 bg-gray-50 hover:border-green-100 hover:bg-green-25'
-              }`}
-            >
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  activeTab === 'completed' ? 'bg-green-500' : 'bg-gray-400'
-                }`}>
+                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
                   <CheckCircle className="h-4 w-4 text-white" />
                 </div>
               </div>
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  activeTab === 'completed' ? 'text-green-600' : 'text-gray-600'
-                }`}>
-                  {services.filter(s => s.status === 'completed').length}
-                </div>
-                <div className={`text-sm ${
-                  activeTab === 'completed' ? 'text-green-600' : 'text-gray-500'
-                }`}>
-                  Finalizados
-                </div>
+              <div className="text-2xl font-bold text-green-600">
+                {services.filter(s => s.status === 'completed').length}
               </div>
+              <div className="text-sm text-green-600">Finalizados</div>
+            </div>
+          </div>
+
+          {/* Barra de filtros */}
+          <div className="grid grid-cols-4 gap-4">
+            <button
+              onClick={() => setActiveTab('open')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'open'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Disponíveis
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('waiting')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'waiting'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Aguardando Lojista
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('in-progress')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'in-progress'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Em Andamento
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'completed'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Finalizados
             </button>
           </div>
         </div>
@@ -1072,6 +1080,23 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
             </div>
+        )}
+        
+        {activeTab === 'waiting' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="divide-y">
+              {servicesQuery.isLoading ? (
+                <div className="p-6 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+                  <p className="text-gray-500">Carregando serviços...</p>
+                </div>
+              ) : (
+                services.filter(service => service.status === 'open' && service.candidates > 0).map(service => (
+                  <StoreServiceCard key={service.id} service={service} />
+                ))
+              )}
+            </div>
+          </div>
         )}
         
         {activeTab === 'in-progress' && (
