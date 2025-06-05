@@ -528,7 +528,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           {chatPartnerProfile && (
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
               <img
-                src={chatPartnerProfile.profileData?.photoUrl || chatPartnerProfile.store?.logoUrl || '/default-avatar.svg'}
+                src={(chatPartnerProfile as any).profilePhotoUrl || chatPartnerProfile.store?.logoUrl || '/default-avatar.svg'}
                 alt={chatPartnerProfile.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
