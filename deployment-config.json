@@ -1,0 +1,51 @@
+{
+  "preserveDirectories": [
+    "uploads",
+    "attached_assets",
+    "shared"
+  ],
+  "staticAssets": {
+    "uploads": {
+      "serve": true,
+      "route": "/uploads",
+      "description": "User uploaded files (profiles, documents, projects, logos)"
+    },
+    "attached_assets": {
+      "serve": true,
+      "route": "/assets",
+      "description": "Static assets integrated in build process"
+    }
+  },
+  "requiredFiles": [
+    "package.json",
+    "vite.config.ts",
+    "tsconfig.json",
+    "drizzle.config.ts",
+    "tailwind.config.ts",
+    ".replit"
+  ],
+  "environmentVariables": {
+    "required": [
+      "DATABASE_URL",
+      "NODE_ENV"
+    ],
+    "optional": [
+      "PORT"
+    ]
+  },
+  "buildProcess": {
+    "commands": [
+      "npm run build"
+    ],
+    "outputDir": "dist",
+    "staticDir": "dist/public"
+  },
+  "verification": {
+    "postDeploy": [
+      "Check /uploads directory accessibility",
+      "Verify attached assets are served correctly",
+      "Confirm database connection",
+      "Test user authentication flow"
+    ]
+  }
+}
