@@ -41,7 +41,7 @@ if (fs.existsSync(clientPath)) {
   });
 }
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const server = createServer(app);
 
 server.listen({

@@ -86,7 +86,7 @@ app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const server = createServer(app);
 
 // WebSocket server
@@ -136,7 +136,8 @@ const prodPkg = {
     "axios": originalPkg.dependencies.axios,
     "stripe": originalPkg.dependencies.stripe,
     "zod": originalPkg.dependencies.zod,
-    "drizzle-zod": originalPkg.dependencies["drizzle-zod"]
+    "drizzle-zod": originalPkg.dependencies["drizzle-zod"],
+    "zod-validation-error": originalPkg.dependencies["zod-validation-error"]
   },
   "engines": {
     "node": ">=18.0.0"

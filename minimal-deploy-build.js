@@ -41,7 +41,7 @@ app.get('*', (req, res) => {
   res.send('<h1>Amigo Montador</h1><p>Application is starting...</p>');
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 const server = createServer(app);
 
 server.listen(port, '0.0.0.0', () => {
