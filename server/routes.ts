@@ -1263,11 +1263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Atualizar status do serviço para 'confirmed' (status intermediário)
+      // Atualizar status do serviço para 'in-progress' quando montador confirma
       await db
         .update(services)
         .set({ 
-          status: 'confirmed'
+          status: 'in-progress'
         })
         .where(eq(services.id, serviceId));
       
@@ -1525,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se a candidatura foi aceita, verificar se o serviço já está em andamento
         if (existingApplication.status === 'accepted') {
           // Verificar se o serviço já está em progresso ou finalizado
-          if (service.status === 'in-progress' || service.status === 'completed') {
+          if (service.status !== 'open') {
             return res.status(200).json({
               application: existingApplication,
               message: "Você já foi aceito para este serviço",
@@ -1533,11 +1533,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           } else {
             // Se foi aceito mas o serviço ainda não está em progresso, atualizar
-            await storage.updateServiceStatus(service.id, 'in_progress');
+            await storage.updateServiceStatus(service.id, 'in-progress');
             return res.status(200).json({
               application: existingApplication,
               message: "Sua candidatura foi aceita e o serviço está em andamento",
-              serviceStatus: 'in_progress'
+              serviceStatus: 'in-progress'
             });
           }
         } else {
