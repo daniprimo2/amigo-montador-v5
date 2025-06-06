@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import assemblerImage from '@assets/Imagem do WhatsApp de 2025-06-05 à(s) 16.25.11_0df0a58b.jpg';
-import storeOwnerImage from '@assets/Imagem do WhatsApp de 2025-06-05 à(s) 16.21.05_8e9e6611.jpg';
+import storeOwnerImage from '@assets/ChatGPT Image 6 de jun. de 2025, 18_20_29.png';
 
 interface RegisterOptionProps {
   image: string;
