@@ -1,10 +1,10 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth } from "./auth";
-import { db } from "./db";
+import { storage } from "./storage.js";
+import { setupAuth } from "./auth.js";
+import { db } from "./db.js";
 import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "@shared/schema";
+import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "../shared/schema.js";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';

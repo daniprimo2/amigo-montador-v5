@@ -1,7 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+// For ESM compatibility in production
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -62,7 +68,18 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Production static file serving
+    const distPath = path.resolve(process.cwd(), "dist", "public");
+    
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      });
+    } else {
+      // Fallback to original serveStatic if dist/public doesn't exist
+      serveStatic(app);
+    }
   }
 
   // ALWAYS serve the app on port 5000
