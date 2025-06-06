@@ -2,6 +2,16 @@ import { pgTable, text, serial, integer, boolean, jsonb, timestamp, primaryKey, 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Definir tipos de status como constantes
+export const SERVICE_STATUS = {
+  OPEN: 'open',
+  IN_PROGRESS: 'in-progress', 
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled'
+} as const;
+
+export type ServiceStatus = typeof SERVICE_STATUS[keyof typeof SERVICE_STATUS];
+
 // Usuários
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
