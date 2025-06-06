@@ -16,7 +16,7 @@ try {
   
   // Step 2: Simple server compilation with esbuild
   console.log('🔧 Compiling server...');
-  execSync(`esbuild server/index.ts --platform=node --target=node18 --format=esm --bundle --external:express --external:drizzle-orm --external:@neondatabase/serverless --external:ws --external:passport --external:express-session --external:connect-pg-simple --external:express-fileupload --external:axios --outfile=dist/index.js`, { stdio: 'inherit' });
+  execSync(`esbuild server/index.ts --platform=node --target=node18 --format=esm --bundle --outfile=dist/index.js --external:express --external:drizzle-orm --external:@neondatabase/serverless --external:ws --external:passport --external:passport-local --external:express-session --external:connect-pg-simple --external:express-fileupload --external:axios --external:react-input-mask --external:stripe --external:memorystore --external:zod --external:drizzle-zod --external:zod-validation-error --define:import.meta.dirname='"__dirname"' --banner:js="import { fileURLToPath } from 'url'; import { dirname } from 'path'; const __filename = fileURLToPath(import.meta.url); const __dirname = dirname(__filename);"`, { stdio: 'inherit' });
   
   // Step 3: Copy necessary files
   console.log('📋 Copying required files...');
