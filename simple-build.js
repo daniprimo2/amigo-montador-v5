@@ -48,6 +48,13 @@ child.on('exit', (code) => {
   console.log('Creating client structure...');
   fs.mkdirSync('dist/public', { recursive: true });
   
+  // Create the public directory in the server location where it's expected
+  fs.mkdirSync('dist/server/public', { recursive: true });
+  
+  // Also create the client directory structure that the server expects
+  fs.mkdirSync('dist/client', { recursive: true });
+  fs.cpSync('client', 'dist/client', { recursive: true });
+  
   const indexHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -69,6 +76,7 @@ child.on('exit', (code) => {
 </html>`;
 
   fs.writeFileSync('dist/public/index.html', indexHtml);
+  fs.writeFileSync('dist/server/public/index.html', indexHtml);
 
   // Copy necessary files
   if (fs.existsSync('attached_assets')) {
