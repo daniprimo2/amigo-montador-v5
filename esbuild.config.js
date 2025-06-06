@@ -23,7 +23,12 @@ const buildServer = async () => {
         'connect-pg-simple',
         'express-fileupload',
         'axios',
-        'react-input-mask'
+        'react-input-mask',
+        'bcrypt',
+        'pg',
+        '@babel/preset-typescript/package.json',
+        'lightningcss',
+        '../pkg'
       ],
       define: {
         'import.meta.dirname': '__dirname'
