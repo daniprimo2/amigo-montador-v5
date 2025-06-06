@@ -6,8 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import fs from "fs";
 import path from "path";
-import { storage } from "./storage";
-import { User as SelectUser, InsertBankAccount } from "@shared/schema";
+import { storage } from "./storage.js";
+import { User as SelectUser, InsertBankAccount } from "../shared/schema.js";
 
 declare global {
   namespace Express {
