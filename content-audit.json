@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-06T21:26:23.086Z",
+  "timestamp": "2025-06-06T22:38:41.797Z",
   "directories": {
     "uploads": {
       "path": "uploads",
@@ -41,7 +41,7 @@
     "attached_assets": {
       "path": "attached_assets",
       "exists": true,
-      "totalFiles": 99,
+      "totalFiles": 100,
       "files": [
         {
           "name": "ChatGPT Image 6 de jun. de 2025, 18_20_29.png",
@@ -634,6 +634,12 @@
         {
           "name": "image_1749109962727.png",
           "size": 39524,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749248949191.png",
+          "size": 144648,
           "isImage": true,
           "isPdf": false
         }
