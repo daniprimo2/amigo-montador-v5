@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import assemblerImage from '@assets/Imagem do WhatsApp de 2025-06-05 à(s) 16.25.11_0df0a58b.jpg';
 
 interface RegisterOptionProps {
   image: string;
@@ -50,7 +51,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSelectType }) => {
         />
         
         <RegisterOption
-          image="/src/assets/assembler.svg"
+          image={assemblerImage}
           title="Montador"
           description="Para profissionais de montagem"
           onClick={() => onSelectType('montador')}
