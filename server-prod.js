@@ -11,7 +11,9 @@ import { WebSocketServer } from 'ws';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('Servidor de produção iniciando...');
+console.log('🚀 Servidor de produção iniciando...');
+console.log('Porta configurada:', process.env.PORT || 5000);
+console.log('Ambiente:', process.env.NODE_ENV || 'production');
 
 const app = express();
 
@@ -82,9 +84,24 @@ const server = createServer(app);
 
 const wss = new WebSocketServer({ server });
 
-server.listen({
-  port,
-  host: "0.0.0.0",
-}, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Acesse: http://localhost:${port}`);
+});
+
+// Manter o processo vivo
+process.on('SIGTERM', () => {
+  console.log('Recebido SIGTERM, fechando servidor...');
+  server.close(() => {
+    console.log('Servidor fechado');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('Recebido SIGINT, fechando servidor...');
+  server.close(() => {
+    console.log('Servidor fechado');
+    process.exit(0);
+  });
 });
