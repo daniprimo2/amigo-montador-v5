@@ -35,10 +35,8 @@ const buildServer = async () => {
       },
       banner: {
         js: `
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = new URL('.', import.meta.url).pathname;
 `
       },
       minify: false,
