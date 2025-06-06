@@ -40,9 +40,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSelectType }) => {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-2 text-[#394252]">Escolha o tipo de conta</h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Selecione o tipo de perfil que deseja criar para continuar o cadastro.
-      </p>
+      <p className="text-sm text-muted-foreground mb-6">"Para lojas e marcenarias que buscam montadores."</p>
       <div className="space-y-4">
         <RegisterOption
           image={storeOwnerImage}
