@@ -1,250 +1,108 @@
-#!/usr/bin/env node
 import fs from 'fs';
-import path from 'path';
+import { execSync } from 'child_process';
 
-console.log('🚀 Criando build simplificado para deploy...');
+console.log('Creating deployment build...');
 
-// Limpar e criar diretório dist
+// Clean dist directory
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true, force: true });
 }
 fs.mkdirSync('dist', { recursive: true });
-fs.mkdirSync('dist/public', { recursive: true });
 
-// 1. Criar servidor de produção direto
-const serverCode = `import express from 'express';
-import { createServer } from 'http';
+try {
+  // Copy server files without bundling (simpler approach)
+  console.log('Copying server files...');
+  fs.cpSync('server', 'dist/server', { recursive: true });
+  fs.cpSync('shared', 'dist/shared', { recursive: true });
+  
+  // Copy vite.config.ts for server import
+  fs.copyFileSync('vite.config.ts', 'dist/vite.config.ts');
+  
+  // Copy other necessary config files
+  fs.copyFileSync('tailwind.config.ts', 'dist/tailwind.config.ts');
+  fs.copyFileSync('postcss.config.js', 'dist/postcss.config.js');
+  
+  // Create simple index.js that uses tsx to run the TypeScript server
+  const startScript = `import { spawn } from 'child_process';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-
-// Middleware básico
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Headers de segurança
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
+const serverPath = path.join(process.cwd(), 'server', 'index.ts');
+const child = spawn('npx', ['tsx', serverPath], {
+  stdio: 'inherit',
+  env: { ...process.env, NODE_ENV: 'production' }
 });
 
-// Log de requisições
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(\`\${req.method} \${req.path} \${res.statusCode} \${duration}ms\`);
-  });
-  next();
+child.on('error', (err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
-// Servir arquivos estáticos
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
-
-// Endpoints de saúde
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'production'
-  });
+child.on('exit', (code) => {
+  process.exit(code);
 });
+`;
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'amigo-montador' });
-});
+  fs.writeFileSync('dist/index.js', startScript);
 
-// API básica
-app.get('/api/user', (req, res) => {
-  res.status(401).json({ message: 'Authentication required' });
-});
-
-app.post('/api/*', (req, res) => {
-  res.status(503).json({ 
-    message: 'Service temporarily unavailable', 
-    hint: 'Full API will be restored after deployment completion' 
-  });
-});
-
-// Servir aplicação cliente
-const clientPath = path.join(__dirname, 'public');
-app.use(express.static(clientPath, { maxAge: '1d', etag: true }));
-
-app.get('*', (req, res) => {
-  const indexPath = path.join(clientPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(503).send(\`
-      <h1>Amigo Montador</h1>
-      <p>Sistema temporariamente indisponível</p>
-      <p>Tente novamente em alguns minutos.</p>
-    \`);
-  }
-});
-
-// Tratamento de erros
-app.use((err, req, res, next) => {
-  console.error('Server error:', err.message);
-  res.status(500).json({ 
-    message: 'Internal server error',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Iniciar servidor
-const port = process.env.PORT || 5000;
-const server = createServer(app);
-
-server.listen({
-  port: parseInt(port),
-  host: "0.0.0.0",
-}, () => {
-  console.log(\`Amigo Montador server running on port \${port}\`);
-  console.log(\`Started: \${new Date().toISOString()}\`);
-  console.log(\`Environment: \${process.env.NODE_ENV || 'production'}\`);
-});
-
-// Shutdown gracioso
-const shutdown = (signal) => {
-  console.log(\`\${signal} received, shutting down gracefully...\`);
-  server.close((err) => {
-    if (err) {
-      console.error('Error during shutdown:', err);
-      process.exit(1);
-    }
-    console.log('Server closed successfully');
-    process.exit(0);
-  });
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-
-export default app;`;
-
-fs.writeFileSync('dist/index.js', serverCode);
-
-// 2. Criar cliente
-const clientHtml = `<!DOCTYPE html>
+  // Create minimal client build
+  console.log('Creating client structure...');
+  fs.mkdirSync('dist/public', { recursive: true });
+  
+  const indexHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amigo Montador - Plataforma de Montagem</title>
-    <meta name="description" content="Conectamos lojas de móveis com montadores profissionais qualificados em todo o Brasil">
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { 
-        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      }
-      .container { 
-        background: white; border-radius: 16px; padding: 3rem 2rem; 
-        max-width: 600px; width: 90%; text-align: center; 
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      }
-      .logo { width: 120px; height: auto; margin-bottom: 2rem; border-radius: 8px; }
-      h1 { color: #1e293b; margin-bottom: 1rem; font-size: 2.5rem; font-weight: 700; }
-      .subtitle { color: #64748b; margin-bottom: 2rem; font-size: 1.2rem; line-height: 1.6; }
-      .status { 
-        background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; 
-        padding: 1.5rem; margin: 2rem 0;
-      }
-      .status h2 { color: #1e40af; margin-bottom: 0.5rem; font-size: 1.3rem; }
-      .status p { color: #1e40af; font-weight: 500; }
-      .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0; }
-      .feature { background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6; }
-      .feature h3 { color: #1e293b; margin-bottom: 0.5rem; }
-      .feature p { color: #64748b; font-size: 0.9rem; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amigo Montador</title>
+  <meta name="description" content="Plataforma que conecta lojas de móveis com montadores profissionais no Brasil" />
 </head>
 <body>
-    <div class="container">
-        <img src="/attached_assets/Logo - Amigo Montador.jpg" alt="Amigo Montador" class="logo" />
+  <div id="root">
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: system-ui;">
+      <div style="text-align: center;">
         <h1>Amigo Montador</h1>
-        <p class="subtitle">Conectamos lojas de móveis com montadores profissionais qualificados</p>
-        
-        <div class="status">
-            <h2>Deploy Realizado com Sucesso</h2>
-            <p>Plataforma funcionando corretamente em ambiente de produção</p>
-        </div>
-
-        <div class="features">
-            <div class="feature">
-                <h3>Para Lojas</h3>
-                <p>Encontre montadores qualificados para seus clientes</p>
-            </div>
-            <div class="feature">
-                <h3>Para Montadores</h3>
-                <p>Acesse oportunidades de trabalho em sua região</p>
-            </div>
-            <div class="feature">
-                <h3>Pagamento Seguro</h3>
-                <p>Sistema integrado com PIX para transações rápidas</p>
-            </div>
-            <div class="feature">
-                <h3>Localização</h3>
-                <p>Encontre profissionais próximos usando geolocalização</p>
-            </div>
-        </div>
+        <p>Plataforma de montagem de móveis</p>
+      </div>
     </div>
+  </div>
 </body>
 </html>`;
 
-fs.writeFileSync('dist/public/index.html', clientHtml);
+  fs.writeFileSync('dist/public/index.html', indexHtml);
 
-// 3. Criar package.json mínimo
-const prodPackage = {
-  "name": "amigo-montador",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+  // Copy necessary files
+  if (fs.existsSync('attached_assets')) {
+    fs.cpSync('attached_assets', 'dist/attached_assets', { recursive: true });
   }
-};
-
-fs.writeFileSync('dist/package.json', JSON.stringify(prodPackage, null, 2));
-
-// 4. Copiar diretórios essenciais
-const dirsToCopy = ['uploads', 'attached_assets'];
-dirsToCopy.forEach(dir => {
-  if (fs.existsSync(dir)) {
-    fs.cpSync(dir, `dist/${dir}`, { recursive: true });
-    console.log(`✓ Copiado ${dir}/`);
+  
+  fs.mkdirSync('dist/uploads', { recursive: true });
+  
+  if (fs.existsSync('default-avatar.svg')) {
+    fs.copyFileSync('default-avatar.svg', 'dist/default-avatar.svg');
   }
-});
 
-// 5. Verificação final
-const requiredFiles = ['dist/index.js', 'dist/package.json', 'dist/public/index.html'];
-const missing = requiredFiles.filter(file => !fs.existsSync(file));
+  // Create production package.json
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const prodPackageJson = {
+    name: packageJson.name,
+    version: packageJson.version,
+    type: 'module',
+    dependencies: packageJson.dependencies,
+    scripts: {
+      start: "node index.js"
+    }
+  };
+  
+  fs.writeFileSync('dist/package.json', JSON.stringify(prodPackageJson, null, 2));
 
-if (missing.length > 0) {
-  console.error(`❌ Arquivos faltando: ${missing.join(', ')}`);
+  console.log('\nDeployment build completed!');
+  console.log('Files created:');
+  console.log('  - dist/index.js (start script)');
+  console.log('  - dist/server/ (TypeScript server files)');
+  console.log('  - dist/public/ (static client)');
+  console.log('  - dist/package.json (dependencies)');
+
+} catch (error) {
+  console.error('Build failed:', error.message);
   process.exit(1);
 }
-
-console.log('✅ Build simplificado concluído!');
-console.log('📋 Arquivos criados:');
-console.log('   • dist/index.js - Servidor Express');
-console.log('   • dist/package.json - Dependências mínimas');
-console.log('   • dist/public/index.html - Interface');
-console.log('   • Arquivos estáticos preservados');
-console.log('\n🚀 Pronto para deploy!');

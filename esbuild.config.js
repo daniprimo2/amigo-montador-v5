@@ -19,6 +19,7 @@ const buildServer = async () => {
         '@neondatabase/serverless',
         'ws',
         'passport',
+        'passport-local',
         'express-session',
         'connect-pg-simple',
         'express-fileupload',
@@ -28,7 +29,12 @@ const buildServer = async () => {
         'pg',
         '@babel/preset-typescript/package.json',
         'lightningcss',
-        '../pkg'
+        '../pkg',
+        'util',
+        'crypto',
+        'fs',
+        'path',
+        'url'
       ],
       define: {
         'import.meta.dirname': '__dirname'
