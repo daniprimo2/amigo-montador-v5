@@ -1,0 +1,650 @@
+{
+  "timestamp": "2025-06-06T21:26:23.086Z",
+  "directories": {
+    "uploads": {
+      "path": "uploads",
+      "exists": true,
+      "totalFiles": 140,
+      "subdirectories": {
+        "documents": {
+          "fileCount": 36,
+          "sampleFiles": [
+            "1748581905595-64vrj7nf34-Imagem do WhatsApp de 2025-05-22 Ã (s) 12.18.04_4b285d00.jpg",
+            "1748581905839-f275ho6l9i-Imagem do WhatsApp de 2025-05-22 Ã (s) 12.18.04_4b285d00.jpg",
+            "1748581906080-sp8d7qoe8x-Imagem do WhatsApp de 2025-05-22 Ã (s) 12.18.04_4b285d00.jpg"
+          ]
+        },
+        "logos": {
+          "fileCount": 1,
+          "sampleFiles": [
+            "logo-1748915370740-fenk1lrxvji-empresa.png"
+          ]
+        },
+        "profiles": {
+          "fileCount": 19,
+          "sampleFiles": [
+            "1747883757079-5ssp65s3ice-imagem renna.jpg",
+            "1747883864240-cpy2rj50krb-Captura de tela 2025-05-09 140510.png",
+            "1747883867749-blbunblkldk-Captura de tela 2025-05-09 140901.png"
+          ]
+        },
+        "projects": {
+          "fileCount": 84,
+          "sampleFiles": [
+            "1747892392733-b9lcm8m86up-GoDaddy - 2024 - WebTrust for CAs - Report.pdf",
+            "1747892392737-pb178qf15nf-CV Lucas Rodrigues.pdf",
+            "1747894342620-m0uhs6nrnb8-GoDaddy - 2024 - WebTrust for CAs - Report.pdf"
+          ]
+        }
+      }
+    },
+    "attached_assets": {
+      "path": "attached_assets",
+      "exists": true,
+      "totalFiles": 99,
+      "files": [
+        {
+          "name": "ChatGPT Image 6 de jun. de 2025, 18_20_29.png",
+          "size": 630560,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Imagem do WhatsApp de 2025-06-01 à(s) 15.37.06_6707735b.jpg",
+          "size": 58237,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Imagem do WhatsApp de 2025-06-01 à(s) 20.22.53_5ab24daf.jpg",
+          "size": 39708,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Imagem do WhatsApp de 2025-06-05 à(s) 16.21.05_8e9e6611.jpg",
+          "size": 30411,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Imagem do WhatsApp de 2025-06-05 à(s) 16.25.11_0df0a58b.jpg",
+          "size": 11845,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Logo - Amigo Montador.jpg",
+          "size": 488516,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "Pasted--Desenvolvimento-do-Aplicativo-Amigo-Montador-O-projeto-um-aplicativo-que-conecta-lojas-de--1746841690452.txt",
+          "size": 6701,
+          "isImage": false,
+          "isPdf": false
+        },
+        {
+          "name": "Pasted--Validador-de-Conta-Banc-ria-Especifica-o-Objetivo-Garantir-que-no-fluxo-de-cria-o-de-1749110739568.txt",
+          "size": 4222,
+          "isImage": false,
+          "isPdf": false
+        },
+        {
+          "name": "Pasted-Para-que-o-meio-de-pagamento-via-Pix-funcione-corretamente-necess-rio-seguir-os-passos-abaixo-1--1748612252391.txt",
+          "size": 2143,
+          "isImage": false,
+          "isPdf": false
+        },
+        {
+          "name": "image_1746841769333.png",
+          "size": 49331,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747897051486.png",
+          "size": 158752,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747928855389.png",
+          "size": 1381,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747928947164.png",
+          "size": 1424,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747929086485.png",
+          "size": 1424,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747929312660.png",
+          "size": 5182,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747929805508.png",
+          "size": 26046,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1747929822467.png",
+          "size": 5408,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748318075841.png",
+          "size": 18567,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748318248561.png",
+          "size": 13299,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748362741868.png",
+          "size": 12790,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748363036617.png",
+          "size": 12669,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748363246307.png",
+          "size": 5828,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748364380602.png",
+          "size": 1790,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748365375555.png",
+          "size": 20774,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748365596555.png",
+          "size": 56171,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748365633264.png",
+          "size": 20919,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748367576454.png",
+          "size": 7842,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748367614303.png",
+          "size": 7842,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748367888944.png",
+          "size": 4172,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748368194186.png",
+          "size": 24246,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748368747470.png",
+          "size": 59572,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748368991003.png",
+          "size": 59572,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748369464146.png",
+          "size": 59023,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748369750330.png",
+          "size": 63829,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748369898383.png",
+          "size": 58649,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748370198425.png",
+          "size": 4375,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748370513505.png",
+          "size": 2928,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748380283747.png",
+          "size": 19497,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748380974514.png",
+          "size": 60464,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748381151705.png",
+          "size": 68723,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748381541473.png",
+          "size": 7759,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748382518738.png",
+          "size": 87437,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748383032198.png",
+          "size": 1383,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748383523515.png",
+          "size": 2396,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748384665347.png",
+          "size": 23167,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748386393151.png",
+          "size": 2846,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748569042022.png",
+          "size": 2870,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748569382975.png",
+          "size": 39147,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748572230777.png",
+          "size": 22811,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748574395557.png",
+          "size": 4612,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748578113719.png",
+          "size": 9679,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748578368875.png",
+          "size": 9354,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748579036219.png",
+          "size": 4919,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748579266857.png",
+          "size": 12433,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748579966329.png",
+          "size": 29197,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748582947431.png",
+          "size": 1842,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748583317414.png",
+          "size": 2262,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748584228032.png",
+          "size": 12293,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748584961442.png",
+          "size": 30417,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748612942322.png",
+          "size": 33240,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748630701242.png",
+          "size": 31069,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748719529681.png",
+          "size": 104163,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748798185219.png",
+          "size": 24998,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748801218864.png",
+          "size": 50332,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748802602560.png",
+          "size": 36677,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748802605289.png",
+          "size": 36677,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748811987002.png",
+          "size": 40797,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748812535912.png",
+          "size": 40208,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748818638457.png",
+          "size": 3839,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819039320.png",
+          "size": 67125,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819251393.png",
+          "size": 25599,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819613502.png",
+          "size": 24877,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819627340.png",
+          "size": 12881,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819795628.png",
+          "size": 21979,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819803813.png",
+          "size": 112588,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748819818459.png",
+          "size": 12795,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748831416960.png",
+          "size": 41639,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748834227416.png",
+          "size": 10404,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748880590089.png",
+          "size": 19556,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748904741273.png",
+          "size": 22730,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748929370074.png",
+          "size": 32555,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748932475617.png",
+          "size": 7686,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748933541683.png",
+          "size": 59490,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1748934264794.png",
+          "size": 41388,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749023747498.png",
+          "size": 74247,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749023756094.png",
+          "size": 20324,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749023927644.png",
+          "size": 54399,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749025605879.png",
+          "size": 75901,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749026468385.png",
+          "size": 19766,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749026553558.png",
+          "size": 9976,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749026845750.png",
+          "size": 7483,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749066710324.png",
+          "size": 54522,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749082283731.png",
+          "size": 66361,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749082324635.png",
+          "size": 88873,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749082566079.png",
+          "size": 4738,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749082594106.png",
+          "size": 26309,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749107603019.png",
+          "size": 14724,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749108322901.png",
+          "size": 51728,
+          "isImage": true,
+          "isPdf": false
+        },
+        {
+          "name": "image_1749109962727.png",
+          "size": 39524,
+          "isImage": true,
+          "isPdf": false
+        }
+      ]
+    }
+  },
+  "serverConfiguration": {
+    "staticServing": true,
+    "uploadsRoute": "/uploads",
+    "assetsRoute": "/attached_assets",
+    "uploadsServing": true,
+    "staticFileHandling": true
+  }
+}
