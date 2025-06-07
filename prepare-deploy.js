@@ -10,6 +10,32 @@ if (!fs.existsSync('dist')) {
   fs.mkdirSync('dist', { recursive: true });
 }
 
+// Create basic public directory with index.html for production
+console.log('Criando estrutura básica do frontend...');
+const publicDir = path.join('dist', 'public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+// Create a simple index.html that loads the app
+const indexHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amigo Montador</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    // For production deployment compatibility
+    window.location.href = '/';
+  </script>
+</body>
+</html>`;
+
+fs.writeFileSync(path.join(publicDir, 'index.html'), indexHtml);
+
 // Compilar servidor
 console.log('Compilando servidor...');
 execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
