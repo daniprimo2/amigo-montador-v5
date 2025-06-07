@@ -58,16 +58,6 @@ export const queryClient = new QueryClient({
       retry: false,
     },
   },
-  mutationCache: {
-    onError: (error) => {
-      console.warn('Erro de mutação capturado:', error);
-    },
-  },
-  queryCache: {
-    onError: (error) => {
-      console.warn('Erro de query capturado:', error);
-    },
-  },
 });
 
 // Disponibilizando globalmente para uso no WebSocket
