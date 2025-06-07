@@ -11,7 +11,8 @@ console.log('1. Checking required files...');
 const requiredFiles = [
   'dist/index.js',
   'dist/package.json',
-  'dist/index.html'
+  'dist/public/index.html',
+  'dist/.replit'
 ];
 
 requiredFiles.forEach(file => {

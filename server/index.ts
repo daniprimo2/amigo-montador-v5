@@ -86,20 +86,30 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     // Production static file serving
-    const publicPath = path.resolve(process.cwd(), "dist", "public");
-    const rootPath = process.cwd();
+    const publicPath = path.resolve(process.cwd(), "public");
+    const distPublicPath = path.resolve(__dirname, "public");
+    const rootIndexPath = path.resolve(process.cwd(), "index.html");
     
-    if (fs.existsSync(publicPath)) {
-      // Vite build structure (dist/public/)
+    // Serve static assets from attached_assets
+    app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+    
+    if (fs.existsSync(distPublicPath)) {
+      // Deployment build structure (dist/public/)
+      app.use(express.static(distPublicPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(distPublicPath, "index.html"));
+      });
+    } else if (fs.existsSync(publicPath)) {
+      // Vite build structure (public/)
       app.use(express.static(publicPath));
       app.use("*", (_req, res) => {
         res.sendFile(path.resolve(publicPath, "index.html"));
       });
-    } else if (fs.existsSync(path.join(rootPath, "index.html"))) {
-      // Deployment build structure (index.html in root)
-      app.use(express.static(rootPath));
+    } else if (fs.existsSync(rootIndexPath)) {
+      // Root level index.html
+      app.use(express.static(process.cwd()));
       app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(rootPath, "index.html"));
+        res.sendFile(rootIndexPath);
       });
     } else {
       // Fallback to original serveStatic
@@ -108,16 +118,21 @@ app.use((req, res, next) => {
   }
 
   // Use PORT environment variable for deployment compatibility
-  // Replit deployments use port 5000 for external access
+  // Cloud Run and Replit deployments require proper port configuration
   const port = parseInt(process.env.PORT || '5000');
   const host = "0.0.0.0";
   
-  server.listen(port, host, () => {
+  server.listen({
+    port,
+    host,
+    reusePort: true,
+  }, () => {
     log(`serving on port ${port}`);
     console.log(`🚀 Amigo Montador running on port ${port}`);
     console.log(`📱 Application: http://0.0.0.0:${port}`);
     if (process.env.NODE_ENV === 'production') {
       console.log(`✅ Production deployment successful`);
+      console.log(`🌐 Health check: http://0.0.0.0:${port}/api/health`);
     }
   });
 })();
