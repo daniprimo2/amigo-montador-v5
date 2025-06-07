@@ -76,7 +76,8 @@ export function useWebSocket() {
   // Função para conectar ao WebSocket
   const connect = useCallback(() => {
     if (!user) {
-      debugLogger('WebSocket', 'Tentativa de conexão sem usuário autenticado');
+      debugLogger('WebSocket', 'Usuário não autenticado - não iniciando conexão WebSocket');
+      setConnected(false);
       return;
     }
 
@@ -86,14 +87,20 @@ export function useWebSocket() {
       socketRef.current.close();
     }
 
-    // Criar nova conexão
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
-    
-    debugLogger('WebSocket', `Iniciando conexão para usuário ${user.id}`, { url: wsUrl });
-    
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
+    try {
+      // Criar nova conexão
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?userId=${user.id}`;
+      
+      debugLogger('WebSocket', `Iniciando conexão para usuário ${user.id}`, { url: wsUrl });
+      
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+    } catch (error) {
+      debugLogger('WebSocket', 'Erro ao criar conexão WebSocket', error);
+      setConnected(false);
+      return;
+    }
 
     socket.onopen = () => {
       debugLogger('WebSocket', 'Conexão estabelecida com sucesso');
