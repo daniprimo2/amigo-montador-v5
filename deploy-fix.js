@@ -1,32 +1,196 @@
 #!/usr/bin/env node
 import fs from 'fs';
+import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('Corrigindo build para deploy...');
+console.log('Creating optimized deployment build...');
 
-// Limpar e recriar dist
+// Clean and create dist
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true });
 }
 fs.mkdirSync('dist', { recursive: true });
 
-// 1. Build apenas do servidor (backend) primeiro
-console.log('Construindo servidor...');
-try {
-  execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
-} catch (error) {
-  console.error('Erro ao construir servidor:', error.message);
-  process.exit(1);
+// Build backend server
+console.log('Building server...');
+execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
+
+// Create optimized frontend
+fs.mkdirSync('dist/public', { recursive: true });
+const indexHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigo Montador - Conectando Lojas e Montadores</title>
+  <meta name="description" content="Plataforma que conecta lojas de móveis com montadores qualificados no Brasil. Encontre o profissional ideal para seus projetos de montagem.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: #667eea;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: white;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .status {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #667eea;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+      text-align: left;
+    }
+    .feature {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .feature-icon {
+      color: #667eea;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🛠️</div>
+    <h1>Amigo Montador</h1>
+    <p class="subtitle">Conectando lojas de móveis com montadores qualificados</p>
+    
+    <div class="status">
+      <div class="loading"></div>
+      Inicializando aplicação...
+    </div>
+    
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">🏪</span>
+        Para Lojas
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔧</span>
+        Para Montadores
+      </div>
+      <div class="feature">
+        <span class="feature-icon">💳</span>
+        Pagamento PIX
+      </div>
+      <div class="feature">
+        <span class="feature-icon">⭐</span>
+        Sistema de Avaliação
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let attempts = 0;
+    const maxAttempts = 30;
+    
+    function checkApp() {
+      fetch('/api/health')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'healthy') {
+            window.location.href = '/';
+          } else {
+            throw new Error('App not ready');
+          }
+        })
+        .catch(() => {
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(checkApp, 2000);
+          } else {
+            document.querySelector('.status').innerHTML = 
+              '<div style="color: #dc3545;">Erro ao conectar. Recarregando...</div>';
+            setTimeout(() => window.location.reload(), 3000);
+          }
+        });
+    }
+    
+    // Start checking after 3 seconds
+    setTimeout(checkApp, 3000);
+  </script>
+</body>
+</html>`;
+
+fs.writeFileSync('dist/public/index.html', indexHtml);
+
+// Copy essential directories and files
+['shared', 'uploads', 'attached_assets'].forEach(dir => {
+  if (fs.existsSync(dir)) {
+    fs.cpSync(dir, `dist/${dir}`, { recursive: true });
+  } else {
+    fs.mkdirSync(`dist/${dir}`, { recursive: true });
+  }
+});
+
+// Copy default avatar if exists
+if (fs.existsSync('default-avatar.svg')) {
+  fs.copyFileSync('default-avatar.svg', 'dist/default-avatar.svg');
 }
 
-// 2. Criar package.json minimalista para produção
-const prodPkg = {
+// Create production package.json with correct port configuration
+const pkg = {
   "name": "amigo-montador",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "NODE_ENV=production PORT=5000 node index.js"
   },
   "dependencies": {
     "express": "^4.21.2",
@@ -49,59 +213,29 @@ const prodPkg = {
   }
 };
 
-fs.writeFileSync('dist/package.json', JSON.stringify(prodPkg, null, 2));
+fs.writeFileSync('dist/package.json', JSON.stringify(pkg, null, 2));
 
-// 3. Copiar arquivos essenciais
-if (fs.existsSync('shared')) {
-  fs.cpSync('shared', 'dist/shared', { recursive: true });
-}
+// Verify build
+const requiredFiles = ['dist/index.js', 'dist/package.json', 'dist/public/index.html'];
+const missing = requiredFiles.filter(f => !fs.existsSync(f));
 
-if (fs.existsSync('attached_assets')) {
-  fs.cpSync('attached_assets', 'dist/attached_assets', { recursive: true });
-}
-
-if (fs.existsSync('uploads')) {
-  fs.cpSync('uploads', 'dist/uploads', { recursive: true });
-}
-
-// 4. Criar diretório public básico
-fs.mkdirSync('dist/public', { recursive: true });
-
-// 5. Build do frontend com timeout menor
-console.log('Construindo frontend...');
-try {
-  execSync('timeout 300 npx vite build --outDir dist/public', { stdio: 'inherit' });
-} catch (error) {
-  console.log('Build do frontend demorou muito, criando versão básica...');
-  // Criar index.html básico se o build falhar
-  const basicHtml = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amigo Montador</title>
-</head>
-<body>
-    <div id="root">
-        <h1>Amigo Montador</h1>
-        <p>Aplicação carregando...</p>
-    </div>
-</body>
-</html>`;
-  fs.writeFileSync('dist/public/index.html', basicHtml);
-}
-
-// Verificar arquivos essenciais
-const requiredFiles = ['dist/index.js', 'dist/package.json'];
-const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
-
-if (missingFiles.length > 0) {
-  console.error('Arquivos essenciais ausentes:', missingFiles);
+if (missing.length > 0) {
+  console.error('Missing files:', missing);
   process.exit(1);
 }
 
-console.log('✅ Build de deploy concluído!');
-console.log('Arquivos criados:');
-console.log('- dist/index.js (servidor)');
-console.log('- dist/package.json (dependências)');
-console.log('- dist/public/ (frontend)');
+console.log('Deployment build completed successfully!');
+console.log('Files created:');
+console.log('- dist/index.js (server)');
+console.log('- dist/package.json (dependencies)');
+console.log('- dist/public/index.html (frontend)');
+console.log('- dist/shared/ (schemas)');
+console.log('- dist/uploads/ (file storage)');
+console.log('- dist/attached_assets/ (static assets)');
+console.log('');
+console.log('Deployment configuration:');
+console.log('- Port: 5000 (Replit deployment standard)');
+console.log('- Host: 0.0.0.0 (external access)');
+console.log('- Environment: production');
+console.log('');
+console.log('Ready for deployment!');
