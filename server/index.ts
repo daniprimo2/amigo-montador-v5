@@ -100,14 +100,16 @@ app.use((req, res, next) => {
   }
 
   // Use PORT environment variable for deployment compatibility
-  // Default to 5000 for development, 3000 for production
-  const port = parseInt(process.env.PORT || '0') || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  // Replit deployments typically use port 5000, fallback to 3000
+  const port = parseInt(process.env.PORT || '5000');
   const host = "0.0.0.0";
+  
   server.listen(port, host, () => {
     log(`serving on port ${port}`);
+    console.log(`🚀 Amigo Montador running on port ${port}`);
+    console.log(`📱 Application: http://0.0.0.0:${port}`);
     if (process.env.NODE_ENV === 'production') {
-      console.log(`🚀 Amigo Montador deployed successfully on port ${port}`);
-      console.log(`📱 Application: http://0.0.0.0:${port}`);
+      console.log(`✅ Production deployment successful`);
     }
   });
 })();

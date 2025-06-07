@@ -3,91 +3,91 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('🚀 Starting production build...');
+console.log('🚀 Building for production deployment...');
 
-// Clean and create dist directory
+// Step 1: Clean and create dist directory
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true });
   console.log('✅ Cleaned existing dist directory');
 }
 fs.mkdirSync('dist', { recursive: true });
-fs.mkdirSync('dist/public', { recursive: true });
 
-// 1. Build frontend with Vite
+// Step 2: Build the frontend using Vite
 console.log('📦 Building frontend...');
 try {
-  execSync('npx vite build --outDir dist/public', { stdio: 'inherit' });
+  execSync('npx vite build', { stdio: 'inherit' });
   console.log('✅ Frontend build completed');
 } catch (error) {
   console.error('❌ Frontend build failed:', error.message);
   process.exit(1);
 }
 
-// 2. Build server with esbuild
-console.log('🔧 Building server...');
+// Step 3: Build the backend server
+console.log('🔧 Building backend server...');
 try {
   execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
-  console.log('✅ Server build completed');
+  console.log('✅ Backend server build completed');
 } catch (error) {
-  console.error('❌ Server build failed:', error.message);
+  console.error('❌ Backend build failed:', error.message);
   process.exit(1);
 }
 
-// 3. Copy static assets
-console.log('📂 Copying static assets...');
-const assetDirs = ['uploads', 'attached_assets', 'shared'];
-assetDirs.forEach(dir => {
+// Step 4: Copy shared directory if it exists
+if (fs.existsSync('shared')) {
+  fs.cpSync('shared', 'dist/shared', { recursive: true });
+  console.log('✅ Copied shared directory');
+}
+
+// Step 5: Copy static assets
+const staticDirs = ['uploads', 'attached_assets'];
+staticDirs.forEach(dir => {
   if (fs.existsSync(dir)) {
-    const destPath = path.join('dist', dir);
-    fs.cpSync(dir, destPath, { recursive: true });
-    console.log(`✅ Copied ${dir}/ to dist/${dir}/`);
+    fs.cpSync(dir, path.join('dist', dir), { recursive: true });
+    console.log(`✅ Copied ${dir} directory`);
   }
 });
 
-// Copy default-avatar.svg if it exists
+// Step 6: Copy default avatar if it exists
 if (fs.existsSync('default-avatar.svg')) {
   fs.copyFileSync('default-avatar.svg', 'dist/default-avatar.svg');
   console.log('✅ Copied default-avatar.svg');
 }
 
-// 4. Create production package.json
-console.log('📄 Creating production package.json...');
-const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-
-const prodPkg = {
-  "name": "amigo-montador",
-  "version": "1.0.0",
+// Step 7: Create production package.json
+const originalPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const productionPackage = {
+  "name": originalPackage.name,
+  "version": originalPackage.version,
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node index.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "express": originalPkg.dependencies.express,
-    "express-session": originalPkg.dependencies["express-session"],
-    "express-fileupload": originalPkg.dependencies["express-fileupload"],
-    "passport": originalPkg.dependencies.passport,
-    "passport-local": originalPkg.dependencies["passport-local"],
-    "ws": originalPkg.dependencies.ws,
-    "connect-pg-simple": originalPkg.dependencies["connect-pg-simple"],
-    "drizzle-orm": originalPkg.dependencies["drizzle-orm"],
-    "@neondatabase/serverless": originalPkg.dependencies["@neondatabase/serverless"],
-    "axios": originalPkg.dependencies.axios,
-    "stripe": originalPkg.dependencies.stripe,
-    "zod": originalPkg.dependencies.zod,
-    "drizzle-zod": originalPkg.dependencies["drizzle-zod"],
-    "zod-validation-error": originalPkg.dependencies["zod-validation-error"]
+    "express": originalPackage.dependencies.express,
+    "express-session": originalPackage.dependencies["express-session"],
+    "express-fileupload": originalPackage.dependencies["express-fileupload"],
+    "passport": originalPackage.dependencies.passport,
+    "passport-local": originalPackage.dependencies["passport-local"],
+    "ws": originalPackage.dependencies.ws,
+    "connect-pg-simple": originalPackage.dependencies["connect-pg-simple"],
+    "drizzle-orm": originalPackage.dependencies["drizzle-orm"],
+    "@neondatabase/serverless": originalPackage.dependencies["@neondatabase/serverless"],
+    "axios": originalPackage.dependencies.axios,
+    "stripe": originalPackage.dependencies.stripe,
+    "zod": originalPackage.dependencies.zod,
+    "drizzle-zod": originalPackage.dependencies["drizzle-zod"],
+    "zod-validation-error": originalPackage.dependencies["zod-validation-error"]
   },
   "engines": {
     "node": ">=18.0.0"
   }
 };
 
-fs.writeFileSync('dist/package.json', JSON.stringify(prodPkg, null, 2));
+fs.writeFileSync('dist/package.json', JSON.stringify(productionPackage, null, 2));
 console.log('✅ Created production package.json');
 
-// 5. Verify all required files exist
-console.log('🔍 Verifying build...');
+// Step 8: Verify critical files exist
 const requiredFiles = [
   'dist/index.js',
   'dist/package.json',
@@ -101,24 +101,11 @@ if (missingFiles.length > 0) {
   process.exit(1);
 }
 
-// Check file sizes
-const stats = {
-  server: fs.statSync('dist/index.js').size,
-  frontend: fs.statSync('dist/public/index.html').size,
-  packageJson: fs.statSync('dist/package.json').size
-};
-
-console.log('📊 Build statistics:');
-console.log(`   Server: ${(stats.server / 1024).toFixed(1)} KB`);
-console.log(`   Frontend: ${(stats.frontend / 1024).toFixed(1)} KB`);
-console.log(`   Package: ${(stats.packageJson / 1024).toFixed(1)} KB`);
-
-console.log('✅ Production build completed successfully!');
-console.log('📁 Files created:');
-console.log('   - dist/index.js (production server)');
-console.log('   - dist/package.json (production dependencies)');
-console.log('   - dist/public/ (built frontend)');
-console.log('   - dist/uploads/ (static assets)');
-console.log('   - dist/attached_assets/ (media files)');
+console.log('🎉 Production build completed successfully!');
+console.log('📁 Created files:');
+console.log('  - dist/index.js (server entry point)');
+console.log('  - dist/package.json (production dependencies)');
+console.log('  - dist/public/ (frontend build)');
+console.log('  - dist/shared/ (shared schemas)');
 console.log('');
 console.log('🚀 Ready for deployment!');
