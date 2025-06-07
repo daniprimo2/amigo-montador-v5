@@ -86,15 +86,23 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     // Production static file serving
-    const distPath = path.resolve(process.cwd(), "dist", "public");
+    const publicPath = path.resolve(process.cwd(), "dist", "public");
+    const rootPath = process.cwd();
     
-    if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
+    if (fs.existsSync(publicPath)) {
+      // Vite build structure (dist/public/)
+      app.use(express.static(publicPath));
       app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(distPath, "index.html"));
+        res.sendFile(path.resolve(publicPath, "index.html"));
+      });
+    } else if (fs.existsSync(path.join(rootPath, "index.html"))) {
+      // Deployment build structure (index.html in root)
+      app.use(express.static(rootPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(rootPath, "index.html"));
       });
     } else {
-      // Fallback to original serveStatic if dist/public doesn't exist
+      // Fallback to original serveStatic
       serveStatic(app);
     }
   }
