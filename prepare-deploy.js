@@ -1,19 +1,44 @@
 #!/usr/bin/env node
 import fs from 'fs';
+import path from 'path';
 import { execSync } from 'child_process';
 
 console.log('Preparando arquivos para deploy...');
 
+// Create dist directory
+if (!fs.existsSync('dist')) {
+  fs.mkdirSync('dist', { recursive: true });
+}
+
 // Compilar servidor
 console.log('Compilando servidor...');
-execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=server-prod.js', { stdio: 'inherit' });
+execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
 
-// Copiar arquivos necessários para a raiz
+// Copiar arquivos necessários para dist
 if (fs.existsSync('shared')) {
-  if (fs.existsSync('shared-prod')) {
-    fs.rmSync('shared-prod', { recursive: true });
+  const sharedDest = path.join('dist', 'shared');
+  if (fs.existsSync(sharedDest)) {
+    fs.rmSync(sharedDest, { recursive: true });
   }
-  fs.cpSync('shared', 'shared-prod', { recursive: true });
+  fs.cpSync('shared', sharedDest, { recursive: true });
+}
+
+// Copy uploads directory if it exists
+if (fs.existsSync('uploads')) {
+  const uploadsDest = path.join('dist', 'uploads');
+  if (fs.existsSync(uploadsDest)) {
+    fs.rmSync(uploadsDest, { recursive: true });
+  }
+  fs.cpSync('uploads', uploadsDest, { recursive: true });
+}
+
+// Copy attached_assets directory if it exists
+if (fs.existsSync('attached_assets')) {
+  const assetsDest = path.join('dist', 'attached_assets');
+  if (fs.existsSync(assetsDest)) {
+    fs.rmSync(assetsDest, { recursive: true });
+  }
+  fs.cpSync('attached_assets', assetsDest, { recursive: true });
 }
 
 // Criar package.json de produção na raiz
@@ -23,13 +48,9 @@ const prodPkg = {
   "name": "amigo-montador",
   "version": "1.0.0",
   "type": "module",
-  "main": "server-prod.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server-prod.js",
-    "dev": originalPkg.scripts.dev,
-    "build": "node prepare-deploy.js",
-    "check": originalPkg.scripts.check,
-    "db:push": originalPkg.scripts["db:push"]
+    "start": "node index.js"
   },
   "dependencies": {
     "express": originalPkg.dependencies.express,
@@ -53,17 +74,14 @@ const prodPkg = {
   }
 };
 
-// Fazer backup do package.json original
-if (!fs.existsSync('package-dev.json')) {
-  fs.copyFileSync('package.json', 'package-dev.json');
-}
-
-// Sobrescrever package.json com versão de produção
-fs.writeFileSync('package.json', JSON.stringify(prodPkg, null, 2));
+// Write production package.json to dist directory
+fs.writeFileSync(path.join('dist', 'package.json'), JSON.stringify(prodPkg, null, 2));
 
 console.log('Arquivos preparados para deploy:');
-console.log('- server-prod.js (servidor compilado)');
-console.log('- package.json (atualizado para produção)');
-console.log('- shared-prod/ (esquemas copiados)');
+console.log('- dist/index.js (servidor compilado)');
+console.log('- dist/package.json (package.json de produção)');
+console.log('- dist/shared/ (esquemas copiados)');
+console.log('- dist/uploads/ (arquivos de upload)');
+console.log('- dist/attached_assets/ (assets estáticos)');
 console.log('');
-console.log('Deploy pronto! Execute "npm start" para testar.');
+console.log('Deploy pronto! Execute "cd dist && npm install && npm start" para testar.');

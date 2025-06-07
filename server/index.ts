@@ -83,8 +83,8 @@ app.use((req, res, next) => {
   }
 
   // Use PORT environment variable for deployment compatibility
-  // Replit deployments expect port 3000
-  const port = process.env.PORT || 3000;
+  // Default to 5000 for development, 3000 for production
+  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
   server.listen({
     port,
     host: "0.0.0.0",
