@@ -51,11 +51,21 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      staleTime: 5 * 60 * 1000, // 5 minutos
       retry: false,
     },
     mutations: {
       retry: false,
+    },
+  },
+  mutationCache: {
+    onError: (error) => {
+      console.warn('Erro de mutação capturado:', error);
+    },
+  },
+  queryCache: {
+    onError: (error) => {
+      console.warn('Erro de query capturado:', error);
     },
   },
 });
