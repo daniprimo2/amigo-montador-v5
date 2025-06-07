@@ -101,12 +101,13 @@ app.use((req, res, next) => {
 
   // Use PORT environment variable for deployment compatibility
   // Default to 5000 for development, 3000 for production
-  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  const port = parseInt(process.env.PORT || '0') || (process.env.NODE_ENV === 'production' ? 3000 : 5000);
+  const host = "0.0.0.0";
+  server.listen(port, host, () => {
     log(`serving on port ${port}`);
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`🚀 Amigo Montador deployed successfully on port ${port}`);
+      console.log(`📱 Application: http://0.0.0.0:${port}`);
+    }
   });
 })();
