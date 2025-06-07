@@ -68,7 +68,6 @@ const prodPkg = {
     "drizzle-zod": originalPkg.dependencies["drizzle-zod"],
     "zod-validation-error": originalPkg.dependencies["zod-validation-error"]
   },
-  "devDependencies": originalPkg.devDependencies,
   "engines": {
     "node": ">=18.0.0"
   }

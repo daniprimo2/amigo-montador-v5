@@ -16,6 +16,23 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5000)
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Serve default avatar and other static files from root directory
 app.get('/default-avatar.svg', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'default-avatar.svg'));
