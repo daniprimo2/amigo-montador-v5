@@ -96,42 +96,37 @@ export function useWebSocket() {
       
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
-    } catch (error) {
-      debugLogger('WebSocket', 'Erro ao criar conexão WebSocket', error);
-      setConnected(false);
-      return;
-    }
 
-    socket.onopen = () => {
-      debugLogger('WebSocket', 'Conexão estabelecida com sucesso');
-      setConnected(true);
-    };
+      socket.onopen = () => {
+        debugLogger('WebSocket', 'Conexão estabelecida com sucesso');
+        setConnected(true);
+      };
 
-    socket.onclose = (event) => {
-      debugLogger('WebSocket', `Conexão fechada: Código ${event.code}, Motivo: ${event.reason || 'Não especificado'}`);
-      setConnected(false);
-      
-      // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
-      if (user) {
-        debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
-        const timeoutId = setTimeout(() => {
-          debugLogger('WebSocket', 'Tentando reconexão automática');
-          connect();
-        }, 5000);
+      socket.onclose = (event) => {
+        debugLogger('WebSocket', `Conexão fechada: Código ${event.code}, Motivo: ${event.reason || 'Não especificado'}`);
+        setConnected(false);
         
-        // Armazenar o ID do timeout para cancelar se necessário
-        return () => clearTimeout(timeoutId);
-      }
-    };
+        // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
+        if (user) {
+          debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
+          const timeoutId = setTimeout(() => {
+            debugLogger('WebSocket', 'Tentando reconexão automática');
+            connect();
+          }, 5000);
+          
+          // Armazenar o ID do timeout para cancelar se necessário
+          return () => clearTimeout(timeoutId);
+        }
+      };
 
-    socket.onerror = (error) => {
-      debugLogger('WebSocket', 'Erro na conexão WebSocket', error);
-      setConnected(false);
-    };
+      socket.onerror = (error) => {
+        debugLogger('WebSocket', 'Erro na conexão WebSocket', error);
+        setConnected(false);
+      };
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as WebSocketMessage;
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as WebSocketMessage;
         debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
         
         // Atualizar último estado da mensagem e enviar evento de notificação
@@ -418,10 +413,16 @@ export function useWebSocket() {
             serviceId: data.serviceId
           });
         }
-      } catch (error) {
-        debugLogger('WebSocket', 'Erro ao processar mensagem', error);
-      }
-    };
+        } catch (error) {
+          debugLogger('WebSocket', 'Erro ao processar mensagem', error);
+        }
+      };
+      
+    } catch (error) {
+      debugLogger('WebSocket', 'Erro ao criar conexão WebSocket', error);
+      setConnected(false);
+      return;
+    }
   }, [user, toast]);
 
   // Conectar ao WebSocket quando o usuário estiver disponível
