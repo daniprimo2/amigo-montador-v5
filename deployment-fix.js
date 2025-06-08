@@ -13,15 +13,14 @@ fs.mkdirSync('dist', { recursive: true });
 
 console.log('1. Building server bundle...');
 try {
-  // Build server with esbuild - ensuring proper ESM output
+  // Build server with esbuild - avoiding import conflicts
   execSync(`npx esbuild server/index.ts \
     --platform=node \
     --packages=external \
     --bundle \
     --format=esm \
     --outfile=dist/index.js \
-    --target=node18 \
-    --banner:js="import { fileURLToPath } from 'url'; const __filename = fileURLToPath(import.meta.url); const __dirname = fileURLToPath(new URL('.', import.meta.url));"`, 
+    --target=node18`, 
     { stdio: 'inherit' }
   );
   
@@ -105,7 +104,19 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync('dist/public/index.html', html);
 
-console.log('6. Validating deployment configuration...');
+console.log('6. Creating deployment configuration...');
+const replitConfig = `[deployment]
+run = ["node", "index.js"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+`;
+
+fs.writeFileSync('dist/.replit', replitConfig);
+
+console.log('7. Validating deployment configuration...');
 const serverContent = fs.readFileSync('dist/index.js', 'utf8');
 
 const validations = [
