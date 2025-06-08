@@ -3,91 +3,45 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('Fixing deployment configuration...');
+console.log('🔧 Applying deployment fixes...');
 
-// Clean and create dist directory
+// Clean dist directory
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true });
 }
 fs.mkdirSync('dist', { recursive: true });
 
-// Build backend server with proper configuration
-console.log('Building server...');
-execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js', { stdio: 'inherit' });
-
-// Create essential directories
-const dirs = ['dist/public', 'dist/uploads', 'dist/attached_assets', 'dist/shared'];
-dirs.forEach(dir => {
-  fs.mkdirSync(dir, { recursive: true });
-});
-
-// Copy shared schemas
-if (fs.existsSync('shared')) {
-  fs.cpSync('shared', 'dist/shared', { recursive: true });
+console.log('1. Building server bundle...');
+try {
+  // Build server with esbuild - ensuring proper ESM output
+  execSync(`npx esbuild server/index.ts \
+    --platform=node \
+    --packages=external \
+    --bundle \
+    --format=esm \
+    --outfile=dist/index.js \
+    --target=node18 \
+    --banner:js="import { fileURLToPath } from 'url'; const __filename = fileURLToPath(import.meta.url); const __dirname = fileURLToPath(new URL('.', import.meta.url));"`, 
+    { stdio: 'inherit' }
+  );
+  
+  console.log('✅ Server bundle created');
+} catch (error) {
+  console.error('❌ Server build failed:', error.message);
+  process.exit(1);
 }
 
-// Copy static assets
-['uploads', 'attached_assets'].forEach(dir => {
-  if (fs.existsSync(dir)) {
-    fs.cpSync(dir, path.join('dist', dir), { recursive: true });
-  }
-});
+// Verify dist/index.js exists
+if (!fs.existsSync('dist/index.js')) {
+  console.error('❌ CRITICAL: dist/index.js was not created');
+  process.exit(1);
+}
 
-// Create production frontend
-const indexHtml = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Amigo Montador</title>
-  <style>
-    body { 
-      margin: 0; 
-      padding: 20px; 
-      font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    .container { 
-      text-align: center; 
-      background: rgba(255,255,255,0.1);
-      padding: 2rem;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-    }
-    .logo { font-size: 4rem; margin-bottom: 1rem; }
-    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">🛠️</div>
-    <h1>Amigo Montador</h1>
-    <p>Conectando lojas de móveis com montadores qualificados</p>
-    <p>Aplicação iniciando...</p>
-  </div>
-  <script>
-    function checkAndRedirect() {
-      fetch('/api/user')
-        .then(() => window.location.href = '/')
-        .catch(() => setTimeout(checkAndRedirect, 2000));
-    }
-    setTimeout(checkAndRedirect, 3000);
-  </script>
-</body>
-</html>`;
-
-fs.writeFileSync('dist/public/index.html', indexHtml);
-
-// Create production package.json with correct configuration
+console.log('2. Creating production package.json...');
 const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const prodPkg = {
   "name": "amigo-montador",
-  "version": "1.0.0",
+  "version": "1.0.0", 
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -116,20 +70,72 @@ const prodPkg = {
 
 fs.writeFileSync('dist/package.json', JSON.stringify(prodPkg, null, 2));
 
-// Verify all required files exist
-const requiredFiles = ['dist/index.js', 'dist/package.json', 'dist/public/index.html'];
-const missingFiles = requiredFiles.filter(file => !fs.existsSync(file));
+console.log('3. Creating required directories...');
+['dist/uploads', 'dist/attached_assets', 'dist/shared', 'dist/public'].forEach(dir => {
+  fs.mkdirSync(dir, { recursive: true });
+});
 
-if (missingFiles.length > 0) {
-  console.error('Build failed - missing files:', missingFiles);
+console.log('4. Copying assets...');
+if (fs.existsSync('shared')) {
+  fs.cpSync('shared', 'dist/shared', { recursive: true });
+}
+
+['uploads', 'attached_assets'].forEach(dir => {
+  if (fs.existsSync(dir)) {
+    fs.cpSync(dir, path.join('dist', dir), { recursive: true });
+  }
+});
+
+console.log('5. Creating simple index.html...');
+const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Amigo Montador</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div id="root">
+    <h1>Amigo Montador</h1>
+    <p>Conectando lojas e montadores</p>
+    <p>Aplicação inicializando...</p>
+  </div>
+</body>
+</html>`;
+
+fs.writeFileSync('dist/public/index.html', html);
+
+console.log('6. Validating deployment configuration...');
+const serverContent = fs.readFileSync('dist/index.js', 'utf8');
+
+const validations = [
+  { check: 'PORT environment variable', test: serverContent.includes('process.env.PORT') },
+  { check: 'Port 5000 default', test: serverContent.includes('5000') },
+  { check: '0.0.0.0 host binding', test: serverContent.includes('0.0.0.0') },
+  { check: 'Health endpoint', test: serverContent.includes('/health') }
+];
+
+let allValid = true;
+validations.forEach(v => {
+  if (v.test) {
+    console.log(`✅ ${v.check}`);
+  } else {
+    console.log(`❌ ${v.check}`);
+    allValid = false;
+  }
+});
+
+if (!allValid) {
+  console.error('❌ Server configuration validation failed');
   process.exit(1);
 }
 
-console.log('Deployment build completed successfully!');
-console.log('Created files:');
-console.log('- dist/index.js (server entry point)');
-console.log('- dist/package.json (production config)');  
-console.log('- dist/public/index.html (frontend)');
-console.log('- All required directories and assets');
-console.log('');
-console.log('Ready for deployment on port 5000');
+const fileSize = fs.statSync('dist/index.js').size;
+console.log(`\n📊 dist/index.js: ${Math.round(fileSize / 1024)}KB`);
+
+console.log('\n🎉 Deployment fixes applied successfully!');
+console.log('✓ dist/index.js created and validated');
+console.log('✓ Server configured for port 5000 with 0.0.0.0 binding');
+console.log('✓ Production package.json with correct start command');
+console.log('✓ All required assets copied');
+console.log('\n🚀 Ready for deployment!');

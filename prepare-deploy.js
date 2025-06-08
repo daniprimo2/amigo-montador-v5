@@ -7,7 +7,7 @@ console.log('🚀 Running deployment build...');
 
 // Execute the fixed deployment build script
 try {
-  execSync('node build-production-fixed.js', { stdio: 'inherit' });
+  execSync('node deployment-fix.js', { stdio: 'inherit' });
   console.log('✅ Production build completed successfully');
 } catch (error) {
   console.error('❌ Production build failed:', error.message);
