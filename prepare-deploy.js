@@ -5,9 +5,9 @@ import { execSync } from 'child_process';
 
 console.log('🚀 Running deployment build...');
 
-// Execute the deployment build script
+// Execute the fixed deployment build script
 try {
-  execSync('node build-deployment.js', { stdio: 'inherit' });
+  execSync('node build-production-fixed.js', { stdio: 'inherit' });
   console.log('✅ Production build completed successfully');
 } catch (error) {
   console.error('❌ Production build failed:', error.message);
