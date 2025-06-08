@@ -3,7 +3,10 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "../shared/schema.js";
 
-neonConfig.webSocketConstructor = ws;
+// Configure Neon WebSocket only in serverless environments
+if (typeof WebSocket === 'undefined') {
+  neonConfig.webSocketConstructor = ws;
+}
 
 // Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
 const getDatabaseUrl = () => {
@@ -23,5 +26,20 @@ const getDatabaseUrl = () => {
   );
 };
 
-export const pool = new Pool({ connectionString: getDatabaseUrl() });
-export const db = drizzle({ client: pool, schema });
+let pool: Pool;
+let db: ReturnType<typeof drizzle>;
+
+try {
+  const connectionString = getDatabaseUrl();
+  pool = new Pool({ 
+    connectionString,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+  db = drizzle({ client: pool, schema });
+  console.log('✅ Database connection initialized successfully');
+} catch (error) {
+  console.error('❌ Database connection failed:', error);
+  throw error;
+}
+
+export { pool, db };
