@@ -488,21 +488,13 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               <FormItem className="form-field">
                 <FormLabel>Telefone da Loja</FormLabel>
                 <FormControl>
-                  <InputMask
+                  <MaskedInput
                     mask="(99) 99999-9999"
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    maskChar={null}
-                  >
-                    {(inputProps: any) => (
-                      <Input
-                        {...inputProps}
-                        placeholder="(11) 99999-9999"
-                        ref={field.ref}
-                      />
-                    )}
-                  </InputMask>
+                    placeholder="(11) 99999-9999"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
