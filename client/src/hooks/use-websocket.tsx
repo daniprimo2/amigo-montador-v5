@@ -109,13 +109,10 @@ export function useWebSocket() {
         // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
         if (user) {
           debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
-          const timeoutId = setTimeout(() => {
+          setTimeout(() => {
             debugLogger('WebSocket', 'Tentando reconexão automática');
             connect();
           }, 5000);
-          
-          // Armazenar o ID do timeout para cancelar se necessário
-          return () => clearTimeout(timeoutId);
         }
       };
 
@@ -127,292 +124,91 @@ export function useWebSocket() {
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data) as WebSocketMessage;
-        debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
-        
-        // Atualizar último estado da mensagem e enviar evento de notificação
-        setLastMessage(data);
-        
-        // Disparar evento global para qualquer componente que precise reagir a novas mensagens
-        // (incluindo o indicador de notificação no Bell)
-        const notificationEvent = new CustomEvent('new-notification', { 
-          detail: { type: data.type, data } 
-        });
-        window.dispatchEvent(notificationEvent);
-        
-        // Mostrar notificação toast e invalidar queries necessárias
-        if (data.type === 'new_application') {
-          debugLogger('WebSocket', 'Processando notificação de nova candidatura', {
-            serviceId: data.serviceId
+          debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
+          
+          // Atualizar último estado da mensagem e enviar evento de notificação
+          setLastMessage(data);
+          
+          // Disparar evento global para qualquer componente que precise reagir a novas mensagens
+          const notificationEvent = new CustomEvent('new-notification', { 
+            detail: { type: data.type, data } 
           });
+          window.dispatchEvent(notificationEvent);
           
-          // Tocar som de notificação com tipo específico
-          playNotificationSound('application');
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '🔔 Nova candidatura', 
-            data.message || 'Um montador se candidatou ao seu serviço'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
-          
-          // Mostrar notificação em estilo destacado com animação de pulso
-          toast({
-            title: '🔔 Nova candidatura',
-            description: data.message,
-            duration: 8000,
-            variant: 'default',
-            className: 'bg-blue-100 border-blue-500 border-2 animate-pulse-once shadow-lg'
-          });
-          
-          // Importante: debugar para verificar se isto está sendo executado
-          debugLogger('WebSocket', 'Notificação de candidatura processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'new_message') {
-          debugLogger('WebSocket', 'Processando notificação de nova mensagem', {
-            serviceId: data.serviceId
-          });
-          
-          // Tocar som de notificação com tipo específico
-          playNotificationSound('message');
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '💬 Nova mensagem recebida!', 
-            data.message || 'Você recebeu uma nova mensagem. Clique para visualizar.'
-          );
-          
-          // Invalidar consultas para atualizar mensagens
-          if (data.serviceId) {
-            queryClient.invalidateQueries({ queryKey: [`/api/services/${data.serviceId}/messages`] });
+          // Processar diferentes tipos de mensagem
+          if (data.type === 'new_application') {
+            playNotificationSound('application');
+            sendBrowserNotification('🔔 Nova candidatura', data.message || 'Um montador se candidatou ao seu serviço');
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-          }
-          
-          // Mostrar notificação visível e com ícone e animação
-          toast({
-            title: '💬 Nova mensagem recebida!',
-            description: data.message,
-            duration: 8000,
-            variant: 'default',
-            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
-          });
-          
-          // Vibrar no celular se API estiver disponível
-          if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
-          }
-          
-          debugLogger('WebSocket', 'Notificação de nova mensagem processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'application_accepted') {
-          debugLogger('WebSocket', 'Processando notificação de candidatura aceita', {
-            serviceId: data.serviceId
-          });
-          
-          // Tocar som de notificação
-          playNotificationSound('application');
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '✅ Candidatura aceita!', 
-            data.message || 'Uma loja aceitou sua candidatura para um serviço'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          
-          // Mostrar notificação com estilo personalizado
-          toast({
-            title: '✅ Candidatura aceita!',
-            description: data.message,
-            duration: 8000,
-            variant: 'default',
-            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
-          });
-          
-          // Vibrar no celular se API estiver disponível
-          if ('vibrate' in navigator) {
-            navigator.vibrate([100, 50, 100, 50, 100]);
-          }
-          
-          debugLogger('WebSocket', 'Notificação de candidatura aceita processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'service_completed') {
-          debugLogger('WebSocket', 'Processando notificação de serviço finalizado', {
-            serviceId: data.serviceId,
-            serviceData: data.serviceData
-          });
-          
-          // Tocar som de notificação
-          playNotificationSound();
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '🌟 Serviço finalizado!', 
-            'Por favor, avalie sua experiência com este serviço.'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          
-          // Disparar evento para abrir tela de avaliação
-          if (data.serviceId && data.serviceData) {
-            // Criar e disparar evento personalizado para abertura do diálogo de avaliação
-            const ratingEvent = new CustomEvent('open-rating-dialog', { 
-              detail: { 
-                serviceId: data.serviceId,
-                serviceData: data.serviceData
-              } 
+            queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+            
+            toast({
+              title: '🔔 Nova candidatura',
+              description: data.message,
+              duration: 8000,
+              variant: 'default',
+              className: 'bg-blue-100 border-blue-500 border-2 animate-pulse-once shadow-lg'
             });
-            window.dispatchEvent(ratingEvent);
-          }
-          
-          // Mostrar notificação com estilo personalizado
-          toast({
-            title: '🌟 Serviço finalizado!',
-            description: 'Por favor, avalie sua experiência.',
-            duration: 10000,
-            variant: 'default',
-            className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg animate-pulse-once'
-          });
-          
-          debugLogger('WebSocket', 'Notificação de serviço finalizado processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'automatic_notification') {
-          debugLogger('WebSocket', 'Processando notificação automática do sistema', {
-            serviceId: data.serviceId,
-            serviceData: data.serviceData
-          });
-          
-          // Tocar som de notificação especial para notificações do sistema
-          playNotificationSound('application');
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '⚠️ Confirmação Necessária', 
-            data.message || 'É necessário confirmar um serviço para prosseguir.'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
-          
-          // Disparar evento para abrir diálogo de confirmação
-          if (data.serviceId && data.serviceData) {
-            // Criar e disparar evento personalizado para abertura do diálogo de confirmação
-            const confirmEvent = new CustomEvent('open-service-confirm-dialog', { 
-              detail: { 
-                serviceId: data.serviceId,
-                serviceData: data.serviceData
-              } 
+          } else if (data.type === 'new_message') {
+            playNotificationSound('message');
+            sendBrowserNotification('💬 Nova mensagem recebida!', data.message || 'Você recebeu uma nova mensagem. Clique para visualizar.');
+            
+            if (data.serviceId) {
+              queryClient.invalidateQueries({ queryKey: [`/api/services/${data.serviceId}/messages`] });
+              queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+            }
+            
+            toast({
+              title: '💬 Nova mensagem recebida!',
+              description: data.message,
+              duration: 8000,
+              variant: 'default',
+              className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
             });
-            window.dispatchEvent(confirmEvent);
-          }
-          
-          // Mostrar notificação com estilo de alerta
-          toast({
-            title: '⚠️ Confirmação Necessária',
-            description: data.message,
-            duration: 15000, // Maior duração por ser importante
-            variant: 'default',
-            className: 'bg-orange-100 border-orange-500 border-2 font-medium shadow-lg animate-pulse'
-          });
-          
-          // Vibrar no celular se API estiver disponível (padrão de alerta)
-          if ('vibrate' in navigator) {
-            navigator.vibrate([300, 100, 300, 100, 300]);
-          }
-          
-          debugLogger('WebSocket', 'Notificação automática processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'service_confirmed') {
-          debugLogger('WebSocket', 'Processando notificação de serviço confirmado', {
-            serviceId: data.serviceId,
-            serviceData: data.serviceData
-          });
-          
-          // Tocar som de notificação
-          playNotificationSound();
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '✅ Serviço Confirmado!', 
-            data.message || 'O montador confirmou o serviço. O pagamento já pode ser realizado.'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          
-          // Mostrar notificação com estilo personalizado
-          toast({
-            title: '✅ Serviço Confirmado!',
-            description: data.message,
-            duration: 8000,
-            variant: 'default',
-            className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
-          });
-          
-          debugLogger('WebSocket', 'Notificação de serviço confirmado processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        } else if (data.type === 'payment_ready') {
-          debugLogger('WebSocket', 'Processando notificação de pagamento disponível', {
-            serviceId: data.serviceId,
-            serviceData: data.serviceData
-          });
-          
-          // Tocar som de notificação
-          playNotificationSound();
-          
-          // Enviar notificação do navegador
-          sendBrowserNotification(
-            '💳 Pagamento Disponível', 
-            data.message || 'O pagamento do serviço já pode ser realizado.'
-          );
-          
-          // Invalidar consultas para atualizar listas de serviços
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          
-          // Disparar evento para abrir tela de pagamento
-          if (data.serviceId && data.serviceData) {
-            // Criar e disparar evento personalizado para abertura do diálogo de pagamento
-            const paymentEvent = new CustomEvent('open-payment-dialog', { 
-              detail: { 
-                serviceId: data.serviceId,
-                serviceData: data.serviceData
-              } 
+            
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
+          } else if (data.type === 'application_accepted') {
+            playNotificationSound('application');
+            sendBrowserNotification('✅ Candidatura aceita!', data.message || 'Uma loja aceitou sua candidatura para um serviço');
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            
+            toast({
+              title: '✅ Candidatura aceita!',
+              description: data.message,
+              duration: 8000,
+              variant: 'default',
+              className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg animate-pulse-once'
             });
-            window.dispatchEvent(paymentEvent);
+            
+            if ('vibrate' in navigator) {
+              navigator.vibrate([100, 50, 100, 50, 100]);
+            }
+          } else if (data.type === 'service_completed') {
+            playNotificationSound();
+            sendBrowserNotification('🌟 Serviço finalizado!', 'Por favor, avalie sua experiência com este serviço.');
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            
+            if (data.serviceId && data.serviceData) {
+              const ratingEvent = new CustomEvent('open-rating-dialog', { 
+                detail: { 
+                  serviceId: data.serviceId,
+                  serviceData: data.serviceData
+                } 
+              });
+              window.dispatchEvent(ratingEvent);
+            }
+            
+            toast({
+              title: '🌟 Serviço finalizado!',
+              description: 'Por favor, avalie sua experiência.',
+              duration: 10000,
+              variant: 'default',
+              className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg animate-pulse-once'
+            });
           }
-          
-          // Mostrar notificação com estilo personalizado
-          toast({
-            title: '💳 Pagamento Disponível',
-            description: data.message || 'O pagamento do serviço já pode ser realizado.',
-            duration: 10000,
-            variant: 'default',
-            className: 'bg-blue-100 border-blue-500 border-2 font-medium shadow-lg animate-pulse-once'
-          });
-          
-          debugLogger('WebSocket', 'Notificação de pagamento disponível processada com sucesso', {
-            message: data.message,
-            serviceId: data.serviceId
-          });
-        }
         } catch (error) {
           debugLogger('WebSocket', 'Erro ao processar mensagem', error);
         }
