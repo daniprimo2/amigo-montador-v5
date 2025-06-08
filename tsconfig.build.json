@@ -2,13 +2,24 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "outDir": "dist",
+    "outDir": "./dist",
+    "rootDir": "./",
     "declaration": false,
-    "declarationMap": false,
     "sourceMap": false,
     "removeComments": true,
-    "skipLibCheck": true
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
-  "include": ["server/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "client", "**/*.test.ts"]
+  "include": [
+    "server/**/*",
+    "shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "client/**/*",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }
