@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import FileUpload from '../ui/file-upload';
-import InputMask from 'react-input-mask';
+import { MaskedInput } from '../ui/masked-input';
 
 // Função para validar CPF
 const validateCPF = (cpf: string): boolean => {
@@ -244,13 +244,12 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
               <FormItem className="form-field">
                 <FormLabel>{documentType === 'cpf' ? 'CPF' : 'CNPJ'}</FormLabel>
                 <FormControl>
-                  <InputMask
+                  <MaskedInput
                     mask={documentType === 'cpf' ? '999.999.999-99' : '99.999.999/9999-99'}
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -265,13 +264,12 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
               <FormItem className="form-field">
                 <FormLabel>Telefone</FormLabel>
                 <FormControl>
-                  <InputMask
+                  <MaskedInput
                     mask="(99) 99999-9999"
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     placeholder="(00) 00000-0000"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   />
                 </FormControl>
                 <FormMessage />
