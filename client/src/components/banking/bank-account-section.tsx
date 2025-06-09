@@ -102,10 +102,7 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
     queryFn: () => apiRequest({ method: 'GET', url: '/api/bank-accounts' }),
   });
 
-  // Debug logging
-  console.log('BankAccountSection - isLoading:', isLoading);
-  console.log('BankAccountSection - bankAccounts:', bankAccounts);
-  console.log('BankAccountSection - error:', error);
+
 
   const deleteMutation = useMutation({
     mutationFn: (accountId: number) => apiRequest({
@@ -187,11 +184,11 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
-                    {account.bankName || account.bank_name}
+                    {account.bankName}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
-                      {(account.accountType || account.account_type) === 'corrente' ? 'Conta Corrente' : 'Poupança'}
+                      {account.accountType === 'corrente' ? 'Conta Corrente' : 'Poupança'}
                     </Badge>
                     <div className="flex items-center gap-1">
                       <Button
@@ -222,32 +219,29 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">Conta</p>
-                    <p className="font-medium">{maskAccountNumber(account.accountNumber || account.account_number)}</p>
+                    <p className="font-medium">{maskAccountNumber(account.accountNumber)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">Titular</p>
-                    <p className="font-medium">{account.holderName || account.holder_name}</p>
+                    <p className="font-medium">{account.holderName}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">
-                      {(account.holderDocumentType || account.holder_document_type)?.toUpperCase()}
+                      {account.holderDocumentType?.toUpperCase()}
                     </p>
                     <p className="font-medium">
-                      {maskDocumentNumber(
-                        account.holderDocumentNumber || account.holder_document_number, 
-                        account.holderDocumentType || account.holder_document_type
-                      )}
+                      {maskDocumentNumber(account.holderDocumentNumber, account.holderDocumentType)}
                     </p>
                   </div>
-                  {(account.pixKey || account.pix_key) && (
+                  {account.pixKey && (
                     <div className="md:col-span-2">
                       <div className="flex items-center gap-2 mb-1">
-                        {getPixKeyIcon(account.pixKeyType || account.pix_key_type)}
+                        {getPixKeyIcon(account.pixKeyType)}
                         <p className="text-muted-foreground">
-                          Chave PIX ({formatPixKeyType(account.pixKeyType || account.pix_key_type)})
+                          Chave PIX ({formatPixKeyType(account.pixKeyType)})
                         </p>
                       </div>
-                      <p className="font-medium">{maskPixKey(account.pixKey || account.pix_key, account.pixKeyType || account.pix_key_type)}</p>
+                      <p className="font-medium">{maskPixKey(account.pixKey, account.pixKeyType)}</p>
                     </div>
                   )}
                 </div>

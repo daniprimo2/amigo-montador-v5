@@ -4417,7 +4417,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const bankAccounts = await storage.getBankAccountsByUserId(req.user.id);
-      res.json(bankAccounts);
+      
+      // Transform snake_case to camelCase for frontend compatibility
+      const transformedBankAccounts = bankAccounts.map(account => ({
+        id: account.id,
+        userId: (account as any).user_id,
+        bankName: (account as any).bank_name,
+        accountType: (account as any).account_type,
+        accountNumber: (account as any).account_number,
+        agency: account.agency,
+        holderName: (account as any).holder_name,
+        holderDocumentType: (account as any).holder_document_type,
+        holderDocumentNumber: (account as any).holder_document_number,
+        pixKey: (account as any).pix_key,
+        pixKeyType: (account as any).pix_key_type,
+        createdAt: (account as any).created_at
+      }));
+      
+      res.json(transformedBankAccounts);
     } catch (error) {
       console.error("Erro ao buscar contas bancárias:", error);
       res.status(500).json({ message: "Erro ao buscar contas bancárias" });
