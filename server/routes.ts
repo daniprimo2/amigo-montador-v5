@@ -4441,6 +4441,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[Bank Accounts Debug] Transformed data:', JSON.stringify(transformedBankAccounts, null, 2));
       
+      // Disable caching for this endpoint
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+      
       res.json(transformedBankAccounts);
     } catch (error) {
       console.error("Erro ao buscar contas bancárias:", error);

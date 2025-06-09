@@ -98,11 +98,22 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
   const queryClient = useQueryClient();
 
   const { data: bankAccounts, isLoading, error } = useQuery({
-    queryKey: ['/api/bank-accounts'],
-    queryFn: () => apiRequest({ method: 'GET', url: '/api/bank-accounts' }),
+    queryKey: ['/api/bank-accounts', Math.random()], // Force fresh request
+    queryFn: () => apiRequest({ 
+      method: 'GET', 
+      url: '/api/bank-accounts',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    }),
     staleTime: 0,
     gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  console.log('BankAccountSection - bankAccounts data:', bankAccounts);
 
 
 
