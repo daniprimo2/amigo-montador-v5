@@ -323,9 +323,99 @@ export class DatabaseStorage implements IStorage {
         } as Service & { storeName: string };
       }));
       
-      // Temporariamente desabilitando filtro de distância para mostrar todos os serviços
-      let filteredByDistance = enhancedServices;
-      console.log('Mostrando todos os serviços disponíveis (filtro de distância desabilitado)');
+      // Filtrar serviços por raio de atendimento do montador
+      let filteredByDistance: (Service & { storeName: string })[] = [];
+      
+      if (assembler.workRadius && assembler.workRadius > 0) {
+        console.log(`Filtrando serviços dentro do raio de ${assembler.workRadius} km para o montador em ${assembler.city}, ${assembler.state}`);
+        
+        // Importar função de cálculo de distância
+        const { calculateDistance, geocodeFromCEP, getCityCoordinates } = await import('./geocoding');
+        
+        try {
+          // Obter coordenadas do montador
+          let assemblerCoords: { latitude: string; longitude: string } | null = null;
+          
+          if (assembler.cep) {
+            try {
+              assemblerCoords = await geocodeFromCEP(assembler.cep);
+              console.log(`Coordenadas do montador (CEP ${assembler.cep}):`, assemblerCoords);
+            } catch (error) {
+              console.error(`Erro ao geocodificar CEP do montador ${assembler.cep}:`, error);
+              // Fallback para coordenadas da cidade
+              assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
+            }
+          } else {
+            // Usar coordenadas da cidade como fallback
+            assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
+          }
+          
+          // Filtrar serviços dentro do raio
+          for (const service of enhancedServices) {
+            try {
+              let serviceCoords: { latitude: string; longitude: string } | null = null;
+              
+              // Tentar obter coordenadas do serviço pelo CEP
+              if (service.cep) {
+                try {
+                  serviceCoords = await geocodeFromCEP(service.cep);
+                } catch (error) {
+                  console.log(`Erro ao geocodificar CEP do serviço ${service.id} (${service.cep}), usando fallback`);
+                }
+              }
+              
+              // Se não conseguiu pelo CEP, usar coordenadas da cidade
+              if (!serviceCoords && service.location) {
+                try {
+                  const locationParts = service.location.split(',');
+                  if (locationParts.length >= 2) {
+                    const serviceCity = locationParts[0].trim();
+                    const serviceState = locationParts[1].trim();
+                    serviceCoords = getCityCoordinates(serviceCity, serviceState);
+                  }
+                } catch (error) {
+                  console.error(`Erro ao obter coordenadas da cidade para serviço ${service.id}:`, error);
+                  continue; // Pular este serviço se não conseguir obter coordenadas
+                }
+              }
+              
+              // Calcular distância se temos ambas as coordenadas
+              if (assemblerCoords && serviceCoords) {
+                const distance = calculateDistance(
+                  parseFloat(assemblerCoords.latitude),
+                  parseFloat(assemblerCoords.longitude),
+                  parseFloat(serviceCoords.latitude),
+                  parseFloat(serviceCoords.longitude)
+                );
+                
+                console.log(`Serviço ${service.id}: distância ${distance.toFixed(1)} km (raio: ${assembler.workRadius} km)`);
+                
+                // Incluir apenas serviços dentro do raio de atendimento
+                if (distance <= assembler.workRadius) {
+                  filteredByDistance.push(service);
+                  console.log(`✓ Serviço ${service.id} incluído (${distance.toFixed(1)} km)`);
+                } else {
+                  console.log(`✗ Serviço ${service.id} excluído (${distance.toFixed(1)} km > ${assembler.workRadius} km)`);
+                }
+              } else {
+                console.warn(`Não foi possível calcular distância para serviço ${service.id} - coordenadas não encontradas`);
+              }
+            } catch (error) {
+              console.error(`Erro ao processar serviço ${service.id}:`, error);
+            }
+          }
+          
+          console.log(`Filtro por distância: ${filteredByDistance.length} de ${enhancedServices.length} serviços dentro do raio de ${assembler.workRadius} km`);
+          
+        } catch (error) {
+          console.error('Erro ao filtrar por distância:', error);
+          // Em caso de erro, retornar todos os serviços para não deixar o montador sem opções
+          filteredByDistance = enhancedServices;
+        }
+      } else {
+        console.log('Montador sem raio de atendimento definido, mostrando todos os serviços');
+        filteredByDistance = enhancedServices;
+      }
 
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
