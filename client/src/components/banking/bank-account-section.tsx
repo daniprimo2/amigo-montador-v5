@@ -97,10 +97,15 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: bankAccounts, isLoading } = useQuery({
+  const { data: bankAccounts, isLoading, error } = useQuery({
     queryKey: ['/api/bank-accounts'],
     queryFn: () => apiRequest({ method: 'GET', url: '/api/bank-accounts' }),
   });
+
+  // Debug logging
+  console.log('BankAccountSection - isLoading:', isLoading);
+  console.log('BankAccountSection - bankAccounts:', bankAccounts);
+  console.log('BankAccountSection - error:', error);
 
   const deleteMutation = useMutation({
     mutationFn: (accountId: number) => apiRequest({
@@ -182,11 +187,11 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
-                    {account.bankName}
+                    {account.bankName || account.bank_name}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
-                      {account.accountType === 'corrente' ? 'Conta Corrente' : 'Poupança'}
+                      {(account.accountType || account.account_type) === 'corrente' ? 'Conta Corrente' : 'Poupança'}
                     </Badge>
                     <div className="flex items-center gap-1">
                       <Button
@@ -217,29 +222,32 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">Conta</p>
-                    <p className="font-medium">{maskAccountNumber(account.accountNumber)}</p>
+                    <p className="font-medium">{maskAccountNumber(account.accountNumber || account.account_number)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">Titular</p>
-                    <p className="font-medium">{account.holderName}</p>
+                    <p className="font-medium">{account.holderName || account.holder_name}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground mb-1">
-                      {account.holderDocumentType.toUpperCase()}
+                      {(account.holderDocumentType || account.holder_document_type)?.toUpperCase()}
                     </p>
                     <p className="font-medium">
-                      {maskDocumentNumber(account.holderDocumentNumber, account.holderDocumentType)}
+                      {maskDocumentNumber(
+                        account.holderDocumentNumber || account.holder_document_number, 
+                        account.holderDocumentType || account.holder_document_type
+                      )}
                     </p>
                   </div>
-                  {account.pixKey && (
+                  {(account.pixKey || account.pix_key) && (
                     <div className="md:col-span-2">
                       <div className="flex items-center gap-2 mb-1">
-                        {getPixKeyIcon(account.pixKeyType)}
+                        {getPixKeyIcon(account.pixKeyType || account.pix_key_type)}
                         <p className="text-muted-foreground">
-                          Chave PIX ({formatPixKeyType(account.pixKeyType)})
+                          Chave PIX ({formatPixKeyType(account.pixKeyType || account.pix_key_type)})
                         </p>
                       </div>
-                      <p className="font-medium">{maskPixKey(account.pixKey, account.pixKeyType)}</p>
+                      <p className="font-medium">{maskPixKey(account.pixKey || account.pix_key, account.pixKeyType || account.pix_key_type)}</p>
                     </div>
                   )}
                 </div>
