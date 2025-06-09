@@ -129,7 +129,10 @@ function getSpecificCoordinatesForCEP(cep: string, city: string, state: string):
     // Áreas gerais
     '06865000': { lat: -23.7167, lng: -46.8500 }, // Itapecerica da Serra geral
     '18135000': { lat: -23.5280, lng: -47.1360 }, // São Roque geral
-    '06243000': { lat: -23.5329, lng: -46.7918 }  // Osasco geral
+    '06243000': { lat: -23.5329, lng: -46.7918 }, // Osasco geral
+    
+    // Anápolis, GO - CEP 75104-857
+    '75104857': { lat: -16.3266, lng: -48.9530 } // Anápolis correto
   };
   
   // Tentar encontrar coordenadas específicas para o CEP
