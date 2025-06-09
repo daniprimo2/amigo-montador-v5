@@ -9,7 +9,12 @@
     "removeComments": true,
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true
   },
   "include": [
     "server/**/*",

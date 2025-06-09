@@ -15,9 +15,15 @@ fs.mkdirSync('dist', { recursive: true });
 // Step 2: Build server with TypeScript compilation
 console.log('2. Compiling TypeScript server...');
 try {
-  // Use TypeScript compiler for proper type checking and compilation
-  execSync('npx tsc --project tsconfig.server.json', { stdio: 'inherit' });
+  // Use TypeScript compiler with correct config file
+  execSync('npx tsc -p tsconfig.build.json', { stdio: 'inherit' });
   console.log('✅ TypeScript compilation successful');
+  
+  // Move server/index.js to dist/index.js for deployment
+  if (fs.existsSync('dist/server/index.js')) {
+    fs.renameSync('dist/server/index.js', 'dist/index.js');
+    console.log('✅ Entry point moved to dist/index.js');
+  }
 } catch (error) {
   console.log('⚠️ TypeScript compilation failed, trying esbuild...');
   try {
