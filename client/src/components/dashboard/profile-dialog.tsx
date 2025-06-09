@@ -1145,16 +1145,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
 
             {/* Seção de informações bancárias */}
             <TabsContent value="dados-bancarios" className="mt-4">
-              {user && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Gerencie suas contas bancárias para receber pagamentos.
-                  </p>
-                  <Button onClick={() => setShowBankDialog(true)}>
-                    Gerenciar Contas Bancárias
-                  </Button>
-                </div>
-              )}
+              {user && <BankAccountSection userId={user.id} />}
             </TabsContent>
           </Tabs>
         )}
