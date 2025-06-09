@@ -162,8 +162,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log(`Buscando serviços disponíveis para o montador (id: ${assembler.id})`);
-        // Buscar serviços disponíveis para montador (incluindo nome da loja)
-        servicesList = await storage.getAvailableServicesForAssembler(assembler);
+        // Buscar serviços disponíveis para montador com filtro de raio
+        servicesList = await storage.getAvailableServicesForAssembler(req.user.id);
         
         // Buscar candidaturas do montador para incluir status de aplicação
         const assemblerApplications = await db
