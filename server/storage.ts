@@ -251,6 +251,8 @@ export class DatabaseStorage implements IStorage {
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     try {
+      console.log(`[STORAGE] getAvailableServicesForAssembler chamado para montador ID ${assembler.id} - Raio: ${assembler.workRadius} km`);
+      
       // Obter apenas serviços com status 'open' (disponíveis para candidatura)
       const servicesList = await db.select({
         services: {
