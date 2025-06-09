@@ -6,7 +6,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FileUpload from '../ui/file-upload';
 import { MaskedInput } from '../ui/masked-input';
 import { useToast } from '@/hooks/use-toast';
@@ -41,34 +40,6 @@ const validatePhone = (phone: string): boolean => {
   return cleanPhone.length === 10 || cleanPhone.length === 11;
 };
 
-// Função para validar CNPJ
-const validateCNPJ = (cnpj: string): boolean => {
-  const cleanCNPJ = cnpj.replace(/\D/g, '');
-  
-  if (cleanCNPJ.length !== 14) return false;
-  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false; // Evita CNPJs com todos os dígitos iguais
-  
-  // Validação do primeiro dígito verificador
-  let sum = 0;
-  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  for (let i = 0; i < 12; i++) {
-    sum += parseInt(cleanCNPJ.charAt(i)) * weights1[i];
-  }
-  let remainder = sum % 11;
-  const digit1 = remainder < 2 ? 0 : 11 - remainder;
-  if (digit1 !== parseInt(cleanCNPJ.charAt(12))) return false;
-  
-  // Validação do segundo dígito verificador
-  sum = 0;
-  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  for (let i = 0; i < 13; i++) {
-    sum += parseInt(cleanCNPJ.charAt(i)) * weights2[i];
-  }
-  remainder = sum % 11;
-  const digit2 = remainder < 2 ? 0 : 11 - remainder;
-  return digit2 === parseInt(cleanCNPJ.charAt(13));
-};
-
 // Função para validar CEP
 const validateZipCode = (zipCode: string): boolean => {
   const cleanZipCode = zipCode.replace(/\D/g, '');
@@ -83,11 +54,6 @@ const assemblerStep1Schema = z.object({
   cpf: z.string()
     .min(1, 'CPF é obrigatório')
     .refine(validateCPF, 'CPF inválido'),
-  documentType: z.enum(['cpf', 'cnpj'], {
-    required_error: 'Tipo de documento é obrigatório',
-  }),
-  documentNumber: z.string()
-    .min(1, 'Número do documento é obrigatório'),
   phone: z.string()
     .min(1, 'Telefone é obrigatório')
     .refine(validatePhone, 'Telefone deve ter 10 ou 11 dígitos'),
@@ -134,16 +100,6 @@ const assemblerStep1Schema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
-}).refine((data) => {
-  if (data.documentType === 'cpf') {
-    return validateCPF(data.documentNumber);
-  } else if (data.documentType === 'cnpj') {
-    return validateCNPJ(data.documentNumber);
-  }
-  return true;
-}, {
-  message: "Documento inválido",
-  path: ["documentNumber"],
 });
 
 export type AssemblerStep1Data = z.infer<typeof assemblerStep1Schema>;
@@ -166,8 +122,6 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
     defaultValues: {
       name: '',
       cpf: '',
-      documentType: 'cpf' as const,
-      documentNumber: '',
       phone: '',
       zipCode: '',
       address: '',
@@ -187,57 +141,55 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
     const formData = {
       ...data,
       fullAddress: `${data.address}, ${data.addressNumber} - ${data.neighborhood}`,
-      profilePicture: profileFiles,
+      profilePicture: profileFiles
     };
     onNext(formData);
   };
 
   const handleProfileChange = (files: FileList | null) => {
-    setProfileFiles(files);
-    form.setValue('profilePicture', files);
-  };
-  
-  const searchZipCode = async (zipCode: string) => {
-    if (!zipCode || zipCode.length < 8) {
-      return;
+    if (files && files.length > 0) {
+      setProfileFiles(files);
+      form.setValue('profilePicture', files);
+      form.clearErrors('profilePicture');
     }
-    
-    // Remove caracteres não numéricos do CEP
+  };
+
+  const searchZipCode = async (zipCode: string) => {
     const cleanZipCode = zipCode.replace(/\D/g, '');
     
     if (cleanZipCode.length !== 8) {
       return;
     }
+
+    setIsSearchingZipCode(true);
     
     try {
-      setIsSearchingZipCode(true);
       const response = await fetch(`https://viacep.com.br/ws/${cleanZipCode}/json/`);
       const data = await response.json();
       
-      if (!data.erro) {
-        form.setValue('address', data.logradouro);
-        form.setValue('neighborhood', data.bairro);
-        form.setValue('city', data.localidade);
-        form.setValue('state', data.uf);
-        
-        // Notificar o usuário que o endereço foi preenchido
-        toast({
-          title: "Endereço encontrado",
-          description: "Os campos de endereço foram preenchidos automaticamente.",
-        });
-      } else {
-        // Notificar o usuário que o CEP não foi encontrado
+      if (data.erro) {
         toast({
           title: "CEP não encontrado",
-          description: "Verifique o CEP informado ou preencha o endereço manualmente.",
+          description: "Verifique se o CEP está correto.",
           variant: "destructive",
         });
+        return;
       }
+
+      // Preencher os campos automaticamente
+      form.setValue('address', data.logradouro || '');
+      form.setValue('neighborhood', data.bairro || '');
+      form.setValue('city', data.localidade || '');
+      form.setValue('state', data.uf || '');
+      
+      toast({
+        title: "CEP encontrado!",
+        description: "Endereço preenchido automaticamente.",
+      });
     } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
       toast({
         title: "Erro ao buscar CEP",
-        description: "Não foi possível consultar o CEP. Preencha o endereço manualmente.",
+        description: "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {
@@ -246,27 +198,18 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="w-full">
-          <div className="relative pt-1">
-            <div className="flex mb-2 items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-black bg-gray-100">
-                  Passo 1 de 3
-                </span>
-              </div>
-            </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '33%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-black"></div>
-            </div>
-          </div>
-        </div>
+    <div className="auth-container">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Cadastro de Montador
+        </h1>
+        <p className="text-gray-600">
+          Etapa 1 de 3: Dados Pessoais
+        </p>
       </div>
-      <h2 className="text-xl font-semibold text-foreground mb-1">Dados Pessoais</h2>
-      <p className="text-sm text-muted-foreground mb-6">Preencha seus dados pessoais para continuar.</p>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="name"
@@ -276,7 +219,7 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Seu nome completo"
+                    placeholder="Digite seu nome completo"
                   />
                 </FormControl>
                 <FormMessage />
@@ -303,52 +246,6 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
               </FormItem>
             )}
           />
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="documentType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Documento para PIX</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="cpf">CPF</SelectItem>
-                      <SelectItem value="cnpj">CNPJ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="documentNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {form.watch('documentType') === 'cnpj' ? 'CNPJ' : 'CPF'} para PIX
-                  </FormLabel>
-                  <FormControl>
-                    <MaskedInput
-                      mask={form.watch('documentType') === 'cnpj' ? '99.999.999/9999-99' : '999.999.999-99'}
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder={form.watch('documentType') === 'cnpj' ? '00.000.000/0000-00' : '000.000.000-00'}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
           
           <FormField
             control={form.control}
