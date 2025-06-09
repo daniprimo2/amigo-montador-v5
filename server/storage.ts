@@ -327,7 +327,8 @@ export class DatabaseStorage implements IStorage {
       let filteredByDistance: (Service & { storeName: string })[] = [];
       
       if (assembler.workRadius && assembler.workRadius > 0) {
-        console.log(`Filtrando serviços dentro do raio de ${assembler.workRadius} km para o montador em ${assembler.city}, ${assembler.state}`);
+        console.log(`[FILTRO RAIO] Iniciando filtro: ${assembler.workRadius} km para montador ${assembler.id} em ${assembler.city}, ${assembler.state}`);
+        console.log(`[FILTRO RAIO] Total de serviços antes do filtro: ${enhancedServices.length}`);
         
         // Importar função de cálculo de distância
         const { calculateDistance, geocodeFromCEP, getCityCoordinates } = await import('./geocoding');
@@ -339,15 +340,23 @@ export class DatabaseStorage implements IStorage {
           if (assembler.cep) {
             try {
               assemblerCoords = await geocodeFromCEP(assembler.cep);
-              console.log(`Coordenadas do montador (CEP ${assembler.cep}):`, assemblerCoords);
+              console.log(`[FILTRO RAIO] Coordenadas do montador (CEP ${assembler.cep}):`, assemblerCoords);
             } catch (error) {
-              console.error(`Erro ao geocodificar CEP do montador ${assembler.cep}:`, error);
+              console.error(`[FILTRO RAIO] Erro ao geocodificar CEP do montador ${assembler.cep}:`, error);
               // Fallback para coordenadas da cidade
-              assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
+              const cityCoords = getCityCoordinates(assembler.city, assembler.state);
+              assemblerCoords = {
+                latitude: cityCoords.lat.toString(),
+                longitude: cityCoords.lng.toString()
+              };
             }
           } else {
             // Usar coordenadas da cidade como fallback
-            assemblerCoords = getCityCoordinates(assembler.city, assembler.state);
+            const cityCoords = getCityCoordinates(assembler.city, assembler.state);
+            assemblerCoords = {
+              latitude: cityCoords.lat.toString(),
+              longitude: cityCoords.lng.toString()
+            };
           }
           
           // Filtrar serviços dentro do raio
@@ -371,10 +380,14 @@ export class DatabaseStorage implements IStorage {
                   if (locationParts.length >= 2) {
                     const serviceCity = locationParts[0].trim();
                     const serviceState = locationParts[1].trim();
-                    serviceCoords = getCityCoordinates(serviceCity, serviceState);
+                    const cityCoords = getCityCoordinates(serviceCity, serviceState);
+                    serviceCoords = {
+                      latitude: cityCoords.lat.toString(),
+                      longitude: cityCoords.lng.toString()
+                    };
                   }
                 } catch (error) {
-                  console.error(`Erro ao obter coordenadas da cidade para serviço ${service.id}:`, error);
+                  console.error(`[FILTRO RAIO] Erro ao obter coordenadas da cidade para serviço ${service.id}:`, error);
                   continue; // Pular este serviço se não conseguir obter coordenadas
                 }
               }
@@ -388,24 +401,33 @@ export class DatabaseStorage implements IStorage {
                   parseFloat(serviceCoords.longitude)
                 );
                 
-                console.log(`Serviço ${service.id}: distância ${distance.toFixed(1)} km (raio: ${assembler.workRadius} km)`);
+                console.log(`[FILTRO RAIO] Serviço ${service.id}: distância ${distance.toFixed(1)} km (raio limite: ${assembler.workRadius} km)`);
                 
                 // Incluir apenas serviços dentro do raio de atendimento
                 if (distance <= assembler.workRadius) {
                   filteredByDistance.push(service);
-                  console.log(`✓ Serviço ${service.id} incluído (${distance.toFixed(1)} km)`);
+                  console.log(`[FILTRO RAIO] ✓ Serviço ${service.id} INCLUÍDO (${distance.toFixed(1)} km <= ${assembler.workRadius} km)`);
                 } else {
-                  console.log(`✗ Serviço ${service.id} excluído (${distance.toFixed(1)} km > ${assembler.workRadius} km)`);
+                  console.log(`[FILTRO RAIO] ✗ Serviço ${service.id} EXCLUÍDO (${distance.toFixed(1)} km > ${assembler.workRadius} km)`);
                 }
               } else {
-                console.warn(`Não foi possível calcular distância para serviço ${service.id} - coordenadas não encontradas`);
+                console.warn(`[FILTRO RAIO] Não foi possível calcular distância para serviço ${service.id} - coordenadas não encontradas`);
+                // Incluir o serviço mesmo sem coordenadas para não perder oportunidades
+                filteredByDistance.push(service);
               }
             } catch (error) {
               console.error(`Erro ao processar serviço ${service.id}:`, error);
             }
           }
           
-          console.log(`Filtro por distância: ${filteredByDistance.length} de ${enhancedServices.length} serviços dentro do raio de ${assembler.workRadius} km`);
+          console.log(`[FILTRO RAIO] RESULTADO FINAL: ${filteredByDistance.length} de ${enhancedServices.length} serviços dentro do raio de ${assembler.workRadius} km`);
+          
+          // Log dos serviços que passaram no filtro
+          if (filteredByDistance.length > 0) {
+            console.log(`[FILTRO RAIO] Serviços que passaram no filtro:`, filteredByDistance.map(s => `ID ${s.id} - ${s.title}`));
+          } else {
+            console.log(`[FILTRO RAIO] ATENÇÃO: Nenhum serviço passou no filtro de raio!`);
+          }
           
         } catch (error) {
           console.error('Erro ao filtrar por distância:', error);
