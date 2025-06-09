@@ -4417,12 +4417,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const bankAccounts = await storage.getBankAccountsByUserId(req.user.id);
-      console.log('[Bank Accounts Debug] Raw data from storage:', JSON.stringify(bankAccounts, null, 2));
       
       // Transform snake_case to camelCase for frontend compatibility
       const transformedBankAccounts = bankAccounts.map(account => {
         const rawAccount = account as any;
-        console.log('[Bank Accounts Debug] Processing account:', rawAccount);
         return {
           id: rawAccount.id,
           userId: rawAccount.user_id,
@@ -4438,8 +4436,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: rawAccount.created_at
         };
       });
-      
-      console.log('[Bank Accounts Debug] Transformed data:', JSON.stringify(transformedBankAccounts, null, 2));
       
       // Disable caching for this endpoint
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
