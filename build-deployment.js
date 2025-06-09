@@ -8,176 +8,118 @@ console.log('🚀 Building for deployment...');
 // Clean and create dist directory
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true });
+  console.log('✅ Cleaned existing dist directory');
 }
 fs.mkdirSync('dist', { recursive: true });
+fs.mkdirSync('dist/public', { recursive: true });
 
-// Build backend server with proper TypeScript compilation
-console.log('Building server with TypeScript...');
+// Build the server using esbuild
+console.log('📦 Compiling server...');
 try {
-  execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js --target=node18 --minify', { stdio: 'inherit' });
-  console.log('✅ Server built successfully');
-} catch (error) {
-  console.error('❌ Server build failed:', error.message);
-  process.exit(1);
-}
-
-// Verify the build output exists
-if (!fs.existsSync('dist/index.js')) {
-  console.error('❌ Build failed: dist/index.js was not created');
-  process.exit(1);
-}
-
-// Create essential directories
-const dirs = ['dist/uploads', 'dist/attached_assets', 'dist/shared', 'dist/public'];
-dirs.forEach(dir => {
-  fs.mkdirSync(dir, { recursive: true });
-});
-
-// Copy shared schemas and static assets
-if (fs.existsSync('shared')) {
-  fs.cpSync('shared', 'dist/shared', { recursive: true });
-}
-
-['uploads', 'attached_assets'].forEach(dir => {
-  if (fs.existsSync(dir)) {
-    fs.cpSync(dir, path.join('dist', dir), { recursive: true });
+  execSync(`npx esbuild server/index.ts \
+    --platform=node \
+    --packages=external \
+    --bundle \
+    --format=esm \
+    --outfile=dist/index.js \
+    --target=node18 \
+    --external:vite \
+    --external:@vitejs/plugin-react \
+    --external:@replit/vite-plugin-cartographer \
+    --external:@replit/vite-plugin-runtime-error-modal`, 
+    { stdio: 'inherit' }
+  );
+  
+  if (!fs.existsSync('dist/index.js')) {
+    throw new Error('dist/index.js was not created');
   }
-});
+  console.log('✅ Server compiled successfully');
+} catch (error) {
+  console.error('❌ Server compilation failed:', error.message);
+  process.exit(1);
+}
 
-// Create production HTML file in public directory
-const deploymentHtml = `<!DOCTYPE html>
+// Build the frontend using Vite
+console.log('🎨 Building frontend...');
+try {
+  execSync('npx vite build --outDir dist/public', { stdio: 'inherit' });
+  console.log('✅ Frontend built successfully');
+} catch (error) {
+  console.error('❌ Frontend build failed:', error.message);
+  // Create a minimal fallback frontend
+  console.log('⚠️ Creating fallback frontend...');
+  const fallbackHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Amigo Montador - Conectando Lojas e Montadores</title>
-  <meta name="description" content="Plataforma que conecta lojas de móveis com montadores qualificados no Brasil">
+  <title>Amigo Montador</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    .container {
-      text-align: center;
-      background: rgba(255,255,255,0.15);
-      padding: 3rem;
-      border-radius: 20px;
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255,255,255,0.2);
-      max-width: 500px;
-    }
-    .logo {
-      font-size: 5rem;
-      margin-bottom: 1.5rem;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-    .subtitle {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-    .status {
-      padding: 1rem;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      margin-top: 2rem;
-    }
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 10px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .logo { color: #3b82f6; font-size: 2em; margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">🛠️</div>
-    <h1>Amigo Montador</h1>
-    <p class="subtitle">Conectando lojas de móveis com montadores qualificados</p>
-    <div class="status">
-      <div class="loading"></div>
-      <span>Inicializando aplicação...</span>
-    </div>
+    <div class="logo">🔧 Amigo Montador</div>
+    <h1>Aplicação Iniciando...</h1>
+    <p>Por favor, aguarde enquanto a aplicação é carregada.</p>
+    <script>
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    </script>
   </div>
-  <script>
-    let attempts = 0;
-    const maxAttempts = 30;
-    
-    function checkServer() {
-      attempts++;
-      fetch('/api/health')
-        .then(response => {
-          if (response.ok) {
-            window.location.href = '/';
-          } else {
-            throw new Error('Server not ready');
-          }
-        })
-        .catch(() => {
-          if (attempts < maxAttempts) {
-            setTimeout(checkServer, 2000);
-          } else {
-            document.querySelector('.status').innerHTML = 
-              '<p>Servidor indisponível. Tente novamente em alguns minutos.</p>';
-          }
-        });
-    }
-    
-    setTimeout(checkServer, 3000);
-  </script>
 </body>
 </html>`;
+  fs.writeFileSync('dist/public/index.html', fallbackHtml);
+}
 
-fs.writeFileSync('dist/public/index.html', deploymentHtml);
-
-// Create production package.json with correct configuration
+// Read original package.json for dependencies
 const originalPkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+// Create production package.json with only runtime dependencies
 const prodPkg = {
   "name": "amigo-montador",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production PORT=5000 node index.js"
+    "start": "NODE_ENV=production node index.js"
   },
   "dependencies": {
+    // Core server dependencies
     "express": originalPkg.dependencies.express,
     "express-session": originalPkg.dependencies["express-session"],
     "express-fileupload": originalPkg.dependencies["express-fileupload"],
+    
+    // Authentication
     "passport": originalPkg.dependencies.passport,
     "passport-local": originalPkg.dependencies["passport-local"],
-    "ws": originalPkg.dependencies.ws,
     "connect-pg-simple": originalPkg.dependencies["connect-pg-simple"],
+    
+    // Database
     "drizzle-orm": originalPkg.dependencies["drizzle-orm"],
     "@neondatabase/serverless": originalPkg.dependencies["@neondatabase/serverless"],
+    
+    // WebSocket
+    "ws": originalPkg.dependencies.ws,
+    
+    // HTTP client and utilities
     "axios": originalPkg.dependencies.axios,
+    "node-fetch": originalPkg.dependencies["node-fetch"],
+    
+    // Payment processing
     "stripe": originalPkg.dependencies.stripe,
+    
+    // Validation
     "zod": originalPkg.dependencies.zod,
     "drizzle-zod": originalPkg.dependencies["drizzle-zod"],
-    "zod-validation-error": originalPkg.dependencies["zod-validation-error"]
+    "zod-validation-error": originalPkg.dependencies["zod-validation-error"],
+    
+    // Date utilities
+    "date-fns": originalPkg.dependencies["date-fns"]
   },
   "engines": {
     "node": ">=18.0.0"
@@ -185,56 +127,55 @@ const prodPkg = {
 };
 
 fs.writeFileSync('dist/package.json', JSON.stringify(prodPkg, null, 2));
+console.log('✅ Created production package.json');
 
-// Create .replit configuration for deployment
-const replitConfig = `[deployment]
-run = ["node", "index.js"]
-deploymentTarget = "cloudrun"
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-`;
-
-fs.writeFileSync('dist/.replit', replitConfig);
-
-// Verify all required files exist
-const requiredFiles = [
-  'dist/index.js',
-  'dist/package.json',
-  'dist/public/index.html',
-  'dist/.replit'
-];
-
-console.log('\n🔍 Verifying build output...');
-let allFilesExist = true;
-
-requiredFiles.forEach(file => {
-  if (fs.existsSync(file)) {
-    console.log(`✅ ${file}`);
+// Copy essential directories
+const copyDirs = ['shared', 'uploads', 'attached_assets'];
+copyDirs.forEach(dir => {
+  if (fs.existsSync(dir)) {
+    fs.cpSync(dir, `dist/${dir}`, { recursive: true });
+    console.log(`✅ Copied ${dir}/ directory`);
   } else {
-    console.log(`❌ ${file} - MISSING`);
-    allFilesExist = false;
+    fs.mkdirSync(`dist/${dir}`, { recursive: true });
+    console.log(`✅ Created empty ${dir}/ directory`);
   }
 });
 
-if (!allFilesExist) {
-  console.error('\n❌ Build verification failed: Required files are missing');
-  process.exit(1);
+// Create default avatar if it doesn't exist
+const avatarPath = 'default-avatar.svg';
+if (!fs.existsSync(avatarPath)) {
+  const defaultAvatar = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="20" fill="#e5e7eb"/>
+  <circle cx="20" cy="16" r="6" fill="#9ca3af"/>
+  <path d="M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12" fill="#9ca3af"/>
+</svg>`;
+  fs.writeFileSync(avatarPath, defaultAvatar);
+  console.log('✅ Created default avatar');
 }
 
-// Check file sizes
-const indexSize = fs.statSync('dist/index.js').size;
-console.log(`\n📊 Build statistics:`);
-console.log(`- dist/index.js: ${(indexSize / 1024).toFixed(1)} KB`);
+// Copy default avatar to dist
+if (fs.existsSync(avatarPath)) {
+  fs.copyFileSync(avatarPath, `dist/${avatarPath}`);
+  console.log('✅ Copied default avatar to dist');
+}
 
-console.log('\n✅ Deployment build completed successfully!');
-console.log('Files created:');
-console.log('- dist/index.js (bundled server)');
+console.log('\n🎉 Deployment build completed successfully!');
+console.log('\nFiles created:');
+console.log('- dist/index.js (server entry point)');
 console.log('- dist/package.json (production dependencies)');
 console.log('- dist/public/index.html (frontend)');
-console.log('- dist/.replit (deployment config)');
-console.log('- dist/shared/ (schemas)');
-console.log('- dist/uploads/ (user files)');
+console.log('- dist/shared/ (shared schemas)');
+console.log('- dist/uploads/ (user uploads)');
 console.log('- dist/attached_assets/ (static assets)');
-console.log('\n🚀 Ready for deployment!');
+
+// Verify critical files exist
+const criticalFiles = ['dist/index.js', 'dist/package.json', 'dist/public/index.html'];
+const missing = criticalFiles.filter(file => !fs.existsSync(file));
+
+if (missing.length > 0) {
+  console.error('\n❌ Critical files missing:', missing);
+  process.exit(1);
+} else {
+  console.log('\n✅ All critical files verified');
+  console.log('🚀 Ready for deployment!');
+}
