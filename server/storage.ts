@@ -432,12 +432,13 @@ export class DatabaseStorage implements IStorage {
           }
           
         } catch (error) {
-          console.error('Erro ao filtrar por distância:', error);
+          console.error('[FILTRO RAIO] Erro ao filtrar por distância:', error);
           // Em caso de erro, retornar todos os serviços para não deixar o montador sem opções
           filteredByDistance = enhancedServices;
+          console.log('[FILTRO RAIO] ERRO: Usando todos os serviços devido ao erro');
         }
       } else {
-        console.log('Montador sem raio de atendimento definido, mostrando todos os serviços');
+        console.log(`[FILTRO RAIO] Montador sem raio de atendimento definido (workRadius: ${assembler.workRadius}), mostrando todos os serviços`);
         filteredByDistance = enhancedServices;
       }
 

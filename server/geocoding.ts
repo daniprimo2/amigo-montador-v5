@@ -191,7 +191,14 @@ export function getCityCoordinates(city: string, state: string): { lat: number; 
     'Palmas-TO': { lat: -10.1689, lng: -48.3317 },
     'Macapá-AP': { lat: 0.0389, lng: -51.0664 },
     'Boa Vista-RR': { lat: 2.8235, lng: -60.6758 },
-    'Rio Branco-AC': { lat: -9.9755, lng: -67.8243 }
+    'Rio Branco-AC': { lat: -9.9755, lng: -67.8243 },
+    // Região metropolitana de São Paulo
+    'Carapicuíba-SP': { lat: -23.5223, lng: -46.8356 },
+    'Osasco-SP': { lat: -23.5329, lng: -46.7918 },
+    'Itapecerica da Serra-SP': { lat: -23.7169, lng: -46.8503 },
+    'São Roque-SP': { lat: -23.5284, lng: -47.1367 },
+    // Goiás
+    'Anápolis-GO': { lat: -16.3266, lng: -48.9530 }
   };
 
   const key = `${city}-${state}`;
