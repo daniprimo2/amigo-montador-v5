@@ -14,9 +14,28 @@ export function WhatsAppSupport({ className = "" }: WhatsAppSupportProps) {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 
   const handleClick = () => {
+    console.log('WhatsApp button clicked');
+    console.log('WhatsApp URL:', whatsappUrl);
+    
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 200);
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    
+    try {
+      // Try to open WhatsApp in a new tab
+      const opened = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      
+      if (!opened) {
+        console.warn('Pop-up blocked, trying location.href');
+        // If popup is blocked, try direct navigation
+        window.location.href = whatsappUrl;
+      } else {
+        console.log('WhatsApp opened successfully');
+      }
+    } catch (error) {
+      console.error('Error opening WhatsApp:', error);
+      // Fallback: try direct navigation
+      window.location.href = whatsappUrl;
+    }
   };
 
   return (
