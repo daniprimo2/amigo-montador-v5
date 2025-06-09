@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('Creating simple deployment build...');
+console.log('Creating deployment build...');
 
 // Clean dist
 if (fs.existsSync('dist')) {
@@ -17,16 +17,15 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 let buildSuccess = false;
 
 try {
-  console.log('Attempting esbuild compilation...');
+  console.log('Building with esbuild...');
   execSync('npx esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --target=node18 --packages=external', { stdio: 'pipe' });
   buildSuccess = true;
-  console.log('✓ esbuild compilation successful');
+  console.log('esbuild compilation successful');
 } catch (error) {
-  console.log('esbuild not available, creating manual build...');
+  console.log('Creating manual build...');
   
-  // Create a basic server that works without complex dependencies
-  const basicServer = `
-import express from 'express';
+  // Create a basic server
+  const basicServer = `import express from 'express';
 import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -37,21 +36,17 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Basic middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/attached_assets', express.static(path.join(__dirname, 'attached_assets')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Catch all - serve index.html
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'public', 'index.html');
   if (fs.existsSync(indexPath)) {
@@ -69,15 +64,14 @@ server.listen(port, '0.0.0.0', (err) => {
     console.error('Server failed to start:', err);
     process.exit(1);
   }
-  console.log(\`🚀 Amigo Montador running on port \${port}\`);
-  console.log(\`📱 Application: http://0.0.0.0:\${port}\`);
-  console.log(\`✅ Production deployment successful\`);
+  console.log('Server running on port ' + port);
+  console.log('Application: http://0.0.0.0:' + port);
 });
 
 server.on('error', (err) => {
   console.error('Server error:', err);
   if (err.code === 'EADDRINUSE') {
-    console.log(\`Port \${port} is in use, trying port \${port + 1}\`);
+    console.log('Port ' + port + ' is in use, trying port ' + (port + 1));
     server.listen(port + 1, '0.0.0.0');
   }
 });
@@ -85,12 +79,12 @@ server.on('error', (err) => {
 
   fs.writeFileSync('dist/index.js', basicServer);
   buildSuccess = true;
-  console.log('✓ Manual build created');
+  console.log('Manual build created');
 }
 
 // Verify index.js exists
 if (!fs.existsSync('dist/index.js')) {
-  console.error('❌ Failed to create dist/index.js');
+  console.error('Failed to create dist/index.js');
   process.exit(1);
 }
 
@@ -129,7 +123,6 @@ const indexHtml = `<!DOCTYPE html>
     <p>Carregando aplicação...</p>
   </div>
   <script>
-    // Reload after 3 seconds to get the full app
     setTimeout(() => { window.location.reload(); }, 3000);
   </script>
 </body>
@@ -137,7 +130,7 @@ const indexHtml = `<!DOCTYPE html>
 
 fs.writeFileSync('dist/public/index.html', indexHtml);
 
-// Create production package.json with minimal dependencies
+// Create production package.json
 const prodPkg = {
   "name": "amigo-montador",
   "version": "1.0.0",
@@ -147,7 +140,22 @@ const prodPkg = {
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": pkg.dependencies.express,
+    "express-session": pkg.dependencies["express-session"],
+    "express-fileupload": pkg.dependencies["express-fileupload"],
+    "passport": pkg.dependencies.passport,
+    "passport-local": pkg.dependencies["passport-local"],
+    "ws": pkg.dependencies.ws,
+    "connect-pg-simple": pkg.dependencies["connect-pg-simple"],
+    "drizzle-orm": pkg.dependencies["drizzle-orm"],
+    "@neondatabase/serverless": pkg.dependencies["@neondatabase/serverless"],
+    "axios": pkg.dependencies.axios,
+    "stripe": pkg.dependencies.stripe,
+    "zod": pkg.dependencies.zod,
+    "drizzle-zod": pkg.dependencies["drizzle-zod"],
+    "zod-validation-error": pkg.dependencies["zod-validation-error"],
+    "node-fetch": pkg.dependencies["node-fetch"],
+    "date-fns": pkg.dependencies["date-fns"]
   },
   "engines": {
     "node": ">=18.0.0"
@@ -162,10 +170,10 @@ fs.writeFileSync('dist/package.json', JSON.stringify(prodPkg, null, 2));
     const dest = path.join('dist', item);
     if (fs.statSync(item).isDirectory()) {
       fs.cpSync(item, dest, { recursive: true });
-      console.log(`✓ Copied ${item}/ directory`);
+      console.log('Copied ' + item + '/ directory');
     } else {
       fs.copyFileSync(item, dest);
-      console.log(`✓ Copied ${item} file`);
+      console.log('Copied ' + item + ' file');
     }
   }
 });
@@ -175,19 +183,19 @@ const requiredFiles = ['dist/index.js', 'dist/package.json', 'dist/public/index.
 const missing = requiredFiles.filter(f => !fs.existsSync(f));
 
 if (missing.length > 0) {
-  console.error('❌ Missing required files:', missing);
+  console.error('Missing required files:', missing);
   process.exit(1);
 }
 
-console.log('✅ Simple deployment build completed!');
+console.log('Deployment build completed successfully!');
 console.log('Created files:');
 console.log('  - dist/index.js (server entry point)');
 console.log('  - dist/package.json (production dependencies)');
 console.log('  - dist/public/index.html (frontend)');
-console.log('📦 Ready for deployment with minimal dependencies');
+console.log('Ready for deployment with minimal dependencies');
 
 // Show file sizes
 try {
   const stats = fs.statSync('dist/index.js');
-  console.log(\`📊 Server bundle size: \${Math.round(stats.size / 1024)}KB\`);
+  console.log('Server bundle size: ' + Math.round(stats.size / 1024) + 'KB');
 } catch (e) {}
