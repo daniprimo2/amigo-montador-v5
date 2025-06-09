@@ -100,6 +100,8 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
   const { data: bankAccounts, isLoading, error } = useQuery({
     queryKey: ['/api/bank-accounts'],
     queryFn: () => apiRequest({ method: 'GET', url: '/api/bank-accounts' }),
+    staleTime: 0,
+    gcTime: 0,
   });
 
 

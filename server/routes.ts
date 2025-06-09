@@ -4417,22 +4417,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const bankAccounts = await storage.getBankAccountsByUserId(req.user.id);
+      console.log('[Bank Accounts Debug] Raw data from storage:', JSON.stringify(bankAccounts, null, 2));
       
       // Transform snake_case to camelCase for frontend compatibility
-      const transformedBankAccounts = bankAccounts.map(account => ({
-        id: account.id,
-        userId: (account as any).user_id,
-        bankName: (account as any).bank_name,
-        accountType: (account as any).account_type,
-        accountNumber: (account as any).account_number,
-        agency: account.agency,
-        holderName: (account as any).holder_name,
-        holderDocumentType: (account as any).holder_document_type,
-        holderDocumentNumber: (account as any).holder_document_number,
-        pixKey: (account as any).pix_key,
-        pixKeyType: (account as any).pix_key_type,
-        createdAt: (account as any).created_at
-      }));
+      const transformedBankAccounts = bankAccounts.map(account => {
+        const rawAccount = account as any;
+        console.log('[Bank Accounts Debug] Processing account:', rawAccount);
+        return {
+          id: rawAccount.id,
+          userId: rawAccount.user_id,
+          bankName: rawAccount.bank_name,
+          accountType: rawAccount.account_type,
+          accountNumber: rawAccount.account_number,
+          agency: rawAccount.agency,
+          holderName: rawAccount.holder_name,
+          holderDocumentType: rawAccount.holder_document_type,
+          holderDocumentNumber: rawAccount.holder_document_number,
+          pixKey: rawAccount.pix_key,
+          pixKeyType: rawAccount.pix_key_type,
+          createdAt: rawAccount.created_at
+        };
+      });
+      
+      console.log('[Bank Accounts Debug] Transformed data:', JSON.stringify(transformedBankAccounts, null, 2));
       
       res.json(transformedBankAccounts);
     } catch (error) {
