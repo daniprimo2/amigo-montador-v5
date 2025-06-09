@@ -30,6 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, User, Camera, Upload, Star, LogOut, Edit } from 'lucide-react';
 import { BankAccountDialog } from '../banking/bank-account-dialog';
+import { BankAccountSection } from '../banking/bank-account-section';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RatingStars } from '@/components/rating/rating-stars';
 

@@ -22,8 +22,8 @@ interface BankAccount {
   holderName: string;
   holderDocumentType: string;
   holderDocumentNumber: string;
-  pixKey?: string;
-  pixKeyType?: string;
+  pixKey?: string | null;
+  pixKeyType?: string | null;
 }
 
 interface BankAccountDialogProps {
@@ -64,8 +64,8 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
         holderName: account.holderName,
         holderDocumentType: account.holderDocumentType as 'cpf' | 'cnpj',
         holderDocumentNumber: account.holderDocumentNumber,
-        pixKey: account.pixKey || '',
-        pixKeyType: (account.pixKeyType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid') || 'cpf_cnpj',
+        pixKey: account.pixKey ?? '',
+        pixKeyType: (account.pixKeyType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid') ?? 'cpf_cnpj',
       });
     } else {
       form.reset({

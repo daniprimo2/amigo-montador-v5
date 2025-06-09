@@ -91,9 +91,9 @@ const maskPixKey = (pixKey: string | null, pixKeyType: string | null) => {
 };
 
 export function BankAccountSection({ userId }: BankAccountSectionProps) {
-  const [selectedAccount, setSelectedAccount] = useState<BankAccount | undefined>();
+  const [selectedAccount, setSelectedAccount] = useState<any>();
   const [showBankDialog, setShowBankDialog] = useState(false);
-  const [accountToDelete, setAccountToDelete] = useState<BankAccount | undefined>();
+  const [accountToDelete, setAccountToDelete] = useState<any>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -124,7 +124,7 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
     },
   });
 
-  const handleEditAccount = (account: BankAccount) => {
+  const handleEditAccount = (account: any) => {
     setSelectedAccount(account);
     setShowBankDialog(true);
   };
@@ -174,9 +174,9 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
         Gerencie suas contas bancárias para receber pagamentos pelos serviços prestados.
       </p>
 
-      {bankAccounts && bankAccounts.length > 0 ? (
+      {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.length > 0 ? (
         <div className="space-y-3">
-          {bankAccounts.map((account: BankAccount) => (
+          {bankAccounts.map((account: any) => (
             <Card key={account.id} className="relative">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
