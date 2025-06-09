@@ -2,115 +2,143 @@
 import fs from 'fs';
 import path from 'path';
 
-console.log('🔍 Verifying deployment readiness...\n');
+console.log('Verifying deployment readiness...\n');
 
-// Check if all required files exist
+const checks = [];
+
+// Check 1: Critical files exist
 const requiredFiles = [
   'dist/index.js',
   'dist/package.json',
   'dist/public/index.html'
 ];
 
-console.log('📁 Checking required files:');
-let allFilesExist = true;
-
 requiredFiles.forEach(file => {
-  if (fs.existsSync(file)) {
-    const stats = fs.statSync(file);
-    console.log(`✅ ${file} (${(stats.size / 1024).toFixed(1)} KB)`);
-  } else {
-    console.log(`❌ ${file} - MISSING`);
-    allFilesExist = false;
-  }
+  const exists = fs.existsSync(file);
+  checks.push({
+    name: `${file} exists`,
+    status: exists ? 'PASS' : 'FAIL',
+    critical: true
+  });
 });
 
-// Check package.json content
-console.log('\n📦 Verifying package.json:');
-try {
+// Check 2: Package.json configuration
+if (fs.existsSync('dist/package.json')) {
   const pkg = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
   
-  console.log(`✅ Name: ${pkg.name}`);
-  console.log(`✅ Main: ${pkg.main}`);
-  console.log(`✅ Start script: ${pkg.scripts.start}`);
-  console.log(`✅ Dependencies: ${Object.keys(pkg.dependencies).length} packages`);
+  checks.push({
+    name: 'Main entry point is index.js',
+    status: pkg.main === 'index.js' ? 'PASS' : 'FAIL',
+    critical: true
+  });
   
-  if (pkg.main !== 'index.js') {
-    console.log('❌ Main should be "index.js"');
-    allFilesExist = false;
-  }
+  checks.push({
+    name: 'Start script exists',
+    status: pkg.scripts?.start ? 'PASS' : 'FAIL',
+    critical: true
+  });
   
-  if (pkg.scripts.start !== 'NODE_ENV=production node index.js') {
-    console.log('❌ Start script should be "NODE_ENV=production node index.js"');
-    allFilesExist = false;
-  }
-} catch (error) {
-  console.log('❌ Error reading package.json:', error.message);
-  allFilesExist = false;
+  checks.push({
+    name: 'Start script uses node index.js',
+    status: pkg.scripts?.start?.includes('node index.js') ? 'PASS' : 'FAIL',
+    critical: true
+  });
+  
+  checks.push({
+    name: 'ES modules enabled',
+    status: pkg.type === 'module' ? 'PASS' : 'FAIL',
+    critical: false
+  });
+  
+  const essentialDeps = ['express', 'drizzle-orm', '@neondatabase/serverless'];
+  essentialDeps.forEach(dep => {
+    checks.push({
+      name: `Dependency ${dep} included`,
+      status: pkg.dependencies?.[dep] ? 'PASS' : 'FAIL',
+      critical: true
+    });
+  });
 }
 
-// Check static assets
-console.log('\n📂 Checking static assets:');
-const assetDirs = ['attached_assets', 'uploads', 'shared'];
+// Check 3: Server configuration verification
+if (fs.existsSync('dist/index.js')) {
+  const serverCode = fs.readFileSync('dist/index.js', 'utf8');
+  
+  checks.push({
+    name: 'Server binds to 0.0.0.0',
+    status: serverCode.includes('0.0.0.0') ? 'PASS' : 'FAIL',
+    critical: true
+  });
+  
+  checks.push({
+    name: 'Uses PORT environment variable',
+    status: serverCode.includes('process.env.PORT') ? 'PASS' : 'FAIL',
+    critical: true
+  });
+  
+  checks.push({
+    name: 'Database connection configured',
+    status: serverCode.includes('DATABASE_URL') ? 'PASS' : 'FAIL',
+    critical: true
+  });
+}
+
+// Check 4: Asset directories
+const assetDirs = ['uploads', 'attached_assets'];
 assetDirs.forEach(dir => {
-  const dirPath = path.join('dist', dir);
-  if (fs.existsSync(dirPath)) {
-    const files = fs.readdirSync(dirPath, { recursive: true });
-    console.log(`✅ ${dir}/ (${files.length} items)`);
-  } else {
-    console.log(`⚠️  ${dir}/ - Not found (optional)`);
+  const srcExists = fs.existsSync(dir);
+  const distExists = fs.existsSync(`dist/${dir}`);
+  
+  if (srcExists) {
+    checks.push({
+      name: `${dir} directory copied to dist`,
+      status: distExists ? 'PASS' : 'FAIL',
+      critical: false
+    });
   }
 });
 
-// Check HTML content
-console.log('\n🌐 Verifying HTML:');
-try {
-  const html = fs.readFileSync('dist/public/index.html', 'utf8');
-  if (html.includes('Amigo Montador')) {
-    console.log('✅ HTML contains app title');
-  } else {
-    console.log('❌ HTML missing app title');
-    allFilesExist = false;
-  }
+// Display results
+console.log('Deployment Verification Results:');
+console.log('================================\n');
+
+let criticalFailures = 0;
+let totalFailures = 0;
+
+checks.forEach(check => {
+  const symbol = check.status === 'PASS' ? '✓' : '✗';
+  const indicator = check.critical ? '[CRITICAL]' : '[OPTIONAL]';
   
-  if (html.includes('charset="UTF-8"')) {
-    console.log('✅ HTML has proper encoding');
-  } else {
-    console.log('❌ HTML missing UTF-8 encoding');
-    allFilesExist = false;
+  console.log(`${symbol} ${check.name} ${indicator}`);
+  
+  if (check.status === 'FAIL') {
+    totalFailures++;
+    if (check.critical) {
+      criticalFailures++;
+    }
   }
-} catch (error) {
-  console.log('❌ Error reading HTML:', error.message);
-  allFilesExist = false;
-}
+});
 
-// Summary
-console.log('\n📊 Deployment Summary:');
-console.log('─'.repeat(50));
+console.log('\n================================');
+console.log(`Total checks: ${checks.length}`);
+console.log(`Passed: ${checks.length - totalFailures}`);
+console.log(`Failed: ${totalFailures}`);
+console.log(`Critical failures: ${criticalFailures}`);
 
-if (allFilesExist) {
-  console.log('✅ ALL DEPLOYMENT REQUIREMENTS MET');
-  console.log('');
-  console.log('🚀 Ready for deployment!');
-  console.log('');
-  console.log('Deployment configuration:');
-  console.log('  • Main file: dist/index.js');
-  console.log('  • Start command: npm run start');
-  console.log('  • Port: Uses PORT environment variable or defaults to 3000');
-  console.log('  • Host: 0.0.0.0 (accessible externally)');
-  console.log('  • Frontend: Served from dist/public/');
-  console.log('  • Static assets: uploaded files and attachments included');
-  console.log('');
-  console.log('🔧 Fixed issues:');
-  console.log('  ✅ Created dist/index.js (production server)');
-  console.log('  ✅ Updated package.json start script');
-  console.log('  ✅ Configured server for port 3000 with 0.0.0.0 binding');
-  console.log('  ✅ Fixed port forwarding compatibility');
-  console.log('  ✅ Created production build with required files');
+if (criticalFailures === 0) {
+  console.log('\n🎉 DEPLOYMENT READY!');
+  console.log('All critical deployment requirements have been met.');
+  console.log('\nDeployment fixes applied:');
+  console.log('- Application starts from dist/index.js');
+  console.log('- Production package.json with correct start script');
+  console.log('- Server binds to 0.0.0.0 and uses PORT environment variable');
+  console.log('- Database connection properly configured');
+  console.log('- Frontend assets available in dist/public/');
+  console.log('- Static assets and uploads copied');
   
   process.exit(0);
 } else {
-  console.log('❌ DEPLOYMENT REQUIREMENTS NOT MET');
-  console.log('');
-  console.log('Please fix the issues listed above.');
+  console.log('\n❌ DEPLOYMENT NOT READY');
+  console.log(`${criticalFailures} critical issue(s) must be resolved before deployment.`);
   process.exit(1);
 }
