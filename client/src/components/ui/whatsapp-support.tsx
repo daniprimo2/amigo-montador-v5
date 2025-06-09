@@ -13,39 +13,39 @@ export function WhatsAppSupport({ className = "" }: WhatsAppSupportProps) {
   const message = encodeURIComponent("Olá Leonardo! Preciso de ajuda com o Amigo Montador. 🏠🔧");
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 
-  const handleClick = () => {
-    console.log('WhatsApp button clicked');
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('WhatsApp button clicked - Event triggered!');
     console.log('WhatsApp URL:', whatsappUrl);
+    
+    // Test with alert first to verify click is working
+    alert('WhatsApp button clicked! Opening WhatsApp...');
     
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 200);
     
+    // Try to open WhatsApp
     try {
-      // Try to open WhatsApp in a new tab
-      const opened = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      
-      if (!opened) {
-        console.warn('Pop-up blocked, trying location.href');
-        // If popup is blocked, try direct navigation
-        window.location.href = whatsappUrl;
-      } else {
-        console.log('WhatsApp opened successfully');
-      }
+      window.open(whatsappUrl, '_blank');
+      console.log('WhatsApp window opened');
     } catch (error) {
       console.error('Error opening WhatsApp:', error);
-      // Fallback: try direct navigation
+      // Fallback to direct navigation
       window.location.href = whatsappUrl;
     }
   };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
+    <div className={`fixed bottom-6 right-6 z-[9999] ${className}`}>
       <button
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`group relative bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 ${isClicked ? 'scale-95' : ''}`}
+        className={`group relative bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 ${isClicked ? 'scale-95' : ''} cursor-pointer`}
         title="Suporte via WhatsApp"
+        type="button"
       >
         <MessageCircle className="w-6 h-6" />
         
