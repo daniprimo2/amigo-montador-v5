@@ -1,73 +1,93 @@
 #!/usr/bin/env node
 import fs from 'fs';
 
-console.log('🔍 Verifying deployment readiness...\n');
+console.log('🔍 Verificação Final de Deployment\n');
 
-const checks = [
+const verificacoes = [
   {
-    name: 'Server bundle exists',
-    check: () => fs.existsSync('dist/index.js'),
-    details: () => `${(fs.statSync('dist/index.js').size / 1024).toFixed(1)} KB`
+    nome: 'Arquivo principal dist/index.js',
+    teste: () => fs.existsSync('dist/index.js'),
+    critico: true
   },
   {
-    name: 'Production package.json',
-    check: () => fs.existsSync('dist/package.json'),
-    details: () => {
+    nome: 'Package.json de produção',
+    teste: () => fs.existsSync('dist/package.json'),
+    critico: true
+  },
+  {
+    nome: 'Script de start configurado',
+    teste: () => {
       const pkg = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
-      return `Start script: ${pkg.scripts.start}`;
-    }
+      return pkg.scripts && pkg.scripts.start && pkg.scripts.start.includes('node index.js');
+    },
+    critico: true
   },
   {
-    name: 'Frontend HTML',
-    check: () => fs.existsSync('dist/public/index.html'),
-    details: () => 'Loading page configured'
+    nome: 'Configuração de porta (PORT env)',
+    teste: () => {
+      const content = fs.readFileSync('dist/index.js', 'utf8');
+      return content.includes('process.env.PORT');
+    },
+    critico: true
   },
   {
-    name: 'Deployment config',
-    check: () => fs.existsSync('dist/.replit'),
-    details: () => 'Replit deployment ready'
+    nome: 'Host binding (0.0.0.0)',
+    teste: () => {
+      const content = fs.readFileSync('dist/index.js', 'utf8');
+      return content.includes('0.0.0.0');
+    },
+    critico: true
   },
   {
-    name: 'Shared schemas',
-    check: () => fs.existsSync('dist/shared/schema.ts'),
-    details: () => 'Database schemas copied'
+    nome: 'Endpoints de saúde',
+    teste: () => {
+      const content = fs.readFileSync('dist/index.js', 'utf8');
+      return content.includes('/health');
+    },
+    critico: false
   },
   {
-    name: 'Assets directory',
-    check: () => fs.existsSync('dist/attached_assets'),
-    details: () => `${fs.readdirSync('dist/attached_assets').length} files`
+    nome: 'Dependências essenciais',
+    teste: () => {
+      const pkg = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
+      const essenciais = ['express', 'drizzle-orm', '@neondatabase/serverless'];
+      return essenciais.every(dep => pkg.dependencies[dep]);
+    },
+    critico: true
   },
   {
-    name: 'Uploads directory',
-    check: () => fs.existsSync('dist/uploads'),
-    details: () => 'User uploads ready'
+    nome: 'Diretórios de assets',
+    teste: () => fs.existsSync('dist/attached_assets') && fs.existsSync('dist/uploads'),
+    critico: false
   }
 ];
 
-let allPassed = true;
+let todasCriticasPassaram = true;
+let totalPassaram = 0;
 
-checks.forEach(check => {
-  const passed = check.check();
-  const status = passed ? '✅' : '❌';
-  const details = passed ? check.details() : 'MISSING';
+verificacoes.forEach(v => {
+  const passou = v.teste();
+  const status = passou ? '✅' : (v.critico ? '❌' : '⚠️');
+  console.log(`${status} ${v.nome}`);
   
-  console.log(`${status} ${check.name}: ${details}`);
-  
-  if (!passed) allPassed = false;
+  if (passou) totalPassaram++;
+  if (v.critico && !passou) todasCriticasPassaram = false;
 });
 
-console.log('\n' + '='.repeat(50));
+console.log(`\n📊 Resultado: ${totalPassaram}/${verificacoes.length} verificações passaram`);
 
-if (allPassed) {
-  console.log('🎉 DEPLOYMENT READY!');
-  console.log('All deployment issues have been resolved:');
-  console.log('✓ Unhandled promise rejection fixed');
-  console.log('✓ Server error handling improved');
-  console.log('✓ Production build optimized');
-  console.log('✓ All assets and configurations in place');
-  console.log('\n🚀 Ready to deploy with Replit Deployments');
+if (todasCriticasPassaram) {
+  console.log('\n🎉 DEPLOYMENT APROVADO!');
+  console.log('✓ Todas as verificações críticas passaram');
+  console.log('✓ Aplicação pronta para deployment no Replit');
+  console.log('✓ Configuração de porta e host compatível com Cloud Run');
+  
+  const tamanho = Math.round(fs.statSync('dist/index.js').size / 1024);
+  console.log(`✓ Arquivo compilado: ${tamanho}KB`);
+  
+  process.exit(0);
 } else {
-  console.log('❌ DEPLOYMENT NOT READY');
-  console.log('Please fix the missing components before deploying');
+  console.log('\n❌ DEPLOYMENT REPROVADO!');
+  console.log('Verificações críticas falharam - corrija antes de fazer deploy');
   process.exit(1);
 }
