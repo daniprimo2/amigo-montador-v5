@@ -328,6 +328,8 @@ export class DatabaseStorage implements IStorage {
       // Filtrar serviços por raio de atendimento do montador
       let filteredByDistance: (Service & { storeName: string })[] = [];
       
+      console.log(`[FILTRO DEBUG] workRadius: ${assembler.workRadius}, tipo: ${typeof assembler.workRadius}`);
+      
       if (assembler.workRadius && assembler.workRadius > 0) {
         console.log(`[FILTRO RAIO] Iniciando filtro: ${assembler.workRadius} km para montador ${assembler.id} em ${assembler.city}, ${assembler.state}`);
         console.log(`[FILTRO RAIO] Total de serviços antes do filtro: ${enhancedServices.length}`);
