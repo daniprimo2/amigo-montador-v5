@@ -3,14 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('Running production deployment build...');
+console.log('Running deployment build...');
 
-// Execute the streamlined build script
+// Execute the simple deployment build script
 try {
-  execSync('node build-production.js', { stdio: 'inherit' });
-  console.log('Production build completed successfully');
+  execSync('node simple-deploy-build.js', { stdio: 'inherit' });
+  console.log('Deployment build completed successfully');
 } catch (error) {
-  console.error('Production build failed:', error.message);
+  console.error('Deployment build failed:', error.message);
   process.exit(1);
 }
 
@@ -22,6 +22,4 @@ console.log('✓ Server properly configured for 0.0.0.0 binding');
 console.log('✓ Uses PORT environment variable correctly');
 console.log('✓ Frontend assets prepared in dist/public/');
 console.log('✓ All required directories and assets copied');
-console.log('✓ Health check endpoints added');
-console.log('✓ TypeScript compiled to JavaScript properly');
 console.log('Ready for production deployment!');
