@@ -221,15 +221,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (assembler && assembler.cep && service.cep) {
             try {
-              console.log(`[DEBUG] Calculando distância: Montador CEP ${assembler.cep} -> Serviço CEP ${service.cep}`);
+              console.log(`[DISTANCE] Calculando distância: Montador CEP ${assembler.cep} -> Serviço CEP ${service.cep} (ID: ${service.id})`);
               
               // Obter coordenadas do montador
               const assemblerCoords = await geocodeFromCEP(assembler.cep);
-              console.log(`[DEBUG] Coordenadas do montador:`, assemblerCoords);
+              console.log(`[DISTANCE] Coordenadas do montador (${assembler.cep}):`, assemblerCoords);
               
               // Obter coordenadas do serviço
               const serviceCoords = await geocodeFromCEP(service.cep);
-              console.log(`[DEBUG] Coordenadas do serviço:`, serviceCoords);
+              console.log(`[DISTANCE] Coordenadas do serviço (${service.cep}):`, serviceCoords);
               
               // Calcular distância usando a fórmula de Haversine
               const distance = calculateDistance(
@@ -239,10 +239,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 parseFloat(serviceCoords.longitude)
               );
               
-              console.log(`[DEBUG] Distância calculada: ${distance} km`);
+              console.log(`[DISTANCE] Distância bruta calculada: ${distance} km para serviço ID ${service.id}`);
               
-              // Sempre mostrar em quilômetros para consistência
-              calculatedDistance = `${distance.toFixed(1)} km`;
+              // Formatação da distância com maior precisão para evitar duplicatas
+              if (distance < 0.1) {
+                calculatedDistance = `${Math.round(distance * 1000)} m`;
+                console.log(`[DISTANCE] Formatado como metros: ${calculatedDistance}`);
+              } else if (distance < 1) {
+                calculatedDistance = `${distance.toFixed(2)} km`;
+                console.log(`[DISTANCE] Formatado com 2 decimais: ${calculatedDistance}`);
+              } else if (distance < 10) {
+                calculatedDistance = `${distance.toFixed(1)} km`;
+                console.log(`[DISTANCE] Formatado com 1 decimal: ${calculatedDistance}`);
+              } else {
+                calculatedDistance = `${Math.round(distance)} km`;
+                console.log(`[DISTANCE] Formatado sem decimais: ${calculatedDistance}`);
+              }
             } catch (error) {
               console.error(`Erro ao calcular distância para serviço ${service.id}:`, error);
               // Fallback para coordenadas aproximadas baseadas na cidade
@@ -283,7 +295,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       serviceCityCoords.lng
                     );
                     
-                    calculatedDistance = `~${distance.toFixed(1)} km`;
+                    // Formatação consistente da distância aproximada
+                    if (distance < 0.1) {
+                      calculatedDistance = `~${Math.round(distance * 1000)} m`;
+                    } else if (distance < 1) {
+                      calculatedDistance = `~${distance.toFixed(2)} km`;
+                    } else if (distance < 10) {
+                      calculatedDistance = `~${distance.toFixed(1)} km`;
+                    } else {
+                      calculatedDistance = `~${Math.round(distance)} km`;
+                    }
                   } else {
                     console.log(`[DEBUG ROUTES] Não foi possível extrair cidade/estado de: "${service.location}"`);
                     calculatedDistance = "Distância não disponível";
