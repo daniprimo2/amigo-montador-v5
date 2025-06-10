@@ -99,7 +99,10 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
 
   const { data: bankAccounts, isLoading, error } = useQuery({
     queryKey: ['/api/bank-accounts'],
-    queryFn: () => apiRequest({ method: 'GET', url: '/api/bank-accounts' }),
+    queryFn: async () => {
+      const response = await apiRequest({ method: 'GET', url: '/api/bank-accounts' });
+      return await response.json();
+    },
   });
 
   // Debug logs
