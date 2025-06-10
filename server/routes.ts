@@ -241,12 +241,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               console.log(`[DEBUG] Distância calculada: ${distance} km`);
               
-              // Se a distância for menor que 1km, mostrar em metros
-              if (distance < 1) {
-                calculatedDistance = `${(distance * 1000).toFixed(0)}m`;
-              } else {
-                calculatedDistance = `${distance.toFixed(1)} km`;
-              }
+              // Sempre mostrar em quilômetros para consistência
+              calculatedDistance = `${distance.toFixed(1)} km`;
             } catch (error) {
               console.error(`Erro ao calcular distância para serviço ${service.id}:`, error);
               // Fallback para coordenadas aproximadas baseadas na cidade
