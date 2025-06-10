@@ -109,7 +109,7 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
     bankAccounts,
     bankAccountsType: typeof bankAccounts,
     isArray: Array.isArray(bankAccounts),
-    length: bankAccounts?.length
+    length: Array.isArray(bankAccounts) ? bankAccounts.length : 'not array'
   });
 
   const deleteMutation = useMutation({
