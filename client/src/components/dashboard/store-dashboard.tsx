@@ -852,7 +852,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       </div>
       
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Serviços Recentes</h3>
+        <h3 className="font-semibold text-gray-900 mb-4 text-[39px] text-center">Serviços Recentes</h3>
         <div className="divide-y">
           {allServices.slice(0, 3).map(service => (
             <StoreServiceCard key={service.id} service={service} />
