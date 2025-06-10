@@ -105,15 +105,7 @@ export function BankAccountSection({ userId }: BankAccountSectionProps) {
     },
   });
 
-  // Debug logs
-  console.log('[BankAccountSection] Debug Info:', {
-    isLoading,
-    error,
-    bankAccounts,
-    bankAccountsType: typeof bankAccounts,
-    isArray: Array.isArray(bankAccounts),
-    length: Array.isArray(bankAccounts) ? bankAccounts.length : 'not array'
-  });
+
 
   const deleteMutation = useMutation({
     mutationFn: (accountId: number) => apiRequest({

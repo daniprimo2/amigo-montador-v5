@@ -4471,11 +4471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const bankAccounts = await storage.getBankAccountsByUserId(req.user.id);
       
-      console.log('[API] Raw bank accounts from DB:', bankAccounts);
-      
       // Transform snake_case to camelCase for frontend compatibility
       const transformedBankAccounts = bankAccounts.map(account => {
-        console.log('[API] Transforming account:', account);
         return {
           id: account.id,
           userId: account.userId,
@@ -4491,8 +4488,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: account.createdAt
         };
       });
-      
-      console.log('[API] Transformed bank accounts:', transformedBankAccounts);
       
       // Disable caching for this endpoint
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
