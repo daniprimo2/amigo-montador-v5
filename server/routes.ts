@@ -162,8 +162,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log(`Buscando serviços disponíveis para o montador (id: ${assembler.id})`);
+        console.log(`[ROUTES DEBUG] Dados do montador antes de chamar filtro:`, { id: assembler.id, workRadius: assembler.workRadius, city: assembler.city, state: assembler.state });
+        
         // Buscar serviços disponíveis para montador com filtro de raio
-        servicesList = await storage.getAvailableServicesForAssembler(assembler);
+        try {
+          servicesList = await storage.getAvailableServicesForAssembler(assembler);
+          console.log(`[ROUTES DEBUG] Serviços retornados após filtro: ${servicesList.length}`);
+          if (servicesList.length > 0) {
+            console.log(`[ROUTES DEBUG] Primeiros 3 serviços:`, servicesList.slice(0, 3).map(s => ({ id: s.id, title: s.title, location: s.location })));
+          }
+        } catch (error) {
+          console.error(`[ROUTES ERROR] Erro ao buscar serviços filtrados:`, error);
+          // Fallback: buscar todos os serviços sem filtro
+          servicesList = await storage.getAllServices();
+          console.log(`[ROUTES DEBUG] Usando fallback - total de serviços: ${servicesList.length}`);
+        }
         
         // Buscar candidaturas do montador para incluir status de aplicação
         const assemblerApplications = await db
