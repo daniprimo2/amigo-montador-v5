@@ -377,18 +377,40 @@ export class DatabaseStorage implements IStorage {
                 }
               }
               
-              // Se não conseguiu pelo CEP, usar coordenadas da cidade
+              // Se não conseguiu pelo CEP, usar coordenadas da cidade extraindo do location
               if (!serviceCoords && service.location) {
                 try {
-                  const locationParts = service.location.split(',');
-                  if (locationParts.length >= 2) {
-                    const serviceCity = locationParts[0].trim();
-                    const serviceState = locationParts[1].trim();
+                  // Tentar extrair cidade e estado do formato "Endereço, Bairro, Número - Cidade, Estado - CEP: xxxxx"
+                  let serviceCity = '';
+                  let serviceState = '';
+                  
+                  // Padrão mais comum: "... - Cidade, Estado - CEP: ..."
+                  const cityStateMatch = service.location.match(/([^-]+),\s*([A-Z]{2})\s*-\s*CEP/);
+                  if (cityStateMatch) {
+                    serviceCity = cityStateMatch[1].trim();
+                    serviceState = cityStateMatch[2].trim();
+                  } else {
+                    // Fallback: tentar última parte antes do CEP
+                    const parts = service.location.split('-');
+                    if (parts.length >= 2) {
+                      const lastPart = parts[parts.length - 2].trim();
+                      const cityStateParts = lastPart.split(',');
+                      if (cityStateParts.length >= 2) {
+                        serviceCity = cityStateParts[0].trim();
+                        serviceState = cityStateParts[1].trim();
+                      }
+                    }
+                  }
+                  
+                  if (serviceCity && serviceState && serviceState.length === 2) {
+                    console.log(`[FILTRO RAIO] Extraindo coordenadas para ${serviceCity}, ${serviceState}`);
                     const cityCoords = getCityCoordinates(serviceCity, serviceState);
                     serviceCoords = {
                       latitude: cityCoords.lat.toString(),
                       longitude: cityCoords.lng.toString()
                     };
+                  } else {
+                    console.log(`[FILTRO RAIO] Não foi possível extrair cidade/estado de: "${service.location}"`);
                   }
                 } catch (error) {
                   console.error(`[FILTRO RAIO] Erro ao obter coordenadas da cidade para serviço ${service.id}:`, error);
@@ -415,9 +437,8 @@ export class DatabaseStorage implements IStorage {
                   console.log(`[FILTRO RAIO] ✗ Serviço ${service.id} EXCLUÍDO (${distance.toFixed(1)} km > ${assembler.workRadius} km)`);
                 }
               } else {
-                console.warn(`[FILTRO RAIO] Não foi possível calcular distância para serviço ${service.id} - coordenadas não encontradas`);
-                // Incluir o serviço mesmo sem coordenadas para não perder oportunidades
-                filteredByDistance.push(service);
+                console.warn(`[FILTRO RAIO] ✗ Serviço ${service.id} EXCLUÍDO - não foi possível calcular distância (coordenadas não encontradas)`);
+                // NÃO incluir serviços sem coordenadas válidas para manter a precisão do filtro
               }
             } catch (error) {
               console.error(`Erro ao processar serviço ${service.id}:`, error);
