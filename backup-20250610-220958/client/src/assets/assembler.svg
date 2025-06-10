@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="40" y="40" width="160" height="160" rx="5" fill="#F0F4F8" />
+  
+  <!-- Person Silhouette -->
+  <circle cx="120" cy="90" r="30" fill="#4A5568" />  <!-- Head -->
+  <rect x="105" y="120" width="30" height="60" rx="3" fill="#4A5568" />  <!-- Body -->
+  
+  <!-- Tools -->
+  <!-- Screwdriver -->
+  <rect x="70" y="130" width="30" height="8" rx="2" fill="#DD6B20" />  <!-- Handle -->
+  <rect x="50" y="131" width="20" height="6" rx="1" fill="#A0AEC0" />  <!-- Metal part -->
+  
+  <!-- Wrench -->
+  <path d="M175 125C175 125 180 130 185 135C190 140 190 145 190 145L180 155C180 155 175 155 170 150C165 145 160 140 160 140L175 125Z" fill="#A0AEC0" />
+  <rect x="145" y="135" width="25" height="10" rx="2" transform="rotate(-45 145 135)" fill="#A0AEC0" />
+  
+  <!-- Furniture -->
+  <rect x="60" y="160" width="120" height="15" rx="2" fill="#805AD5" />  <!-- Shelf -->
+  <rect x="70" y="175" width="10" height="20" fill="#805AD5" />  <!-- Leg 1 -->
+  <rect x="160" y="175" width="10" height="20" fill="#805AD5" />  <!-- Leg 2 -->
+  
+  <!-- Tools on belt -->
+  <rect x="105" y="180" width="30" height="10" rx="5" fill="#2D3748" />  <!-- Tool belt -->
+  <circle cx="115" cy="185" r="3" fill="#E53E3E" />  <!-- Tool 1 -->
+  <circle cx="125" cy="185" r="3" fill="#DD6B20" />  <!-- Tool 2 -->
+  
+  <!-- Hard Hat -->
+  <path d="M95 80C95 70 108 60 120 60C132 60 145 70 145 80" fill="#ECC94B" stroke="#2D3748" stroke-width="2" />
+</svg>

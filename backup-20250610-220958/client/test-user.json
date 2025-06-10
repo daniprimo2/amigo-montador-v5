@@ -1,0 +1,16 @@
+{
+  "username": "test@example.com",
+  "password": "123456",
+  "name": "Usuário Teste",
+  "email": "test@example.com",
+  "phone": "11987654321",
+  "userType": "lojista",
+  "profileData": {},
+  "storeName": "Loja Teste",
+  "cnpj": "12345678901234",
+  "address": "Rua Teste, 123",
+  "city": "São Paulo",
+  "state": "SP",
+  "storePhone": "1199887766",
+  "materialTypes": ["marcenaria", "plano-corte"]
+}
