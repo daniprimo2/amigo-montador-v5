@@ -240,11 +240,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (assembler.city && assembler.state && service.location) {
                 try {
                   const assemblerCityCoords = getCityCoordinates(assembler.city, assembler.state);
-                  // Tentar extrair cidade do location do serviço
-                  const locationParts = service.location.split(',');
-                  if (locationParts.length >= 2) {
-                    const serviceCity = locationParts[0].trim();
-                    const serviceState = locationParts[1].trim();
+                  
+                  // Tentar extrair cidade e estado do formato "Endereço, Bairro, Número - Cidade, Estado - CEP: xxxxx"
+                  let serviceCity = '';
+                  let serviceState = '';
+                  
+                  // Padrão mais comum: "... - Cidade, Estado - CEP: ..."
+                  const cityStateMatch = service.location.match(/([^-]+),\s*([A-Z]{2})\s*-\s*CEP/);
+                  if (cityStateMatch) {
+                    serviceCity = cityStateMatch[1].trim();
+                    serviceState = cityStateMatch[2].trim();
+                  } else {
+                    // Fallback: tentar última parte antes do CEP
+                    const parts = service.location.split('-');
+                    if (parts.length >= 2) {
+                      const lastPart = parts[parts.length - 2].trim();
+                      const cityStateParts = lastPart.split(',');
+                      if (cityStateParts.length >= 2) {
+                        serviceCity = cityStateParts[0].trim();
+                        serviceState = cityStateParts[1].trim();
+                      }
+                    }
+                  }
+                  
+                  if (serviceCity && serviceState && serviceState.length === 2) {
+                    console.log(`[DEBUG ROUTES] Extraindo coordenadas para ${serviceCity}, ${serviceState}`);
                     const serviceCityCoords = getCityCoordinates(serviceCity, serviceState);
                     
                     const distance = calculateDistance(
@@ -255,6 +275,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     );
                     
                     calculatedDistance = `~${distance.toFixed(1)} km`;
+                  } else {
+                    console.log(`[DEBUG ROUTES] Não foi possível extrair cidade/estado de: "${service.location}"`);
+                    calculatedDistance = "Distância não disponível";
                   }
                 } catch (fallbackError) {
                   console.error(`Erro no fallback de distância para serviço ${service.id}:`, fallbackError);
