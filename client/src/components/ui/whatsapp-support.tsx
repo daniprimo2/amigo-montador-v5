@@ -20,9 +20,6 @@ export function WhatsAppSupport({ className = "" }: WhatsAppSupportProps) {
     console.log('WhatsApp button clicked - Event triggered!');
     console.log('WhatsApp URL:', whatsappUrl);
     
-    // Test with alert first to verify click is working
-    alert('WhatsApp button clicked! Opening WhatsApp...');
-    
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 200);
     
@@ -38,7 +35,7 @@ export function WhatsAppSupport({ className = "" }: WhatsAppSupportProps) {
   };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-[9999] ${className}`}>
+    <div className={`fixed bottom-20 sm:bottom-6 right-6 z-[9999] ${className}`}>
       {/* Pulse animation - moved behind button */}
       <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-20 pointer-events-none"></div>
       
