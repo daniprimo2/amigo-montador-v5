@@ -219,23 +219,51 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {status === "editing" && "Contratar Montador"}
-            {status === "loading" && "Processando..."}
-            {status === "success" && "Montador Contratado"}
-            {status === "error" && "Erro na Contratação"}
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-6 border-b border-gray-100">
+          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+            {status === "editing" && (
+              <>
+                <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                </div>
+                Contratar Montador
+              </>
+            )}
+            {status === "loading" && (
+              <>
+                <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 text-orange-600 animate-spin" />
+                </div>
+                Processando...
+              </>
+            )}
+            {status === "success" && (
+              <>
+                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                Montador Contratado
+              </>
+            )}
+            {status === "error" && (
+              <>
+                <div className="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-red-600" />
+                </div>
+                Erro na Contratação
+              </>
+            )}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-600 mt-2">
             {status === "editing" && 
-              "Confirme os detalhes do serviço para contratar o montador."
+              "Confirme os detalhes do serviço para contratar o montador selecionado."
             }
             {status === "loading" && 
-              "Processando sua solicitação..."
+              "Aguarde enquanto processamos sua solicitação..."
             }
             {status === "success" && 
-              "O montador foi contratado com sucesso!"
+              "O montador foi contratado com sucesso e já foi notificado!"
             }
             {status === "error" && 
               "Houve um problema ao processar sua solicitação. Tente novamente."
@@ -243,7 +271,7 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col space-y-4 p-1">
+        <div className="flex flex-col space-y-6 pt-6">
           {isLoading ? (
             <div className="flex justify-center items-center h-32">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -254,15 +282,23 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                 <>
                   {/* Informações do montador com avaliação */}
                   {assemblerData && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">{assemblerData.user?.name || 'Montador'}</h3>
-                        <div className="flex items-center gap-1">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {(assemblerData.user?.name || 'M').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{assemblerData.user?.name || 'Montador'}</h3>
+                            <p className="text-sm text-gray-600">Montador Profissional</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1 border border-yellow-200">
                           <RatingStars
                             rating={assemblerData.rating || 0}
                             size="sm"
                           />
-                          <span className="text-sm font-medium text-yellow-600">
+                          <span className="text-sm font-semibold text-yellow-700">
                             {assemblerData.rating ? assemblerData.rating.toFixed(1) : '0.0'}
                           </span>
                         </div>
@@ -281,53 +317,62 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                     </div>
                   )}
                 
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Valor do serviço</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+                      Valor do serviço
+                    </Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-green-600 font-semibold">
                         R$
                       </span>
                       <Input
                         id="price"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="pl-8"
+                        className="pl-10 h-11 border-gray-200 hover:border-green-300 focus:border-green-500 focus:ring-green-500 transition-colors"
                         placeholder="0,00"
                       />
                     </div>
-                    <p className="text-sm text-gray-500">
-                      Valor atual: {formatDisplayPrice(service?.price || "0")}
-                    </p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-700 font-medium">
+                        💰 Valor atual: {formatDisplayPrice(service?.price || "0")}
+                      </p>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Data de início</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+                      Data de início do serviço
+                    </Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
+                            "w-full justify-start text-left font-normal h-11 px-4 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors",
+                            !date && "text-gray-500"
                           )}
                         >
-                          <Calendar className="mr-2 h-4 w-4" />
+                          <Calendar className="mr-3 h-5 w-5 text-blue-600" />
                           {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione uma data"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 shadow-lg border-0">
                         <CalendarComponent
                           mode="single"
                           selected={date}
                           onSelect={setDate}
                           initialFocus
                           locale={ptBR}
+                          disabled={(date) => date < new Date()}
                         />
                       </PopoverContent>
                     </Popover>
-                    <p className="text-sm text-gray-500">
-                      Data atual: {service?.date || "Não definida"}
-                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-700 font-medium">
+                        📅 Data atual do serviço: {service?.date ? format(new Date(service.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Não definida"}
+                      </p>
+                    </div>
                   </div>
                 </>
               )}
@@ -370,28 +415,40 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
         </div>
 
         {status === "editing" && (
-          <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-2">
+          <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-3 pt-6 border-t border-gray-100">
             <Button
               variant="outline"
               onClick={onClose}
+              className="h-11 px-6 border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleHireAssembler}
               disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="h-11 px-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
             >
-              Contratar Montador
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Contratar Montador
+                </>
+              )}
             </Button>
           </DialogFooter>
         )}
 
         {status === "error" && (
-          <DialogFooter>
+          <DialogFooter className="pt-6 border-t border-gray-100">
             <Button 
               onClick={() => setStatus("editing")}
               variant="outline"
+              className="h-11 px-6 border-red-300 text-red-700 hover:bg-red-50 transition-colors"
             >
               Tentar Novamente
             </Button>
