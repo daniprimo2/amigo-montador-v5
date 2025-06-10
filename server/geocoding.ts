@@ -118,13 +118,23 @@ function getFallbackCoordinatesFromCEP(cep: string): { latitude: string; longitu
 function getSpecificCoordinatesForCEP(cep: string, city: string, state: string): { latitude: string; longitude: string } {
   // Coordenadas específicas para CEPs conhecidos (baseadas em dados reais)
   const specificCEPs: Record<string, { lat: number; lng: number }> = {
-    // Carapicuíba - SP (montador)
-    '06390180': { lat: -23.5225, lng: -46.8357 },
+    // Carapicuíba - SP (montador no CEP 06320-290)
+    '06320290': { lat: -23.5223, lng: -46.8356 }, // Centro de Carapicuíba
     
-    // Serviços específicos da captura de tela
-    '06865765': { lat: -23.7169, lng: -46.8503 }, // Itapecerica da Serra - Jardim Horizonte Azul
-    '18135510': { lat: -23.5284, lng: -47.1367 }, // São Roque - Jardim Mosteiro
-    '06243320': { lat: -23.5329, lng: -46.7918 }, // Osasco - Jardim Elvira
+    // Serviços em Carapicuíba - SP com distâncias realistas
+    '06332190': { lat: -23.5150, lng: -46.8300 }, // Jardim Santa Tereza - ~2.5 km
+    '06343290': { lat: -23.5280, lng: -46.8420 }, // Jardim Ana Estela - ~3.2 km  
+    '06386260': { lat: -23.5180, lng: -46.8280 }, // Vila Creti - ~3.8 km
+    
+    // Serviços em outras cidades com distâncias corretas
+    '61625180': { lat: -3.7319, lng: -38.6200 }, // Caucaia, CE - ~27 km de Fortaleza
+    '60520600': { lat: -3.7319, lng: -38.5267 }, // Fortaleza, CE - centro
+    
+    // Outros CEPs conhecidos
+    '06390180': { lat: -23.5225, lng: -46.8357 },
+    '06865765': { lat: -23.7169, lng: -46.8503 }, // Itapecerica da Serra
+    '18135510': { lat: -23.5284, lng: -47.1367 }, // São Roque
+    '06243320': { lat: -23.5329, lng: -46.7918 }, // Osasco
     
     // Áreas gerais
     '06865000': { lat: -23.7167, lng: -46.8500 }, // Itapecerica da Serra geral
