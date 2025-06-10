@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { RatingStars } from "@/components/rating/rating-stars";
 
@@ -219,7 +218,7 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto w-[95vw]">
         <DialogHeader className="pb-6 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-3">
             {status === "editing" && (
@@ -340,39 +339,69 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label htmlFor="date" className="text-sm font-medium text-gray-700">
                       Data de início do serviço
                     </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal h-11 px-4 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors",
-                            !date && "text-gray-500"
-                          )}
-                        >
-                          <Calendar className="mr-3 h-5 w-5 text-blue-600" />
-                          {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione uma data"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 shadow-lg border-0">
+                    
+                    {/* Display selected date */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-800">
+                            Data selecionada
+                          </p>
+                          <p className="text-base font-semibold text-blue-900">
+                            {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Nenhuma data selecionada"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Calendar Component - Always visible */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
+                      <div className="flex justify-center">
                         <CalendarComponent
                           mode="single"
                           selected={date}
                           onSelect={setDate}
-                          initialFocus
                           locale={ptBR}
                           disabled={(date) => date < new Date()}
+                          className="rounded-lg mx-auto"
+                          classNames={{
+                            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                            month: "space-y-4 w-full",
+                            caption: "flex justify-center pt-1 relative items-center mb-4",
+                            caption_label: "text-lg font-semibold text-gray-800",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: "h-8 w-8 bg-gray-100 hover:bg-gray-200 rounded-full p-0 opacity-70 hover:opacity-100 transition-all duration-200",
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex w-full",
+                            head_cell: "text-gray-500 rounded-md w-10 font-medium text-sm flex-1 text-center py-2",
+                            row: "flex w-full mt-1",
+                            cell: "text-center text-sm p-0 relative flex-1 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-blue-100 hover:text-blue-900 rounded-lg transition-all duration-200 mx-auto",
+                            day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white shadow-md",
+                            day_today: "bg-gray-100 text-gray-900 font-bold border-2 border-blue-300",
+                            day_outside: "text-gray-300 opacity-50",
+                            day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                            day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                            day_hidden: "invisible",
+                          }}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-700 font-medium">
-                        📅 Data atual do serviço: {service?.date ? format(new Date(service.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Não definida"}
-                      </p>
+                      </div>
                     </div>
+                    
+                    {service?.date && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <p className="text-sm text-amber-700 font-medium">
+                          📅 Data atual do serviço: {format(new Date(service.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
