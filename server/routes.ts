@@ -173,8 +173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (error) {
           console.error(`[ROUTES ERROR] Erro ao buscar serviços filtrados:`, error);
-          // Fallback: buscar todos os serviços sem filtro
-          servicesList = await storage.getAllServices();
+          // Fallback: buscar serviços abertos sem filtro
+          servicesList = await db.select().from(services).where(eq(services.status, 'open'));
           console.log(`[ROUTES DEBUG] Usando fallback - total de serviços: ${servicesList.length}`);
         }
         
@@ -2575,33 +2575,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws, request) => {
     console.log('Nova conexão WebSocket');
     
-    // Autenticar o cliente
-    const url = new URL(request.url || '', `http://${request.headers.host}`);
-    const userId = url.searchParams.get('userId');
+    let userIdNum: number | null = null;
     
-    if (!userId) {
-      console.log('Conexão rejeitada: userId não fornecido');
-      ws.close();
-      return;
+    try {
+      // Autenticar o cliente
+      const url = new URL(request.url || '', `http://${request.headers.host}`);
+      const userId = url.searchParams.get('userId');
+      
+      if (!userId) {
+        console.log('Conexão rejeitada: userId não fornecido');
+        ws.close(1000, 'userId não fornecido');
+        return;
+      }
+      
+      userIdNum = parseInt(userId);
+      
+      if (isNaN(userIdNum)) {
+        console.log('Conexão rejeitada: userId inválido');
+        ws.close(1000, 'userId inválido');
+        return;
+      }
+      
+      // Armazenar a conexão
+      clients.set(userIdNum, ws);
+      console.log(`Cliente conectado: userId=${userIdNum}`);
+      
+      // Configurar tratamento de erros
+      ws.on('error', (error) => {
+        console.error(`Erro WebSocket para usuário ${userIdNum}:`, error);
+        if (userIdNum !== null) {
+          clients.delete(userIdNum);
+        }
+      });
+      
+      // Limpar quando desconectar
+      ws.on('close', (code, reason) => {
+        console.log(`Cliente desconectado: userId=${userIdNum}, code=${code}, reason=${reason}`);
+        if (userIdNum !== null) {
+          clients.delete(userIdNum);
+        }
+      });
+      
+      // Confirmar conexão
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'connection',
+          message: 'Conectado com sucesso'
+        }));
+      }
+      
+    } catch (error) {
+      console.error('Erro ao configurar conexão WebSocket:', error);
+      if (userIdNum !== null) {
+        clients.delete(userIdNum);
+      }
+      ws.close(1011, 'Erro interno do servidor');
     }
-    
-    const userIdNum = parseInt(userId);
-    
-    // Armazenar a conexão
-    clients.set(userIdNum, ws);
-    console.log(`Cliente conectado: userId=${userIdNum}`);
-    
-    // Limpar quando desconectar
-    ws.on('close', () => {
-      console.log(`Cliente desconectado: userId=${userIdNum}`);
-      clients.delete(userIdNum);
-    });
-    
-    // Confirmar conexão
-    ws.send(JSON.stringify({
-      type: 'connection',
-      message: 'Conectado com sucesso'
-    }));
   });
   
   // (Antiga segunda função removida)
@@ -4373,6 +4402,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao criar avaliação:", error);
       res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
+  // Endpoint para verificar avaliações pendentes obrigatórias
+  app.get("/api/services/pending-ratings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const userId = req.user!.id;
+      const userType = req.user!.userType;
+
+      // Buscar serviços completados que requerem avaliação do usuário atual
+      let pendingRatings: any[] = [];
+
+      if (userType === 'lojista') {
+        // Lojista precisa avaliar montadores
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          const completedServices = await storage.getServicesByStoreId(store.id, 'completed');
+          
+          for (const service of completedServices) {
+            // Verificar se precisa de avaliação do lojista
+            if (service.ratingRequired && !service.storeRatingCompleted) {
+              // Buscar montador que trabalhou no serviço
+              const acceptedApplications = await db
+                .select({ assemblerId: applications.assemblerId })
+                .from(applications)
+                .where(
+                  and(
+                    eq(applications.serviceId, service.id),
+                    eq(applications.status, 'accepted')
+                  )
+                )
+                .limit(1);
+
+              if (acceptedApplications.length > 0) {
+                const assembler = await storage.getAssemblerById(acceptedApplications[0].assemblerId);
+                if (assembler) {
+                  const assemblerUser = await storage.getUser(assembler.userId);
+                  if (assemblerUser) {
+                    pendingRatings.push({
+                      serviceId: service.id,
+                      serviceName: service.title,
+                      otherUserName: assemblerUser.name,
+                      userType: 'montador'
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else if (userType === 'montador') {
+        // Montador precisa avaliar lojistas
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          const assemblerApplications = await db
+            .select()
+            .from(applications)
+            .where(
+              and(
+                eq(applications.assemblerId, assembler.id),
+                eq(applications.status, 'accepted')
+              )
+            );
+
+          for (const application of assemblerApplications) {
+            const service = await storage.getServiceById(application.serviceId);
+            if (service && service.status === 'completed' && service.ratingRequired && !service.assemblerRatingCompleted) {
+              const store = await storage.getStore(service.storeId);
+              if (store) {
+                const storeUser = await storage.getUser(store.userId);
+                if (storeUser) {
+                  pendingRatings.push({
+                    serviceId: service.id,
+                    serviceName: service.title,
+                    otherUserName: storeUser.name,
+                    userType: 'lojista'
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      res.json({
+        pendingRatings,
+        hasPendingRatings: pendingRatings.length > 0
+      });
+    } catch (error) {
+      console.error("Erro ao buscar avaliações pendentes:", error);
+      res.status(500).json({ message: "Erro ao buscar avaliações pendentes" });
     }
   });
 
