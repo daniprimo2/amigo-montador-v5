@@ -10,7 +10,6 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import amigoMontadorLogo from '@assets/Logo - Amigo Montador.jpg';
 
 import { 
   Dialog,

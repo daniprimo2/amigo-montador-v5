@@ -1,5 +1,4 @@
 import React from 'react';
-import logoImage from '@assets/Logo - Amigo Montador.jpg';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -12,27 +11,24 @@ export const Logo: React.FC<LogoProps> = ({
   withText = true,
   className = ''
 }) => {
-  const sizes = {
-    sm: 'w-10 h-10',
-    md: 'w-16 h-16',
-    lg: 'w-24 h-24',
-  };
-
   const textSizes = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
+    sm: 'text-xl',
+    md: 'text-2xl',
+    lg: 'text-3xl',
   };
 
   return (
-    <>
+    <div className={`flex flex-col items-center ${className}`}>
+      <div className={`${textSizes[size]} text-white font-bold mb-2`}>
+        🔧
+      </div>
       {withText && (
-        <div className={`text-white ${textSizes[size]} flex items-center mt-1`}>
+        <div className={`text-white ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} flex items-center`}>
           <span className="font-light tracking-wide">Amigo</span>
           <span className="font-bold ml-1 tracking-wide">Montador</span>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

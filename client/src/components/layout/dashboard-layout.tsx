@@ -1,6 +1,5 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import amigoMontadorLogo from '@assets/Logo - Amigo Montador.jpg';
 import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
