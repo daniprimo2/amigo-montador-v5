@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  birthDate: text("birth_date").notNull(), // Data de nascimento no formato DD/MM/YYYY
   userType: text("user_type").notNull(), // 'lojista' ou 'montador'
   profilePhotoUrl: text("profile_photo_url").notNull(), // URL da foto de perfil
   profileData: jsonb("profile_data"), // Dados adicionais específicos para cada tipo de usuário
@@ -174,6 +175,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   email: true,
   phone: true,
+  birthDate: true,
   userType: true,
   profilePhotoUrl: true,
   profileData: true,
@@ -200,6 +202,58 @@ const validateDocumentNumber = (documentNumber: string, documentType: string): b
   return false;
 };
 
+// Função para validar data no formato DD/MM/YYYY
+const validateBirthDate = (birthDate: string): boolean => {
+  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = birthDate.match(dateRegex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1; // JavaScript months are 0-indexed
+  const year = parseInt(match[3], 10);
+  
+  const date = new Date(year, month, day);
+  
+  // Verificar se a data é válida
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return false;
+  }
+  
+  // Verificar se a data não é futura
+  const today = new Date();
+  if (date > today) {
+    return false;
+  }
+  
+  return true;
+};
+
+// Função para verificar se o usuário é maior de idade (18 anos)
+const isAdult = (birthDate: string): boolean => {
+  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = birthDate.match(dateRegex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1; // JavaScript months are 0-indexed
+  const year = parseInt(match[3], 10);
+  
+  const birthDateObj = new Date(year, month, day);
+  const today = new Date();
+  
+  // Calcular idade
+  let age = today.getFullYear() - birthDateObj.getFullYear();
+  const monthDiff = today.getMonth() - birthDateObj.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+    age--;
+  }
+  
+  return age >= 18;
+};
+
 export const insertStoreSchema = createInsertSchema(stores).refine(
   (data) => validateDocumentNumber(data.documentNumber, data.documentType),
   {
@@ -211,6 +265,11 @@ export const insertStoreSchema = createInsertSchema(stores).refine(
 export const insertAssemblerSchema = createInsertSchema(assemblers).extend({
   documentType: z.enum(['cpf', 'cnpj']).optional(),
   documentNumber: z.string().optional(),
+  birthDate: z.string().refine(validateBirthDate, {
+    message: "Data de nascimento deve estar no formato DD/MM/YYYY e ser uma data válida"
+  }).refine(isAdult, {
+    message: "Você deve ter pelo menos 18 anos para se cadastrar"
+  }),
 }).refine(
   (data) => {
     // If documentType and documentNumber are provided, validate them

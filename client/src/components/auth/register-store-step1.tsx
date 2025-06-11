@@ -75,6 +75,58 @@ const validatePhone = (phone: string): boolean => {
   return cleanPhone.length === 10 || cleanPhone.length === 11;
 };
 
+// Função para validar data no formato DD/MM/YYYY
+const validateBirthDate = (birthDate: string): boolean => {
+  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = birthDate.match(dateRegex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1; // JavaScript months are 0-indexed
+  const year = parseInt(match[3], 10);
+  
+  const date = new Date(year, month, day);
+  
+  // Verificar se a data é válida
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return false;
+  }
+  
+  // Verificar se a data não é futura
+  const today = new Date();
+  if (date > today) {
+    return false;
+  }
+  
+  return true;
+};
+
+// Função para verificar se o usuário é maior de idade (18 anos)
+const isAdult = (birthDate: string): boolean => {
+  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = birthDate.match(dateRegex);
+  
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1; // JavaScript months are 0-indexed
+  const year = parseInt(match[3], 10);
+  
+  const birthDateObj = new Date(year, month, day);
+  const today = new Date();
+  
+  // Calcular idade
+  let age = today.getFullYear() - birthDateObj.getFullYear();
+  const monthDiff = today.getMonth() - birthDateObj.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDateObj.getDate())) {
+    age--;
+  }
+  
+  return age >= 18;
+};
+
 const storeStep1Schema = z.object({
   name: z.string()
     .min(3, 'Nome deve ter pelo menos 3 caracteres')
@@ -92,6 +144,10 @@ const storeStep1Schema = z.object({
     .min(1, 'Email é obrigatório')
     .email('Email inválido')
     .max(255, 'Email deve ter no máximo 255 caracteres'),
+  birthDate: z.string()
+    .min(1, 'Data de nascimento é obrigatória')
+    .refine(validateBirthDate, 'Data deve estar no formato DD/MM/YYYY e ser uma data válida')
+    .refine(isAdult, 'Você deve ter pelo menos 18 anos para se cadastrar'),
   password: z.string()
     .min(8, 'A senha deve ter pelo menos 8 caracteres')
     .max(50, 'A senha deve ter no máximo 50 caracteres')
@@ -146,6 +202,7 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
       documentNumber: '',
       phone: '',
       email: '',
+      birthDate: '',
       password: '',
       confirmPassword: '',
       ...defaultValues,
