@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
-import { portManager } from "./port-manager.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
