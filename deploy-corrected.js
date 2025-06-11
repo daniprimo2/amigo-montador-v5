@@ -136,9 +136,9 @@ const port = process.env.PORT || 8080;
 const host = '0.0.0.0';
 
 app.listen(port, host, () => {
-  console.log(\`🚀 Amigo Montador rodando em \${host}:\${port}\`);
-  console.log(\`📱 Acesse: http://\${host}:\${port}\`);
-  console.log(\`🔍 Health check: http://\${host}:\${port}/health\`);
+  console.log('🚀 Amigo Montador rodando em ' + host + ':' + port);
+  console.log('📱 Acesse: http://' + host + ':' + port);
+  console.log('🔍 Health check: http://' + host + ':' + port + '/health');
 });`;
 
 fs.writeFileSync('dist/index.js', mainServer);
@@ -180,10 +180,10 @@ essentialDirs.forEach(dir => {
   
   if (fs.existsSync(sourcePath)) {
     fs.cpSync(sourcePath, destPath, { recursive: true });
-    console.log(`Copiado ${dir}/`);
+    console.log('Copiado ' + dir + '/');
   } else {
     fs.mkdirSync(destPath, { recursive: true });
-    console.log(`Criado ${dir}/ vazio`);
+    console.log('Criado ' + dir + '/ vazio');
   }
 });
 
@@ -191,7 +191,7 @@ essentialDirs.forEach(dir => {
 const configFiles = ['default-avatar.svg', 'drizzle.config.ts'];
 configFiles.forEach(file => {
   if (fs.existsSync(file)) {
-    fs.copyFileSync(file, \`dist/\${file}\`);
+    fs.copyFileSync(file, 'dist/' + file);
   }
 });
 
@@ -224,8 +224,8 @@ if (missingFiles.length > 0) {
   process.exit(1);
 }
 
-console.log('\\nDeploy preparado com sucesso!');
-console.log('\\nArquivos de produção:');
+console.log('\nDeploy preparado com sucesso!');
+console.log('\nArquivos de produção:');
 console.log('• dist/index.js - Servidor principal');
 console.log('• dist/package.json - Dependências de produção');
 console.log('• dist/public/ - Frontend construído');
@@ -233,7 +233,7 @@ console.log('• dist/shared/ - Esquemas compartilhados');
 console.log('• dist/uploads/ - Armazenamento de arquivos');
 console.log('• dist/.replit - Configuração de deploy');
 
-console.log('\\nPróximos passos:');
+console.log('\nPróximos passos:');
 console.log('1. cd dist');
 console.log('2. npm install');
 console.log('3. npm start');
