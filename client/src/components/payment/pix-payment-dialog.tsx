@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QrCode, Copy, Check, AlertCircle, CreditCard, DollarSign } from 'lucide-react';
+import { RatingDialog } from '@/components/rating/rating-dialog';
 
 interface PixPaymentDialogProps {
   isOpen: boolean;
@@ -22,6 +23,11 @@ interface PixPaymentDialogProps {
   serviceId: number;
   amount: string;
   serviceTitle: string;
+  assemblerInfo?: {
+    id: number;
+    name: string;
+    userId: number;
+  };
 }
 
 interface PixPaymentData {
@@ -38,15 +44,17 @@ export function PixPaymentDialog({
   onClose, 
   serviceId, 
   amount, 
-  serviceTitle 
+  serviceTitle,
+  assemblerInfo
 }: PixPaymentDialogProps) {
-  const [step, setStep] = useState<'generate' | 'payment' | 'proof'>('generate');
+  const [step, setStep] = useState<'generate' | 'payment' | 'proof' | 'rating'>('generate');
   const [pixData, setPixData] = useState<PixPaymentData | null>(null);
   const [paymentProof, setPaymentProof] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [currentToken, setCurrentToken] = useState<string>('');
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
   const { toast } = useToast();
 
   // The amount should be displayed exactly as stored in the service
@@ -108,8 +116,13 @@ export function PixPaymentDialog({
         
         toast({
           title: "Pagamento Confirmado!",
-          description: "Seu pagamento PIX foi confirmado automaticamente. O comprovante foi enviado no chat.",
+          description: "Seu pagamento PIX foi confirmado automaticamente. Agora você deve avaliar o montador.",
         });
+        
+        // Show rating dialog immediately after payment confirmation
+        if (assemblerInfo) {
+          setShowRatingDialog(true);
+        }
       }
     },
     onError: (error) => {
@@ -165,14 +178,20 @@ export function PixPaymentDialog({
 
   // Submit payment proof
   const submitProofMutation = useMutation({
-    mutationFn: () => apiRequest('/api/payment/pix/confirm', {
-      method: 'POST',
-      body: {
-        serviceId,
-        paymentProof,
-        paymentReference: pixData?.reference
-      }
-    }),
+    mutationFn: async () => {
+      const response = await fetch('/api/payment/pix/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          serviceId,
+          paymentProof,
+          paymentReference: pixData?.reference
+        })
+      });
+      return await response.json();
+    },
     onSuccess: (data) => {
       if (data.success) {
         toast({
@@ -526,5 +545,28 @@ export function PixPaymentDialog({
         )}
       </DialogContent>
     </Dialog>
+    
+    {/* Rating Dialog - Shows immediately after payment confirmation */}
+    {assemblerInfo && (
+      <RatingDialog
+        open={showRatingDialog}
+        onOpenChange={setShowRatingDialog}
+        serviceId={serviceId}
+        toUserId={assemblerInfo.userId}
+        toUserName={assemblerInfo.name}
+        serviceName={serviceTitle}
+        onSuccess={() => {
+          setShowRatingDialog(false);
+          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
+          onClose(); // Close the PIX dialog after rating is complete
+          toast({
+            title: "Serviço Finalizado!",
+            description: "Pagamento confirmado e avaliação realizada com sucesso.",
+          });
+        }}
+      />
+    )}
+    </>
   );
 }
