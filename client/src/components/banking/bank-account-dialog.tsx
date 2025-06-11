@@ -380,98 +380,49 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
 
             {/* Chave PIX */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Chave PIX *</h4>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={pixKeyAutoDetect}
-                    onChange={(e) => setPixKeyAutoDetect(e.target.checked)}
-                    className="rounded"
-                  />
-                  <span>Auto-detectar tipo</span>
-                </label>
+              {/* Aviso sobre restrição da chave PIX */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-amber-800 mb-1">Importante: Restrição da Chave PIX</h4>
+                    <p className="text-sm text-amber-700">
+                      A chave PIX deve ser obrigatoriamente no formato CPF e deve ser o mesmo CPF informado como titular da conta bancária.
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              <FormField
-                control={form.control}
-                name="pixKeyType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Chave PIX *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="cpf_cnpj">CPF/CNPJ</SelectItem>
-                        <SelectItem value="email">E-mail</SelectItem>
-                        <SelectItem value="telefone">Telefone</SelectItem>
-                        <SelectItem value="uuid">Chave Aleatória</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}
                 name="pixKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valor da Chave PIX *</FormLabel>
+                    <FormLabel>Chave PIX (CPF) *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder={getPixKeyPlaceholder(form.watch('pixKeyType'))}
-                        maxLength={getPixKeyMaxLength(form.watch('pixKeyType'))}
+                        placeholder="000.000.000-00"
+                        maxLength={14}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const pixKeyType = form.watch('pixKeyType');
-                          
-                          let formattedValue = value;
-                          
-                          // Formatar como CPF
-                          if (pixKeyType === 'cpf') {
-                            const clean = value.replace(/\D/g, '');
-                            formattedValue = formatCPF(clean);
-                          }
-                          
+                          const clean = value.replace(/\D/g, '');
+                          const formattedValue = formatCPF(clean);
                           field.onChange(formattedValue);
-                          handlePixKeyChange(formattedValue);
                         }}
                         onBlur={() => {
-                          // Validar PIX key em tempo real
                           const value = field.value;
-                          const pixKeyType = form.watch('pixKeyType');
-                          if (value && pixKeyType) {
-                            let isValid = false;
-                            switch (pixKeyType) {
-                              case 'cpf_cnpj':
-                                const clean = value.replace(/\D/g, '');
-                                isValid = (clean.length === 11 && validateCPF(value)) || 
-                                         (clean.length === 14 && validateCNPJ(value));
-                                break;
-                              case 'email':
-                                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-                                break;
-                              case 'telefone':
-                                const cleanPhone = value.replace(/\D/g, '');
-                                isValid = (cleanPhone.length === 10 || cleanPhone.length === 11) && 
-                                         parseInt(cleanPhone.substring(0, 2)) >= 11;
-                                break;
-                              case 'uuid':
-                                isValid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-                                break;
-                            }
+                          if (value) {
+                            const isValid = validateCPF(value);
                             
                             if (!isValid) {
                               form.setError('pixKey', {
                                 type: 'manual',
-                                message: 'Chave PIX inválida para o tipo selecionado.'
+                                message: 'Chave PIX deve ser um CPF válido.'
                               });
                             } else {
                               form.clearErrors('pixKey');
@@ -480,6 +431,9 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                         }}
                       />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Informe o mesmo CPF do titular da conta bancária
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
