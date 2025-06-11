@@ -159,6 +159,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     currentRating,
     isRatingDialogOpen: isMandatoryRatingOpen,
     handleRatingCompleted,
+    closeMandatoryRating,
   } = useMandatoryRatings();
 
   // Mapeamento de equivalências de cidades para normalização
@@ -1821,12 +1822,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       {/* Diálogo de Avaliação Obrigatória */}
       {currentRating && (
         <MandatoryRatingDialog
-          open={isMandatoryRatingOpen}
+          isOpen={isMandatoryRatingOpen}
+          onClose={closeMandatoryRating}
           serviceId={currentRating.serviceId}
-          serviceName={currentRating.serviceName}
+          serviceTitle={currentRating.serviceName}
           otherUserName={currentRating.otherUserName}
-          userType={currentRating.userType}
-          onSuccess={handleRatingCompleted}
+          otherUserType={currentRating.userType === 'montador' ? 'lojista' : 'montador'}
+          currentUserType={currentRating.userType}
         />
       )}
       

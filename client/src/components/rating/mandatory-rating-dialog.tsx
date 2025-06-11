@@ -35,20 +35,12 @@ export function MandatoryRatingDialog({
 
   const submitRatingMutation = useMutation({
     mutationFn: async (data: { rating: number; comment: string }) => {
-      const response = await fetch(`/api/services/${serviceId}/rate`, {
+      const response = await apiRequest({
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
+        url: `/api/services/${serviceId}/rate`,
+        data
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao enviar avaliação');
-      }
-      
-      return response.json();
+      return await response.json();
     },
     onSuccess: () => {
       toast({
