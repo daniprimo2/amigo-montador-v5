@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Star } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface MandatoryRatingDialogProps {
   isOpen: boolean;
@@ -28,162 +28,137 @@ export function MandatoryRatingDialog({
   currentUserType
 }: MandatoryRatingDialogProps) {
   const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [punctualityRating, setPunctualityRating] = useState(5);
-  const [qualityRating, setQualityRating] = useState(5);
-  const [complianceRating, setComplianceRating] = useState(5);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const submitRatingMutation = useMutation({
-    mutationFn: async () => {
-      if (rating === 0) {
-        throw new Error("Por favor, selecione uma avaliação geral");
-      }
-      
-      const response = await apiRequest({
-        method: 'POST',
-        url: `/api/services/${serviceId}/rate`,
-        data: {
-          rating,
-          comment,
-          punctualityRating,
-          qualityRating,
-          complianceRating,
-          emojiRating: rating >= 4 ? 'satisfied' : rating >= 3 ? 'neutral' : 'dissatisfied'
-        }
+    mutationFn: async (data: { rating: number; comment: string }) => {
+      return apiRequest(`/api/services/${serviceId}/rate`, 'POST', data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Avaliação enviada",
+        description: `Obrigado por avaliar ${otherUserType === 'lojista' ? 'a loja' : 'o montador'}!`,
       });
       
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        toast({
-          title: "Avaliação Enviada",
-          description: "Sua avaliação foi registrada com sucesso!",
-        });
-        
-        // Invalidate relevant queries
-        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
-        
-        onClose();
-      } else {
-        toast({
-          title: "Erro",
-          description: data.message || "Falha ao enviar avaliação",
-          variant: "destructive"
-        });
-      }
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/services/mandatory-ratings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      
+      // Reset form
+      setRating(0);
+      setComment("");
+      
+      // Close dialog
+      onClose();
     },
     onError: (error: any) => {
       toast({
-        title: "Erro",
-        description: error.message || "Erro ao enviar avaliação",
+        title: "Erro ao enviar avaliação",
+        description: error.message || "Ocorreu um erro ao enviar sua avaliação. Tente novamente.",
         variant: "destructive"
       });
     }
   });
 
-  const StarRating = ({ value, onChange, label }: { value: number; onChange: (value: number) => void; label: string }) => (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium">{label}</Label>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => onChange(star)}
-            className="transition-colors"
-          >
-            <Star
-              className={`w-6 h-6 ${
-                star <= value ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-              }`}
-            />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  const handleSubmit = () => {
+    if (rating === 0) {
+      toast({
+        title: "Avaliação obrigatória",
+        description: "Por favor, selecione uma nota de 1 a 5 estrelas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    submitRatingMutation.mutate({
+      rating,
+      comment: comment.trim()
+    });
+  };
+
+  const otherUserTypeLabel = otherUserType === 'lojista' ? 'da loja' : 'do montador';
+  const currentUserAction = currentUserType === 'lojista' ? 'contratou' : 'realizou';
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md mx-auto">
+    <Dialog open={isOpen} onOpenChange={() => {}} modal>
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-orange-500" />
+          <DialogTitle className="text-center text-lg font-semibold">
             Avaliação Obrigatória
           </DialogTitle>
+          <DialogDescription className="text-center text-sm text-gray-600">
+            Para finalizar o serviço "{serviceTitle}", você precisa avaliar {otherUserTypeLabel} {otherUserName}.
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              Para finalizar o serviço <strong>"{serviceTitle}"</strong>, 
-              você deve avaliar {otherUserType === 'lojista' ? 'a loja' : 'o montador'}: 
-              <strong> {otherUserName}</strong>
-            </p>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-              <p className="text-xs text-orange-700 font-medium">
-                Esta avaliação é obrigatória e deve ser feita por ambas as partes para concluir o serviço.
-              </p>
+
+        <div className="space-y-6 py-4">
+          {/* Rating Stars */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Como você avalia o {otherUserType === 'lojista' ? 'atendimento da loja' : 'trabalho do montador'}?
+            </Label>
+            <div className="flex justify-center space-x-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className="p-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                  onMouseEnter={() => setHoveredRating(star)}
+                  onMouseLeave={() => setHoveredRating(0)}
+                  onClick={() => setRating(star)}
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= (hoveredRating || rating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                    } transition-colors`}
+                  />
+                </button>
+              ))}
             </div>
+            {rating > 0 && (
+              <p className="text-center text-sm text-gray-600">
+                {rating === 1 && "Muito ruim"}
+                {rating === 2 && "Ruim"}
+                {rating === 3 && "Regular"}
+                {rating === 4 && "Bom"}
+                {rating === 5 && "Excelente"}
+              </p>
+            )}
           </div>
 
-          <StarRating
-            value={rating}
-            onChange={setRating}
-            label="Avaliação Geral"
-          />
-
-          <StarRating
-            value={punctualityRating}
-            onChange={setPunctualityRating}
-            label="Pontualidade"
-          />
-
-          <StarRating
-            value={qualityRating}
-            onChange={setQualityRating}
-            label="Qualidade do Trabalho"
-          />
-
-          <StarRating
-            value={complianceRating}
-            onChange={setComplianceRating}
-            label="Cumprimento de Acordos"
-          />
-
+          {/* Comment */}
           <div className="space-y-2">
-            <Label htmlFor="comment">Comentário (opcional)</Label>
+            <Label htmlFor="comment" className="text-sm font-medium">
+              Comentário (opcional)
+            </Label>
             <Textarea
               id="comment"
-              placeholder="Deixe um comentário sobre a experiência..."
+              placeholder={`Conte como foi sua experiência com ${otherUserTypeLabel} ${otherUserName}...`}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
+              className="resize-none"
             />
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-              disabled={submitRatingMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={() => submitRatingMutation.mutate()}
+          {/* Action Buttons */}
+          <div className="flex flex-col space-y-2">
+            <Button 
+              onClick={handleSubmit}
               disabled={rating === 0 || submitRatingMutation.isPending}
-              className="flex-1"
+              className="w-full"
             >
               {submitRatingMutation.isPending ? "Enviando..." : "Enviar Avaliação"}
             </Button>
+            
+            <p className="text-xs text-gray-500 text-center">
+              Esta avaliação é obrigatória para finalizar o serviço.
+            </p>
           </div>
         </div>
       </DialogContent>

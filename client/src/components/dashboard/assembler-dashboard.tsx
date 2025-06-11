@@ -16,6 +16,7 @@ import { RatingDialog } from '@/components/rating/rating-dialog';
 import { ProfileDialog } from './profile-dialog';
 import { SkillsUpdateWizard } from './skills-update-wizard';
 import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dialog';
+import { MandatoryRatingChecker } from '@/components/rating/mandatory-rating-checker';
 import { useMandatoryRatings } from '@/hooks/use-mandatory-ratings';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

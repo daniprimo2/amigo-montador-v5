@@ -21,6 +21,7 @@ import { RatingList } from '@/components/rating/rating-list';
 import { PendingEvaluationsModal } from './pending-evaluations-modal';
 import { RankingSection } from '@/components/ranking/ranking-section';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { MandatoryRatingChecker } from '@/components/rating/mandatory-rating-checker';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -1677,6 +1678,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           }}
         />
       )}
+      
+      {/* Verificador de Avaliações Obrigatórias */}
+      <MandatoryRatingChecker currentUserType="lojista" />
     </div>
   );
 };

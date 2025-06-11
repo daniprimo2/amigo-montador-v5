@@ -9,6 +9,11 @@ interface MandatoryRating {
   otherUserType: 'lojista' | 'montador';
 }
 
+interface MandatoryRatingResponse {
+  pendingRatings: MandatoryRating[];
+  hasPendingRatings: boolean;
+}
+
 interface MandatoryRatingCheckerProps {
   currentUserType: 'lojista' | 'montador';
 }
@@ -17,14 +22,14 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
   const [currentRatingIndex, setCurrentRatingIndex] = useState(0);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
 
-  const { data: mandatoryRatings, refetch } = useQuery({
+  const { data: mandatoryRatings, refetch } = useQuery<MandatoryRatingResponse>({
     queryKey: ['/api/services/mandatory-ratings'],
     refetchInterval: 30000, // Check every 30 seconds
     refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
-    if (mandatoryRatings?.hasPendingRatings && mandatoryRatings.pendingRatings.length > 0) {
+    if (mandatoryRatings && mandatoryRatings.hasPendingRatings && mandatoryRatings.pendingRatings && mandatoryRatings.pendingRatings.length > 0) {
       // Show the first pending rating dialog
       setCurrentRatingIndex(0);
       setShowRatingDialog(true);
@@ -34,7 +39,7 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
   const handleRatingComplete = () => {
     const nextIndex = currentRatingIndex + 1;
     
-    if (mandatoryRatings?.pendingRatings && nextIndex < mandatoryRatings.pendingRatings.length) {
+    if (mandatoryRatings && mandatoryRatings.pendingRatings && nextIndex < mandatoryRatings.pendingRatings.length) {
       // Show next rating dialog
       setCurrentRatingIndex(nextIndex);
     } else {
@@ -46,7 +51,7 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
     }
   };
 
-  const currentRating = mandatoryRatings?.pendingRatings?.[currentRatingIndex];
+  const currentRating = mandatoryRatings && mandatoryRatings.pendingRatings ? mandatoryRatings.pendingRatings[currentRatingIndex] : null;
 
   if (!showRatingDialog || !currentRating) {
     return null;
