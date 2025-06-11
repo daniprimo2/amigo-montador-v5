@@ -170,9 +170,15 @@ export function setupAuth(app: Express) {
 
       // Criação de usuário base
       user = await storage.createUser({
-        ...req.body,
+        username: req.body.username || req.body.email,
         password: hashedPassword,
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        birthDate: req.body.birthDate,
+        userType: req.body.userType,
         profilePhotoUrl,
+        profileData: {}
       });
 
       userId = user.id;
