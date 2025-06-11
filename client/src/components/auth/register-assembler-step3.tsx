@@ -419,7 +419,6 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           Faça upload dos documentos necessários para verificação.
         </p>
       </div>
-      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="form-field">
@@ -714,7 +713,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço e Política de Privacidade</a>.
+                    Eu concordo com os <a href="#" className="text-[#0000FF]">Termos de Serviço e Política de Privacidade</a>.
                   </FormLabel>
                   <FormMessage />
                 </div>
