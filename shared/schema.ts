@@ -168,6 +168,16 @@ export const bankAccounts = pgTable("bank_accounts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Tokens de recuperação de senha
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
+});
+
 // Schemas de inserção
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -298,6 +308,8 @@ export const insertBankAccountSchema = createInsertSchema(bankAccounts).refine(
   }
 );
 
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens);
+
 // Tipos de inserção
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertStore = z.infer<typeof insertStoreSchema>;
@@ -308,6 +320,7 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertMessageRead = z.infer<typeof insertMessageReadSchema>;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
 export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 
 // Tipos de seleção
 export type User = typeof users.$inferSelect;
@@ -319,3 +332,4 @@ export type Message = typeof messages.$inferSelect;
 export type MessageRead = typeof messageReads.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type BankAccount = typeof bankAccounts.$inferSelect;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;

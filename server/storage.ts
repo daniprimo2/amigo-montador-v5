@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, stores, type Store, type InsertStore, assemblers, type Assembler, type InsertAssembler, services, type Service, type InsertService, applications, type Application, type InsertApplication, messages, type Message, type InsertMessage, messageReads, type MessageRead, type InsertMessageRead, ratings, type Rating, type InsertRating, bankAccounts, type BankAccount, type InsertBankAccount } from "../shared/schema.js";
+import { users, type User, type InsertUser, stores, type Store, type InsertStore, assemblers, type Assembler, type InsertAssembler, services, type Service, type InsertService, applications, type Application, type InsertApplication, messages, type Message, type InsertMessage, messageReads, type MessageRead, type InsertMessageRead, ratings, type Rating, type InsertRating, bankAccounts, type BankAccount, type InsertBankAccount, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken } from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq, and, not, desc, asc, or, gt, lt, inArray, sql } from "drizzle-orm";
 import session from "express-session";
@@ -61,6 +61,12 @@ export interface IStorage {
   createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, bankAccountData: Partial<BankAccount>): Promise<BankAccount>;
   deleteBankAccount(id: number): Promise<void>;
+  
+  // Recuperação de senha
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenAsUsed(tokenId: number): Promise<void>;
+  deleteExpiredPasswordResetTokens(): Promise<void>;
   
   // Sessão
   sessionStore: session.Store;
