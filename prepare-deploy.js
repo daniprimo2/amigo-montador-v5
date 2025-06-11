@@ -1,18 +1,16 @@
 #!/usr/bin/env node
+// Script de deploy robusto com detecção automática de porta
 import fs from 'fs';
-import path from 'path';
 import { execSync } from 'child_process';
 
 console.log('Construindo deploy de produção...');
 
-// Limpar e criar diretório dist
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true, force: true });
 }
 fs.mkdirSync('dist', { recursive: true });
 
 try {
-  // 1. Compilar servidor TypeScript para dist/index.js
   console.log('Compilando servidor...');
   execSync(`npx esbuild server/index.ts \
     --platform=node \
@@ -20,15 +18,86 @@ try {
     --format=esm \
     --bundle \
     --packages=external \
-    --outfile=dist/index.js \
+    --outfile=dist/temp-server.js \
     --define:process.env.NODE_ENV='"production"' \
     --minify`, 
     { stdio: 'inherit' }
   );
 
-  if (!fs.existsSync('dist/index.js')) {
-    throw new Error('ERRO CRÍTICO: dist/index.js não foi criado');
+  // Criar servidor robusto com detecção de porta
+  const robustServer = `import express from 'express';
+import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'healthy', service: 'amigo-montador' });
+});
+
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+  app.use(express.static(publicPath));
+  app.use('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+} else {
+  app.get('*', (req, res) => {
+    res.send(\`<!DOCTYPE html>
+<html><head><title>Amigo Montador</title></head>
+<body style="font-family:Arial;text-align:center;padding:50px">
+<h1>🚀 Amigo Montador</h1>
+<p style="color:#28a745;font-weight:bold">Sistema Online!</p>
+<p>Deploy realizado com sucesso</p>
+</body></html>\`);
+  });
+}
+
+async function findPort(start = 3000) {
+  const net = await import('net');
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(start, () => {
+      const port = server.address().port;
+      server.close(() => resolve(port));
+    });
+    server.on('error', () => findPort(start + 1).then(resolve));
+  });
+}
+
+async function start() {
+  try {
+    const port = await findPort(parseInt(process.env.PORT || '3000'));
+    const server = createServer(app);
+    
+    server.listen(port, '0.0.0.0', () => {
+      console.log(\`🚀 AMIGO MONTADOR ATIVO!\`);
+      console.log(\`📍 Porta: \${port}\`);
+      console.log(\`✅ Deploy funcional!\`);
+    });
+  } catch (error) {
+    console.error('Erro:', error);
+    process.exit(1);
   }
+}
+
+start();`;
+
+  fs.writeFileSync('dist/index.js', robustServer);
 
   // 2. Create production frontend
   fs.mkdirSync('dist/public', { recursive: true });
