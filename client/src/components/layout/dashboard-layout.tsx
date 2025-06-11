@@ -222,11 +222,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="bg-zinc-800 w-full p-4 safe-top">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <img 
-              src={amigoMontadorLogo} 
-              alt="Amigo Montador" 
-              className="h-10 w-auto object-contain"
-            />
+            <div className="text-white text-2xl font-bold flex items-center">
+              🔧
+              <span className="ml-2 text-lg">
+                <span className="font-light">Amigo</span>
+                <span className="font-bold ml-1">Montador</span>
+              </span>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <button 

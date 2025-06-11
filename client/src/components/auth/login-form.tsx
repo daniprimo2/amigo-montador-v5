@@ -90,12 +90,12 @@ export const LoginForm: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
-          <div className="tech-logo-container text-[#0c0a0900] rounded-full">
-            <img 
-              src={amigoMontadorLogo} 
-              alt="Amigo Montador" 
-              className="w-32 h-32 object-cover rounded-full"
-            />
+          <div className="flex flex-col items-center space-y-2">
+            <div className="text-6xl">🔧</div>
+            <div className="text-xl font-bold text-gray-800">
+              <span className="font-light">Amigo</span>
+              <span className="font-bold ml-1">Montador</span>
+            </div>
           </div>
         </div>
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Bem-vindo de volta</h2>
