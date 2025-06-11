@@ -350,6 +350,26 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
           
           <FormField
             control={form.control}
+            name="birthDate"
+            render={({ field }) => (
+              <FormItem className="form-field">
+                <FormLabel>Data de Nascimento</FormLabel>
+                <FormControl>
+                  <MaskedInput
+                    mask="99/99/9999"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="DD/MM/YYYY"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem className="form-field">
