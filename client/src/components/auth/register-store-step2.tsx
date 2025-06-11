@@ -301,7 +301,6 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
           Preencha os dados da sua loja.
         </p>
       </div>
-      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -803,7 +802,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço</a> e <a href="#" className="text-primary">Política de Privacidade</a>.
+                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço</a> e <a href="#" className="text-[#0000FF]">Política de Privacidade</a>.
                   </FormLabel>
                   <FormMessage />
                 </div>
