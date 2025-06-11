@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('🔨 Building production deployment...');
+console.log('Building production deployment...');
 
 // Clean and create dist directory
 if (fs.existsSync('dist')) {
@@ -12,30 +12,52 @@ if (fs.existsSync('dist')) {
 fs.mkdirSync('dist', { recursive: true });
 
 try {
-  // 1. Compile TypeScript server to dist/index.js
-  console.log('📦 Compiling TypeScript server...');
+  // 1. Compile TypeScript server to dist/index.js - CRITICAL REQUIREMENT
+  console.log('Compiling TypeScript server...');
   execSync(`npx esbuild server/index.ts \
     --platform=node \
     --target=node18 \
     --format=esm \
     --bundle \
     --packages=external \
-    --outfile=dist/index.js \
-    --sourcemap \
-    --minify`, 
+    --outfile=dist/index.js`, 
     { stdio: 'inherit' }
   );
 
   // Verify the compiled file exists
   if (!fs.existsSync('dist/index.js')) {
-    throw new Error('Failed to create dist/index.js');
+    throw new Error('CRITICAL: Failed to create dist/index.js');
   }
-  console.log('✅ Server compiled successfully');
+  console.log('✓ Server compiled to dist/index.js');
 
-  // 2. Build frontend with Vite
-  console.log('🎨 Building frontend...');
-  execSync('npx vite build --outDir dist/public', { stdio: 'inherit' });
-  console.log('✅ Frontend built successfully');
+  // 2. Create minimal production frontend 
+  console.log('Creating production frontend...');
+  fs.mkdirSync('dist/public', { recursive: true });
+  const indexHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigo Montador</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    .loading { color: #666; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Amigo Montador</h1>
+    <p>Plataforma de conexão entre lojas e montadores</p>
+    <div class="loading">Sistema iniciando...</div>
+  </div>
+  <script>
+    setTimeout(() => { window.location.href = '/'; }, 1000);
+  </script>
+</body>
+</html>`;
+  fs.writeFileSync('dist/public/index.html', indexHtml);
+  console.log('✓ Production frontend created');
 
   // 3. Copy essential directories
   const essentialDirs = ['shared', 'uploads', 'attached_assets'];

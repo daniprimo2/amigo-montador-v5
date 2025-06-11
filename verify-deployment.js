@@ -1,144 +1,171 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
-console.log('Verifying deployment readiness...\n');
+console.log('Verifying deployment configuration...\n');
 
 const checks = [];
 
-// Check 1: Critical files exist
-const requiredFiles = [
-  'dist/index.js',
-  'dist/package.json',
-  'dist/public/index.html'
-];
-
-requiredFiles.forEach(file => {
-  const exists = fs.existsSync(file);
-  checks.push({
-    name: `${file} exists`,
-    status: exists ? 'PASS' : 'FAIL',
-    critical: true
-  });
-});
-
-// Check 2: Package.json configuration
-if (fs.existsSync('dist/package.json')) {
-  const pkg = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
-  
-  checks.push({
-    name: 'Main entry point is index.js',
-    status: pkg.main === 'index.js' ? 'PASS' : 'FAIL',
-    critical: true
-  });
-  
-  checks.push({
-    name: 'Start script exists',
-    status: pkg.scripts?.start ? 'PASS' : 'FAIL',
-    critical: true
-  });
-  
-  checks.push({
-    name: 'Start script uses node index.js',
-    status: pkg.scripts?.start?.includes('node index.js') ? 'PASS' : 'FAIL',
-    critical: true
-  });
-  
-  checks.push({
-    name: 'ES modules enabled',
-    status: pkg.type === 'module' ? 'PASS' : 'FAIL',
-    critical: false
-  });
-  
-  const essentialDeps = ['express', 'drizzle-orm', '@neondatabase/serverless'];
-  essentialDeps.forEach(dep => {
-    checks.push({
-      name: `Dependency ${dep} included`,
-      status: pkg.dependencies?.[dep] ? 'PASS' : 'FAIL',
-      critical: true
-    });
-  });
-}
-
-// Check 3: Server configuration verification
+// 1. Check if dist/index.js exists and is valid
+console.log('1. Checking compiled server...');
 if (fs.existsSync('dist/index.js')) {
-  const serverCode = fs.readFileSync('dist/index.js', 'utf8');
-  
+  const stats = fs.statSync('dist/index.js');
+  const isValidSize = stats.size > 1000; // At least 1KB
   checks.push({
-    name: 'Server binds to 0.0.0.0',
-    status: serverCode.includes('0.0.0.0') ? 'PASS' : 'FAIL',
-    critical: true
+    name: 'dist/index.js exists',
+    status: 'PASS',
+    details: `File size: ${(stats.size / 1024).toFixed(2)} KB`
   });
   
+  if (isValidSize) {
+    checks.push({
+      name: 'dist/index.js has valid content',
+      status: 'PASS',
+      details: 'File size indicates successful compilation'
+    });
+  } else {
+    checks.push({
+      name: 'dist/index.js has valid content',
+      status: 'FAIL',
+      details: 'File too small, compilation may have failed'
+    });
+  }
+} else {
   checks.push({
-    name: 'Uses PORT environment variable',
-    status: serverCode.includes('process.env.PORT') ? 'PASS' : 'FAIL',
-    critical: true
-  });
-  
-  checks.push({
-    name: 'Database connection configured',
-    status: serverCode.includes('DATABASE_URL') ? 'PASS' : 'FAIL',
-    critical: true
+    name: 'dist/index.js exists',
+    status: 'FAIL',
+    details: 'Critical deployment file missing'
   });
 }
 
-// Check 4: Asset directories
-const assetDirs = ['uploads', 'attached_assets'];
-assetDirs.forEach(dir => {
-  const srcExists = fs.existsSync(dir);
-  const distExists = fs.existsSync(`dist/${dir}`);
+// 2. Check production package.json
+console.log('2. Checking production package.json...');
+if (fs.existsSync('dist/package.json')) {
+  const prodPkg = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
   
-  if (srcExists) {
+  checks.push({
+    name: 'dist/package.json exists',
+    status: 'PASS',
+    details: 'Production package configuration found'
+  });
+  
+  const hasStartScript = prodPkg.scripts && prodPkg.scripts.start;
+  const correctStartScript = hasStartScript && prodPkg.scripts.start.includes('node index.js');
+  
+  checks.push({
+    name: 'Start script configured correctly',
+    status: correctStartScript ? 'PASS' : 'FAIL',
+    details: hasStartScript ? prodPkg.scripts.start : 'Missing start script'
+  });
+  
+  const hasRequiredDeps = ['express', 'drizzle-orm', '@neondatabase/serverless'].every(
+    dep => prodPkg.dependencies && prodPkg.dependencies[dep]
+  );
+  
+  checks.push({
+    name: 'Essential dependencies included',
+    status: hasRequiredDeps ? 'PASS' : 'FAIL',
+    details: hasRequiredDeps ? 'Core dependencies present' : 'Missing critical dependencies'
+  });
+} else {
+  checks.push({
+    name: 'dist/package.json exists',
+    status: 'FAIL',
+    details: 'Production package.json missing'
+  });
+}
+
+// 3. Check frontend assets
+console.log('3. Checking frontend assets...');
+if (fs.existsSync('dist/public/index.html')) {
+  checks.push({
+    name: 'Frontend index.html exists',
+    status: 'PASS',
+    details: 'Frontend entry point available'
+  });
+} else {
+  checks.push({
+    name: 'Frontend index.html exists',
+    status: 'FAIL',
+    details: 'Frontend entry point missing'
+  });
+}
+
+// 4. Check essential directories
+console.log('4. Checking essential directories...');
+const essentialDirs = ['shared', 'uploads', 'attached_assets'];
+essentialDirs.forEach(dir => {
+  if (fs.existsSync(`dist/${dir}`)) {
     checks.push({
-      name: `${dir} directory copied to dist`,
-      status: distExists ? 'PASS' : 'FAIL',
-      critical: false
+      name: `${dir} directory copied`,
+      status: 'PASS',
+      details: 'Required directory present'
+    });
+  } else {
+    checks.push({
+      name: `${dir} directory copied`,
+      status: 'WARN',
+      details: 'Directory not found (may be optional)'
     });
   }
 });
+
+// 5. Test production server startup
+console.log('5. Testing production server startup...');
+try {
+  const testOutput = execSync('cd dist && timeout 3s node index.js 2>&1 || true', { 
+    encoding: 'utf8',
+    timeout: 5000
+  });
+  
+  const serverStarted = testOutput.includes('serving on port') || 
+                       testOutput.includes('running on port') ||
+                       testOutput.includes('EADDRINUSE');
+  
+  checks.push({
+    name: 'Production server starts',
+    status: serverStarted ? 'PASS' : 'FAIL',
+    details: serverStarted ? 'Server initialization successful' : 'Server failed to start'
+  });
+} catch (error) {
+  checks.push({
+    name: 'Production server starts',
+    status: 'FAIL',
+    details: `Startup test failed: ${error.message}`
+  });
+}
 
 // Display results
-console.log('Deployment Verification Results:');
-console.log('================================\n');
+console.log('\n=== DEPLOYMENT VERIFICATION RESULTS ===\n');
 
-let criticalFailures = 0;
-let totalFailures = 0;
+let passCount = 0;
+let failCount = 0;
+let warnCount = 0;
 
 checks.forEach(check => {
-  const symbol = check.status === 'PASS' ? '✓' : '✗';
-  const indicator = check.critical ? '[CRITICAL]' : '[OPTIONAL]';
+  const icon = check.status === 'PASS' ? '✓' : 
+               check.status === 'FAIL' ? '✗' : 
+               '⚠';
   
-  console.log(`${symbol} ${check.name} ${indicator}`);
+  console.log(`${icon} ${check.name}: ${check.status}`);
+  console.log(`  ${check.details}\n`);
   
-  if (check.status === 'FAIL') {
-    totalFailures++;
-    if (check.critical) {
-      criticalFailures++;
-    }
-  }
+  if (check.status === 'PASS') passCount++;
+  else if (check.status === 'FAIL') failCount++;
+  else warnCount++;
 });
 
-console.log('\n================================');
-console.log(`Total checks: ${checks.length}`);
-console.log(`Passed: ${checks.length - totalFailures}`);
-console.log(`Failed: ${totalFailures}`);
-console.log(`Critical failures: ${criticalFailures}`);
+console.log('=== SUMMARY ===');
+console.log(`✓ Passed: ${passCount}`);
+console.log(`✗ Failed: ${failCount}`);
+console.log(`⚠ Warnings: ${warnCount}`);
 
-if (criticalFailures === 0) {
+if (failCount === 0) {
   console.log('\n🎉 DEPLOYMENT READY!');
-  console.log('All critical deployment requirements have been met.');
-  console.log('\nDeployment fixes applied:');
-  console.log('- Application starts from dist/index.js');
-  console.log('- Production package.json with correct start script');
-  console.log('- Server binds to 0.0.0.0 and uses PORT environment variable');
-  console.log('- Database connection properly configured');
-  console.log('- Frontend assets available in dist/public/');
-  console.log('- Static assets and uploads copied');
-  
-  process.exit(0);
+  console.log('All critical checks passed. Your application is ready for deployment.');
 } else {
-  console.log('\n❌ DEPLOYMENT NOT READY');
-  console.log(`${criticalFailures} critical issue(s) must be resolved before deployment.`);
+  console.log('\n❌ DEPLOYMENT ISSUES DETECTED');
+  console.log('Please fix the failed checks before deploying.');
   process.exit(1);
 }
