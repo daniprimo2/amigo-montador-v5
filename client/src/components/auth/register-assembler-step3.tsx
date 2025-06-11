@@ -11,7 +11,7 @@ import FileUpload from '../ui/file-upload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { bankAccountSchema, validateCPF, validateCNPJ, detectPixKeyType, formatCPF, formatCNPJ, formatPhone } from '@/lib/bank-account-schema';
+import { validateCPF, validateCNPJ, formatCPF } from '@/lib/bank-account-schema';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
 
 const assemblerStep3Schema = z.object({
@@ -644,7 +644,10 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                         if (form.watch('holderDocumentType') === 'cpf') {
                           value = formatCPF(value);
                         } else if (form.watch('holderDocumentType') === 'cnpj') {
-                          value = formatCNPJ(value);
+                          // For CNPJ, apply basic formatting
+                          value = value.replace(/[^\d]/g, '');
+                          if (value.length > 14) value = value.substring(0, 14);
+                          value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
                         }
                         
                         field.onChange(value);
@@ -657,107 +660,49 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="pixKeyType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Chave PIX</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Limpar a chave PIX quando o tipo mudar
-                      form.setValue('pixKey', '');
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="cpf">CPF</SelectItem>
-                      <SelectItem value="cnpj">CNPJ</SelectItem>
-                      <SelectItem value="email">E-mail</SelectItem>
-                      <SelectItem value="telefone">Telefone</SelectItem>
-                      <SelectItem value="aleatória">Chave Aleatória</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+          {/* Aviso sobre restrição da chave PIX */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-amber-800 mb-1">Importante: Restrição da Chave PIX</h4>
+                <p className="text-sm text-amber-700">
+                  A chave PIX deve ser obrigatoriamente no formato CPF e deve ser o mesmo CPF informado como titular da conta bancária.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
             <FormField
               control={form.control}
               name="pixKey"
-              render={({ field }) => {
-                const pixKeyType = form.watch('pixKeyType');
-                
-                const getPlaceholder = () => {
-                  switch (pixKeyType) {
-                    case 'cpf': return '123.456.789-00';
-                    case 'cnpj': return '12.345.678/0001-90';
-                    case 'email': return 'exemplo@email.com';
-                    case 'telefone': return '(11) 99999-9999';
-                    case 'aleatória': return '12345678-1234-1234-1234-123456789012';
-                    default: return 'Selecione o tipo de chave primeiro';
-                  }
-                };
-                
-                return (
-                  <FormItem>
-                    <FormLabel>Chave PIX</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder={getPlaceholder()}
-                        disabled={!pixKeyType}
-                        {...field}
-                        onChange={(e) => {
-                          let value = e.target.value;
-                          
-                          // Formatação automática baseada no tipo
-                          switch (pixKeyType) {
-                            case 'cpf':
-                              value = value.replace(/[^\d]/g, '');
-                              value = formatCPF(value);
-                              break;
-                            case 'cnpj':
-                              value = value.replace(/[^\d]/g, '');
-                              value = formatCNPJ(value);
-                              break;
-                            case 'telefone':
-                              value = value.replace(/[^\d]/g, '');
-                              value = formatPhone(value);
-                              break;
-                            case 'email':
-                              // Apenas remover espaços para email
-                              value = value.replace(/\s/g, '');
-                              break;
-                            case 'aleatória':
-                              // Permitir apenas caracteres válidos para UUID
-                              value = value.replace(/[^0-9a-fA-F\-]/g, '');
-                              break;
-                          }
-                          
-                          field.onChange(value);
-                          
-                          // Detecção automática de tipo se não estiver definido
-                          if (!pixKeyType && value) {
-                            const detectedType = detectPixKeyType(value);
-                            if (detectedType && ['cpf', 'cnpj', 'email', 'telefone', 'aleatória'].includes(detectedType)) {
-                              form.setValue('pixKeyType', detectedType as 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatória');
-                            }
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave PIX (CPF)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="123.456.789-00"
+                      {...field}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        // Formatação automática para CPF
+                        value = value.replace(/[^\d]/g, '');
+                        value = formatCPF(value);
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Informe o mesmo CPF do titular da conta bancária
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
           

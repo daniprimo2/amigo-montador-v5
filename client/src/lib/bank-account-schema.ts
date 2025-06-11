@@ -135,7 +135,7 @@ const baseBankAccountSchema = z.object({
     .min(1, 'Chave PIX inválida para o tipo selecionado.')
     .max(77, 'Chave PIX deve ter no máximo 77 caracteres'),
   // Tipo de Chave PIX
-  pixKeyType: z.enum(['cpf_cnpj', 'email', 'telefone', 'uuid'], {
+  pixKeyType: z.enum(['cpf'], {
     required_error: 'Selecione o tipo de chave PIX.',
   }),
 });
@@ -153,45 +153,33 @@ export const bankAccountSchema = baseBankAccountSchema.refine((data) => {
   message: "CPF/CNPJ inválido.",
   path: ["holderDocumentNumber"],
 }).refine((data) => {
-  // Validar chave PIX conforme tipo selecionado
-  if (!data.pixKey || !data.pixKeyType) return false;
-  
-  switch (data.pixKeyType) {
-    case 'cpf_cnpj':
-      const cleanDoc = data.pixKey.replace(/\D/g, '');
-      if (cleanDoc.length === 11) {
-        return validateCPF(data.pixKey);
-      } else if (cleanDoc.length === 14) {
-        return validateCNPJ(data.pixKey);
-      }
-      return false;
-    case 'email':
-      return validateEmail(data.pixKey);
-    case 'telefone':
-      return validatePhone(data.pixKey);
-    case 'uuid':
-      return validateRandomKey(data.pixKey);
-    default:
-      return false;
-  }
+  // Validar chave PIX - deve ser CPF válido
+  if (!data.pixKey || data.pixKeyType !== 'cpf') return false;
+  return validateCPF(data.pixKey);
 }, {
-  message: "Chave PIX inválida para o tipo selecionado.",
+  message: "Chave PIX deve ser um CPF válido",
+  path: ["pixKey"],
+}).refine((data) => {
+  // Validar se a conta bancária pertence ao mesmo titular da chave PIX
+  if (data.holderDocumentType === 'cpf' && data.pixKeyType === 'cpf') {
+    // Remover formatação para comparar os números
+    const holderCPF = data.holderDocumentNumber.replace(/\D/g, '');
+    const pixKeyCPF = data.pixKey.replace(/\D/g, '');
+    return holderCPF === pixKeyCPF;
+  }
+  return true;
+}, {
+  message: "A chave PIX deve ser o mesmo CPF do titular da conta bancária",
   path: ["pixKey"],
 });
 
 // Função para retornar mensagem de erro específica baseada no tipo de chave PIX
 export const getPixValidationMessage = (pixKeyType: string): string => {
   switch (pixKeyType) {
-    case 'cpf_cnpj':
-      return "CPF/CNPJ inválido. Digite apenas números (11 para CPF ou 14 para CNPJ)";
-    case 'email':
-      return "E-mail inválido. Digite um endereço de e-mail válido (exemplo@dominio.com)";
-    case 'telefone':
-      return "Telefone inválido. Digite com DDD: (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo";
-    case 'uuid':
-      return "Chave aleatória inválida. Deve ser um UUID no formato: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
+    case 'cpf':
+      return "CPF inválido. Digite apenas números (11 dígitos)";
     default:
-      return "Chave PIX inválida para o tipo selecionado";
+      return "Chave PIX deve ser um CPF válido";
   }
 };
 

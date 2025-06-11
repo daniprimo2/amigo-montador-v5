@@ -729,7 +729,10 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                         if (form.watch('holderDocumentType') === 'cpf') {
                           value = formatCPF(value);
                         } else if (form.watch('holderDocumentType') === 'cnpj') {
-                          value = formatCNPJ(value);
+                          // For CNPJ, apply basic formatting
+                          value = value.replace(/[^\d]/g, '');
+                          if (value.length > 14) value = value.substring(0, 14);
+                          value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
                         }
                         
                         field.onChange(value);
