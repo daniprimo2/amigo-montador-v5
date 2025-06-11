@@ -18,7 +18,7 @@ export const useMandatoryRatings = () => {
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
 
   const { data, isLoading, refetch } = useQuery<PendingRatingsResponse>({
-    queryKey: ['/api/services/pending-ratings'],
+    queryKey: ['/api/mandatory-ratings'],
     enabled: true, // Habilitar para aplicar avaliações obrigatórias
     retry: 1, // Tentar uma vez em caso de erro
     refetchOnWindowFocus: true,
@@ -50,6 +50,10 @@ export const useMandatoryRatings = () => {
     }
   };
 
+  const closeMandatoryRating = () => {
+    setIsRatingDialogOpen(false);
+  };
+
   return {
     pendingRatings,
     hasPendingRatings,
@@ -57,6 +61,7 @@ export const useMandatoryRatings = () => {
     isRatingDialogOpen,
     isLoading,
     handleRatingCompleted,
+    closeMandatoryRating,
     refetch,
   };
 };
