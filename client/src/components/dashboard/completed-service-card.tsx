@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Building, CalendarIcon, CheckSquare, DollarSign, MapPin, MessageSquare, Star } from 'lucide-react';
+import { Building, CalendarIcon, CheckSquare, DollarSign, MapPin, MessageSquare } from 'lucide-react';
 
 interface ServiceProps {
   id: number;
@@ -10,19 +10,17 @@ interface ServiceProps {
   price: string;
   store: string | { name: string; id?: number; logoUrl?: string; userId?: number; user?: any };
   type: string;
-  rated?: boolean;
+
   completedAt?: string; // Nova propriedade para data de finalização
 }
 
 interface CompletedServiceCardProps {
   service: ServiceProps;
-  onRateClick?: (service: ServiceProps) => void;
   onChatClick?: (serviceId: number) => void; // Nova propriedade para acesso ao chat
 }
 
 export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({ 
   service, 
-  onRateClick,
   onChatClick
 }) => {
   // Função para formatar o preço corretamente
@@ -49,9 +47,7 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
     }).format(numericPrice);
   };
 
-  const handleRateClick = () => {
-    if (onRateClick) onRateClick(service);
-  };
+
 
   const handleChatClick = () => {
     if (onChatClick) onChatClick(service.id);
@@ -106,29 +102,7 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
         </Button>
       </div>
       
-      {!service.rated && (
-        <div className="flex flex-col space-y-2">
-          <div className="px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm mb-2">
-            <span className="font-semibold">⚠️ Avaliação Pendente:</span> É necessário avaliar este serviço.
-          </div>
-          <Button 
-            onClick={handleRateClick}
-            size="sm" 
-            variant="default" 
-            className="w-full flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white"
-          >
-            <Star className="h-4 w-4 mr-1 fill-white" />
-            Avaliar Agora
-          </Button>
-        </div>
-      )}
-      
-      {service.rated && (
-        <div className="text-sm text-green-600 font-medium flex items-center">
-          <Star className="h-4 w-4 mr-1 fill-green-500" />
-          Avaliado com Sucesso
-        </div>
-      )}
+      {/* Avaliações são gerenciadas pelo sistema obrigatório após pagamento */}
     </div>
   );
 };
