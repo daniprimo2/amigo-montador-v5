@@ -3877,6 +3877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bothRatingsCompleted: false
         });
         
+        console.log("[PIX Webhook] Serviço marcado como finalizado e requerendo avaliações obrigatórias");
+        
         // Buscar informações do pagador (lojista que está pagando)
         const store = await storage.getStore(service.storeId!);
         const storeUser = store ? await storage.getUser(store.userId) : null;
