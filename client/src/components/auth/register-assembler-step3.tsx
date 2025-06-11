@@ -714,7 +714,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço</a> e <a href="#" className="text-primary">Política de Privacidade</a>.
+                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço e Política de Privacidade</a>.
                   </FormLabel>
                   <FormMessage />
                 </div>
