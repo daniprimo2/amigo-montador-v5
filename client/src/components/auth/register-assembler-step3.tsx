@@ -55,7 +55,7 @@ const assemblerStep3Schema = z.object({
   pixKey: z.string()
     .min(1, 'Chave PIX é obrigatória para receber pagamentos')
     .max(77, 'Chave PIX deve ter no máximo 77 caracteres'),
-  pixKeyType: z.enum(['cpf', 'cnpj', 'email', 'telefone', 'aleatória'], {
+  pixKeyType: z.enum(['cpf'], {
     required_error: 'Tipo de chave PIX é obrigatório',
   }),
   termsAgreed: z.boolean().refine(val => val === true, {
@@ -73,30 +73,23 @@ const assemblerStep3Schema = z.object({
   message: "CPF ou CNPJ do titular inválido. Verifique os dígitos verificadores.",
   path: ["holderDocumentNumber"],
 }).refine((data) => {
-  // Validar chave PIX - obrigatória e deve ser compatível com o tipo
-  if (!data.pixKey || !data.pixKeyType) return false;
-  
-  switch (data.pixKeyType) {
-    case 'cpf':
-      return validateCPF(data.pixKey);
-    case 'cnpj':
-      return validateCNPJ(data.pixKey);
-    case 'email':
-      return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(data.pixKey) && data.pixKey.length <= 254;
-    case 'telefone':
-      const cleanPhone = data.pixKey.replace(/\D/g, '');
-      if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
-      const ddd = parseInt(cleanPhone.substring(0, 2));
-      if (ddd < 11 || ddd > 99) return false;
-      if (cleanPhone.length === 11 && parseInt(cleanPhone.charAt(2)) !== 9) return false;
-      return true;
-    case 'aleatória':
-      return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.pixKey);
-    default:
-      return false;
-  }
+  // Validar chave PIX - deve ser CPF válido
+  if (!data.pixKey || data.pixKeyType !== 'cpf') return false;
+  return validateCPF(data.pixKey);
 }, {
-  message: "Chave PIX inválida para o tipo selecionado",
+  message: "Chave PIX deve ser um CPF válido",
+  path: ["pixKey"],
+}).refine((data) => {
+  // Validar se a conta bancária pertence ao mesmo titular da chave PIX
+  if (data.holderDocumentType === 'cpf' && data.pixKeyType === 'cpf') {
+    // Remover formatação para comparar os números
+    const holderCPF = data.holderDocumentNumber.replace(/\D/g, '');
+    const pixKeyCPF = data.pixKey.replace(/\D/g, '');
+    return holderCPF === pixKeyCPF;
+  }
+  return true;
+}, {
+  message: "A chave PIX deve ser o mesmo CPF do titular da conta bancária",
   path: ["pixKey"],
 });
 
