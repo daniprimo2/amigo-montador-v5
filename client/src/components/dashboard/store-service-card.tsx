@@ -71,12 +71,13 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
       return price;
     }
     
-    // Converte string para número - o valor já vem correto da API
-    const numericPrice = parseFloat(price);
+    // Converte formato brasileiro para formato numérico (vírgula para ponto)
+    const normalizedPrice = price.replace(/\./g, '').replace(',', '.');
+    const numericPrice = parseFloat(normalizedPrice);
     
     // Se o valor for inválido, retorna o valor original
     if (isNaN(numericPrice)) {
-      return price;
+      return `R$ ${price}`;
     }
     
     // Formata como moeda brasileira
@@ -265,14 +266,14 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                 <CalendarIcon className="h-4 w-4 text-green-500 mr-1 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-gray-600">
                   <span className="font-medium text-green-600">Início:</span>{' '}
-                  {new Date(service.startDate).toLocaleDateString('pt-BR')}
+                  {new Date(service.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                 </span>
               </div>
               <div className="flex items-center">
                 <CalendarIcon className="h-4 w-4 text-blue-500 mr-1 flex-shrink-0" />
                 <span className="text-xs sm:text-sm text-gray-600">
                   <span className="font-medium text-blue-600">Fim:</span>{' '}
-                  {new Date(service.endDate).toLocaleDateString('pt-BR')}
+                  {new Date(service.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                 </span>
               </div>
             </div>
