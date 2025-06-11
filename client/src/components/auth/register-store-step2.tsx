@@ -98,6 +98,9 @@ const storeStep2Schema = z.object({
   pixKeyType: z.enum(['cpf'], {
     required_error: 'Tipo de chave PIX é obrigatório',
   }),
+  termsAgreed: z.boolean().refine(val => val === true, {
+    message: "Você deve concordar com os termos de serviço",
+  }),
 }).refine((data) => {
   // Validar documento do titular
   if (data.holderDocumentType === 'cpf') {
@@ -173,6 +176,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
       holderDocumentNumber: '',
       pixKey: '',
       pixKeyType: 'cpf',
+      termsAgreed: false,
       ...defaultValues,
     },
   });
@@ -785,6 +789,27 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
               )}
             />
           </div>
+          
+          <FormField
+            control={form.control}
+            name="termsAgreed"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço</a> e <a href="#" className="text-primary">Política de Privacidade</a>.
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
           
           <div className="flex gap-4 mt-8">
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
