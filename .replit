@@ -11,42 +11,6 @@ deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
-[[ports]]
-localPort = 3000
-
-[[ports]]
-localPort = 3001
-
-[[ports]]
-localPort = 3002
-
-[[ports]]
-localPort = 5000
-
-[[ports]]
-localPort = 5001
-
-[[ports]]
-localPort = 6000
-
-[[ports]]
-localPort = 6001
-
-[[ports]]
-localPort = 7000
-
-[[ports]]
-localPort = 8000
-
-[[ports]]
-localPort = 8080
-
-[[ports]]
-localPort = 9000
-
-[[ports]]
-localPort = 9999
-
 [workflows]
 runButton = "Project"
 
