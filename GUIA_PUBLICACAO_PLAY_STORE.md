@@ -175,7 +175,7 @@ Transforme a experiência de montagem de móveis com o AmigoMontador!
 - Faça upload do arquivo `app-release.aab`
 - Adicione as **Notas de versão:**
 ```
-Primeira versão do MontaFácil
+Primeira versão do AmigoMontador
 • Conexão entre lojistas e montadores
 • Sistema de geolocalização
 • Chat integrado
@@ -184,13 +184,13 @@ Primeira versão do MontaFácil
 
 ### 5. Configurar classificação de conteúdo:
 - Complete o questionário de classificação
-- Para o MontaFácil, será provavelmente **PEGI 3** ou **Livre**
+- Para o AmigoMontador, será provavelmente **PEGI 3** ou **Livre**
 
 ### 6. Política de Privacidade:
 Você precisará criar uma política de privacidade. Exemplo básico:
 
 ```
-POLÍTICA DE PRIVACIDADE - MontaFácil
+POLÍTICA DE PRIVACIDADE - AmigoMontador
 
 Última atualização: [DATA]
 
@@ -298,8 +298,8 @@ Antes de publicar, verifique:
 
 ---
 
-**🚀 Parabéns! Seu aplicativo MontaFácil está pronto para a Play Store!**
+**🚀 Parabéns! Seu aplicativo AmigoMontador está pronto para a Play Store!**
 
 ---
 
-*Este guia foi criado especificamente para o projeto MontaFácil. Para dúvidas específicas, consulte a documentação oficial de cada ferramenta.*
+*Este guia foi criado especificamente para o projeto AmigoMontador. Para dúvidas específicas, consulte a documentação oficial de cada ferramenta.*

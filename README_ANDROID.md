@@ -1,4 +1,4 @@
-# 📱 MontaFácil - Build Android para Play Store
+# 📱 AmigoMontador - Build Android para Play Store
 
 ## 🚀 Execução Rápida
 
@@ -25,7 +25,7 @@ Para gerar o arquivo AAB para a Play Store, execute:
 
 2. **Crie o keystore:**
    ```bash
-   keytool -genkey -v -keystore android/app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias montafacil
+   keytool -genkey -v -keystore android/app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias amigomontador
    ```
 
 3. **Configure as senhas** no arquivo `gradle.properties`
@@ -40,4 +40,4 @@ Consulte o arquivo `GUIA_PUBLICACAO_PLAY_STORE.md` para instruções detalhadas.
 
 ---
 
-**Seu aplicativo MontaFácil está pronto para ser publicado na Play Store!**
+**Seu aplicativo AmigoMontador está pronto para ser publicado na Play Store!**

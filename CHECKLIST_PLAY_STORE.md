@@ -1,4 +1,5 @@
 # ✅ Checklist - Publicação Play Store
+## AmigoMontador
 
 ## 📋 Verificação Antes de Publicar
 
@@ -31,8 +32,8 @@
 - [ ] Categoria: Produtividade
 
 ### Informações do App
-- **Nome:** MontaFácil
-- **ID:** com.montafacil.app
+- **Nome:** AmigoMontador
+- **ID:** com.amigomontador.app
 - **Versão:** 1.0.0
 - **Categoria:** Produtividade
 - **Idioma:** Português (Brasil)
