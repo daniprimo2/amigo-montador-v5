@@ -1053,19 +1053,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Formato inválido dos dados do serviço" });
       }
       
-      // Debug: verificar se o campo date existe
-      console.log("DEBUG: Verificando campo date em serviceData:", !!serviceData.date);
-      console.log("DEBUG: Valor do campo date:", serviceData.date);
-      console.log("DEBUG: Todas as chaves de serviceData:", Object.keys(serviceData));
-      console.log("DEBUG: serviceData completo:", serviceData);
-      
-      // Processar o campo de data combinado em startDate e endDate
-      if (serviceData.date) {
-        console.log("Processando data:", serviceData.date);
+      // Processar datas diretas (startDate e endDate) ou campo date combinado
+      if (serviceData.startDate && serviceData.endDate) {
+        // Converter strings de data ISO para objetos Date
+        try {
+          serviceData.startDate = new Date(serviceData.startDate);
+          serviceData.endDate = new Date(serviceData.endDate);
+          
+          if (isNaN(serviceData.startDate.getTime()) || isNaN(serviceData.endDate.getTime())) {
+            return res.status(400).json({ message: "Formato de data inválido" });
+          }
+          
+          console.log("Datas processadas - startDate:", serviceData.startDate, "endDate:", serviceData.endDate);
+        } catch (error) {
+          return res.status(400).json({ message: "Formato de data inválido" });
+        }
+      } else if (serviceData.date) {
+        // Fallback para o formato antigo de data combinada
+        console.log("Processando data combinada:", serviceData.date);
         try {
           const dateRange = serviceData.date.split(' - ');
           if (dateRange.length === 2) {
-            // Validar se as datas são válidas
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
             
@@ -1078,14 +1086,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             return res.status(400).json({ message: "Formato de data deve ser: YYYY-MM-DD - YYYY-MM-DD" });
           }
-          console.log("Data processada - startDate:", serviceData.startDate, "endDate:", serviceData.endDate);
         } catch (error) {
           return res.status(400).json({ message: "Formato de data inválido" });
         }
         // Remover o campo date original
         delete serviceData.date;
       } else {
-        console.log("DEBUG: Campo date não encontrado, mas deveria estar presente!");
         return res.status(400).json({ message: "Data de início e fim são obrigatórias" });
       }
 
@@ -3028,6 +3034,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description, 
         price, 
         date, 
+        startDate,
+        endDate,
         status, 
         materialType 
       } = req.body;

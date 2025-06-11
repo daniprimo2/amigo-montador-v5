@@ -247,15 +247,12 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
       setIsSubmitting(true);
       
-      // Formatar as datas para exibição
-      const formattedStartDate = formatDateForDisplay(editedService.startDate);
-      const formattedEndDate = formatDateForDisplay(editedService.endDate);
-      
-      // Preparar dados para envio
+      // Preparar dados para envio - usar as datas no formato ISO direto
       const serviceData = {
         title: editedService.title,
         description: editedService.description,
-        date: `${formattedStartDate} - ${formattedEndDate}`,
+        startDate: editedService.startDate, // Formato YYYY-MM-DD do input
+        endDate: editedService.endDate,     // Formato YYYY-MM-DD do input
         price: extractNumericValue(editedService.price),
         materialType: editedService.materialType,
         filesToDelete: filesToDelete
@@ -271,7 +268,8 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
         // Adicionar dados do serviço
         formData.append('title', editedService.title);
         formData.append('description', editedService.description || '');
-        formData.append('date', `${formattedStartDate} - ${formattedEndDate}`);
+        formData.append('startDate', editedService.startDate);
+        formData.append('endDate', editedService.endDate);
         formData.append('price', extractNumericValue(editedService.price).toString());
         formData.append('materialType', editedService.materialType || '');
         
