@@ -802,7 +802,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-primary">Termos de Serviço e Política de Privacidade</a>.
+                    Eu concordo com os <a href="#" className="text-[#0000FF]">Termos de Serviço e Política de Privacidade</a>.
                   </FormLabel>
                   <FormMessage />
                 </div>
