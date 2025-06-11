@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { QrCode, Copy, Check, AlertCircle, CreditCard, DollarSign } from 'lucide-react';
 import { RatingDialog } from '@/components/rating/rating-dialog';
+import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dialog';
 
 interface PixPaymentDialogProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function PixPaymentDialog({
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [currentToken, setCurrentToken] = useState<string>('');
   const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [showMandatoryRating, setShowMandatoryRating] = useState(false);
   const { toast } = useToast();
 
   // The amount should be displayed exactly as stored in the service

@@ -3762,13 +3762,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("[PIX Webhook] Pagamento confirmado para serviço:", serviceId);
         
         // Atualizar status do serviço para finalizado quando pagamento for confirmado
+        // IMPORTANTE: Marcar como requerendo avaliações mútuas obrigatórias
         await storage.updateService(serviceId, {
           paymentStatus: 'completed',
           status: 'completed',
           completedAt: new Date(),
           ratingRequired: true,
           storeRatingCompleted: false,
-          assemblerRatingCompleted: false
+          assemblerRatingCompleted: false,
+          bothRatingsCompleted: false
         });
         
         // Buscar informações do pagador (lojista que está pagando)
