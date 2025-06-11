@@ -404,29 +404,24 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="w-full">
-          <div className="relative pt-1">
-            <div className="flex mb-2 items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-black bg-gray-100">
-                  Passo 3 de 3
-                </span>
-              </div>
-            </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-muted">
-              <div style={{width: '100%'}} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-black"></div>
-            </div>
-          </div>
+    <div className="auth-container">
+      <div className="text-center mb-8">
+        <p className="text-sm text-gray-500 mb-4">
+          ETAPA 3 DE 3
+        </p>
+        <div className="w-full bg-gray-200 rounded-full h-1 mb-6">
+          <div className="bg-gray-800 h-1 rounded-full" style={{width: '100%'}}></div>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Documentação
+        </h1>
+        <p className="text-gray-600">
+          Faça upload dos documentos necessários para verificação.
+        </p>
       </div>
       
-      <h2 className="text-xl font-semibold text-foreground mb-1">Documentação</h2>
-      <p className="text-sm text-muted-foreground mb-6">Faça upload dos documentos necessários para verificação.</p>
-      
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="form-field">
             <FormLabel>RG/CNH (frente)</FormLabel>
             <FileUpload 

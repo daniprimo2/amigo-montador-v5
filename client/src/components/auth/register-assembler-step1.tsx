@@ -200,11 +200,17 @@ export const RegisterAssemblerStep1: React.FC<RegisterAssemblerStep1Props> = ({
   return (
     <div className="auth-container">
       <div className="text-center mb-8">
+        <p className="text-sm text-gray-500 mb-4">
+          ETAPA 1 DE 3
+        </p>
+        <div className="w-full bg-gray-200 rounded-full h-1 mb-6">
+          <div className="bg-gray-800 h-1 rounded-full" style={{width: '33.33%'}}></div>
+        </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Cadastro de Montador
         </h1>
         <p className="text-gray-600">
-          Etapa 1 de 3: Dados Pessoais
+          Dados Pessoais
         </p>
       </div>
 
