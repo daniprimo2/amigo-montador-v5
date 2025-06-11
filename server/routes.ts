@@ -3207,6 +3207,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedService = await storage.updateService(serviceId, {
         status: 'completed',
         ratingRequired: true,
+        storeRatingCompleted: false,
+        assemblerRatingCompleted: false,
+        bothRatingsCompleted: false,
         completedAt: new Date()
       });
       
