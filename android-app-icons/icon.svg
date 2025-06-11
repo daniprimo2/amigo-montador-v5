@@ -1,25 +1,23 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Fundo circular -->
-  <circle cx="256" cy="256" r="240" fill="#2563eb" stroke="#1d4ed8" stroke-width="8"/>
+  <!-- Fundo circular branco -->
+  <circle cx="256" cy="256" r="240" fill="#ffffff" stroke="#e5e7eb" stroke-width="8"/>
   
-  <!-- Ferramenta (chave de fenda) -->
-  <rect x="220" y="120" width="72" height="8" rx="4" fill="#ffffff" transform="rotate(45 256 256)"/>
-  <rect x="220" y="120" width="8" height="72" rx="4" fill="#ffffff" transform="rotate(45 256 256)"/>
+  <!-- Logo A (Amigo) -->
+  <g transform="translate(256,180) scale(3.5)">
+    <path d="M-25,-15 L-12,-40 L12,-40 L25,-15 L18,-15 L12,-25 L-12,-25 L-18,-15 Z" fill="#2d3748"/>
+    <rect x="-8" y="-30" width="16" height="3" fill="#2d3748"/>
+  </g>
   
-  <!-- Martelo -->
-  <rect x="180" y="200" width="120" height="16" rx="8" fill="#fbbf24"/>
-  <rect x="240" y="160" width="32" height="80" rx="16" fill="#f59e0b"/>
+  <!-- Logo M (Montador) -->
+  <g transform="translate(256,270) scale(2.8)">
+    <path d="M-30,0 L-20,-20 L-8,0 L8,0 L20,-20 L30,0 L22,0 L15,-12 L8,0 L-8,0 L-15,-12 L-22,0 Z" fill="#9ca3af"/>
+  </g>
   
-  <!-- Móvel (representando montagem) -->
-  <rect x="320" y="280" width="80" height="60" rx="8" fill="#374151" stroke="#1f2937" stroke-width="2"/>
-  <rect x="340" y="300" width="40" height="20" rx="4" fill="#6b7280"/>
-  
-  <!-- Pessoa/montador (ícone simplificado) -->
-  <circle cx="160" cy="320" r="24" fill="#fbbf24"/>
-  <rect x="140" y="350" width="40" height="60" rx="20" fill="#374151"/>
-  <rect x="135" y="360" width="20" height="40" rx="10" fill="#f59e0b"/>
-  <rect x="165" y="360" width="20" height="40" rx="10" fill="#f59e0b"/>
-  
-  <!-- Texto MF (MontaFácil) -->
-  <text x="256" y="420" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#ffffff">MF</text>
+  <!-- Texto -->
+  <text x="256" y="360" text-anchor="middle" fill="#2d3748" font-family="Arial, sans-serif" font-size="24" font-weight="300">
+    amigo
+  </text>
+  <text x="256" y="390" text-anchor="middle" fill="#2d3748" font-family="Arial, sans-serif" font-size="28" font-weight="bold">
+    montador
+  </text>
 </svg>
