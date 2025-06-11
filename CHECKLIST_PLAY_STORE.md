@@ -48,14 +48,14 @@
 
 ### Textos Sugeridos
 
-**Título:** MontaFácil
+**Título:** AmigoMontador
 
 **Descrição Curta:** 
 "Conecta profissionais de lojas de móveis com montadores especializados"
 
 **Descrição Completa:**
 ```
-O MontaFácil é a plataforma que conecta profissionais de lojas de móveis com montadores especializados no Brasil.
+O AmigoMontador é a plataforma que conecta profissionais de lojas de móveis com montadores especializados no Brasil.
 
 Principais funcionalidades:
 • Busca inteligente por montadores próximos
@@ -77,7 +77,7 @@ Para Montadores:
 • Receba pagamentos seguros
 • Construa sua reputação
 
-Transforme a experiência de montagem de móveis com o MontaFácil!
+Transforme a experiência de montagem de móveis com o AmigoMontador!
 ```
 
 **Tags:** montagem, móveis, serviços, profissionais, brasil
@@ -90,7 +90,7 @@ Transforme a experiência de montagem de móveis com o MontaFácil!
 
 # 2. Criar keystore
 keytool -genkey -v -keystore android/app/keystore.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 -alias montafacil
+  -keyalg RSA -keysize 2048 -validity 10000 -alias amigomontador
 
 # 3. Abrir no Android Studio
 npx cap open android
