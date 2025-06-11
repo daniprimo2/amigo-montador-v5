@@ -10,6 +10,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
 import { 
   Dialog,
@@ -34,6 +35,7 @@ export const LoginForm: React.FC = () => {
   const [, navigate] = useLocation();
   const [resetEmail, setResetEmail] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -65,7 +67,7 @@ export const LoginForm: React.FC = () => {
     );
   };
 
-  const handlePasswordReset = () => {
+  const handlePasswordReset = async () => {
     if (!resetEmail) {
       toast({
         title: "Atenção",
@@ -75,14 +77,54 @@ export const LoginForm: React.FC = () => {
       return;
     }
 
-    // Simulando o envio do email de redefinição
-    toast({
-      title: "Email enviado",
-      description: "Instruções para redefinição de senha foram enviadas para seu email.",
-    });
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, digite um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsResetDialogOpen(false);
-    setResetEmail("");
+    setIsResetting(true);
+
+    try {
+      const response = await fetch('/api/password-reset/request', {
+        method: 'POST',
+        body: JSON.stringify({ email: resetEmail }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Email enviado",
+          description: data.message,
+        });
+        setIsResetDialogOpen(false);
+        setResetEmail("");
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Erro",
+          description: errorData.message || "Erro ao enviar email de recuperação.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao solicitar recuperação de senha:', error);
+      toast({
+        title: "Erro",
+        description: "Erro de conexão. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -177,9 +219,10 @@ export const LoginForm: React.FC = () => {
                   <Button 
                     type="button" 
                     onClick={handlePasswordReset}
-                    className="bg-gray-600 hover:bg-gray-700 text-white"
+                    disabled={isResetting}
+                    className="bg-gray-600 hover:bg-gray-700 text-white disabled:opacity-50"
                   >
-                    Enviar
+                    {isResetting ? 'Enviando...' : 'Enviar'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
