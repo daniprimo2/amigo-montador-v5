@@ -121,10 +121,11 @@ export function PixPaymentDialog({
           description: "Seu pagamento PIX foi confirmado automaticamente. Agora você deve avaliar o montador.",
         });
         
-        // Show rating dialog immediately after payment confirmation
-        if (assemblerInfo) {
-          setShowRatingDialog(true);
-        }
+        // Show mandatory rating dialog immediately after payment confirmation
+        setTimeout(() => {
+          onClose();
+          setShowMandatoryRating(true);
+        }, 2000);
       }
     },
     onError: (error) => {
@@ -265,9 +266,10 @@ export function PixPaymentDialog({
         queryClient.invalidateQueries({ queryKey: ['/api/messages', serviceId] });
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         
-        // Close dialog after success
+        // Show mandatory rating dialog immediately after payment confirmation
         setTimeout(() => {
           onClose();
+          setShowMandatoryRating(true);
         }, 2000);
       }
     },
@@ -549,25 +551,16 @@ export function PixPaymentDialog({
       </DialogContent>
     </Dialog>
     
-    {/* Rating Dialog - Shows immediately after payment confirmation */}
+    {/* Mandatory Rating Dialog - Shows immediately after payment confirmation */}
     {assemblerInfo && (
-      <RatingDialog
-        open={showRatingDialog}
-        onOpenChange={setShowRatingDialog}
+      <MandatoryRatingDialog
+        isOpen={showMandatoryRating}
+        onClose={() => setShowMandatoryRating(false)}
         serviceId={serviceId}
-        toUserId={assemblerInfo.userId}
-        toUserName={assemblerInfo.name}
-        serviceName={serviceTitle}
-        onSuccess={() => {
-          setShowRatingDialog(false);
-          queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
-          onClose(); // Close the PIX dialog after rating is complete
-          toast({
-            title: "Serviço Finalizado!",
-            description: "Pagamento confirmado e avaliação realizada com sucesso.",
-          });
-        }}
+        serviceTitle={serviceTitle}
+        otherUserName={assemblerInfo.name}
+        otherUserType="montador"
+        currentUserType="lojista"
       />
     )}
     </>

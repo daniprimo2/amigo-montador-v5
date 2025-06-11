@@ -2875,6 +2875,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
   
+  // Verificar serviços com avaliações obrigatórias pendentes
+  app.get("/api/services/mandatory-ratings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+      
+      const userId = req.user!.id;
+      const userType = req.user!.userType;
+      
+      // Buscar serviços que requerem avaliação mútua onde este usuário ainda não avaliou
+      let mandatoryRatingServices = [];
+      
+      if (userType === 'lojista') {
+        // Para lojistas: buscar serviços completados que requerem avaliação e onde o lojista ainda não avaliou
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          const serviceList = await db
+            .select()
+            .from(services)
+            .where(
+              and(
+                eq(services.storeId, store.id),
+                eq(services.status, 'completed'),
+                eq(services.ratingRequired, true),
+                eq(services.storeRatingCompleted, false)
+              )
+            );
+          
+          // Para cada serviço, buscar informações do montador
+          for (const service of serviceList) {
+            const acceptedApps = await db
+              .select({ assemblerId: applications.assemblerId })
+              .from(applications)
+              .where(
+                and(
+                  eq(applications.serviceId, service.id),
+                  eq(applications.status, 'accepted')
+                )
+              )
+              .limit(1);
+            
+            if (acceptedApps.length > 0) {
+              const assembler = await storage.getAssemblerById(acceptedApps[0].assemblerId);
+              const assemblerUser = assembler ? await storage.getUser(assembler.userId) : null;
+              
+              if (assemblerUser) {
+                mandatoryRatingServices.push({
+                  serviceId: service.id,
+                  serviceName: service.title,
+                  otherUserName: assemblerUser.name,
+                  otherUserType: 'montador'
+                });
+              }
+            }
+          }
+        }
+      } else if (userType === 'montador') {
+        // Para montadores: buscar serviços onde o montador foi aceito, está completo e ainda não avaliou
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          const acceptedApplications = await db
+            .select({ serviceId: applications.serviceId })
+            .from(applications)
+            .where(
+              and(
+                eq(applications.assemblerId, assembler.id),
+                eq(applications.status, 'accepted')
+              )
+            );
+          
+          for (const app of acceptedApplications) {
+            const service = await storage.getServiceById(app.serviceId);
+            if (service && 
+                service.status === 'completed' && 
+                service.ratingRequired && 
+                !service.assemblerRatingCompleted) {
+              
+              const store = await storage.getStore(service.storeId);
+              const storeUser = store ? await storage.getUser(store.userId) : null;
+              
+              if (storeUser) {
+                mandatoryRatingServices.push({
+                  serviceId: service.id,
+                  serviceName: service.title,
+                  otherUserName: storeUser.name,
+                  otherUserType: 'lojista'
+                });
+              }
+            }
+          }
+        }
+      }
+      
+      res.json({
+        pendingRatings: mandatoryRatingServices,
+        hasPendingRatings: mandatoryRatingServices.length > 0
+      });
+    } catch (error) {
+      console.error("Erro ao buscar avaliações obrigatórias:", error);
+      res.status(500).json({ message: "Erro ao buscar avaliações obrigatórias" });
+    }
+  });
+  
   // Obter avaliações de um serviço
   app.get("/api/services/:id/ratings", async (req, res) => {
     try {
