@@ -128,11 +128,10 @@ export const RankingSection: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center justify-center w-10 h-10">
-                    <Badge className={getRankingBadgeColor(position)}>
+                    <Badge className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent hover:bg-primary/80 bg-[#ffffff] text-[#cccccc]">
                       {position <= 3 ? getRankingIcon(position) : `#${position}`}
                     </Badge>
                   </div>
-                  
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
                       <h4 
@@ -170,7 +169,6 @@ export const RankingSection: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
                   <div className="flex items-center space-x-2">
                     <RatingStars rating={item.rating} size="sm" />
                     <span className="text-sm font-medium text-gray-700">
