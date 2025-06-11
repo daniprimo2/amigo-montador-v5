@@ -1,9 +1,9 @@
 # 📱 Guia Completo - Publicação na Play Store
-### MontaFácil - Aplicativo Android
+### AmigoMontador - Aplicativo Android
 
 ## 🎯 Visão Geral
 
-Este guia te ajudará a publicar o aplicativo MontaFácil na Google Play Store usando os arquivos gerados.
+Este guia te ajudará a publicar o aplicativo AmigoMontador na Google Play Store usando os arquivos gerados.
 
 ---
 
@@ -43,12 +43,12 @@ Este script irá:
 ```bash
 keytool -genkey -v -keystore android/app/keystore.jks \
   -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias montafacil
+  -alias amigomontador
 ```
 
 ### Preencha as informações solicitadas:
 - **Nome e sobrenome:** Seu nome ou da empresa
-- **Unidade organizacional:** MontaFácil
+- **Unidade organizacional:** AmigoMontador
 - **Organização:** Sua empresa
 - **Cidade:** Sua cidade
 - **Estado:** Seu estado  
@@ -89,7 +89,7 @@ MYAPP_RELEASE_KEY_PASSWORD=sua_senha_chave
 ### 2. Configurar Keystore:
 - **Key store path:** Selecione o arquivo `android/app/keystore.jks`
 - **Key store password:** Digite a senha do keystore
-- **Key alias:** montafacil
+- **Key alias:** amigomontador
 - **Key password:** Digite a senha da chave
 - Clique em **Next**
 
@@ -130,7 +130,7 @@ O arquivo será gerado em: `android/app/release/app-release.aab`
 
 ### 2. Criar novo aplicativo:
 - Clique em **"Criar aplicativo"**
-- **Nome:** MontaFácil
+- **Nome:** AmigoMontador
 - **Idioma padrão:** Português (Brasil)
 - **Tipo:** Aplicativo
 - **Pago ou gratuito:** Escolha conforme seu modelo
@@ -138,11 +138,11 @@ O arquivo será gerado em: `android/app/release/app-release.aab`
 ### 3. Configurar informações básicas:
 
 #### **Detalhes do aplicativo:**
-- **Título:** MontaFácil
+- **Título:** AmigoMontador
 - **Descrição curta:** "Conecta profissionais de lojas de móveis com montadores especializados"
 - **Descrição completa:** 
 ```
-O MontaFácil é a plataforma que conecta profissionais de lojas de móveis com montadores especializados no Brasil. 
+O AmigoMontador é a plataforma que conecta profissionais de lojas de móveis com montadores especializados no Brasil. 
 
 🔧 Principais funcionalidades:
 • Busca inteligente por montadores próximos
@@ -164,7 +164,7 @@ O MontaFácil é a plataforma que conecta profissionais de lojas de móveis com 
 • Receba pagamentos seguros
 • Construa sua reputação
 
-Transforme a experiência de montagem de móveis com o MontaFácil!
+Transforme a experiência de montagem de móveis com o AmigoMontador!
 ```
 
 #### **Categoria:** Produtividade

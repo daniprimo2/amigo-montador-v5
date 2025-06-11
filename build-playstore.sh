@@ -39,7 +39,7 @@ echo "✅ Build da web concluído"
 # Inicializar Capacitor
 echo "⚙️ Configurando Capacitor..."
 if [ ! -f "capacitor.config.ts" ]; then
-    npx cap init "MontaFácil" "com.montafacil.app" --web-dir="client/dist"
+    npx cap init "AmigoMontador" "com.amigomontador.app" --web-dir="client/dist"
 fi
 
 # Adicionar plataforma Android
@@ -60,7 +60,7 @@ echo "📋 PRÓXIMOS PASSOS:"
 echo ""
 echo "1. 🔑 Criar keystore:"
 echo "   keytool -genkey -v -keystore android/app/keystore.jks \\"
-echo "     -keyalg RSA -keysize 2048 -validity 10000 -alias montafacil"
+echo "     -keyalg RSA -keysize 2048 -validity 10000 -alias amigomontador"
 echo ""
 echo "2. ⚙️ Configurar senhas no arquivo gradle.properties"
 echo ""
