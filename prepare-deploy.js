@@ -3,30 +3,31 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-console.log('Preparing deployment build...');
+console.log('Construindo deploy de produção...');
 
-// Clean and create dist directory
+// Limpar e criar diretório dist
 if (fs.existsSync('dist')) {
   fs.rmSync('dist', { recursive: true, force: true });
 }
 fs.mkdirSync('dist', { recursive: true });
 
 try {
-  // 1. Compile TypeScript server to dist/index.js - CRITICAL REQUIREMENT
-  console.log('Compiling TypeScript server...');
+  // 1. Compilar servidor TypeScript para dist/index.js
+  console.log('Compilando servidor...');
   execSync(`npx esbuild server/index.ts \
     --platform=node \
     --target=node18 \
     --format=esm \
     --bundle \
     --packages=external \
-    --outfile=dist/index.js`, 
+    --outfile=dist/index.js \
+    --define:process.env.NODE_ENV='"production"' \
+    --minify`, 
     { stdio: 'inherit' }
   );
 
-  // Verify the compiled file exists - this addresses the main deployment issue
   if (!fs.existsSync('dist/index.js')) {
-    throw new Error('CRITICAL: Failed to create dist/index.js');
+    throw new Error('ERRO CRÍTICO: dist/index.js não foi criado');
   }
 
   // 2. Create production frontend
