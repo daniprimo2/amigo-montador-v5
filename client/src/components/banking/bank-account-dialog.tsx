@@ -49,7 +49,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
       holderDocumentType: 'cpf',
       holderDocumentNumber: '',
       pixKey: '',
-      pixKeyType: 'cpf_cnpj',
+      pixKeyType: 'cpf',
     },
   });
 
@@ -65,7 +65,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
         holderDocumentType: account.holderDocumentType as 'cpf' | 'cnpj',
         holderDocumentNumber: account.holderDocumentNumber,
         pixKey: account.pixKey ?? '',
-        pixKeyType: (account.pixKeyType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid') ?? 'cpf_cnpj',
+        pixKeyType: 'cpf',
       });
     } else {
       form.reset({
@@ -77,19 +77,17 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
         holderDocumentType: 'cpf',
         holderDocumentNumber: '',
         pixKey: '',
-        pixKeyType: 'cpf_cnpj',
+        pixKeyType: 'cpf',
       });
     }
   }, [account, form]);
 
-  // Auto-detectar tipo de chave PIX
+  // Auto-formatação da chave PIX (CPF)
   const handlePixKeyChange = (value: string) => {
-    if (value && pixKeyAutoDetect) {
-      const detectedType = detectPixKeyType(value);
-      if (detectedType) {
-        form.setValue('pixKeyType', detectedType as 'cpf_cnpj' | 'email' | 'telefone' | 'uuid');
-      }
-    }
+    // Formatar automaticamente como CPF
+    const cleanValue = value.replace(/[^\d]/g, '');
+    const formattedValue = formatCPF(cleanValue);
+    return formattedValue;
   };
 
   const createMutation = useMutation({
@@ -436,22 +434,10 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                           
                           let formattedValue = value;
                           
-                          // Formatar conforme o tipo
-                          if (pixKeyType === 'cpf_cnpj') {
+                          // Formatar como CPF
+                          if (pixKeyType === 'cpf') {
                             const clean = value.replace(/\D/g, '');
-                            if (clean.length <= 11) {
-                              formattedValue = formatCPF(value);
-                            } else {
-                              formattedValue = formatCNPJ(value);
-                            }
-                          } else if (pixKeyType === 'telefone') {
-                            formattedValue = formatPhone(value);
-                          } else if (pixKeyType === 'email') {
-                            // Manter formato original para email
-                            formattedValue = value.toLowerCase();
-                          } else if (pixKeyType === 'uuid') {
-                            // Manter formato original para UUID
-                            formattedValue = value.toLowerCase();
+                            formattedValue = formatCPF(clean);
                           }
                           
                           field.onChange(formattedValue);
@@ -520,30 +506,18 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
 
 function getPixKeyPlaceholder(pixKeyType: string): string {
   switch (pixKeyType) {
-    case 'cpf_cnpj':
-      return '000.000.000-00 ou 00.000.000/0000-00';
-    case 'email':
-      return 'exemplo@dominio.com';
-    case 'telefone':
-      return '(11) 99999-9999';
-    case 'uuid':
-      return '00000000-0000-0000-0000-000000000000';
+    case 'cpf':
+      return '000.000.000-00';
     default:
-      return 'Digite sua chave PIX';
+      return '000.000.000-00';
   }
 }
 
 function getPixKeyMaxLength(pixKeyType: string): number {
   switch (pixKeyType) {
-    case 'cpf_cnpj':
-      return 18; // CNPJ formatado: 00.000.000/0000-00
-    case 'email':
-      return 77; // Máximo permitido para email PIX
-    case 'telefone':
-      return 15; // (00) 00000-0000
-    case 'uuid':
-      return 36; // 00000000-0000-0000-0000-000000000000
+    case 'cpf':
+      return 14; // CPF formatado: 000.000.000-00
     default:
-      return 77;
+      return 14;
   }
 }
