@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Star, Trash2, AlertTriangle, PencilIcon, FileText, MessageSquare } from 'lucide-react';
+import { CalendarIcon, DollarSign, ChevronRight, CheckSquare, Trash2, AlertTriangle, PencilIcon, FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -162,12 +162,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
     }
   };
   
-  const handleRateClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onRateClick) {
-      onRateClick(service);
-    }
-  };
+
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -308,17 +303,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           <div className="flex flex-wrap gap-1 sm:gap-2">
             {/* O botão "Montagem Concluída" foi movido para a interface de chat */}
             
-            {service.status === 'completed' && service.assembler && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="text-yellow-600 border-yellow-300 hover:bg-yellow-50 text-xs sm:text-sm" 
-                onClick={handleRateClick}
-              >
-                <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 fill-yellow-500" />
-                <span className="hidden sm:inline">Avaliar</span>
-              </Button>
-            )}
+
             
             {service.status === 'open' && (
               <>
