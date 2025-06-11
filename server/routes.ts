@@ -3076,12 +3076,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.price = ensureBrazilianFormat(price);
       }
       
-      // Processar campo 'date' para startDate/endDate
-      if (date !== undefined) {
+      // Processar datas - priorizar startDate/endDate diretos, caso contrário usar campo 'date'
+      if (startDate !== undefined && endDate !== undefined) {
+        // Converter strings de data ISO para objetos Date
+        try {
+          updateData.startDate = new Date(startDate);
+          updateData.endDate = new Date(endDate);
+          
+          if (isNaN(updateData.startDate.getTime()) || isNaN(updateData.endDate.getTime())) {
+            return res.status(400).json({ message: "Formato de data inválido" });
+          }
+        } catch (error) {
+          return res.status(400).json({ message: "Formato de data inválido" });
+        }
+      } else if (date !== undefined) {
+        // Fallback para campo 'date' combinado
         const { processDateField } = await import('./utils/date-converter.js');
-        const { startDate, endDate } = processDateField(date);
-        updateData.startDate = startDate;
-        updateData.endDate = endDate;
+        const { startDate: parsedStartDate, endDate: parsedEndDate } = processDateField(date);
+        updateData.startDate = parsedStartDate;
+        updateData.endDate = parsedEndDate;
       }
       
       if (materialType !== undefined) {
