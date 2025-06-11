@@ -4,7 +4,7 @@ import { storage } from "./storage.js";
 import { setupAuth } from "./auth.js";
 import { db } from "./db.js";
 import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount } from "../shared/schema.js";
+import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount, type Application } from "../shared/schema.js";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';
@@ -1419,6 +1419,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else {
         return res.status(403).json({ message: "Tipo de usuário não autorizado" });
+      }
+
+      // Verificar se já existem avaliações pendentes que impedem a finalização
+      const userId = req.user!.id;
+      const userType = req.user!.userType;
+      
+      // Buscar serviços completados que requerem avaliação do usuário atual
+      let pendingRatings: any[] = [];
+
+      if (userType === 'lojista') {
+        // Lojista precisa avaliar montadores
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          const completedServices = await storage.getServicesByStoreId(store.id, 'completed');
+          
+          for (const completedService of completedServices) {
+            // Verificar se precisa de avaliação do lojista
+            if (completedService.ratingRequired && !completedService.storeRatingCompleted) {
+              // Buscar montador que trabalhou no serviço
+              const acceptedApplications = await db
+                .select({ assemblerId: applications.assemblerId })
+                .from(applications)
+                .where(
+                  and(
+                    eq(applications.serviceId, completedService.id),
+                    eq(applications.status, 'accepted')
+                  )
+                )
+                .limit(1);
+
+              if (acceptedApplications.length > 0) {
+                const assembler = await storage.getAssemblerById(acceptedApplications[0].assemblerId);
+                if (assembler) {
+                  const assemblerUser = await storage.getUser(assembler.userId);
+                  if (assemblerUser) {
+                    pendingRatings.push({
+                      serviceId: completedService.id,
+                      serviceName: completedService.title,
+                      otherUserName: assemblerUser.name,
+                      userType: 'montador'
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else if (userType === 'montador') {
+        // Montador precisa avaliar lojistas
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          const assemblerApplications = await db
+            .select()
+            .from(applications)
+            .where(
+              and(
+                eq(applications.assemblerId, assembler.id),
+                eq(applications.status, 'accepted')
+              )
+            );
+
+          for (const application of assemblerApplications) {
+            const completedService = await storage.getServiceById(application.serviceId);
+            if (completedService && completedService.status === 'completed' && completedService.ratingRequired && !completedService.assemblerRatingCompleted) {
+              const store = await storage.getStore(completedService.storeId);
+              if (store) {
+                const storeUser = await storage.getUser(store.userId);
+                if (storeUser) {
+                  pendingRatings.push({
+                    serviceId: completedService.id,
+                    serviceName: completedService.title,
+                    otherUserName: storeUser.name,
+                    userType: 'lojista'
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Se há avaliações pendentes, impedir a finalização
+      if (pendingRatings.length > 0) {
+        return res.status(400).json({ 
+          message: "A avaliação do serviço é obrigatória antes que ele possa ser alterado para o status de Finalizado. Complete todas as avaliações pendentes primeiro.",
+          pendingRatings: pendingRatings,
+          requiresRating: true
+        });
       }
 
       // Atualizar status para 'completed', gravar data de finalização e marcar como requerendo avaliação

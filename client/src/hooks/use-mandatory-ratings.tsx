@@ -19,8 +19,10 @@ export const useMandatoryRatings = () => {
 
   const { data, isLoading, refetch } = useQuery<PendingRatingsResponse>({
     queryKey: ['/api/services/pending-ratings'],
-    enabled: false, // Desabilitar temporariamente para evitar travamentos
-    retry: false, // Não tentar novamente em caso de erro
+    enabled: true, // Habilitar para aplicar avaliações obrigatórias
+    retry: 1, // Tentar uma vez em caso de erro
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Verificar a cada 30 segundos
   });
 
   const pendingRatings = data?.pendingRatings || [];
