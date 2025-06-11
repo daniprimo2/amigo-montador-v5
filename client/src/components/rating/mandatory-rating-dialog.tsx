@@ -35,7 +35,20 @@ export function MandatoryRatingDialog({
 
   const submitRatingMutation = useMutation({
     mutationFn: async (data: { rating: number; comment: string }) => {
-      return apiRequest(`/api/services/${serviceId}/rate`, 'POST', data);
+      const response = await fetch(`/api/services/${serviceId}/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao enviar avaliação');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -44,7 +57,7 @@ export function MandatoryRatingDialog({
       });
       
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/services/mandatory-ratings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       
       // Reset form

@@ -2876,7 +2876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // Verificar serviços com avaliações obrigatórias pendentes
-  app.get("/api/services/mandatory-ratings", async (req, res) => {
+  app.get("/api/mandatory-ratings", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });

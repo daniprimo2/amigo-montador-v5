@@ -1843,6 +1843,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           onSuccess={handleRatingCompleted}
         />
       )}
+      
+      {/* Verificador de Avaliações Obrigatórias */}
+      <MandatoryRatingChecker currentUserType="montador" />
     </div>
   );
 };
