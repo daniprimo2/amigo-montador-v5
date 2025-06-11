@@ -185,7 +185,8 @@ export const RegisterStoreStep1: React.FC<RegisterStoreStep1Props> = ({
           </div>
         </div>
       </div>
-      <h2 className="text-xl font-semibold text-foreground mb-1">Dados Pessoais</h2>
+      <h2 className="text-xl font-semibold text-foreground mb-1">Dados Pessoais do lojista
+</h2>
       <p className="text-sm text-muted-foreground mb-6">Preencha seus dados pessoais para continuar.</p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
