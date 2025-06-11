@@ -847,41 +847,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   };
   
   // Função para lidar com o clique no botão de avaliação
-  const handleRateClick = async (service: any) => {
-    try {
-      // Buscar informações completas do serviço para ter o userId da loja
-      const response = await fetch(`/api/services/${service.id}`);
-      if (!response.ok) {
-        throw new Error('Erro ao buscar informações do serviço');
-      }
-      const serviceData = await response.json();
-      
-      // Criar objeto de serviço com informações completas
-      const completeService = {
-        ...service,
-        store: serviceData.store || service.store
-      };
-      
-      setSelectedServiceForRating(completeService);
-      setIsRatingDialogOpen(true);
-      
-      // Mostrar notificação sobre a avaliação obrigatória
-      toast({
-        title: '🌟 Avaliação Necessária',
-        description: 'É necessário avaliar este serviço antes de continuar usando o aplicativo.',
-        duration: 8000,
-        variant: 'destructive',
-        className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
-      });
-    } catch (error) {
-      console.error('Erro ao abrir diálogo de avaliação:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível abrir o diálogo de avaliação. Tente novamente.',
-        variant: 'destructive'
-      });
-    }
-  };
+  // Ratings are now handled by the mandatory rating system after payment confirmation
 
   // Renderiza diferentes seções com base na aba selecionada
   const renderHomeSection = () => (
@@ -1269,10 +1235,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         })() : '',
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || 'Não especificado',
-                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
-
+                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined
                       }}
-                      onRateClick={handleRateClick}
                       onChatClick={(serviceId) => {
                         setSelectedChatService(serviceId);
                         setDashboardSection('chat');
