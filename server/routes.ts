@@ -3865,6 +3865,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isCompleted) {
         console.log("[PIX Webhook] Pagamento confirmado para serviço:", serviceId);
         
+        // Buscar e aceitar automaticamente a primeira candidatura pendente
+        const pendingApplications = await db
+          .select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'pending')
+            )
+          )
+          .limit(1);
+        
+        if (pendingApplications.length > 0) {
+          const applicationId = pendingApplications[0].id;
+          await storage.acceptApplication(applicationId, serviceId);
+          console.log("[PIX Webhook] Candidatura automaticamente aceita:", applicationId);
+        }
+        
         // Atualizar status do serviço para finalizado quando pagamento for confirmado
         // IMPORTANTE: Marcar como requerendo avaliações mútuas obrigatórias
         await storage.updateService(serviceId, {
