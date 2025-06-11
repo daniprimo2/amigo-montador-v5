@@ -123,6 +123,7 @@ export function PixPaymentDialog({
         
         // Show mandatory rating dialog immediately after payment confirmation
         setTimeout(() => {
+          onClose();
           setShowMandatoryRating(true);
         }, 2000);
       }
@@ -267,6 +268,7 @@ export function PixPaymentDialog({
         
         // Show mandatory rating dialog immediately after payment confirmation
         setTimeout(() => {
+          onClose();
           setShowMandatoryRating(true);
         }, 2000);
       }

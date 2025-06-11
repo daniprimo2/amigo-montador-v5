@@ -251,6 +251,22 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             duration: 5000
           });
         }
+      } else if (lastMessage.type === 'payment_confirmed') {
+        console.log("[StoreDashboard] Pagamento confirmado! Agora deve avaliar o montador", lastMessage);
+        
+        // Atualizar todas as listas de serviços
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
+        
+        // Notificar sobre pagamento confirmado e necessidade de avaliação
+        toast({
+          title: '✅ Pagamento Confirmado!',
+          description: 'Seu pagamento foi confirmado. Agora você deve avaliar o montador.',
+          duration: 8000,
+          className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+        });
+        
+        // A avaliação obrigatória será exibida pelo MandatoryRatingChecker
       } else if (lastMessage.type === 'service_completed') {
         console.log("[StoreDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
         

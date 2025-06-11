@@ -402,7 +402,30 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-    } 
+    }
+    // Quando receber confirmação de pagamento PIX
+    else if (lastMessage.type === 'payment_confirmed') {
+      console.log("[AssemblerDashboard] Pagamento confirmado! Agora deve avaliar o lojista", lastMessage);
+      
+      // Atualizar todas as listas de serviços
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
+      
+      // Vibrar no celular se API estiver disponível
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200, 100, 500]);
+      }
+      
+      // Notificar sobre pagamento confirmado e necessidade de avaliação
+      toast({
+        title: '✅ Pagamento Confirmado!',
+        description: 'O pagamento foi confirmado. Agora você deve avaliar o lojista.',
+        duration: 8000,
+        className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+      });
+      
+      // A avaliação obrigatória será exibida pelo MandatoryRatingChecker
+    }
     // Quando receber notificação automática de serviço pelo lojista
     else if (lastMessage.type === 'automatic_notification') {
       console.log("[AssemblerDashboard] Notificação automática recebida do lojista", lastMessage);
