@@ -3070,31 +3070,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Processar campo 'date' para startDate/endDate
       if (date !== undefined) {
-        // Função para converter data DD/MM/YYYY para ISO
-        const convertDateToISO = (dateStr: string): string => {
-          try {
-            const parts = dateStr.trim().split('/');
-            if (parts.length === 3) {
-              const [day, month, year] = parts;
-              return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`).toISOString();
-            }
-            return new Date(dateStr).toISOString();
-          } catch {
-            return new Date().toISOString();
-          }
-        };
-
-        if (date.includes(' - ')) {
-          // Formato "DD/MM/YYYY - DD/MM/YYYY"
-          const [startDateStr, endDateStr] = date.split(' - ').map((d: string) => d.trim());
-          updateData.startDate = convertDateToISO(startDateStr);
-          updateData.endDate = convertDateToISO(endDateStr);
-        } else {
-          // Formato único "DD/MM/YYYY"
-          const isoDate = convertDateToISO(date);
-          updateData.startDate = isoDate;
-          updateData.endDate = isoDate;
-        }
+        const { processDateField } = await import('./utils/date-converter.js');
+        const { startDate, endDate } = processDateField(date);
+        updateData.startDate = startDate;
+        updateData.endDate = endDate;
       }
       
       if (materialType !== undefined) {
@@ -3191,31 +3170,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Processar campo 'date' para startDate/endDate
       if (date !== undefined) {
-        // Função para converter data DD/MM/YYYY para ISO
-        const convertDateToISO = (dateStr: string): string => {
-          try {
-            const parts = dateStr.trim().split('/');
-            if (parts.length === 3) {
-              const [day, month, year] = parts;
-              return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`).toISOString();
-            }
-            return new Date(dateStr).toISOString();
-          } catch {
-            return new Date().toISOString();
-          }
-        };
-
-        if (date.includes(' - ')) {
-          // Formato "DD/MM/YYYY - DD/MM/YYYY"
-          const [startDateStr, endDateStr] = date.split(' - ').map((d: string) => d.trim());
-          updateData.startDate = convertDateToISO(startDateStr);
-          updateData.endDate = convertDateToISO(endDateStr);
-        } else {
-          // Formato único "DD/MM/YYYY"
-          const isoDate = convertDateToISO(date);
-          updateData.startDate = isoDate;
-          updateData.endDate = isoDate;
-        }
+        const { processDateField } = await import('./utils/date-converter.js');
+        const { startDate, endDate } = processDateField(date);
+        updateData.startDate = startDate;
+        updateData.endDate = endDate;
       }
       
       if (price) {
