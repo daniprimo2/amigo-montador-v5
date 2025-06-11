@@ -1238,9 +1238,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || service.type || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
-                        rated: false // Será atualizado pelo backend
+
                       }}
-                      onRateClick={handleRateClick}
                       onChatClick={(serviceId) => {
                         setSelectedChatService(serviceId);
                         setDashboardSection('chat');
@@ -1271,7 +1270,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
-                        rated: !!service.rated
+
                       }}
                       onRateClick={handleRateClick}
                       onChatClick={(serviceId) => {
