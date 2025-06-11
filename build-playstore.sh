@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Script completo para gerar AAB para Play Store
-# MontaFácil - Build para Produção
+# AmigoMontador - Build para Produção
 
-echo "🚀 MontaFácil - Build para Play Store"
+echo "🚀 AmigoMontador - Build para Play Store"
 echo "====================================="
 
 # Verificar Node.js

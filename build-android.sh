@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Script para gerar APK/AAB para a Play Store
-# MontaFácil - Build Android
+# AmigoMontador - Build Android
 
-echo "🚀 Iniciando build do MontaFácil para Android..."
+echo "🚀 Iniciando build do AmigoMontador para Android..."
 
 # Verificar se o Node.js está instalado
 if ! command -v node &> /dev/null; then
@@ -34,7 +34,7 @@ fi
 # Inicializar Capacitor se ainda não foi feito
 if [ ! -f "capacitor.config.ts" ]; then
     echo "⚙️ Inicializando Capacitor..."
-    npx cap init "MontaFácil" "com.montafacil.app" --web-dir="client/dist"
+    npx cap init "AmigoMontador" "com.amigomontador.app" --web-dir="client/dist"
 fi
 
 # Adicionar plataforma Android se ainda não foi adicionada
@@ -80,4 +80,4 @@ echo "3. Gerar o AAB no Android Studio"
 echo "4. Fazer upload na Play Console"
 echo ""
 echo "📋 Para gerar o keystore execute:"
-echo "keytool -genkey -v -keystore android/app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias montafacil"
+echo "keytool -genkey -v -keystore android/app/keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias amigomontador"

@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.montafacil.app',
-  appName: 'MontaFácil',
+  appId: 'com.amigomontador.app',
+  appName: 'AmigoMontador',
   webDir: 'client/dist',
   server: {
     androidScheme: 'https'
@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   android: {
     buildOptions: {
       keystorePath: 'android/app/keystore.jks',
-      keystoreAlias: 'montafacil',
+      keystoreAlias: 'amigomontador',
       keystorePassword: process.env.KEYSTORE_PASSWORD || '',
       keystoreAliasPassword: process.env.KEY_PASSWORD || ''
     }
