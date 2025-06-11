@@ -991,29 +991,27 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className="divide-y">
               {isLoading ? (
                 // Show animated service card skeletons
-                <div className="p-4">
+                (<div className="p-4">
                   <ServiceCardSkeletonGrid count={3} />
-                </div>
+                </div>)
               ) : error ? (
                 // Show error message
-                <div className="p-8 text-center text-red-500">
-                  Erro ao carregar serviços. Por favor, tente novamente.
-                </div>
+                (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
+                                  </div>)
               ) : availableServices.length > 0 ? (
                 // Show all available services
-                availableServices.map(service => (
+                (availableServices.map(service => (
                   <AvailableServiceCard 
                     key={service.id} 
                     service={formatServiceForDisplay(service)} 
                     onApply={handleApply}
                     activeServices={activeServices || []}
                   />
-                ))
+                )))
               ) : (
                 // Show empty state
-                <div className="p-8 text-center text-gray-500">
-                  Nenhum serviço disponível no momento.
-                </div>
+                (<div className="p-8 text-center text-gray-500">Nenhum serviço disponível no momento.
+                                  </div>)
               )}
             </div>
           </div>
@@ -1024,14 +1022,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className="divide-y">
               {isLoading ? (
                 // Show animated service card skeletons
-                <div className="p-4">
+                (<div className="p-4">
                   <ServiceCardSkeletonGrid count={2} />
-                </div>
+                </div>)
               ) : error ? (
                 // Show error message
-                <div className="p-8 text-center text-red-500">
-                  Erro ao carregar serviços. Por favor, tente novamente.
-                </div>
+                (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
+                                  </div>)
               ) : (() => {
                 // Filter services with pending application status
                 const pendingServices = (rawServices || []).filter((service: any) => 
@@ -1040,7 +1037,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 
                 return pendingServices.length > 0 ? (
                   // Show pending services
-                  pendingServices.map(service => (
+                  (pendingServices.map(service => (
                     <div 
                       key={service.id} 
                       className="p-4 hover:bg-gray-50 cursor-pointer"
@@ -1094,14 +1091,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         </div>
                       </div>
                     </div>
-                  ))
+                  )))
                 ) : (
                   // Show empty state
-                  <div className="p-8 text-center text-gray-500">
+                  (<div className="p-8 text-center text-gray-500">
                     <Clock className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                     <p>Nenhuma candidatura aguardando aprovação.</p>
                     <p className="text-sm mt-2">Suas candidaturas aparecerão aqui quando estiverem pendentes.</p>
-                  </div>
+                  </div>)
                 );
               })()}
             </div>
@@ -1113,18 +1110,18 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className="divide-y">
               {isLoadingActiveServices ? (
                 // Show animated service card skeletons
-                <div className="p-4">
+                (<div className="p-4">
                   <ServiceCardSkeletonGrid count={2} />
-                </div>
+                </div>)
               ) : !inProgressServices || inProgressServices.length === 0 ? (
                 // Show empty state
-                <div className="p-8 text-center text-gray-500">
+                (<div className="p-8 text-center text-gray-500">
                   <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p>Nenhum serviço em andamento.</p>
-                </div>
+                </div>)
               ) : (
                 // Show only truly in-progress services (not completed ones)
-                inProgressServices.filter((service: any) => service.status === 'in-progress').map((service: any) => (
+                (inProgressServices.filter((service: any) => service.status === 'in-progress').map((service: any) => (
                   <div 
                     key={service.id} 
                     className="p-4 hover:bg-gray-50 cursor-pointer"
@@ -1183,7 +1180,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       </Button>
                     </div>
                   </div>
-                ))
+                )))
               )}
             </div>
           </div>
@@ -1194,17 +1191,16 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             <div className="divide-y">
               {isLoading || isLoadingActiveServices ? (
                 // Show animated service card skeletons
-                <div className="p-4">
+                (<div className="p-4">
                   <ServiceCardSkeletonGrid count={2} />
-                </div>
+                </div>)
               ) : error ? (
                 // Show error message
-                <div className="p-8 text-center text-red-500">
-                  Erro ao carregar serviços. Por favor, tente novamente.
-                </div>
+                (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
+                                  </div>)
               ) : (completedServicesFromRaw.length > 0 || completedServicesFromActive.length > 0) ? (
                 // Show completed services from both sources
-                <>
+                (<>
                   {/* Show completed services from rawServices */}
                   {completedServicesFromRaw.map(service => (
                     <CompletedServiceCard 
@@ -1236,7 +1232,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       }}
                     />
                   ))}
-                  
                   {/* Show completed chat services */}
                   {completedServicesFromActive.map((service: any) => (
                     <CompletedServiceCard 
@@ -1267,7 +1262,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       }}
                     />
                   ))}
-                  
                   {/* Seção de conversas finalizadas */}
                   {completedServicesFromActive.filter((service: any) => service.applicationStatus).length > 0 && (
                     <div className="p-4 border-t bg-gray-50">
@@ -1298,13 +1292,13 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       </div>
                     </div>
                   )}
-                </>
+                </>)
               ) : (
                 // Show empty state
-                <div className="p-8 text-center text-gray-500">
+                (<div className="p-8 text-center text-gray-500">
                   <CheckCheck className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p>Nenhum serviço concluído ainda.</p>
-                </div>
+                </div>)
               )}
             </div>
           </div>
@@ -1455,34 +1449,32 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         <div className="divide-y">
           {isLoading ? (
             // Show loading skeletons
-            Array(3).fill(0).map((_, index) => (
+            (Array(3).fill(0).map((_, index) => (
               <div key={index} className="p-4">
                 <Skeleton className="h-5 w-3/4 mb-2" />
                 <Skeleton className="h-4 w-1/2 mb-3" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-10 w-full rounded-full" />
               </div>
-            ))
+            )))
           ) : error ? (
             // Show error message
-            <div className="p-8 text-center text-red-500">
-              Erro ao carregar serviços. Por favor, tente novamente.
-            </div>
+            (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
+                          </div>)
           ) : filteredServices.length > 0 ? (
             // Show services
-            filteredServices.map(service => (
+            (filteredServices.map(service => (
               <AvailableServiceCard 
                 key={service.id} 
                 service={service} 
                 onApply={handleApply}
                 activeServices={activeServices || []}
               />
-            ))
+            )))
           ) : (
             // Show empty state
-            <div className="p-8 text-center text-gray-500">
-              Nenhum serviço disponível no momento.
-            </div>
+            (<div className="p-8 text-center text-gray-500">Nenhum serviço disponível no momento.
+                          </div>)
           )}
         </div>
       </div>
@@ -1537,7 +1529,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     return (
       <div className="mt-2">
         <h3 className="text-lg font-semibold mb-4">Conversas e Candidaturas</h3>
-        
         {isLoading || isLoadingActiveServices ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -1564,9 +1555,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         <div>
                           <div className="flex items-center">
                             <h4 className="font-medium">{service.title}</h4>
-                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Aceita
-                            </span>
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Finalizado</span>
                             {service.hasUnreadMessages && (
                               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white animate-pulse">
                                 Nova mensagem
