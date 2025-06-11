@@ -12,6 +12,9 @@ import fileUpload from 'express-fileupload';
 import axios from 'axios';
 import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
 import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
+import { emailService } from './email-service.js';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 // Function to generate payment proof image as SVG
 function generatePaymentProofImage(data: {
@@ -129,6 +132,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configurar autenticação
   setupAuth(app);
+
+  // Rotas de recuperação de senha
+  app.post("/api/password-reset/request", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email é obrigatório" });
+      }
+
+      // Buscar usuário pelo email
+      const user = await storage.getUserByUsername(email);
+      
+      if (!user) {
+        // Por segurança, não revelar se o email existe ou não
+        return res.json({ 
+          message: "Se o email estiver cadastrado, você receberá instruções para redefinir sua senha." 
+        });
+      }
+
+      // Verificar se o serviço de email está configurado
+      if (!emailService.isConfigured()) {
+        return res.status(500).json({ 
+          message: "Serviço de email não está configurado no servidor. Entre em contato com o suporte." 
+        });
+      }
+
+      // Gerar token único
+      const resetToken = emailService.generateResetToken();
+      
+      // Definir expiração para 24 horas
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+
+      // Limpar tokens expirados
+      await storage.deleteExpiredPasswordResetTokens();
+
+      // Salvar token no banco
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt
+      });
+
+      // Enviar email
+      const emailSent = await emailService.sendPasswordResetEmail(
+        user.username, 
+        user.name, 
+        resetToken
+      );
+
+      if (!emailSent) {
+        return res.status(500).json({ 
+          message: "Erro ao enviar email. Tente novamente ou entre em contato com o suporte." 
+        });
+      }
+
+      res.json({ 
+        message: "Se o email estiver cadastrado, você receberá instruções para redefinir sua senha." 
+      });
+
+    } catch (error) {
+      console.error('Erro ao processar solicitação de recuperação de senha:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/password-reset/reset", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token e nova senha são obrigatórios" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres" });
+      }
+
+      // Buscar token no banco
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Token inválido" });
+      }
+
+      // Verificar se o token já foi usado
+      if (resetToken.usedAt) {
+        return res.status(400).json({ message: "Token já foi utilizado" });
+      }
+
+      // Verificar se o token expirou
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "Token expirado" });
+      }
+
+      // Buscar usuário
+      const user = await storage.getUser(resetToken.userId);
+      if (!user) {
+        return res.status(400).json({ message: "Usuário não encontrado" });
+      }
+
+      // Gerar hash da nova senha
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Atualizar senha do usuário
+      await storage.updateUser(user.id, { password: hashedPassword });
+
+      // Marcar token como usado
+      await storage.markPasswordResetTokenAsUsed(resetToken.id);
+
+      res.json({ message: "Senha redefinida com sucesso" });
+
+    } catch (error) {
+      console.error('Erro ao redefinir senha:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/password-reset/verify/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token é obrigatório" });
+      }
+
+      // Buscar token no banco
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Token inválido", valid: false });
+      }
+
+      // Verificar se o token já foi usado
+      if (resetToken.usedAt) {
+        return res.status(400).json({ message: "Token já foi utilizado", valid: false });
+      }
+
+      // Verificar se o token expirou
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "Token expirado", valid: false });
+      }
+
+      res.json({ message: "Token válido", valid: true });
+
+    } catch (error) {
+      console.error('Erro ao verificar token:', error);
+      res.status(500).json({ message: "Erro interno do servidor", valid: false });
+    }
+  });
 
   // API para serviços
   app.get("/api/services", async (req, res) => {
