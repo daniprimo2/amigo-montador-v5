@@ -743,6 +743,14 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           </div>
         </form>
       </Form>
+      
+      {/* PDF Viewer for Terms and Privacy Policy */}
+      <PDFViewer
+        isOpen={isPdfViewerOpen}
+        onClose={() => setIsPdfViewerOpen(false)}
+        pdfUrl="/assets/termos-privacidade.pdf"
+        title="Termos de Serviço e Política de Privacidade"
+      />
     </div>
   );
 };

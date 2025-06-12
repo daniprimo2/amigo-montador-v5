@@ -14,6 +14,7 @@ import { MaskedInput } from '../ui/masked-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { validateCPF, validateCNPJ, formatCPF } from '@/lib/bank-account-schema';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
+import { PDFViewer } from '@/components/ui/pdf-viewer';
 
 // Função para validar CEP
 const validateZipCode = (zipCode: string): boolean => {
@@ -153,6 +154,7 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
   const [, navigate] = useLocation();
   const [logoFiles, setLogoFiles] = useState<FileList | null>(null);
   const [isSearchingZipCode, setIsSearchingZipCode] = useState(false);
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
 
   const form = useForm<StoreStep2Data>({
     resolver: zodResolver(storeStep2Schema),
@@ -802,7 +804,13 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-[#0000FF]">Termos de Serviço e Política de Privacidade</a>.
+                    Eu concordo com os <button 
+                      type="button"
+                      onClick={() => setIsPdfViewerOpen(true)}
+                      className="text-[#0000FF] underline hover:text-blue-700 transition-colors"
+                    >
+                      Termos de Serviço e Política de Privacidade
+                    </button>.
                   </FormLabel>
                   <FormMessage />
                 </div>
@@ -824,6 +832,14 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
           </div>
         </form>
       </Form>
+      
+      {/* PDF Viewer for Terms and Privacy Policy */}
+      <PDFViewer
+        isOpen={isPdfViewerOpen}
+        onClose={() => setIsPdfViewerOpen(false)}
+        pdfUrl="/assets/termos-privacidade.pdf"
+        title="Termos de Serviço e Política de Privacidade"
+      />
     </div>
   );
 };
