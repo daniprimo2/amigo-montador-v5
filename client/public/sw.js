@@ -47,41 +47,74 @@ self.addEventListener('activate', (event) => {
 
 // Push notification handling
 self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data ? event.data.text() : 'Nova notificação do Amigo Montador',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    },
-    actions: [
-      {
-        action: 'explore', 
-        title: 'Ver Detalhes',
-        icon: '/icon-192.png'
-      },
-      {
-        action: 'close', 
-        title: 'Fechar',
-        icon: '/icon-192.png'
-      }
-    ]
+  console.log('Service Worker: Push received', event);
+  
+  let notificationData = {
+    title: 'Amigo Montador',
+    body: 'Você tem uma nova notificação',
+    icon: '/logo-amigomontador.jpg',
+    badge: '/logo-amigomontador.jpg',
+    tag: 'default',
+    requireInteraction: false,
+    data: {}
   };
 
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = { ...notificationData, ...data };
+    } catch (e) {
+      console.log('Service Worker: Error parsing push data', e);
+      notificationData.body = event.data.text();
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('Amigo Montador', options)
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag || 'default',
+      requireInteraction: notificationData.requireInteraction || false,
+      data: notificationData.data || {},
+      actions: notificationData.actions || [
+        { action: 'view', title: 'Ver Detalhes' },
+        { action: 'close', title: 'Fechar' }
+      ],
+      vibrate: [200, 100, 200],
+      sound: '/notification.mp3'
+    })
   );
 });
 
 // Notification click handling
 self.addEventListener('notificationclick', (event) => {
+  console.log('Service Worker: Notification clicked', event);
+  
   event.notification.close();
 
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/dashboard')
-    );
+  const data = event.notification.data || {};
+  let url = '/';
+
+  if (data.url) {
+    url = data.url;
+  } else if (event.action === 'view' || event.action === 'explore') {
+    url = '/dashboard';
   }
+
+  // Open or focus the app
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Check if app is already open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Open new window
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
 });

@@ -2842,6 +2842,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Erro ao enviar notificação de nova mensagem:', notificationError);
       }
       
+      // Enviar push notification
+      try {
+        if (req.user?.userType === 'montador') {
+          // Notificar lojista via push
+          const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
+          if (storeResult.length > 0) {
+            const storeUserId = storeResult[0].userId;
+            await pushNotificationService.notifyNewMessage(storeUserId, req.user.name, service.title, serviceId);
+          }
+        } else if (req.user?.userType === 'lojista') {
+          // Notificar montadores via push
+          const acceptedApplications = await db
+            .select()
+            .from(applications)
+            .where(and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            ));
+          
+          for (const app of acceptedApplications) {
+            const assemblerDataResult = await db
+              .select()
+              .from(assemblers)
+              .where(eq(assemblers.id, app.assemblerId));
+            
+            if (assemblerDataResult.length > 0) {
+              const assemblerUserId = assemblerDataResult[0].userId;
+              await pushNotificationService.notifyNewMessage(assemblerUserId, req.user.name, service.title, serviceId);
+            }
+          }
+        }
+      } catch (pushError) {
+        console.error('Erro ao enviar push notification:', pushError);
+      }
+      
       // Notificar usuário sobre a nova mensagem (função global)
       if (global.notifyNewMessage) {
         await global.notifyNewMessage(serviceId, req.user.id);
