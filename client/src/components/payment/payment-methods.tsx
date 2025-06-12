@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCard, Smartphone, QrCode, Building, CheckCircle, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatToBrazilianPrice } from "@/lib/utils";
 
 interface PaymentMethodsProps {
   amount: number;
