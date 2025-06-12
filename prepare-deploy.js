@@ -46,18 +46,19 @@ try {
     cpSync('uploads', 'dist/uploads', { recursive: true });
   }
 
-  // Create production entry point with proper port handling
+  // Create production entry point that works with Replit deployment
   const indexJs = `#!/usr/bin/env node
 
 // Production entry point for Amigo Montador
-import { spawn } from "child_process";
+const { spawn } = require("child_process");
+const path = require("path");
 
-// Ensure PORT is properly set for deployment
-const PORT = process.env.PORT || process.env.REPL_SERVER_PORT || 5000;
+// Use deployment PORT from environment
+const PORT = process.env.PORT || 3000;
 process.env.PORT = PORT;
 process.env.NODE_ENV = "production";
 
-console.log(\`Starting Amigo Montador on port \${PORT}\`);
+console.log(\`🚀 Starting Amigo Montador on port \${PORT}\`);
 
 // Start server with tsx for TypeScript compilation
 const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
@@ -67,49 +68,50 @@ const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
     NODE_ENV: "production", 
     PORT: PORT 
   },
-  cwd: process.cwd()
+  cwd: __dirname
 });
 
 serverProcess.on("error", (err) => {
-  console.error("Server startup failed:", err);
+  console.error("❌ Server startup failed:", err);
   process.exit(1);
 });
 
 serverProcess.on("exit", (code) => {
   if (code !== 0) {
-    console.error(\`Server exited with code \${code}\`);
+    console.error(\`❌ Server exited with code \${code}\`);
     process.exit(code);
   }
 });
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully');
+  console.log('🔄 Received SIGTERM, shutting down gracefully');
   serverProcess.kill('SIGTERM');
 });
 
 process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down gracefully');
+  console.log('🔄 Received SIGINT, shutting down gracefully');
   serverProcess.kill('SIGINT');
 });
 `;
 
   writeFileSync('dist/index.js', indexJs);
 
-  // Update package.json for production
+  // Update package.json for production deployment
   const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
   packageJson.main = 'index.js';
+  packageJson.type = 'commonjs'; // Force CommonJS for entry point
   packageJson.scripts = {
-    ...packageJson.scripts,
     start: 'node index.js'
   };
   packageJson.engines = {
     node: '>=18.0.0'
   };
   
-  // Ensure tsx is in production dependencies
-  if (!packageJson.dependencies.tsx && packageJson.devDependencies?.tsx) {
-    packageJson.dependencies.tsx = packageJson.devDependencies.tsx;
+  // Move tsx to production dependencies for deployment
+  if (!packageJson.dependencies) packageJson.dependencies = {};
+  if (!packageJson.dependencies.tsx) {
+    packageJson.dependencies.tsx = packageJson.devDependencies?.tsx || '^4.0.0';
   }
   
   writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));

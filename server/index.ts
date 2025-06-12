@@ -190,9 +190,9 @@ app.use((req, res, next) => {
     }
 
     // Use PORT environment variable for deployment compatibility
-    // Cloud Run and Replit deployments require proper port configuration
-    const port = parseInt(process.env.PORT || process.env.REPL_SERVER_PORT || '5000');
-    const host = process.env.NODE_ENV === 'production' ? "0.0.0.0" : "localhost";
+    // Deployment platforms provide PORT automatically
+    const port = parseInt(process.env.PORT || '3000');
+    const host = "0.0.0.0"; // Always bind to all interfaces for deployment
     
     server.listen(port, host, () => {
       log(`serving on port ${port}`);
