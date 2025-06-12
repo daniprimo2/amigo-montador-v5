@@ -50,7 +50,7 @@ try {
   const indexJs = `#!/usr/bin/env node
 
 // Production entry point for Amigo Montador
-const { spawn } = require("child_process");
+import { spawn } from "child_process";
 
 // Ensure PORT is properly set for deployment
 const PORT = process.env.PORT || process.env.REPL_SERVER_PORT || 5000;
@@ -67,7 +67,7 @@ const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
     NODE_ENV: "production", 
     PORT: PORT 
   },
-  cwd: __dirname
+  cwd: process.cwd()
 });
 
 serverProcess.on("error", (err) => {
