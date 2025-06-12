@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WhatsAppSupport } from "@/components/ui/whatsapp-support";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import StoreDashboardPage from "@/pages/store-dashboard-page";
