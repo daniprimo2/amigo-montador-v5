@@ -53,7 +53,7 @@ const authLimiter = new RateLimiterMemory({
 // Apply general rate limiting
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await generalLimiter.consume(req.ip);
+    await generalLimiter.consume(req.ip ?? req.socket.remoteAddress ?? 'unknown');
     next();
   } catch (rejRes: any) {
     res.status(429).json({
@@ -62,11 +62,6 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
     });
   }
 });
-
-// Sentry request handler
-if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.requestHandler());
-}
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -147,6 +142,7 @@ app.use((req, res, next) => {
   try {
     const server = await registerRoutes(app);
 
+    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";

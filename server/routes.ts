@@ -13,6 +13,7 @@ import axios from 'axios';
 import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
 import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
 import { emailService } from './email-service.js';
+import { pushNotificationService, vapidKeys, type PushSubscription } from './push-notifications.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
@@ -132,6 +133,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configurar autenticação
   setupAuth(app);
+
+  // Rotas de Push Notifications
+  app.get("/api/push/vapid-key", (req, res) => {
+    res.json({ publicKey: vapidKeys.publicKey });
+  });
+
+  app.post("/api/push/subscribe", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const subscription: PushSubscription = req.body;
+      pushNotificationService.registerSubscription(req.user!.id, subscription);
+      
+      res.json({ message: "Subscription registrada com sucesso" });
+    } catch (error) {
+      console.error('Erro ao registrar push subscription:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/push/unsubscribe", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { endpoint } = req.body;
+      pushNotificationService.unregisterSubscription(req.user!.id, endpoint);
+      
+      res.json({ message: "Subscription removida com sucesso" });
+    } catch (error) {
+      console.error('Erro ao remover push subscription:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/push/test", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const success = await pushNotificationService.sendToUser(req.user!.id, {
+        title: "Teste de Notificação",
+        body: "Se você está vendo isto, as notificações estão funcionando!",
+        icon: "/logo-amigomontador.jpg"
+      });
+
+      res.json({ success, message: success ? "Notificação enviada" : "Falha ao enviar notificação" });
+    } catch (error) {
+      console.error('Erro ao enviar notificação de teste:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
 
   // Rotas de recuperação de senha
   app.post("/api/password-reset/request", async (req, res) => {
