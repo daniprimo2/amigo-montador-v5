@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, cpSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, cpSync, rmSync, writeFileSync, readFileSync } from 'fs';
 
 console.log('Preparing deployment...');
 
@@ -47,7 +47,7 @@ try {
   }
 
   // Update package.json for production
-  const packageJson = JSON.parse(await import('fs').then(fs => fs.readFileSync('dist/package.json', 'utf8')));
+  const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
   packageJson.main = 'server/index.ts';
   packageJson.scripts.start = 'NODE_ENV=production tsx server/index.ts';
   writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
