@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
 import { validateCPF, validateCNPJ, formatCPF } from '@/lib/bank-account-schema';
 import { getBanksOrderedByName } from '@/lib/brazilian-banks';
+import { PDFViewer } from '@/components/ui/pdf-viewer';
 
 const assemblerStep3Schema = z.object({
   identityFront: z.any().refine((files) => files && files.length > 0, {
@@ -117,6 +118,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
   const [idBackFiles, setIdBackFiles] = useState<FileList | null>(null);
   const [addressFiles, setAddressFiles] = useState<FileList | null>(null);
   const [certFiles, setCertFiles] = useState<FileList | null>(null);
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
 
   const form = useForm<AssemblerStep3Data>({
     resolver: zodResolver(assemblerStep3Schema),
@@ -713,7 +715,13 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>
-                    Eu concordo com os <a href="#" className="text-[#0000FF]">Termos de Serviço e Política de Privacidade</a>.
+                    Eu concordo com os <button 
+                      type="button"
+                      onClick={() => setIsPdfViewerOpen(true)}
+                      className="text-[#0000FF] underline hover:text-blue-700 transition-colors"
+                    >
+                      Termos de Serviço e Política de Privacidade
+                    </button>.
                   </FormLabel>
                   <FormMessage />
                 </div>
