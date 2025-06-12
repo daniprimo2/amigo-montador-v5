@@ -31,14 +31,16 @@ function Router() {
 
 function App() {
   return (
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-        <WhatsAppSupport />
-        <InstallPrompt />
-      </TooltipProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+          <WhatsAppSupport />
+          <InstallPrompt />
+        </TooltipProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
