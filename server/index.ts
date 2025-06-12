@@ -4,14 +4,72 @@ import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import helmet from "helmet";
+import compression from "compression";
+import { RateLimiterMemory } from "rate-limiter-flexible";
+// import * as Sentry from "@sentry/node";
 
 // For ESM compatibility in production
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Monitoring will be configured when SENTRY_DSN is provided
+
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      connectSrc: ["'self'", "ws:", "wss:", "https:"],
+      manifestSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Compression for better performance
+app.use(compression());
+
+// Rate limiting
+const generalLimiter = new RateLimiterMemory({
+  keyPrefix: 'general',
+  points: 100,
+  duration: 60,
+});
+
+const authLimiter = new RateLimiterMemory({
+  keyPrefix: 'auth',
+  points: 5,
+  duration: 900,
+});
+
+// Apply general rate limiting
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await generalLimiter.consume(req.ip);
+    next();
+  } catch (rejRes: any) {
+    res.status(429).json({
+      error: 'Muitas requisições. Tente novamente em alguns minutos.',
+      retryAfter: rejRes.msBeforeNext
+    });
+  }
+});
+
+// Sentry request handler
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.requestHandler());
+}
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
