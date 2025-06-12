@@ -4,7 +4,7 @@ import ws from "ws";
 import * as schema from "../shared/schema.js";
 
 // Configure Neon WebSocket only in serverless environments
-if (typeof WebSocket === 'undefined') {
+if (typeof globalThis.WebSocket === 'undefined') {
   neonConfig.webSocketConstructor = ws;
 }
 

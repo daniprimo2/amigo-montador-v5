@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process';
 import { existsSync, mkdirSync, cpSync, rmSync, writeFileSync, readFileSync } from 'fs';
 
 console.log('Preparing deployment...');
@@ -12,30 +11,18 @@ try {
   }
   mkdirSync('dist', { recursive: true });
 
-  // Compile server code to JavaScript
-  console.log('Compiling server...');
-  execSync('npx tsc --project tsconfig.server.json --outDir dist --skipLibCheck', { stdio: 'inherit' });
-
-  // Build frontend for production
-  console.log('Building frontend...');
-  try {
-    execSync('NODE_ENV=production npx vite build --outDir dist/public', { 
-      stdio: 'inherit',
-      env: { ...process.env, NODE_ENV: 'production' },
-      timeout: 120000
-    });
-  } catch (error) {
-    console.log('Frontend build failed, using development mode for static files...');
-    // Copy client files for development serving
-    cpSync('client', 'dist/client', { recursive: true });
-    cpSync('vite.config.ts', 'dist/vite.config.ts');
-    cpSync('tailwind.config.ts', 'dist/tailwind.config.ts');
-    cpSync('postcss.config.js', 'dist/postcss.config.js');
-    cpSync('tsconfig.json', 'dist/tsconfig.json');
-  }
+  // Copy all source files for runtime compilation
+  console.log('Copying source files...');
+  cpSync('client', 'dist/client', { recursive: true });
+  cpSync('server', 'dist/server', { recursive: true });
+  cpSync('shared', 'dist/shared', { recursive: true });
 
   // Copy configuration files
   cpSync('package.json', 'dist/package.json');
+  cpSync('tsconfig.json', 'dist/tsconfig.json');
+  cpSync('vite.config.ts', 'dist/vite.config.ts');
+  cpSync('tailwind.config.ts', 'dist/tailwind.config.ts');
+  cpSync('postcss.config.js', 'dist/postcss.config.js');
   cpSync('drizzle.config.ts', 'dist/drizzle.config.ts');
 
   // Copy public assets
@@ -59,19 +46,49 @@ try {
     cpSync('uploads', 'dist/uploads', { recursive: true });
   }
 
+  // Create production entry point
+  const indexJs = `#!/usr/bin/env node
+
+// Production entry point for Amigo Montador
+import("tsx/esm").then(async (tsx) => {
+  // Register tsx for TypeScript compilation
+  const { register } = tsx;
+  register();
+  
+  // Import and start the server
+  const { default: server } = await import("./server/index.ts");
+}).catch(async (error) => {
+  console.log("Falling back to direct tsx execution...");
+  // Fallback to direct tsx execution
+  const { spawn } = await import("child_process");
+  const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
+    stdio: "inherit",
+    env: { ...process.env, NODE_ENV: "production", PORT: process.env.PORT || "5000" }
+  });
+  
+  serverProcess.on("error", (err) => {
+    console.error("Server startup failed:", err);
+    process.exit(1);
+  });
+});
+`;
+
+  writeFileSync('dist/index.js', indexJs);
+
   // Update package.json for production
   const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
   packageJson.main = 'index.js';
-  packageJson.scripts.start = 'NODE_ENV=production node index.js';
+  packageJson.scripts.start = 'NODE_ENV=production PORT=${PORT:-5000} node index.js';
   
-  // Move tsx to dependencies for runtime compilation fallback
-  if (packageJson.devDependencies && packageJson.devDependencies.tsx) {
+  // Ensure tsx is in production dependencies
+  if (!packageJson.dependencies.tsx && packageJson.devDependencies?.tsx) {
     packageJson.dependencies.tsx = packageJson.devDependencies.tsx;
   }
   
   writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
 
   console.log('Deployment preparation completed successfully!');
+  console.log('Created runtime TypeScript compilation setup');
 
 } catch (error) {
   console.error('Deployment preparation failed:', error.message);
