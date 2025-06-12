@@ -20,7 +20,35 @@ try {
   // Copy configuration files
   cpSync('package.json', 'dist/package.json');
   cpSync('tsconfig.json', 'dist/tsconfig.json');
-  cpSync('vite.config.ts', 'dist/vite.config.ts');
+  // Create production-compatible vite.config.ts without top-level await
+  const viteConfig = `import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import { fileURLToPath } from "url";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "client", "src"),
+      "@shared": path.resolve(__dirname, "shared"),
+      "@assets": path.resolve(__dirname, "attached_assets"),
+    },
+  },
+  root: path.resolve(__dirname, "client"),
+  build: {
+    outDir: path.resolve(__dirname, "dist/public"),
+    emptyOutDir: true,
+  },
+});`;
+  
+  writeFileSync('dist/vite.config.ts', viteConfig);
   cpSync('tailwind.config.ts', 'dist/tailwind.config.ts');
   cpSync('postcss.config.js', 'dist/postcss.config.js');
   cpSync('drizzle.config.ts', 'dist/drizzle.config.ts');
