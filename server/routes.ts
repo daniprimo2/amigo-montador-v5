@@ -152,13 +152,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Verificar se o serviço de email está configurado
-      if (!emailService.isConfigured()) {
-        return res.status(500).json({ 
-          message: "Serviço de email não está configurado no servidor. Entre em contato com o suporte." 
-        });
-      }
-
       // Gerar token único
       const resetToken = emailService.generateResetToken();
       
@@ -176,14 +169,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt
       });
 
-      // Enviar email
+      // Tentar enviar email
       const emailSent = await emailService.sendPasswordResetEmail(
         user.username, 
         user.name, 
         resetToken
       );
 
-      if (!emailSent) {
+      if (!emailSent && !emailService.isConfigured()) {
+        console.log('Token criado mas email não enviado - credenciais SMTP não configuradas');
+        console.log(`Token de teste: ${resetToken}`);
+      } else if (!emailSent) {
         return res.status(500).json({ 
           message: "Erro ao enviar email. Tente novamente ou entre em contato com o suporte." 
         });

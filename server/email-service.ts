@@ -34,6 +34,7 @@ class EmailService {
       // Verificar se as credenciais estão configuradas
       if (!config.auth.user || !config.auth.pass) {
         console.warn('Credenciais de email não configuradas. Emails de recuperação de senha não serão enviados.');
+        console.warn('Configure as variáveis: SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_PORT');
         return;
       }
 
@@ -60,6 +61,12 @@ class EmailService {
   async sendPasswordResetEmail(email: string, userName: string, resetToken: string): Promise<boolean> {
     if (!this.transporter) {
       console.error('Transporter de email não está configurado');
+      console.log('=== SIMULAÇÃO DE ENVIO DE EMAIL ===');
+      console.log(`Para: ${email}`);
+      console.log(`Nome: ${userName}`);
+      console.log(`Token: ${resetToken}`);
+      console.log(`Link de recuperação: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`);
+      console.log('=== FIM DA SIMULAÇÃO ===');
       return false;
     }
 
