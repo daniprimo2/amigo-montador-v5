@@ -191,20 +191,18 @@ app.use((req, res, next) => {
 
     // Use PORT environment variable for deployment compatibility
     // Cloud Run and Replit deployments require proper port configuration
-    const port = parseInt(process.env.PORT || '5000');
-    const host = "0.0.0.0";
+    const port = parseInt(process.env.PORT || process.env.REPL_SERVER_PORT || '5000');
+    const host = process.env.NODE_ENV === 'production' ? "0.0.0.0" : "localhost";
     
-    server.listen({
-      port,
-      host,
-      reusePort: true,
-    }, () => {
+    server.listen(port, host, () => {
       log(`serving on port ${port}`);
       console.log(`🚀 Amigo Montador running on port ${port}`);
-      console.log(`📱 Application: http://0.0.0.0:${port}`);
+      console.log(`📱 Application: http://${host}:${port}`);
       if (process.env.NODE_ENV === 'production') {
         console.log(`✅ Production deployment successful`);
-        console.log(`🌐 Health check: http://0.0.0.0:${port}/api/health`);
+        console.log(`🌐 Health check: http://${host}:${port}/api/health`);
+        console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
+        console.log(`🌍 Host: ${host}:${port}`);
       }
     });
   } catch (error) {

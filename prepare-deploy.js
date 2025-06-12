@@ -46,30 +46,51 @@ try {
     cpSync('uploads', 'dist/uploads', { recursive: true });
   }
 
-  // Create production entry point
+  // Create production entry point with proper port handling
   const indexJs = `#!/usr/bin/env node
 
 // Production entry point for Amigo Montador
-import("tsx/esm").then(async (tsx) => {
-  // Register tsx for TypeScript compilation
-  const { register } = tsx;
-  register();
-  
-  // Import and start the server
-  const { default: server } = await import("./server/index.ts");
-}).catch(async (error) => {
-  console.log("Falling back to direct tsx execution...");
-  // Fallback to direct tsx execution
-  const { spawn } = await import("child_process");
-  const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
-    stdio: "inherit",
-    env: { ...process.env, NODE_ENV: "production", PORT: process.env.PORT || "5000" }
-  });
-  
-  serverProcess.on("error", (err) => {
-    console.error("Server startup failed:", err);
-    process.exit(1);
-  });
+const { spawn } = require("child_process");
+
+// Ensure PORT is properly set for deployment
+const PORT = process.env.PORT || process.env.REPL_SERVER_PORT || 5000;
+process.env.PORT = PORT;
+process.env.NODE_ENV = "production";
+
+console.log(\`Starting Amigo Montador on port \${PORT}\`);
+
+// Start server with tsx for TypeScript compilation
+const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
+  stdio: "inherit",
+  env: { 
+    ...process.env, 
+    NODE_ENV: "production", 
+    PORT: PORT 
+  },
+  cwd: __dirname
+});
+
+serverProcess.on("error", (err) => {
+  console.error("Server startup failed:", err);
+  process.exit(1);
+});
+
+serverProcess.on("exit", (code) => {
+  if (code !== 0) {
+    console.error(\`Server exited with code \${code}\`);
+    process.exit(code);
+  }
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM, shutting down gracefully');
+  serverProcess.kill('SIGTERM');
+});
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT, shutting down gracefully');
+  serverProcess.kill('SIGINT');
 });
 `;
 
@@ -78,7 +99,13 @@ import("tsx/esm").then(async (tsx) => {
   // Update package.json for production
   const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
   packageJson.main = 'index.js';
-  packageJson.scripts.start = 'NODE_ENV=production PORT=${PORT:-5000} node index.js';
+  packageJson.scripts = {
+    ...packageJson.scripts,
+    start: 'node index.js'
+  };
+  packageJson.engines = {
+    node: '>=18.0.0'
+  };
   
   // Ensure tsx is in production dependencies
   if (!packageJson.dependencies.tsx && packageJson.devDependencies?.tsx) {
