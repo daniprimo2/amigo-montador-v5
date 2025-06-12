@@ -232,6 +232,7 @@ export function setupAuth(app: Express) {
         console.log("Criando dados do montador...");
         const assemblerData = {
           userId,
+          birthDate: req.body.birthDate,
           address: req.body.address,
           addressNumber: req.body.addressNumber,
           neighborhood: req.body.neighborhood,

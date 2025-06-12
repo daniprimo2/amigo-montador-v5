@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execSync } from 'child_process';
 import { existsSync, mkdirSync, cpSync, rmSync, writeFileSync, readFileSync } from 'fs';
 
 console.log('Preparing deployment...');
@@ -11,18 +12,30 @@ try {
   }
   mkdirSync('dist', { recursive: true });
 
-  // Copy source files for runtime compilation
-  console.log('Copying source files...');
-  cpSync('client', 'dist/client', { recursive: true });
-  cpSync('server', 'dist/server', { recursive: true });
-  cpSync('shared', 'dist/shared', { recursive: true });
+  // Compile server code to JavaScript
+  console.log('Compiling server...');
+  execSync('npx tsc --project tsconfig.server.json --outDir dist --skipLibCheck', { stdio: 'inherit' });
+
+  // Build frontend for production
+  console.log('Building frontend...');
+  try {
+    execSync('NODE_ENV=production npx vite build --outDir dist/public', { 
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production' },
+      timeout: 120000
+    });
+  } catch (error) {
+    console.log('Frontend build failed, using development mode for static files...');
+    // Copy client files for development serving
+    cpSync('client', 'dist/client', { recursive: true });
+    cpSync('vite.config.ts', 'dist/vite.config.ts');
+    cpSync('tailwind.config.ts', 'dist/tailwind.config.ts');
+    cpSync('postcss.config.js', 'dist/postcss.config.js');
+    cpSync('tsconfig.json', 'dist/tsconfig.json');
+  }
 
   // Copy configuration files
   cpSync('package.json', 'dist/package.json');
-  cpSync('tsconfig.json', 'dist/tsconfig.json');
-  cpSync('vite.config.ts', 'dist/vite.config.ts');
-  cpSync('tailwind.config.ts', 'dist/tailwind.config.ts');
-  cpSync('postcss.config.js', 'dist/postcss.config.js');
   cpSync('drizzle.config.ts', 'dist/drizzle.config.ts');
 
   // Copy public assets
@@ -48,8 +61,14 @@ try {
 
   // Update package.json for production
   const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
-  packageJson.main = 'server/index.ts';
-  packageJson.scripts.start = 'NODE_ENV=production tsx server/index.ts';
+  packageJson.main = 'index.js';
+  packageJson.scripts.start = 'NODE_ENV=production node index.js';
+  
+  // Move tsx to dependencies for runtime compilation fallback
+  if (packageJson.devDependencies && packageJson.devDependencies.tsx) {
+    packageJson.dependencies.tsx = packageJson.devDependencies.tsx;
+  }
+  
   writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
 
   console.log('Deployment preparation completed successfully!');
