@@ -176,9 +176,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         resetToken
       );
 
-      if (!emailSent && !emailService.isConfigured()) {
+      if (!emailService.isConfigured()) {
         console.log('Token criado mas email não enviado - credenciais SMTP não configuradas');
         console.log(`Token de teste: ${resetToken}`);
+        
+        // Retorna o link diretamente para teste quando SMTP não está configurado
+        return res.json({ 
+          message: "Email não configurado. Use o link abaixo para redefinir sua senha:",
+          resetLink: `http://localhost:5173/reset-password?token=${resetToken}`,
+          developmentMode: true
+        });
       } else if (!emailSent) {
         return res.status(500).json({ 
           message: "Erro ao enviar email. Tente novamente ou entre em contato com o suporte." 

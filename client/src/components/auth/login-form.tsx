@@ -101,10 +101,21 @@ export const LoginForm: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        toast({
-          title: "Email enviado",
-          description: data.message,
-        });
+        
+        if (data.developmentMode && data.resetLink) {
+          // Modo desenvolvimento - abrir link diretamente
+          window.open(data.resetLink, '_blank');
+          toast({
+            title: "Link de recuperação aberto",
+            description: "Uma nova aba foi aberta com o link para redefinir sua senha.",
+          });
+        } else {
+          toast({
+            title: "Email enviado",
+            description: data.message,
+          });
+        }
+        
         setIsResetDialogOpen(false);
         setResetEmail("");
       } else {
