@@ -16,6 +16,15 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve static files from public directory (for PDFs, assets, etc.)
+app.use('/assets', express.static(path.join(process.cwd(), 'public/assets'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+  }
+}));
+
 // Health check endpoints
 app.get('/health', (req, res) => {
   res.status(200).json({ 
@@ -36,6 +45,14 @@ app.get('/api/health', (req, res) => {
 // Serve default avatar and other static files from root directory
 app.get('/default-avatar.svg', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'default-avatar.svg'));
+});
+
+// Serve PDF files directly
+app.get('/assets/termos-privacidade.pdf', (req, res) => {
+  const pdfPath = path.join(process.cwd(), 'public/assets/termos-privacidade.pdf');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline; filename="termos-privacidade.pdf"');
+  res.sendFile(pdfPath);
 });
 
 app.use((req, res, next) => {
