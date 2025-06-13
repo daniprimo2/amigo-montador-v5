@@ -15,6 +15,7 @@ import { AuthProvider } from "./hooks/use-auth";
 function Router() {
   return (
     <Switch>
+      <Route path="/test-reset" component={TestResetPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       <ProtectedRoute path="/lojista" component={StoreDashboardPage} />
       <ProtectedRoute path="/montador" component={AssemblerDashboardPage} />
