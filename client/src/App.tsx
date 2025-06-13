@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WhatsAppSupport } from "@/components/ui/whatsapp-support";
@@ -13,14 +13,19 @@ import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
 function Router() {
+  const [location] = useLocation();
+  
+  // Renderização direta para páginas específicas
+  if (location === "/test-reset") {
+    return <TestResetPage />;
+  }
+  
+  if (location.startsWith("/reset-password")) {
+    return <ResetPasswordPage />;
+  }
+  
   return (
     <Switch>
-      <Route path="/test-reset">
-        <TestResetPage />
-      </Route>
-      <Route path="/reset-password">
-        <ResetPasswordPage />
-      </Route>
       <ProtectedRoute path="/lojista" component={StoreDashboardPage} />
       <ProtectedRoute path="/montador" component={AssemblerDashboardPage} />
       <Route path="/profile/:userId" component={UserProfilePage} />

@@ -23,7 +23,7 @@ function ResetPasswordFinal() {
     validateToken(tokenParam);
   }, []);
 
-  const validateToken = async (tokenToValidate) => {
+  const validateToken = async (tokenToValidate: string) => {
     try {
       const response = await fetch(`/api/password-reset/verify/${tokenToValidate}`);
       const data = await response.json();
@@ -43,7 +43,7 @@ function ResetPasswordFinal() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newPassword || newPassword.length < 6) {
