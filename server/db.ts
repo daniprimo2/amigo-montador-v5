@@ -1,12 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { Pool } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
 import * as schema from "../shared/schema.js";
-
-// Configure Neon WebSocket only in serverless environments
-if (typeof globalThis.WebSocket === 'undefined') {
-  neonConfig.webSocketConstructor = ws;
-}
 
 // Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
 const getDatabaseUrl = () => {
@@ -18,7 +12,7 @@ const getDatabaseUrl = () => {
   const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT } = process.env;
   if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
     const port = PGPORT || '5432';
-    return `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${port}/${PGDATABASE}`;
+    return `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${port}/${PGDATABASE}?sslmode=require`;
   }
 
   throw new Error(
@@ -31,10 +25,12 @@ let db: ReturnType<typeof drizzle>;
 
 try {
   const connectionString = getDatabaseUrl();
+  
+  // Configuração simplificada do pool
   pool = new Pool({ 
-    connectionString,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString
   });
+  
   db = drizzle({ client: pool, schema });
   console.log('✅ Database connection initialized successfully');
 } catch (error) {

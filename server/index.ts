@@ -191,7 +191,7 @@ app.use((req, res, next) => {
 
     // Use PORT environment variable for deployment compatibility
     // Deployment platforms provide PORT automatically
-    const port = parseInt(process.env.PORT || '3000');
+    const port = parseInt(process.env.PORT || '5000');
     const host = "0.0.0.0"; // Always bind to all interfaces for deployment
     
     server.listen(port, host, () => {
