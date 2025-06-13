@@ -74,53 +74,34 @@ export default defineConfig({
     cpSync('uploads', 'dist/uploads', { recursive: true });
   }
 
-  // Create production entry point that works with Replit deployment
-  const indexJs = `#!/usr/bin/env node
-
-// Production entry point for Amigo Montador
-const { spawn } = require("child_process");
-const path = require("path");
-
-// Use deployment PORT from environment
-const PORT = process.env.PORT || 3000;
-process.env.PORT = PORT;
-process.env.NODE_ENV = "production";
-
-console.log(\`🚀 Starting Amigo Montador on port \${PORT}\`);
-
-// Start server with tsx for TypeScript compilation
-const serverProcess = spawn("npx", ["tsx", "server/index.ts"], {
-  stdio: "inherit",
-  env: { 
-    ...process.env, 
-    NODE_ENV: "production", 
-    PORT: PORT 
-  },
-  cwd: __dirname
-});
-
-serverProcess.on("error", (err) => {
-  console.error("❌ Server startup failed:", err);
-  process.exit(1);
-});
-
-serverProcess.on("exit", (code) => {
-  if (code !== 0) {
-    console.error(\`❌ Server exited with code \${code}\`);
-    process.exit(code);
+  // Build frontend assets first
+  console.log('Building frontend...');
+  const { execSync } = await import('child_process');
+  
+  try {
+    execSync('npx vite build', { 
+      cwd: process.cwd(),
+      stdio: 'inherit'
+    });
+  } catch (error) {
+    console.log('Frontend build failed, copying client files...');
+    if (existsSync('client/dist')) {
+      cpSync('client/dist', 'dist/public', { recursive: true });
+    }
   }
-});
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🔄 Received SIGTERM, shutting down gracefully');
-  serverProcess.kill('SIGTERM');
-});
+  // Create simple production entry point
+  const indexJs = `const { register } = require('tsx/cjs');
+register();
 
-process.on('SIGINT', () => {
-  console.log('🔄 Received SIGINT, shutting down gracefully');
-  serverProcess.kill('SIGINT');
-});
+// Set production environment immediately
+process.env.NODE_ENV = "production";
+process.env.PORT = process.env.PORT || 3000;
+
+console.log('Starting Amigo Montador on port', process.env.PORT);
+
+// Import and start server directly
+require('./server/index.ts');
 `;
 
   writeFileSync('dist/index.js', indexJs);
