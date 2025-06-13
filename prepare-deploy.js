@@ -20,6 +20,19 @@ try {
   // Copy configuration files
   cpSync('package.json', 'dist/package.json');
   cpSync('tsconfig.json', 'dist/tsconfig.json');
+  // Build the frontend first
+  console.log('Building frontend...');
+  const { execSync: execSyncBuild } = await import('child_process');
+  
+  try {
+    // Build frontend with Vite
+    execSyncBuild('npx vite build', { stdio: 'inherit', cwd: process.cwd() });
+    console.log('Frontend build completed');
+  } catch (error) {
+    console.error('Frontend build failed:', error.message);
+    // Continue with deployment even if frontend build fails
+  }
+
   // Create production-compatible vite.config.ts without top-level await
   const viteConfig = `import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
@@ -76,7 +89,6 @@ export default defineConfig({
 
   // Build frontend assets first
   console.log('Building frontend...');
-  const { execSync } = await import('child_process');
   
   try {
     execSync('npx vite build', { 
@@ -99,7 +111,7 @@ export default defineConfig({
     // Create simple JavaScript entry point
     const indexJs = `// Production entry point for Amigo Montador
 process.env.NODE_ENV = "production";
-process.env.PORT = process.env.PORT || 3000;
+process.env.PORT = process.env.PORT || 5000;
 
 console.log('Starting Amigo Montador on port', process.env.PORT);
 
@@ -115,7 +127,7 @@ require('./server/index.js');
     // Fallback to runtime compilation
     const indexJs = `// Production entry point for Amigo Montador
 process.env.NODE_ENV = "production";
-process.env.PORT = process.env.PORT || 3000;
+process.env.PORT = process.env.PORT || 5000;
 
 console.log('Starting Amigo Montador on port', process.env.PORT);
 
