@@ -35,7 +35,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
-  const userQuery = useQuery<SelectUser | null>({
+  const { data: user, error, isLoading } = useQuery({
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
@@ -46,7 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!res.ok) {
           throw new Error(`${res.status}: ${res.statusText}`);
         }
-        return await res.json() as SelectUser;
+        const userData = await res.json();
+        return userData as SelectUser;
       } catch (error) {
         console.error('AuthProvider - Erro ao buscar usuário:', error);
         return null;
@@ -56,8 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
-  
-  const { data: user, error, isLoading } = userQuery;
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
