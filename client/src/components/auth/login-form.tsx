@@ -102,12 +102,25 @@ export const LoginForm: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         
-        if (data.developmentMode && data.resetLink) {
-          // Modo desenvolvimento - abrir link diretamente
-          window.open(data.resetLink, '_blank');
+        if (data.developmentMode && (data.appLink || data.webLink)) {
+          // Modo desenvolvimento - tentar abrir deep link primeiro, depois web
+          if (data.appLink) {
+            // Tentar abrir o deep link do app
+            window.location.href = data.appLink;
+            
+            // Fallback para web após um delay
+            setTimeout(() => {
+              if (data.webLink) {
+                window.open(data.webLink, '_blank');
+              }
+            }, 1000);
+          } else if (data.webLink) {
+            window.open(data.webLink, '_blank');
+          }
+          
           toast({
-            title: "Link de recuperação aberto",
-            description: "Uma nova aba foi aberta com o link para redefinir sua senha.",
+            title: "Links de recuperação disponíveis",
+            description: "Tentando abrir no app. Se não funcionar, uma aba web será aberta.",
           });
         } else {
           toast({

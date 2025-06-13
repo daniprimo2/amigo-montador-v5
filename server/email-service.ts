@@ -79,11 +79,13 @@ class EmailService {
     }
 
     try {
-      // Usar a URL do Replit se estiver disponível, senão usar localhost
-      const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-        : process.env.FRONTEND_URL || 'http://localhost:5000';
-      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+      // Usar deep link para abrir o aplicativo, com fallback para web
+      const deepLinkUrl = `amigomontador://app/reset-password?token=${resetToken}`;
+      const webUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/reset-password?token=${resetToken}`
+        : `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+      
+      const resetUrl = deepLinkUrl;
       
       const mailOptions = {
         from: `"AmigoMontador" <${process.env.SMTP_USER}>`,
@@ -121,14 +123,25 @@ class EmailService {
                 
                 <p>Para criar uma nova senha, clique no botão abaixo:</p>
                 
-                <div style="text-align: center;">
-                  <a href="${resetUrl}" class="button">Redefinir Senha</a>
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${resetUrl}" class="button" style="margin-bottom: 10px; display: inline-block;">
+                    Abrir no App AmigoMontador
+                  </a>
+                  <br>
+                  <a href="${webUrl}" class="button" style="background-color: #6c757d; margin-top: 10px; display: inline-block;">
+                    Abrir no Navegador
+                  </a>
                 </div>
                 
-                <p>Ou copie e cole este link no seu navegador:</p>
-                <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
-                  ${resetUrl}
-                </p>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                  <p style="margin: 0; font-size: 14px;"><strong>Links alternativos:</strong></p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px;">
+                    <strong>App:</strong> <span style="word-break: break-all;">${resetUrl}</span>
+                  </p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px;">
+                    <strong>Web:</strong> <span style="word-break: break-all;">${webUrl}</span>
+                  </p>
+                </div>
                 
                 <div class="warning">
                   <strong>⚠️ Importante:</strong>

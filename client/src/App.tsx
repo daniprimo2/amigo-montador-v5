@@ -11,6 +11,7 @@ import ResetPasswordPage from "@/pages/reset-password-final";
 import TestResetPage from "@/pages/test-reset";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { usePasswordResetDeepLink } from "./hooks/use-deep-links";
 
 function Router() {
   const [location] = useLocation();
