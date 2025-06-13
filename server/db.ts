@@ -7,28 +7,25 @@ import dotenv from 'dotenv';
 // Carregar variáveis de ambiente
 dotenv.config();
 
-// Mostrar informações de debug
-console.log('Variáveis de ambiente do banco:', {
-  DATABASE_URL: process.env.DATABASE_URL ? '***definida***' : undefined,
-  PGHOST: process.env.PGHOST,
-  PGUSER: process.env.PGUSER,
-  PGPASSWORD: process.env.PGPASSWORD ? '***definida***' : undefined,
-  PGDATABASE: process.env.PGDATABASE,
-  PGPORT: process.env.PGPORT
-});
+// Verificar se está usando o banco do Replit
+if (process.env.DATABASE_URL) {
+  console.log('✅ Usando banco PostgreSQL do Replit');
+} else {
+  console.log('⚠️ DATABASE_URL não encontrada');
+}
 
 // Configure Neon WebSocket only in serverless environments
 if (typeof WebSocket === 'undefined') {
   neonConfig.webSocketConstructor = ws;
 }
 
-// Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
+// Usar a variável de ambiente DATABASE_URL do Replit
 const getDatabaseUrl = () => {
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL !== 'postgresql://neondb_owner:password@ep-example.neon.tech/neondb?sslmode=require') {
+  if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }
   
-  // Construir URL a partir de variáveis individuais
+  // Construir URL a partir de variáveis individuais do Replit
   const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT } = process.env;
   if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
     const port = PGPORT || '5432';
@@ -36,11 +33,7 @@ const getDatabaseUrl = () => {
   }
 
   throw new Error(
-    "AÇÃO NECESSÁRIA: Configure uma URL de banco real no arquivo .env\n" +
-    "1. Acesse https://neon.tech ou https://www.elephantsql.com\n" +
-    "2. Crie uma conta gratuita\n" +
-    "3. Copie a string de conexão\n" +
-    "4. Cole no arquivo .env como DATABASE_URL="
+    "Banco de dados do Replit não configurado. Verifique se o PostgreSQL está provisionado."
   );
 };
 
