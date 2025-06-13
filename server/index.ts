@@ -4,67 +4,14 @@ import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import helmet from "helmet";
-import compression from "compression";
-import { RateLimiterMemory } from "rate-limiter-flexible";
-// import * as Sentry from "@sentry/node";
 
 // For ESM compatibility in production
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Monitoring will be configured when SENTRY_DSN is provided
-
 const app = express();
-
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      connectSrc: ["'self'", "ws:", "wss:", "https:"],
-      manifestSrc: ["'self'"],
-      workerSrc: ["'self'", "blob:"]
-    }
-  },
-  crossOriginEmbedderPolicy: false
-}));
-
-// Compression for better performance
-app.use(compression());
-
-// Rate limiting
-const generalLimiter = new RateLimiterMemory({
-  keyPrefix: 'general',
-  points: 100,
-  duration: 60,
-});
-
-const authLimiter = new RateLimiterMemory({
-  keyPrefix: 'auth',
-  points: 5,
-  duration: 900,
-});
-
-// Apply general rate limiting
-app.use(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await generalLimiter.consume(req.ip ?? req.socket.remoteAddress ?? 'unknown');
-    next();
-  } catch (rejRes: any) {
-    res.status(429).json({
-      error: 'Muitas requisições. Tente novamente em alguns minutos.',
-      retryAfter: rejRes.msBeforeNext
-    });
-  }
-});
-
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -142,7 +89,6 @@ app.use((req, res, next) => {
   try {
     const server = await registerRoutes(app);
 
-    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -190,19 +136,21 @@ app.use((req, res, next) => {
     }
 
     // Use PORT environment variable for deployment compatibility
-    // Deployment platforms provide PORT automatically
+    // Cloud Run and Replit deployments require proper port configuration
     const port = parseInt(process.env.PORT || '5000');
-    const host = "0.0.0.0"; // Always bind to all interfaces for deployment
+    const host = "0.0.0.0";
     
-    server.listen(port, host, () => {
+    server.listen({
+      port,
+      host,
+      reusePort: true,
+    }, () => {
       log(`serving on port ${port}`);
       console.log(`🚀 Amigo Montador running on port ${port}`);
-      console.log(`📱 Application: http://${host}:${port}`);
+      console.log(`📱 Application: http://0.0.0.0:${port}`);
       if (process.env.NODE_ENV === 'production') {
         console.log(`✅ Production deployment successful`);
-        console.log(`🌐 Health check: http://${host}:${port}/api/health`);
-        console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-        console.log(`🌍 Host: ${host}:${port}`);
+        console.log(`🌐 Health check: http://0.0.0.0:${port}/api/health`);
       }
     });
   } catch (error) {
