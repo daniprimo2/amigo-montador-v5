@@ -7,12 +7,20 @@ import { queryClient } from "./lib/queryClient";
 // Tratamento global de erros não capturados
 window.addEventListener('unhandledrejection', (event) => {
   console.warn('Promise rejeitada não tratada:', event.reason);
-  // Previne que o erro apareça no console como não tratado
-  event.preventDefault();
+  // Só previne erros relacionados a fetch/network que não afetam a UI
+  if (event.reason?.message?.includes('Failed to fetch') || 
+      event.reason?.message?.includes('NetworkError') ||
+      event.reason?.message?.includes('fetch')) {
+    event.preventDefault();
+  }
 });
 
 window.addEventListener('error', (event) => {
   console.warn('Erro global capturado:', event.error);
+  // Log detalhado para debugging
+  if (event.error?.stack) {
+    console.error('Stack trace:', event.error.stack);
+  }
 });
 
 createRoot(document.getElementById("root")!).render(

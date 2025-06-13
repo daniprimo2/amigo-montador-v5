@@ -44,6 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    onError: (error) => {
+      console.error('AuthProvider - Erro na query /api/user:', error);
+    },
+    onSuccess: (data) => {
+      console.log('AuthProvider - Query /api/user bem-sucedida:', data);
+    }
   });
 
   const loginMutation = useMutation({
