@@ -44,26 +44,31 @@ export function useDeepLinks(handlers: DeepLinkHandler = {}) {
       }
     };
 
-    // Listener para deep links no Capacitor
+    // Listener para deep links no Capacitor (quando disponível)
     const setupCapacitorDeepLinks = async () => {
-      try {
-        // Verificar se o Capacitor está disponível
-        if (typeof window !== 'undefined' && (window as any).Capacitor) {
-          const { App } = await import('@capacitor/app');
+      // Capacitor será configurado apenas em builds móveis
+      // Em desenvolvimento web, usar apenas detecção de URL padrão
+      if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform) {
+        try {
+          // Usar importação condicional que só funciona em ambiente Capacitor real
+          const { App } = (window as any).Capacitor.Plugins;
           
-          // Listener para quando o app é aberto via deep link
-          App.addListener('appUrlOpen', (event) => {
-            handleDeepLink(event.url);
-          });
+          if (App) {
+            // Listener para quando o app é aberto via deep link
+            App.addListener('appUrlOpen', (event: { url: string }) => {
+              handleDeepLink(event.url);
+            });
 
-          // Verificar se há uma URL inicial (quando o app foi aberto via deep link)
-          const initialUrl = await App.getLaunchUrl();
-          if (initialUrl && initialUrl.url) {
-            handleDeepLink(initialUrl.url);
+            // Verificar se há uma URL inicial
+            App.getLaunchUrl().then((result: any) => {
+              if (result && result.url) {
+                handleDeepLink(result.url);
+              }
+            });
           }
+        } catch (error) {
+          console.log('Capacitor App plugin não disponível');
         }
-      } catch (error) {
-        console.log('Capacitor não disponível, usando modo web');
       }
     };
 

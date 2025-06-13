@@ -16,6 +16,9 @@ import { usePasswordResetDeepLink } from "./hooks/use-deep-links";
 function Router() {
   const [location] = useLocation();
   
+  // Ativar detecção de deep links para recuperação de senha
+  usePasswordResetDeepLink();
+  
   // Renderização direta para páginas específicas
   if (location === "/test-reset") {
     return <TestResetPage />;
