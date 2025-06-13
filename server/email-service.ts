@@ -76,7 +76,7 @@ class EmailService {
     }
 
     try {
-      const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+      const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
       
       const mailOptions = {
         from: `"AmigoMontador" <${process.env.SMTP_USER}>`,

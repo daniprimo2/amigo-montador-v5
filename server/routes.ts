@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Retorna o link diretamente para teste quando SMTP não está configurado
         return res.json({ 
           message: "Email não configurado. Use o link abaixo para redefinir sua senha:",
-          resetLink: `http://localhost:5173/reset-password?token=${resetToken}`,
+          resetLink: `http://localhost:5000/reset-password?token=${resetToken}`,
           developmentMode: true
         });
       } else if (!emailSent) {
