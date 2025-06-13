@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { existsSync, mkdirSync, copyFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { existsSync, mkdirSync, copyFileSync, cpSync } from 'fs';
 
 console.log('🚀 Preparando build para produção...');
 
@@ -15,19 +10,8 @@ if (!existsSync('dist')) {
   mkdirSync('dist', { recursive: true });
 }
 
-// Build do servidor
-console.log('📦 Compilando servidor...');
-try {
-  execSync('npx esbuild server/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --external:pg-native --external:bcrypt --external:express --external:ws', {
-    stdio: 'inherit'
-  });
-} catch (error) {
-  console.error('❌ Erro no build do servidor:', error.message);
-  process.exit(1);
-}
-
-// Build do cliente
-console.log('🎨 Compilando cliente...');
+// Build apenas do cliente (frontend)
+console.log('🎨 Compilando aplicação web...');
 try {
   execSync('npx vite build --outDir dist/client', {
     stdio: 'inherit'
@@ -37,17 +21,23 @@ try {
   process.exit(1);
 }
 
-// Copiar arquivos necessários
-console.log('📋 Copiando arquivos...');
+// Copiar arquivos do servidor para produção
+console.log('📋 Preparando arquivos do servidor...');
 try {
-  // Copiar package.json
-  copyFileSync('package.json', 'dist/package.json');
+  // Copiar pasta server
+  if (!existsSync('dist/server')) {
+    mkdirSync('dist/server', { recursive: true });
+  }
+  cpSync('server', 'dist/server', { recursive: true });
   
   // Copiar shared
   if (!existsSync('dist/shared')) {
     mkdirSync('dist/shared', { recursive: true });
   }
-  copyFileSync('shared/schema.ts', 'dist/shared/schema.ts');
+  cpSync('shared', 'dist/shared', { recursive: true });
+  
+  // Copiar package.json
+  copyFileSync('package.json', 'dist/package.json');
   
   // Copiar tsconfig.json
   copyFileSync('tsconfig.json', 'dist/tsconfig.json');
@@ -58,4 +48,6 @@ try {
 }
 
 console.log('✅ Build concluído com sucesso!');
-console.log('📁 Arquivos gerados em: dist/');
+console.log('📁 Frontend gerado em: dist/client/');
+console.log('📁 Servidor copiado para: dist/server/');
+console.log('🎯 Pronto para Capacitor!');
