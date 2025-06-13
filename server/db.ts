@@ -1,6 +1,10 @@
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from 'ws';
 import * as schema from "../shared/schema.js";
+
+// Configure WebSocket para Node.js
+neonConfig.webSocketConstructor = ws;
 
 // Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
 const getDatabaseUrl = () => {
@@ -23,19 +27,29 @@ const getDatabaseUrl = () => {
 let pool: Pool;
 let db: ReturnType<typeof drizzle>;
 
-try {
-  const connectionString = getDatabaseUrl();
-  
-  // Configuração simplificada do pool
-  pool = new Pool({ 
-    connectionString
-  });
-  
-  db = drizzle({ client: pool, schema });
-  console.log('✅ Database connection initialized successfully');
-} catch (error) {
-  console.error('❌ Database connection failed:', error);
-  throw error;
-}
+const initializeDatabase = async () => {
+  try {
+    const connectionString = getDatabaseUrl();
+    
+    // Configuração do pool com timeout e configurações específicas
+    pool = new Pool({ 
+      connectionString,
+      connectionTimeoutMillis: 10000
+    });
+    
+    db = drizzle({ client: pool, schema });
+    
+    // Testar conexão
+    const client = await pool.connect();
+    client.release();
+    console.log('✅ Database connection initialized successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    throw error;
+  }
+};
+
+// Inicializar conexão
+initializeDatabase();
 
 export { pool, db };
