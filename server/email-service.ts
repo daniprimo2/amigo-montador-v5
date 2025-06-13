@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { config } from 'dotenv';
+
+// Carregar variáveis de ambiente
+config();
 
 interface EmailConfig {
   host: string;

@@ -4,6 +4,10 @@ import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { config } from 'dotenv';
+
+// Carregar variáveis de ambiente
+config();
 
 // For ESM compatibility in production
 const __filename = fileURLToPath(import.meta.url);
