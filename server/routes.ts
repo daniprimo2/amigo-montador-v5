@@ -13,7 +13,6 @@ import axios from 'axios';
 import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
 import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
 import { emailService } from './email-service.js';
-import { pushNotificationService, vapidKeys, type PushSubscription } from './push-notifications.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
@@ -133,157 +132,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configurar autenticação
   setupAuth(app);
-
-  // Rotas de Push Notifications
-  app.get("/api/push/vapid-key", (req, res) => {
-    res.json({ publicKey: vapidKeys.publicKey });
-  });
-
-  app.post("/api/push/subscribe", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-
-      const subscription: PushSubscription = req.body;
-      pushNotificationService.registerSubscription(req.user!.id, subscription);
-      
-      res.json({ message: "Subscription registrada com sucesso" });
-    } catch (error) {
-      console.error('Erro ao registrar push subscription:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-
-  app.post("/api/push/unsubscribe", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-
-      const { endpoint } = req.body;
-      pushNotificationService.unregisterSubscription(req.user!.id, endpoint);
-      
-      res.json({ message: "Subscription removida com sucesso" });
-    } catch (error) {
-      console.error('Erro ao remover push subscription:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-
-  app.post("/api/push/test", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-
-      const success = await pushNotificationService.sendToUser(req.user!.id, {
-        title: "Teste de Notificação",
-        body: "Se você está vendo isto, as notificações estão funcionando!",
-        icon: "/logo-amigomontador.jpg"
-      });
-
-      res.json({ success, message: success ? "Notificação enviada" : "Falha ao enviar notificação" });
-    } catch (error) {
-      console.error('Erro ao enviar notificação de teste:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-
-  // Analytics API endpoint
-  app.get("/api/analytics", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-
-      const { range = "30d" } = req.query;
-      const days = range === "7d" ? 7 : range === "90d" ? 90 : 30;
-      
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      // Calcular métricas baseadas nos dados reais
-      const [totalServices, completedServices, activeServices] = await Promise.all([
-        db.select({ count: sql<number>`count(*)` }).from(services).where(sql`created_at >= ${startDate}`),
-        db.select({ count: sql<number>`count(*)` }).from(services).where(and(
-          eq(services.status, 'completed'),
-          sql`created_at >= ${startDate}`
-        )),
-        db.select({ count: sql<number>`count(*)` }).from(services).where(and(
-          eq(services.status, 'in-progress'),
-          sql`created_at >= ${startDate}`
-        ))
-      ]);
-
-      // Buscar estatísticas de avaliações
-      const avgRatingResult = await db
-        .select({ avg: sql<number>`AVG(rating::numeric)` })
-        .from(ratings)
-        .where(sql`created_at >= ${startDate}`);
-
-      // Estatísticas de notificações
-      const notificationStats = {
-        sent: pushNotificationService.getSubscriptionCount(),
-        users: pushNotificationService.getUserCount()
-      };
-
-      // Locais mais populares
-      const popularLocations = await db
-        .select({
-          location: services.location,
-          count: sql<number>`count(*)`
-        })
-        .from(services)
-        .where(sql`created_at >= ${startDate}`)
-        .groupBy(services.location)
-        .orderBy(sql`count(*) DESC`)
-        .limit(5);
-
-      // Status dos serviços
-      const servicesByStatus = await db
-        .select({
-          status: services.status,
-          count: sql<number>`count(*)`
-        })
-        .from(services)
-        .where(sql`created_at >= ${startDate}`)
-        .groupBy(services.status);
-
-      const totalCount = servicesByStatus.reduce((sum, item) => sum + item.count, 0);
-      const statusWithPercentage = servicesByStatus.map(item => ({
-        status: item.status === 'completed' ? 'Concluído' : 
-                item.status === 'in-progress' ? 'Em Andamento' :
-                item.status === 'open' ? 'Aberto' : 'Cancelado',
-        count: item.count,
-        percentage: totalCount > 0 ? (item.count / totalCount) * 100 : 0
-      }));
-
-      const analytics = {
-        totalServices: totalServices[0]?.count || 0,
-        completedServices: completedServices[0]?.count || 0,
-        activeServices: activeServices[0]?.count || 0,
-        totalRevenue: 0, // Implementar quando integração de pagamento estiver ativa
-        averageRating: Number(avgRatingResult[0]?.avg || 0),
-        responseTime: 2.3, // Calcular baseado nos timestamps reais
-        notificationsSent: notificationStats.sent,
-        mobileUsers: 85, // Implementar tracking de user-agent
-        weeklyGrowth: 12.5, // Calcular comparando com período anterior
-        popularLocations: popularLocations.map(loc => ({
-          city: loc.location || 'Não informado',
-          count: loc.count
-        })),
-        servicesByStatus: statusWithPercentage,
-        revenueByMonth: [], // Implementar quando dados de pagamento estiverem disponíveis
-        userActivity: [] // Implementar tracking de horários de atividade
-      };
-
-      res.json(analytics);
-    } catch (error) {
-      console.error('Erro ao buscar analytics:', error);
-      res.status(500).json({ message: "Erro ao buscar dados de analytics" });
-    }
-  });
 
   // Rotas de recuperação de senha
   app.post("/api/password-reset/request", async (req, res) => {
@@ -2935,41 +2783,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (notificationError) {
         console.error('Erro ao enviar notificação de nova mensagem:', notificationError);
-      }
-      
-      // Enviar push notification
-      try {
-        if (req.user?.userType === 'montador') {
-          // Notificar lojista via push
-          const storeResult = await db.select().from(stores).where(eq(stores.id, service.storeId));
-          if (storeResult.length > 0) {
-            const storeUserId = storeResult[0].userId;
-            await pushNotificationService.notifyNewMessage(storeUserId, req.user.name, service.title, serviceId);
-          }
-        } else if (req.user?.userType === 'lojista') {
-          // Notificar montadores via push
-          const acceptedApplications = await db
-            .select()
-            .from(applications)
-            .where(and(
-              eq(applications.serviceId, serviceId),
-              eq(applications.status, 'accepted')
-            ));
-          
-          for (const app of acceptedApplications) {
-            const assemblerDataResult = await db
-              .select()
-              .from(assemblers)
-              .where(eq(assemblers.id, app.assemblerId));
-            
-            if (assemblerDataResult.length > 0) {
-              const assemblerUserId = assemblerDataResult[0].userId;
-              await pushNotificationService.notifyNewMessage(assemblerUserId, req.user.name, service.title, serviceId);
-            }
-          }
-        }
-      } catch (pushError) {
-        console.error('Erro ao enviar push notification:', pushError);
       }
       
       // Notificar usuário sobre a nova mensagem (função global)

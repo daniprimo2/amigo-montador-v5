@@ -1,10 +1,12 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from 'ws';
+import ws from "ws";
 import * as schema from "../shared/schema.js";
 
-// Configure WebSocket para Node.js
-neonConfig.webSocketConstructor = ws;
+// Configure Neon WebSocket only in serverless environments
+if (typeof WebSocket === 'undefined') {
+  neonConfig.webSocketConstructor = ws;
+}
 
 // Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
 const getDatabaseUrl = () => {
@@ -16,7 +18,7 @@ const getDatabaseUrl = () => {
   const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT } = process.env;
   if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
     const port = PGPORT || '5432';
-    return `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${port}/${PGDATABASE}?sslmode=require`;
+    return `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${port}/${PGDATABASE}`;
   }
 
   throw new Error(
@@ -27,29 +29,17 @@ const getDatabaseUrl = () => {
 let pool: Pool;
 let db: ReturnType<typeof drizzle>;
 
-const initializeDatabase = async () => {
-  try {
-    const connectionString = getDatabaseUrl();
-    
-    // Configuração do pool com timeout e configurações específicas
-    pool = new Pool({ 
-      connectionString,
-      connectionTimeoutMillis: 10000
-    });
-    
-    db = drizzle({ client: pool, schema });
-    
-    // Testar conexão
-    const client = await pool.connect();
-    client.release();
-    console.log('✅ Database connection initialized successfully');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    throw error;
-  }
-};
-
-// Inicializar conexão
-initializeDatabase();
+try {
+  const connectionString = getDatabaseUrl();
+  pool = new Pool({ 
+    connectionString,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+  db = drizzle({ client: pool, schema });
+  console.log('✅ Database connection initialized successfully');
+} catch (error) {
+  console.error('❌ Database connection failed:', error);
+  throw error;
+}
 
 export { pool, db };

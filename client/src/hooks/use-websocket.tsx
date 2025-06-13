@@ -107,14 +107,19 @@ export function useWebSocket() {
         debugLogger('WebSocket', `Conexão fechada: Código ${event.code}, Motivo: ${event.reason || 'Não especificado'}`);
         setConnected(false);
         
-        // Não reconectar automaticamente para evitar loops infinitos
-        // A reconexão será feita quando necessário
+        // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
+        if (user) {
+          debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
+          setTimeout(() => {
+            debugLogger('WebSocket', 'Tentando reconexão automática');
+            connect();
+          }, 5000);
+        }
       };
 
       socket.onerror = (error) => {
-        debugLogger('WebSocket', 'Erro na conexão WebSocket - continuando sem WebSocket', error);
+        debugLogger('WebSocket', 'Erro na conexão WebSocket', error);
         setConnected(false);
-        // Não fazer throw do erro para não quebrar a aplicação
       };
 
       socket.onmessage = (event) => {
@@ -217,15 +222,10 @@ export function useWebSocket() {
     }
   }, [user, toast]);
 
-  // Conectar ao WebSocket quando o usuário estiver disponível (opcional)
+  // Conectar ao WebSocket quando o usuário estiver disponível
   useEffect(() => {
     if (user) {
-      // Tentar conectar com delay para dar tempo ao servidor inicializar
-      const timer = setTimeout(() => {
-        connect();
-      }, 2000);
-      
-      return () => clearTimeout(timer);
+      connect();
     }
     
     // Limpar ao desmontar
