@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { insertUserSchema, User as SelectUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export type RegisterUserData = {
@@ -34,23 +34,30 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<SelectUser | null, Error>({
+  
+  const userQuery = useQuery<SelectUser | null>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/user", { credentials: "include" });
+        if (res.status === 401) {
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(`${res.status}: ${res.statusText}`);
+        }
+        return await res.json() as SelectUser;
+      } catch (error) {
+        console.error('AuthProvider - Erro ao buscar usuário:', error);
+        return null;
+      }
+    },
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
-    onError: (error) => {
-      console.error('AuthProvider - Erro na query /api/user:', error);
-    },
-    onSuccess: (data) => {
-      console.log('AuthProvider - Query /api/user bem-sucedida:', data);
-    }
   });
+  
+  const { data: user, error, isLoading } = userQuery;
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
