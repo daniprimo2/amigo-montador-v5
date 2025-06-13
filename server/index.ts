@@ -140,11 +140,7 @@ app.use((req, res, next) => {
     const port = parseInt(process.env.PORT || '5000');
     const host = "0.0.0.0";
     
-    server.listen({
-      port,
-      host,
-      reusePort: true,
-    }, () => {
+    server.listen(port, host, () => {
       log(`serving on port ${port}`);
       console.log(`🚀 Amigo Montador running on port ${port}`);
       console.log(`📱 Application: http://0.0.0.0:${port}`);
