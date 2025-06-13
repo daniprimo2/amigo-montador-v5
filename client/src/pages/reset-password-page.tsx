@@ -19,7 +19,7 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export const ResetPasswordPage: React.FC = () => {
+const ResetPasswordPage: React.FC = () => {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [token, setToken] = useState<string | null>(null);

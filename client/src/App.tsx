@@ -8,16 +8,17 @@ import StoreDashboardPage from "@/pages/store-dashboard-page";
 import AssemblerDashboardPage from "@/pages/assembler-dashboard-page";
 import UserProfilePage from "@/pages/user-profile-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
+import TestResetPage from "@/pages/test-reset";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <ProtectedRoute path="/lojista" component={StoreDashboardPage} />
       <ProtectedRoute path="/montador" component={AssemblerDashboardPage} />
       <Route path="/profile/:userId" component={UserProfilePage} />
-      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/register" component={AuthPage} />
       <Route path="/login" component={AuthPage} />
