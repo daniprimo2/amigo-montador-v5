@@ -91,7 +91,7 @@ export default defineConfig({
   console.log('Building frontend...');
   
   try {
-    execSync('npx vite build', { 
+    execSyncBuild('npx vite build', { 
       cwd: process.cwd(),
       stdio: 'inherit'
     });
@@ -103,7 +103,7 @@ export default defineConfig({
   // Compile server TypeScript to JavaScript for production
   console.log('Compiling server to JavaScript...');
   try {
-    execSync('npx tsc server/index.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck --resolveJsonModule', {
+    execSyncBuild('npx tsc server/index.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck --resolveJsonModule', {
       cwd: process.cwd(),
       stdio: 'inherit'
     });
