@@ -47,7 +47,9 @@ class EmailService {
       // Verificar conexão
       this.transporter.verify((error, success) => {
         if (error) {
-          console.error('Erro na configuração do email:', error);
+          console.warn('Erro na configuração do email - usando modo desenvolvimento:', error.message);
+          console.log('Para Hotmail/Outlook, você precisa de uma "senha de aplicativo" ao invés da senha normal.');
+          console.log('Instruções: https://support.microsoft.com/pt-br/account-billing/manage-app-passwords-for-two-step-verification-d6dc8c6d-4bf7-4b3b-b7b8-5ff81c78c0c1');
           this.transporter = null;
         } else {
           console.log('Servidor de email configurado com sucesso');
