@@ -102,30 +102,18 @@ export const LoginForm: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         
-        if (data.developmentMode && (data.appLink || data.webLink)) {
-          // Modo desenvolvimento - tentar abrir deep link primeiro, depois web
-          if (data.appLink) {
-            // Tentar abrir o deep link do app
-            window.location.href = data.appLink;
-            
-            // Fallback para web após um delay
-            setTimeout(() => {
-              if (data.webLink) {
-                window.open(data.webLink, '_blank');
-              }
-            }, 1000);
-          } else if (data.webLink) {
-            window.open(data.webLink, '_blank');
-          }
+        if (data.developmentMode && data.appLink) {
+          // Modo desenvolvimento - abrir apenas deep link do aplicativo
+          window.location.href = data.appLink;
           
           toast({
-            title: "Links de recuperação disponíveis",
-            description: "Tentando abrir no app. Se não funcionar, uma aba web será aberta.",
+            title: "Redirecionando para o app",
+            description: "Abrindo link de recuperação no aplicativo AmigoMontador.",
           });
         } else {
           toast({
             title: "Email enviado",
-            description: data.message,
+            description: "Verifique seu email e clique no link para abrir no aplicativo AmigoMontador.",
           });
         }
         

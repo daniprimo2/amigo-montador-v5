@@ -79,13 +79,8 @@ class EmailService {
     }
 
     try {
-      // Usar deep link para abrir o aplicativo, com fallback para web
-      const deepLinkUrl = `amigomontador://app/reset-password?token=${resetToken}`;
-      const webUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/reset-password?token=${resetToken}`
-        : `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
-      
-      const resetUrl = deepLinkUrl;
+      // Usar exclusivamente deep link para abrir o aplicativo AmigoMontador
+      const resetUrl = `amigomontador://app/reset-password?token=${resetToken}`;
       
       const mailOptions = {
         from: `"AmigoMontador" <${process.env.SMTP_USER}>`,
@@ -121,30 +116,36 @@ class EmailService {
                 
                 <p>Recebemos uma solicitação para redefinir a senha da sua conta no AmigoMontador.</p>
                 
-                <p>Para criar uma nova senha, clique no botão abaixo:</p>
+                <p>Para criar uma nova senha, clique no botão abaixo que abrirá diretamente no aplicativo AmigoMontador:</p>
                 
-                <div style="text-align: center; margin: 20px 0;">
-                  <a href="${resetUrl}" class="button" style="margin-bottom: 10px; display: inline-block;">
-                    Abrir no App AmigoMontador
-                  </a>
-                  <br>
-                  <a href="${webUrl}" class="button" style="background-color: #6c757d; margin-top: 10px; display: inline-block;">
-                    Abrir no Navegador
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetUrl}" class="button" style="font-size: 16px; padding: 15px 30px;">
+                    🔗 Redefinir Senha no App
                   </a>
                 </div>
                 
-                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-                  <p style="margin: 0; font-size: 14px;"><strong>Links alternativos:</strong></p>
-                  <p style="margin: 5px 0 0 0; font-size: 12px;">
-                    <strong>App:</strong> <span style="word-break: break-all;">${resetUrl}</span>
-                  </p>
-                  <p style="margin: 5px 0 0 0; font-size: 12px;">
-                    <strong>Web:</strong> <span style="word-break: break-all;">${webUrl}</span>
+                <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+                  <p style="margin: 0; color: #1976d2; font-weight: bold;">📱 Importante:</p>
+                  <p style="margin: 5px 0; color: #1976d2;">Este link funciona apenas no aplicativo AmigoMontador instalado em seu dispositivo móvel.</p>
+                </div>
+                
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 14px;">
+                  <p style="margin: 0;"><strong>Se o botão não funcionar:</strong></p>
+                  <p style="margin: 5px 0 0 0;">Copie e cole este link no seu dispositivo móvel:</p>
+                  <p style="word-break: break-all; background-color: #ffffff; padding: 10px; border: 1px solid #dee2e6; border-radius: 3px; margin: 10px 0; font-family: monospace;">
+                    ${resetUrl}
                   </p>
                 </div>
                 
                 <div class="warning">
-                  <strong>⚠️ Importante:</strong>
+                  <strong>⚠️ Não tem o aplicativo instalado?</strong>
+                  <p style="margin: 10px 0;">Baixe o AmigoMontador gratuitamente:</p>
+                  <p style="margin: 5px 0;">📱 <strong>Android:</strong> Google Play Store</p>
+                  <p style="margin: 5px 0;">🍎 <strong>iOS:</strong> App Store</p>
+                </div>
+                
+                <div class="warning">
+                  <strong>⚠️ Segurança:</strong>
                   <ul>
                     <li>Este link é válido por 24 horas</li>
                     <li>Se você não solicitou esta alteração, ignore este email</li>

@@ -180,16 +180,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Token criado mas email não enviado - credenciais SMTP não configuradas');
         console.log(`Token de teste: ${resetToken}`);
         
-        // Retorna links para teste quando SMTP não está configurado
-        const deepLinkUrl = `amigomontador://app/reset-password?token=${resetToken}`;
-        const webUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
-          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/reset-password?token=${resetToken}`
-          : `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+        // Retorna apenas deep link para aplicativo quando SMTP não está configurado
+        const appLink = `amigomontador://app/reset-password?token=${resetToken}`;
           
         return res.json({ 
-          message: "Email não configurado. Use um dos links abaixo para redefinir sua senha:",
-          appLink: deepLinkUrl,
-          webLink: webUrl,
+          message: "Email não configurado. Use o link do aplicativo para redefinir sua senha:",
+          appLink: appLink,
           developmentMode: true
         });
       } else if (!emailSent) {
