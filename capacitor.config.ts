@@ -3,9 +3,10 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.amigomontador.app',
   appName: 'AmigoMontador',
-  webDir: 'client/dist',
+  webDir: 'dist/client',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    allowNavigation: ['*']
   },
   android: {
     buildOptions: {

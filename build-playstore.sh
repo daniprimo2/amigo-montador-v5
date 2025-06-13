@@ -29,9 +29,14 @@ echo "🔧 Fazendo build da aplicação web..."
 npm run build
 
 # Verificar se o build existe
-if [ ! -d "client/dist" ]; then
-    echo "❌ Build da web falhou. Pasta client/dist não encontrada."
+if [ ! -d "dist/client" ]; then
+    echo "❌ Build da web falhou. Pasta dist/client não encontrada."
     exit 1
+fi
+
+# Criar symlink para compatibilidade com Capacitor
+if [ ! -d "client/dist" ]; then
+    ln -sf ../dist/client client/dist
 fi
 
 echo "✅ Build da web concluído"
