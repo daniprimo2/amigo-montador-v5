@@ -66,8 +66,7 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, userName: string, resetToken: string): Promise<boolean> {
     if (!this.transporter) {
-      console.error('Transporter de email não está configurado');
-      console.log('=== SIMULAÇÃO DE ENVIO DE EMAIL ===');
+      console.log('=== MODO DESENVOLVIMENTO - SIMULAÇÃO DE EMAIL ===');
       console.log(`Para: ${email}`);
       console.log(`Nome: ${userName}`);
       console.log(`Token: ${resetToken}`);
