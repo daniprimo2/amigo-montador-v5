@@ -24,15 +24,7 @@ if (typeof WebSocket === 'undefined') {
 
 // Usar a variável de ambiente DATABASE_URL ou construir a partir das outras variáveis
 const getDatabaseUrl = () => {
-  // Para desenvolvimento local sem PostgreSQL, usar URL de exemplo do Neon
-  if (process.env.NODE_ENV === 'development' && !process.env.DATABASE_URL) {
-    console.log('⚠️ Modo desenvolvimento: usando configuração padrão');
-    console.log('📋 Para usar seu próprio banco, configure DATABASE_URL no arquivo .env');
-    // URL de exemplo - você deve substituir pela sua própria
-    return 'postgresql://neondb_owner:your_password@host.neon.tech/neondb?sslmode=require';
-  }
-
-  if (process.env.DATABASE_URL) {
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL !== 'postgresql://neondb_owner:password@ep-example.neon.tech/neondb?sslmode=require') {
     return process.env.DATABASE_URL;
   }
   
@@ -44,7 +36,11 @@ const getDatabaseUrl = () => {
   }
 
   throw new Error(
-    "Configure DATABASE_URL no arquivo .env. Veja CONFIGURACAO_BANCO_LOCAL.md para instruções."
+    "AÇÃO NECESSÁRIA: Configure uma URL de banco real no arquivo .env\n" +
+    "1. Acesse https://neon.tech ou https://www.elephantsql.com\n" +
+    "2. Crie uma conta gratuita\n" +
+    "3. Copie a string de conexão\n" +
+    "4. Cole no arquivo .env como DATABASE_URL="
   );
 };
 
