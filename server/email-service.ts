@@ -70,13 +70,20 @@ class EmailService {
       console.log(`Para: ${email}`);
       console.log(`Nome: ${userName}`);
       console.log(`Token: ${resetToken}`);
-      console.log(`Link de recuperação: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`);
+      const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        : process.env.FRONTEND_URL || 'http://localhost:5000';
+      console.log(`Link de recuperação: ${baseUrl}/reset-password?token=${resetToken}`);
       console.log('=== FIM DA SIMULAÇÃO ===');
       return false;
     }
 
     try {
-      const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+      // Usar a URL do Replit se estiver disponível, senão usar localhost
+      const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        : process.env.FRONTEND_URL || 'http://localhost:5000';
+      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
       
       const mailOptions = {
         from: `"AmigoMontador" <${process.env.SMTP_USER}>`,

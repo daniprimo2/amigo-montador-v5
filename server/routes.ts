@@ -181,9 +181,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Token de teste: ${resetToken}`);
         
         // Retorna o link diretamente para teste quando SMTP não está configurado
+        const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          : process.env.FRONTEND_URL || 'http://localhost:5000';
         return res.json({ 
           message: "Email não configurado. Use o link abaixo para redefinir sua senha:",
-          resetLink: `http://localhost:5000/reset-password?token=${resetToken}`,
+          resetLink: `${baseUrl}/reset-password?token=${resetToken}`,
           developmentMode: true
         });
       } else if (!emailSent) {
