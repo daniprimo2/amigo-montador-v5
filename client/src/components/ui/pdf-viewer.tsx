@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, ExternalLink, X } from 'lucide-react';
 
@@ -34,9 +34,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <DialogDescription className="sr-only">
-            Visualizador de documento PDF contendo os termos de serviço e política de privacidade da plataforma Amigo Montador
-          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
