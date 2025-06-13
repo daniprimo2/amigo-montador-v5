@@ -83,28 +83,61 @@ export default defineConfig({
       cwd: process.cwd(),
       stdio: 'inherit'
     });
+    console.log('Frontend build completed');
   } catch (error) {
-    console.log('Frontend build failed, copying client files...');
-    if (existsSync('client/dist')) {
-      cpSync('client/dist', 'dist/public', { recursive: true });
-    }
+    console.log('Frontend build failed, using development mode');
   }
 
-  // Create simple production entry point
-  const indexJs = `const { register } = require('tsx/cjs');
-register();
-
-// Set production environment immediately
+  // Compile server TypeScript to JavaScript for production
+  console.log('Compiling server to JavaScript...');
+  try {
+    execSync('npx tsc server/index.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports --skipLibCheck --resolveJsonModule', {
+      cwd: process.cwd(),
+      stdio: 'inherit'
+    });
+    
+    // Create simple JavaScript entry point
+    const indexJs = `// Production entry point for Amigo Montador
 process.env.NODE_ENV = "production";
 process.env.PORT = process.env.PORT || 3000;
 
 console.log('Starting Amigo Montador on port', process.env.PORT);
 
-// Import and start server directly
-require('./server/index.ts');
+// Start the compiled server
+require('./server/index.js');
 `;
+    writeFileSync('dist/index.js', indexJs);
+    console.log('JavaScript compilation completed');
+    
+  } catch (compileError) {
+    console.log('TypeScript compilation failed, using runtime approach...');
+    
+    // Fallback to runtime compilation
+    const indexJs = `// Production entry point for Amigo Montador
+process.env.NODE_ENV = "production";
+process.env.PORT = process.env.PORT || 3000;
 
-  writeFileSync('dist/index.js', indexJs);
+console.log('Starting Amigo Montador on port', process.env.PORT);
+
+// Use tsx for runtime TypeScript compilation
+const { spawn } = require('child_process');
+
+const server = spawn('npx', ['tsx', 'server/index.ts'], {
+  stdio: 'inherit',
+  env: process.env,
+  cwd: __dirname
+});
+
+server.on('error', (err) => {
+  console.error('Server failed:', err);
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => server.kill('SIGTERM'));
+process.on('SIGINT', () => server.kill('SIGINT'));
+`;
+    writeFileSync('dist/index.js', indexJs);
+  }
 
   // Update package.json for production deployment
   const packageJson = JSON.parse(readFileSync('dist/package.json', 'utf8'));
