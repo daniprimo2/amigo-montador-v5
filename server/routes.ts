@@ -107,9 +107,8 @@ declare global {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Log das requisições
+  // Log das requisições - removido para produção
   app.use((req, res, next) => {
-    .toISOString()}] ${req.method} ${req.url}`);
     next();
   });
   

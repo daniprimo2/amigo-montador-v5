@@ -1,3 +1,18 @@
+#!/bin/bash
+
+echo "Restaurando projeto e preparando para produção..."
+
+# Limpar arquivos corrompidos
+rm -f optimize-for-production.js fix-production.js prepare-production.js
+
+# Verificar se existe backup
+if [ -f "server/routes.ts.backup" ]; then
+    echo "Restaurando routes.ts do backup..."
+    cp server/routes.ts.backup server/routes.ts
+fi
+
+# Criar versão limpa do storage.ts se estiver corrompido
+cat > server/storage.ts << 'EOF'
 import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
 import { db } from "./db.js";
 import { 
@@ -414,3 +429,75 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+EOF
+
+echo "Projeto restaurado!"
+echo "Agora preparando configurações para produção e Play Store..."
+
+# Criar configuração Capacitor otimizada
+cat > capacitor.config.ts << 'EOF'
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.amigomontador.app',
+  appName: 'AmigoMontador',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  },
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: "#2563EB",
+      showSpinner: false
+    },
+    StatusBar: {
+      style: "dark",
+      backgroundColor: "#2563EB"
+    }
+  }
+};
+
+export default config;
+EOF
+
+# Criar script de build para produção
+cat > build-for-playstore.sh << 'EOF'
+#!/bin/bash
+
+echo "🏗️ Preparando build para Play Store..."
+
+# Limpar builds anteriores
+rm -rf dist/
+rm -rf android/app/src/main/assets/public/
+
+# Build otimizado do frontend
+echo "📦 Building frontend..."
+NODE_ENV=production npm run build
+
+# Verificar se build foi bem-sucedido
+if [ ! -d "dist" ]; then
+  echo "❌ Erro no build do frontend"
+  exit 1
+fi
+
+# Sync com Capacitor
+echo "🔄 Syncing with Capacitor..."
+npx cap sync android
+
+echo "✅ Projeto pronto para gerar AAB!"
+echo "📱 Execute: cd android && ./gradlew bundleRelease"
+EOF
+
+chmod +x build-for-playstore.sh
+
+echo "✅ Projeto restaurado e configurado para produção!"
+echo "📋 Para preparar para Play Store:"
+echo "1. Execute: ./build-for-playstore.sh"
+echo "2. Execute: cd android && ./gradlew bundleRelease"
+echo "3. O AAB estará em: android/app/build/outputs/bundle/release/"
