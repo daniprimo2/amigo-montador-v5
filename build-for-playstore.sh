@@ -21,4 +21,5 @@ echo "🔄 Syncing with Capacitor..."
 npx cap sync android
 
 echo "✅ Projeto pronto para gerar AAB!"
-echo "📱 Execute: cd android && ./gradlew bundleRelease"
+echo "📱 Para gerar AAB: cd android && ./gradlew bundleRelease"
+echo "📍 AAB será gerado em: android/app/build/outputs/bundle/release/"

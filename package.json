@@ -9,9 +9,10 @@
     "build": "node prepare-deploy.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "build:prod": "./build-production.sh",
-    "android:build": "./build-android.sh",
-    "optimize": "node optimize-for-production.js"
+    "build:prod": "./build-for-playstore.sh",
+    "android:build": "cd android && ./gradlew bundleRelease",
+    "optimize": "node optimize-for-production.js",
+    "android:clean": "cd android && ./gradlew clean"
   },
   "dependencies": {
     "@capacitor/android": "^7.3.0",

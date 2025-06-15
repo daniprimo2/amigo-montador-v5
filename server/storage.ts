@@ -143,124 +143,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getServicesByStoreId(storeId: number, status?: string): Promise<Service[]> {
-    const enhancedServices = await Promise.all(services.map(async (service) => {
-      const acceptedApplications = await db
-        .select()
-        .from(applications)
-        .where(
-          and(
-            eq(applications.serviceId, service.id),
-            eq(applications.status, 'accepted')
-          )
-        );
-      
-      if (acceptedApplications.length > 0) {
-        const assemblerId = acceptedApplications[0].assemblerId;
-        const assembler = await this.getAssemblerById(assemblerId);
-        
-        if (assembler) {
-          const userResult = await db
-            .select({
-              id: users.id,
-              name: users.name,
-              phone: users.phone,
-              email: users.email,
-              profilePhotoUrl: users.profilePhotoUrl
-            })
-            .from(users)
-            .where(eq(users.id, assembler.userId))
-            .limit(1);
-          
-          if (userResult.length > 0) {
-            return {
-              ...service,
-              assembler: {
-                id: assemblerId,
-                name: userResult[0].name,
-                userId: assembler.userId,
-                phone: userResult[0].phone,
-                email: userResult[0].email,
-                photoUrl: userResult[0].profilePhotoUrl,
-                city: assembler.city,
-                state: assembler.state,
-                specialties: assembler.specialties,
-                experience: assembler.experience,
-                rating: assembler.rating
-              }
-            };
-          }
-        }
-      }
-      
-      return service;
-    }));
+    let query = db.select().from(services).where(eq(services.storeId, storeId));
     
-    return enhancedServices;
+    if (status) {
+      query = query.where(eq(services.status, status));
+    }
+    
+    return await query.orderBy(desc(services.createdAt));
   }
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
-    const servicesList = await db.select({
-      services: {
-        id: services.id,
-        storeId: services.storeId,
-        title: services.title,
-        description: services.description,
-        location: services.location,
-        address: services.address,
-        addressNumber: services.addressNumber,
-        cep: services.cep,
-        latitude: services.latitude,
-        longitude: services.longitude,
-        startDate: services.startDate,
-        endDate: services.endDate,
-        price: services.price,
-        status: services.status,
-        materialType: services.materialType,
-        projectFiles: services.projectFiles,
-        createdAt: services.createdAt,
-        completedAt: services.completedAt
-      },
-      stores: {
-        id: stores.id,
-        name: stores.name
-      }
-    })
-      .from(services)
-      .leftJoin(stores, eq(services.storeId, stores.id))
-      .where(eq(services.status, 'open'))
-      .orderBy(desc(services.createdAt));
-    
-    const enhancedServices = await Promise.all(servicesList.map(async result => {
-      const { services: service, stores: store } = result;
-      
-      let projectFiles = [];
-      if (service.projectFiles) {
-        try {
-          if (typeof service.projectFiles === 'string') {
-            projectFiles = JSON.parse(service.projectFiles);
-          } else {
-            projectFiles = service.projectFiles;
-          }
-        } catch (error) {
-          // Silencioso para produção
-        }
-      }
-      
-      const storeNameFromDb = store?.name || 'Loja não especificada';
-      
-      return {
-        ...service,
-        projectFiles,
-        storeName: storeNameFromDb,
-        description: service.description || '',
-        materialType: service.materialType || '',
-        address: service.address || '',
-        addressNumber: service.addressNumber || '',
-        cep: service.cep || ''
-      } as Service & { storeName: string };
-    }));
-    
-    return enhancedServices;
+    const result = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    return result;
   }
 
   async createService(serviceData: InsertService): Promise<Service> {

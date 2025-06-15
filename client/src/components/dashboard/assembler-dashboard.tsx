@@ -740,26 +740,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const completedServicesFromRaw = rawServices?.filter(s => s.status === 'completed') || [];
   const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
   
-  // Debug logs para entender a categorização
-  :", completedServicesFromRaw.length);
-  :", completedServicesFromActive.length);
-  // Debug detalhado para serviços pendentes
-  => ({
-    id: s.id,
-    title: s.title,
-    applicationStatus: s.applicationStatus,
-    hasApplied: s.hasApplied,
-    status: s.status
-  })));
-  
-  // Debug detalhado dos serviços por status
-  ));
-  => ({ id: s.id, title: s.title, status: s.status })));
-  => ({ id: s.id, title: s.title, status: s.status })));
-  
-  // Debug completo do activeServices para entender todos os status
-  => ({ id: s.id, title: s.title, status: s.status })) || []);
-  
   // Calculate service counts by status
   const serviceCounts = {
     // Disponíveis: serviços abertos onde o montador ainda não se candidatou

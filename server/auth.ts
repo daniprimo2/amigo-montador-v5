@@ -80,8 +80,6 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      );
-      
       // Verificar se o usuário já existe
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
