@@ -139,6 +139,46 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('Todos os estados');
+  const [maxDistance, setMaxDistance] = useState(1000);
+  const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+  const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
+  const [dashboardSection, setDashboardSection] = useState('services');
+  const [activeTab, setActiveTab] = useState('available');
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isSkillsWizardOpen, setIsSkillsWizardOpen] = useState(false);
+  const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
+  const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
+  const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
+
+  const { lastMessage } = useWebSocket(user?.id);
+  // Queries
+  const { data: rawServices, isLoading, error } = useQuery({
+    queryKey: ['/api/services/available'],
+    enabled: !!user
+  });
+
+  const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
+    queryKey: ['/api/services/active'],
+    enabled: !!user
+  });
+
+  const { data: assemblerProfile } = useQuery({
+    queryKey: [`/api/assemblers/${user?.id}`],
+    enabled: !!user?.id
+  });
+
+  const {
+    pendingRatings,
+    selectedServiceForRating: mandatoryServiceForRating,
+    isDialogOpen: isMandatoryRatingDialogOpen,
+    closeMandatoryRating
+  } = useMandatoryRatings();
+ onLogout }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedState, setSelectedState] = useState('Todos os estados');
   const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
   const [maxDistance, setMaxDistance] = useState(1000); // Default 1000km - mostrar todos os serviços
   const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
@@ -311,9 +351,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     if (equivalents2.some((eq: string) => normalizeCityName(eq) === norm1)) return true;
     
     // Verifica se ambas têm equivalências em comum
-    const normalizedEquiv1: string[] = equivalents1.map((eq: string) => normalizeCityName(eq
-    const normalizedEquiv2: string[] = equivalents2.map((eq: string) => normalizeCityName(eq
-    return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq
+    const normalizedEquiv1: string[] = equivalents1.map((eq: string) => normalizeCityName(eq));
+    const normalizedEquiv2: string[] = equivalents2.map((eq: string) => normalizeCityName(eq));
+    return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq));
   };
 
   // Lista de estados brasileiros para filtro
@@ -628,54 +668,38 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Only apply filters if user has actively searched or selected specific filters
   const hasActiveFilters = searchTerm !== '' || selectedState !== 'Todos os estados' || maxDistance < 1000;
   
-  const filteredServices = services?.filter(service => {
-    // Se não há filtros ativos, mostrar TODOS os serviços para montadores
-    if (!hasActiveFilters) {
-      return true; // Mostrar todos os serviços disponíveis
+  const filteredServices = (rawServices || []).filter((service: any) => {
+    // Se não há pesquisa nem filtros ativos, mostrar todos os serviços
+    if (searchTerm === '' && selectedState === 'Todos os estados' && maxDistance >= 1000) {
+      return true;
     }
     
-    // Aplicar filtros apenas quando o usuário especificamente pesquisar/filtrar
     const matchesSearch = searchTerm === '' || 
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
-      service.location.toLowerCase().includes(searchTerm.toLowerCase(
-    // State filtering based on abbreviations (only when state is specifically selected)
+      service.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesState = selectedState === 'Todos os estados' || (() => {
-      // Extract state from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
       const locationParts = service.location.split(' - ');
-      
       if (locationParts.length >= 2) {
-        const cityStatePart = locationParts[1]; // "City, State"
-        const statePart = cityStatePart.split(',')[1]?.trim(); // Extract state abbreviation
-        
-        // Check if the extracted state matches the selected state
-        const stateMatches = statePart === selectedState;
-        
-        return stateMatches;
+        const cityStatePart = locationParts[1];
+        const statePart = cityStatePart.split(',')[1]?.trim();
+        return statePart === selectedState;
       }
-      
       return false;
     })();
     
-    // Distance filtering (only when distance is specifically limited)
-    const matchesDistance = maxDistance >= 500 || (() => {
-      if (!service.distance || service.distance === 'Distância não calculada') {
-        return true; // Include services without distance data
+    const matchesDistance = maxDistance >= 1000 || (() => {
+      if (service.distance && typeof service.distance === 'string') {
+        const distanceValue = parseFloat(service.distance.replace(' km', ''));
+        return !isNaN(distanceValue) && distanceValue <= maxDistance;
       }
-      
-      // Extract numeric distance from string like "21.7 km"
-      const distanceMatch = service.distance.match(/^(\d+\.?\d*)\s*km$/);
-      if (distanceMatch) {
-        const serviceDistance = parseFloat(distanceMatch[1]);
-        return serviceDistance <= maxDistance;
-      }
-      
-      return true; // Include if distance format is unexpected
+      return true;
     })();
     
     return matchesSearch && matchesState && matchesDistance;
-  }) || [];
+  });
 
   // Filtrar serviços por status para cada aba
   // Pending services: services where user has applied but waiting for store approval
@@ -1634,9 +1658,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           toUserName={selectedServiceForRating.store?.name || 'Loja'}
           serviceName={selectedServiceForRating.title}
           onSuccess={() => {
-            // Atualizar listas de serviços após avaliação
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            // Notificar usuário sobre avaliação
             toast({
               title: 'Avaliação enviada com sucesso',
               description: 'Obrigado por avaliar este serviço!'
