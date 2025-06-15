@@ -166,117 +166,117 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const cityEquivalences: Record<string, string[]> = {
     // São Paulo
     'são paulo': ['sp', 'são paulo sp', 'sao paulo', 'sampa'],
-    'sp': ['são paulo', 'são paulo sp', 'sao paulo', 'sampa']
-    //
+    'sp': ['são paulo', 'são paulo sp', 'sao paulo', 'sampa'],
+    // Rio de Janeiro
     'rio de janeiro': ['rj', 'rio de janeiro rj', 'rio'],
     'rj': ['rio de janeiro', 'rio de janeiro rj', 'rio'],
-    'rio': ['rio de janeiro', 'rj', 'rio de janeiro rj']
-    //
+    'rio': ['rio de janeiro', 'rj', 'rio de janeiro rj'],
+    // Brasília
     'brasília': ['df', 'brasilia', 'brasília df'],
     'df': ['brasília', 'brasilia', 'brasília df'],
-    'brasilia': ['brasília', 'df', 'brasília df']
-    //
+    'brasilia': ['brasília', 'df', 'brasília df'],
+    // Belo Horizonte
     'belo horizonte': ['mg', 'bh', 'belo horizonte mg'],
-    'bh': ['belo horizonte', 'mg', 'belo horizonte mg']
-    //
-    'salvador': ['ba', 'salvador ba']
-    //
-    'fortaleza': ['ce', 'fortaleza ce']
-    //
-    'curitiba': ['pr', 'curitiba pr']
-    //
-    'recife': ['pe', 'recife pe']
-    //
+    'bh': ['belo horizonte', 'mg', 'belo horizonte mg'],
+    // Salvador
+    'salvador': ['ba', 'salvador ba'],
+    // Fortaleza
+    'fortaleza': ['ce', 'fortaleza ce'],
+    // Curitiba
+    'curitiba': ['pr', 'curitiba pr'],
+    // Recife
+    'recife': ['pe', 'recife pe'],
+    // Porto Alegre
     'porto alegre': ['rs', 'porto alegre rs', 'poa'],
-    'poa': ['porto alegre', 'rs', 'porto alegre rs']
-    //
-    'manaus': ['am', 'manaus am']
-    //
+    'poa': ['porto alegre', 'rs', 'porto alegre rs'],
+    // Manaus
+    'manaus': ['am', 'manaus am'],
+    // Goiânia
     'goiânia': ['go', 'goiania', 'goiânia go'],
-    'goiania': ['goiânia', 'go', 'goiânia go']
-    //
+    'goiania': ['goiânia', 'go', 'goiânia go'],
+    // Belém
     'belém': ['pa', 'belem', 'belém pa'],
-    'belem': ['belém', 'pa', 'belém pa']
-    //
-    'guarulhos': ['guarulhos sp']
-    //
-    'campinas': ['campinas sp']
-    //
+    'belem': ['belém', 'pa', 'belém pa'],
+    // Guarulhos
+    'guarulhos': ['guarulhos sp'],
+    // Campinas
+    'campinas': ['campinas sp'],
+    // São Luís
     'são luís': ['ma', 'sao luis', 'são luís ma'],
-    'sao luis': ['são luís', 'ma', 'são luís ma']
-    //
+    'sao luis': ['são luís', 'ma', 'são luís ma'],
+    // Maceió
     'maceió': ['al', 'maceio', 'maceió al'],
-    'maceio': ['maceió', 'al', 'maceió al']
-    //
-    'natal': ['rn', 'natal rn']
-    //
-    'teresina': ['pi', 'teresina pi']
-    //
-    'campo grande': ['ms', 'campo grande ms']
-    //
+    'maceio': ['maceió', 'al', 'maceió al'],
+    // Natal
+    'natal': ['rn', 'natal rn'],
+    // Teresina
+    'teresina': ['pi', 'teresina pi'],
+    // Campo Grande
+    'campo grande': ['ms', 'campo grande ms'],
+    // João Pessoa
     'joão pessoa': ['pb', 'joao pessoa', 'joão pessoa pb'],
-    'joao pessoa': ['joão pessoa', 'pb', 'joão pessoa pb']
-    //
+    'joao pessoa': ['joão pessoa', 'pb', 'joão pessoa pb'],
+    // Florianópolis
     'florianópolis': ['sc', 'florianopolis', 'floripa', 'florianópolis sc'],
     'florianopolis': ['florianópolis', 'sc', 'floripa', 'florianópolis sc'],
-    'floripa': ['florianópolis', 'sc', 'florianopolis', 'florianópolis sc']
-    //
+    'floripa': ['florianópolis', 'sc', 'florianopolis', 'florianópolis sc'],
+    // Cuiabá
     'cuiabá': ['mt', 'cuiaba', 'cuiabá mt'],
-    'cuiaba': ['cuiabá', 'mt', 'cuiabá mt']
-    //
-    'aracaju': ['se', 'aracaju se']
-    //
+    'cuiaba': ['cuiabá', 'mt', 'cuiabá mt'],
+    // Aracaju
+    'aracaju': ['se', 'aracaju se'],
+    // Vitória
     'vitória': ['es', 'vitoria', 'vitória es'],
-    'vitoria': ['vitória', 'es', 'vitória es']
-    //
-    'osasco': ['osasco sp']
-    //
+    'vitoria': ['vitória', 'es', 'vitória es'],
+    // Osasco
+    'osasco': ['osasco sp'],
+    // Santo André
     'santo andré': ['santo andre', 'santo andré sp'],
-    'santo andre': ['santo andré', 'santo andré sp']
-    //
+    'santo andre': ['santo andré', 'santo andré sp'],
+    // São Bernardo do Campo
     'são bernardo do campo': ['sao bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
     'sao bernardo do campo': ['são bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
     'são bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'sao bernardo', 'são bernardo do campo sp'],
-    'sao bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'são bernardo', 'são bernardo do campo sp']
-    //
-    'santos': ['santos sp']
-    //
-    'sorocaba': ['sorocaba sp']
-    //
+    'sao bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'são bernardo', 'são bernardo do campo sp'],
+    // Santos
+    'santos': ['santos sp'],
+    // Sorocaba
+    'sorocaba': ['sorocaba sp'],
+    // Ribeirão Preto
     'ribeirão preto': ['ribeirao preto', 'ribeirão preto sp'],
-    'ribeirao preto': ['ribeirão preto', 'ribeirão preto sp']
-    //
+    'ribeirao preto': ['ribeirão preto', 'ribeirão preto sp'],
+    // São José dos Campos
     'são josé dos campos': ['sao jose dos campos', 'sjc', 'são josé dos campos sp'],
     'sao jose dos campos': ['são josé dos campos', 'sjc', 'são josé dos campos sp'],
-    'sjc': ['são josé dos campos', 'sao jose dos campos', 'são josé dos campos sp']
-    //
-    'joinville': ['joinville sc']
-    //
-    'londrina': ['londrina pr']
-    //
-    'contagem': ['contagem mg']
-    //
+    'sjc': ['são josé dos campos', 'sao jose dos campos', 'são josé dos campos sp'],
+    // Joinville
+    'joinville': ['joinville sc'],
+    // Londrina
+    'londrina': ['londrina pr'],
+    // Contagem
+    'contagem': ['contagem mg'],
+    // Uberlândia
     'uberlândia': ['uberlandia', 'uberlândia mg'],
-    'uberlandia': ['uberlândia', 'uberlândia mg']
-    //
-    'juiz de fora': ['juiz de fora mg']
-    //
-    'feira de santana': ['feira de santana ba']
-    //
-    'caxias do sul': ['caxias do sul rs']
-    //
+    'uberlandia': ['uberlândia', 'uberlândia mg'],
+    // Juiz de Fora
+    'juiz de fora': ['juiz de fora mg'],
+    // Feira de Santana
+    'feira de santana': ['feira de santana ba'],
+    // Caxias do Sul
+    'caxias do sul': ['caxias do sul rs'],
+    // Aparecida de Goiânia
     'aparecida de goiânia': ['aparecida de goiania', 'aparecida de goiânia go'],
-    'aparecida de goiania': ['aparecida de goiânia', 'aparecida de goiânia go']
-    //
+    'aparecida de goiania': ['aparecida de goiânia', 'aparecida de goiânia go'],
+    // Niterói
     'niterói': ['niteroi', 'niterói rj'],
-    'niteroi': ['niterói', 'niterói rj']
-    //
+    'niteroi': ['niterói', 'niterói rj'],
+    // Carapicuíba
     'carapicuíba': ['carapicuiba', 'carapicuíba sp'],
-    'carapicuiba': ['carapicuíba', 'carapicuíba sp']
-    //
+    'carapicuiba': ['carapicuíba', 'carapicuíba sp'],
+    // Itapecerica da Serra
     'itapecerica da serra': ['itapecerica', 'itapecerica da serra sp'],
-    'itapecerica': ['itapecerica da serra', 'itapecerica da serra sp']
-    //
+    'itapecerica': ['itapecerica da serra', 'itapecerica da serra sp'],
+    // São Roque
     'são roque': ['sao roque', 'são roque sp'],
     'sao roque': ['são roque', 'são roque sp']
   };
