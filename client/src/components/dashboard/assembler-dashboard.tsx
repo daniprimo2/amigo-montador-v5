@@ -159,166 +159,124 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     currentRating,
     isRatingDialogOpen: isMandatoryRatingOpen,
     handleRatingCompleted,
-    closeMandatoryRating,
+    closeMandatoryRating
   } = useMandatoryRatings();
 
   // Mapeamento de equivalências de cidades para normalização
   const cityEquivalences: Record<string, string[]> = {
     // São Paulo
     'são paulo': ['sp', 'são paulo sp', 'sao paulo', 'sampa'],
-    'sp': ['são paulo', 'são paulo sp', 'sao paulo', 'sampa'],
-    
-    // Rio de Janeiro
+    'sp': ['são paulo', 'são paulo sp', 'sao paulo', 'sampa']
+    //
     'rio de janeiro': ['rj', 'rio de janeiro rj', 'rio'],
     'rj': ['rio de janeiro', 'rio de janeiro rj', 'rio'],
-    'rio': ['rio de janeiro', 'rj', 'rio de janeiro rj'],
-    
-    // Brasília
+    'rio': ['rio de janeiro', 'rj', 'rio de janeiro rj']
+    //
     'brasília': ['df', 'brasilia', 'brasília df'],
     'df': ['brasília', 'brasilia', 'brasília df'],
-    'brasilia': ['brasília', 'df', 'brasília df'],
-    
-    // Belo Horizonte
+    'brasilia': ['brasília', 'df', 'brasília df']
+    //
     'belo horizonte': ['mg', 'bh', 'belo horizonte mg'],
-    'bh': ['belo horizonte', 'mg', 'belo horizonte mg'],
-    
-    // Salvador
-    'salvador': ['ba', 'salvador ba'],
-    
-    // Fortaleza
-    'fortaleza': ['ce', 'fortaleza ce'],
-    
-    // Curitiba
-    'curitiba': ['pr', 'curitiba pr'],
-    
-    // Recife
-    'recife': ['pe', 'recife pe'],
-    
-    // Porto Alegre
+    'bh': ['belo horizonte', 'mg', 'belo horizonte mg']
+    //
+    'salvador': ['ba', 'salvador ba']
+    //
+    'fortaleza': ['ce', 'fortaleza ce']
+    //
+    'curitiba': ['pr', 'curitiba pr']
+    //
+    'recife': ['pe', 'recife pe']
+    //
     'porto alegre': ['rs', 'porto alegre rs', 'poa'],
-    'poa': ['porto alegre', 'rs', 'porto alegre rs'],
-    
-    // Manaus
-    'manaus': ['am', 'manaus am'],
-    
-    // Goiânia
+    'poa': ['porto alegre', 'rs', 'porto alegre rs']
+    //
+    'manaus': ['am', 'manaus am']
+    //
     'goiânia': ['go', 'goiania', 'goiânia go'],
-    'goiania': ['goiânia', 'go', 'goiânia go'],
-    
-    // Belém
+    'goiania': ['goiânia', 'go', 'goiânia go']
+    //
     'belém': ['pa', 'belem', 'belém pa'],
-    'belem': ['belém', 'pa', 'belém pa'],
-    
-    // Guarulhos
-    'guarulhos': ['guarulhos sp'],
-    
-    // Campinas
-    'campinas': ['campinas sp'],
-    
-    // São Luís
+    'belem': ['belém', 'pa', 'belém pa']
+    //
+    'guarulhos': ['guarulhos sp']
+    //
+    'campinas': ['campinas sp']
+    //
     'são luís': ['ma', 'sao luis', 'são luís ma'],
-    'sao luis': ['são luís', 'ma', 'são luís ma'],
-    
-    // Maceió
+    'sao luis': ['são luís', 'ma', 'são luís ma']
+    //
     'maceió': ['al', 'maceio', 'maceió al'],
-    'maceio': ['maceió', 'al', 'maceió al'],
-    
-    // Natal
-    'natal': ['rn', 'natal rn'],
-    
-    // Teresina
-    'teresina': ['pi', 'teresina pi'],
-    
-    // Campo Grande
-    'campo grande': ['ms', 'campo grande ms'],
-    
-    // João Pessoa
+    'maceio': ['maceió', 'al', 'maceió al']
+    //
+    'natal': ['rn', 'natal rn']
+    //
+    'teresina': ['pi', 'teresina pi']
+    //
+    'campo grande': ['ms', 'campo grande ms']
+    //
     'joão pessoa': ['pb', 'joao pessoa', 'joão pessoa pb'],
-    'joao pessoa': ['joão pessoa', 'pb', 'joão pessoa pb'],
-    
-    // Florianópolis
+    'joao pessoa': ['joão pessoa', 'pb', 'joão pessoa pb']
+    //
     'florianópolis': ['sc', 'florianopolis', 'floripa', 'florianópolis sc'],
     'florianopolis': ['florianópolis', 'sc', 'floripa', 'florianópolis sc'],
-    'floripa': ['florianópolis', 'sc', 'florianopolis', 'florianópolis sc'],
-    
-    // Cuiabá
+    'floripa': ['florianópolis', 'sc', 'florianopolis', 'florianópolis sc']
+    //
     'cuiabá': ['mt', 'cuiaba', 'cuiabá mt'],
-    'cuiaba': ['cuiabá', 'mt', 'cuiabá mt'],
-    
-    // Aracaju
-    'aracaju': ['se', 'aracaju se'],
-    
-    // Vitória
+    'cuiaba': ['cuiabá', 'mt', 'cuiabá mt']
+    //
+    'aracaju': ['se', 'aracaju se']
+    //
     'vitória': ['es', 'vitoria', 'vitória es'],
-    'vitoria': ['vitória', 'es', 'vitória es'],
-    
-    // Osasco
-    'osasco': ['osasco sp'],
-    
-    // Santo André
+    'vitoria': ['vitória', 'es', 'vitória es']
+    //
+    'osasco': ['osasco sp']
+    //
     'santo andré': ['santo andre', 'santo andré sp'],
-    'santo andre': ['santo andré', 'santo andré sp'],
-    
-    // São Bernardo do Campo
+    'santo andre': ['santo andré', 'santo andré sp']
+    //
     'são bernardo do campo': ['sao bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
     'sao bernardo do campo': ['são bernardo do campo', 'são bernardo', 'sao bernardo', 'são bernardo do campo sp'],
     'são bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'sao bernardo', 'são bernardo do campo sp'],
-    'sao bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'são bernardo', 'são bernardo do campo sp'],
-    
-    // Santos
-    'santos': ['santos sp'],
-    
-    // Sorocaba
-    'sorocaba': ['sorocaba sp'],
-    
-    // Ribeirão Preto
+    'sao bernardo': ['são bernardo do campo', 'sao bernardo do campo', 'são bernardo', 'são bernardo do campo sp']
+    //
+    'santos': ['santos sp']
+    //
+    'sorocaba': ['sorocaba sp']
+    //
     'ribeirão preto': ['ribeirao preto', 'ribeirão preto sp'],
-    'ribeirao preto': ['ribeirão preto', 'ribeirão preto sp'],
-    
-    // São José dos Campos
+    'ribeirao preto': ['ribeirão preto', 'ribeirão preto sp']
+    //
     'são josé dos campos': ['sao jose dos campos', 'sjc', 'são josé dos campos sp'],
     'sao jose dos campos': ['são josé dos campos', 'sjc', 'são josé dos campos sp'],
-    'sjc': ['são josé dos campos', 'sao jose dos campos', 'são josé dos campos sp'],
-    
-    // Joinville
-    'joinville': ['joinville sc'],
-    
-    // Londrina
-    'londrina': ['londrina pr'],
-    
-    // Contagem
-    'contagem': ['contagem mg'],
-    
-    // Uberlândia
+    'sjc': ['são josé dos campos', 'sao jose dos campos', 'são josé dos campos sp']
+    //
+    'joinville': ['joinville sc']
+    //
+    'londrina': ['londrina pr']
+    //
+    'contagem': ['contagem mg']
+    //
     'uberlândia': ['uberlandia', 'uberlândia mg'],
-    'uberlandia': ['uberlândia', 'uberlândia mg'],
-    
-    // Juiz de Fora
-    'juiz de fora': ['juiz de fora mg'],
-    
-    // Feira de Santana
-    'feira de santana': ['feira de santana ba'],
-    
-    // Caxias do Sul
-    'caxias do sul': ['caxias do sul rs'],
-    
-    // Aparecida de Goiânia
+    'uberlandia': ['uberlândia', 'uberlândia mg']
+    //
+    'juiz de fora': ['juiz de fora mg']
+    //
+    'feira de santana': ['feira de santana ba']
+    //
+    'caxias do sul': ['caxias do sul rs']
+    //
     'aparecida de goiânia': ['aparecida de goiania', 'aparecida de goiânia go'],
-    'aparecida de goiania': ['aparecida de goiânia', 'aparecida de goiânia go'],
-    
-    // Niterói
+    'aparecida de goiania': ['aparecida de goiânia', 'aparecida de goiânia go']
+    //
     'niterói': ['niteroi', 'niterói rj'],
-    'niteroi': ['niterói', 'niterói rj'],
-    
-    // Carapicuíba
+    'niteroi': ['niterói', 'niterói rj']
+    //
     'carapicuíba': ['carapicuiba', 'carapicuíba sp'],
-    'carapicuiba': ['carapicuíba', 'carapicuíba sp'],
-    
-    // Itapecerica da Serra
+    'carapicuiba': ['carapicuíba', 'carapicuíba sp']
+    //
     'itapecerica da serra': ['itapecerica', 'itapecerica da serra sp'],
-    'itapecerica': ['itapecerica da serra', 'itapecerica da serra sp'],
-    
-    // São Roque
+    'itapecerica': ['itapecerica da serra', 'itapecerica da serra sp']
+    //
     'são roque': ['sao roque', 'são roque sp'],
     'sao roque': ['são roque', 'são roque sp']
   };
@@ -353,10 +311,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     if (equivalents2.some((eq: string) => normalizeCityName(eq) === norm1)) return true;
     
     // Verifica se ambas têm equivalências em comum
-    const normalizedEquiv1: string[] = equivalents1.map((eq: string) => normalizeCityName(eq));
-    const normalizedEquiv2: string[] = equivalents2.map((eq: string) => normalizeCityName(eq));
-    
-    return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq));
+    const normalizedEquiv1: string[] = equivalents1.map((eq: string) => normalizeCityName(eq
+    const normalizedEquiv2: string[] = equivalents2.map((eq: string) => normalizeCityName(eq
+    return normalizedEquiv1.some((eq: string) => normalizedEquiv2.includes(eq
   };
 
   // Lista de estados brasileiros para filtro
@@ -682,8 +639,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (typeof service.store === 'string' ? service.store.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
-      service.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      service.location.toLowerCase().includes(searchTerm.toLowerCase(
     // State filtering based on abbreviations (only when state is specifically selected)
     const matchesState = selectedState === 'Todos os estados' || (() => {
       // Extract state from service location (format: "Address, Neighborhood, Number - City, State - CEP: xxxxx")
@@ -733,7 +689,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   );
   
   // Format available services for display
-  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service));
+  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service
   const inProgressServices = activeServices?.filter((service: any) => 
     service.status === 'in-progress'
   ) || [];
@@ -743,12 +699,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Calculate service counts by status
   const serviceCounts = {
     // Disponíveis: serviços abertos onde o montador ainda não se candidatou
-    available: availableServices.length,
-    // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
-    pending: pendingServices.length,
-    // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
-    inProgress: inProgressServices.length,
-    // Finalizados: apenas serviços do activeServices com status 'completed'
+    available: availableServices.length
+    //
+    pending: pendingServices.length
+    //
+    inProgress: inProgressServices.length
+    //
     completed: completedServicesFromActive.length
   };
   
@@ -759,8 +715,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         const response = await fetch(`/api/services/${serviceId}/apply`, {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-          }
+            'Content-Type': 'application/json'
+  }
         });
         
         const result = await response.json();
@@ -1177,9 +1133,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         })(),
                         store: service.store || 'Loja não especificada',
                         type: service.materialType || service.type || 'Não especificado',
-                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined,
-
-                      }}
+                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined
+  }}
                       onChatClick={(serviceId) => {
                         setSelectedChatService(serviceId);
                         setDashboardSection('chat');

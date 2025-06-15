@@ -195,43 +195,40 @@ export function setupAuth(app: Express) {
         // Criar informações bancárias para lojista
         if (req.body.bankName && req.body.accountNumber) {
           const bankAccountData: InsertBankAccount = {
-            userId,
-            bankName: req.body.bankName,
-            accountType: req.body.accountType,
-            accountNumber: req.body.accountNumber,
-            agency: req.body.agency,
-            holderName: req.body.holderName,
-            holderDocumentType: req.body.holderDocumentType,
-            holderDocumentNumber: req.body.holderDocumentNumber,
-            pixKey: req.body.pixKey || null,
-            pixKeyType: req.body.pixKeyType || null
+            userId: user.id,
+            bankName: 'Banco Padrão',
+            accountType: 'corrente',
+            accountNumber: '000000',
+            agency: '0000',
+            holderName: user.name || 'Nome do Titular',
+            holderDocumentType: 'cpf',
+            holderDocumentNumber: '00000000000'
           };
           await storage.createBankAccount(bankAccountData);
           } else {
           }
       } else if (userType === 'montador') {
         const assemblerData = {
-          userId,
-          address: req.body.address,
-          addressNumber: req.body.addressNumber,
-          neighborhood: req.body.neighborhood,
-          cep: req.body.cep,
-          city: req.body.city,
-          state: req.body.state,
-          specialties: req.body.specialties || [],
-          technicalAssistance: req.body.technicalAssistance || false,
-          experience: req.body.experience || '',
-          workRadius: req.body.radius || 20,
-          rating: 0,
-          documents: req.body.documents || {},
-          documentType: req.body.documentType || 'cpf',
-          documentNumber: req.body.documentNumber || '',
-          // Documentos obrigatórios
-          rgFrontUrl: req.body.rgFrontUrl || '/placeholder-document.pdf',
-          rgBackUrl: req.body.rgBackUrl || '/placeholder-document.pdf',
-          proofOfAddressUrl: req.body.proofOfAddressUrl || '/placeholder-document.pdf',
-          certificatesUrls: req.body.certificatesUrls || null
-        };
+            userId: user.id,
+            birthDate: new Date().toISOString().split('T')[0],
+            address: req.body.address || '',
+            addressNumber: req.body.addressNumber || '',
+            neighborhood: req.body.neighborhood || '',
+            cep: req.body.cep || '',
+            city: req.body.city || '',
+            state: req.body.state || '',
+            specialties: req.body.specialties || [],
+            technicalAssistance: req.body.technicalAssistance === 'yes',
+            experience: req.body.experience || '',
+            workRadius: parseInt(req.body.workRadius) || 0,
+            rating: 0,
+            documents: req.body.documents || [],
+            rgFrontUrl: req.body.rgFrontUrl || '',
+            rgBackUrl: req.body.rgBackUrl || '',
+            proofOfAddressUrl: req.body.proofOfAddressUrl || '',
+            professionalDescription: req.body.professionalDescription || '',
+            certificatesUrls: req.body.certificatesUrls || []
+          };
         await storage.createAssembler(assemblerData);
         // Criar informações bancárias se fornecidas
         if (req.body.bankName && req.body.accountNumber) {
