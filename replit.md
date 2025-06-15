@@ -1,0 +1,136 @@
+# AmigoMontador Platform
+
+## Overview
+
+The AmigoMontador platform is a mobile-first web application that connects furniture store professionals with skilled installers in Brazil. The platform facilitates service management, communication, and payment processing, with a focus on mobile optimization and Android app deployment to the Google Play Store.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript
+- **Build Tool**: Vite for fast development and optimized production builds
+- **Styling**: Tailwind CSS with mobile-first responsive design
+- **UI Components**: Radix UI components for accessibility and consistency
+- **State Management**: React Query for server state management
+- **Routing**: Wouter for lightweight client-side routing
+- **Mobile Optimization**: Safe area support, touch targets, and Android/iOS specific optimizations
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js server
+- **Language**: TypeScript for type safety
+- **Database ORM**: Drizzle ORM with PostgreSQL
+- **Authentication**: Passport.js with local strategy and session management
+- **File Uploads**: Express-fileupload middleware
+- **Real-time Communication**: WebSocket integration for chat functionality
+
+### Mobile App Architecture
+- **Framework**: Capacitor for native mobile app generation
+- **Target Platforms**: Android (Google Play Store ready)
+- **App Configuration**: Optimized for Android API 22-34 compatibility
+- **Build System**: Gradle with custom configurations for Play Store deployment
+
+## Key Components
+
+### User Management System
+- Dual user types: Store owners (lojistas) and Installers (montadores)
+- Profile management with photo uploads and document verification
+- Rating and review system for trust building
+- Geographic location services for service matching
+
+### Service Management
+- Service creation and listing by store owners
+- Application system for installers to bid on services
+- Status tracking throughout service lifecycle
+- Price formatting in Brazilian currency format (R$ 1.000,00)
+
+### Communication System
+- Real-time messaging between stores and installers
+- File sharing capabilities for project documentation
+- Push notification support for mobile app
+
+### Payment Integration
+- PIX payment integration (Brazilian instant payment system)
+- Payment proof generation and verification
+- Bank account management for installers
+
+### Geographic Services
+- CEP (Brazilian postal code) to coordinates conversion
+- Distance calculation for service matching
+- City-based service filtering
+
+## Data Flow
+
+### User Registration Flow
+1. User selects account type (store owner or installer)
+2. Multi-step registration process with form validation
+3. Profile data collection including location and specialties
+4. Document upload and verification
+5. Account activation and dashboard access
+
+### Service Management Flow
+1. Store owner creates service listing with location and requirements
+2. System geocodes location and matches with nearby installers
+3. Installers view available services and submit applications
+4. Store owner reviews applications and selects installer
+5. Real-time communication between parties
+6. Service completion and mutual rating
+
+### Payment Flow
+1. Service completion confirmation
+2. Payment proof generation with QR code
+3. PIX payment processing
+4. Payment confirmation and release
+5. Transaction history tracking
+
+## External Dependencies
+
+### Database
+- **PostgreSQL**: Primary database with Neon.tech as recommended cloud provider
+- **Connection Pooling**: Neon serverless PostgreSQL for scalability
+- **Session Store**: PostgreSQL-based session storage
+
+### Third-party Services
+- **Email Service**: Nodemailer with SMTP configuration for password recovery
+- **Geocoding**: Brazilian CEP to coordinates conversion services
+- **File Storage**: Local file system with organized upload directories
+
+### Mobile Development
+- **Capacitor**: Native mobile app framework
+- **Android Studio**: Required for AAB generation and Play Store deployment
+- **Java JDK 11+**: Required for Android development
+
+## Deployment Strategy
+
+### Web Application
+- **Development**: Vite dev server with hot module replacement
+- **Production**: Static build with optimized assets
+- **Hosting**: Can be deployed to any static hosting provider or Node.js server
+
+### Mobile Application
+- **Android**: AAB (Android App Bundle) generation for Google Play Store
+- **Signing**: Keystore-based signing for production releases
+- **Distribution**: Google Play Store with comprehensive metadata and assets
+
+### Database
+- **Development**: Local PostgreSQL or cloud-based Neon.tech
+- **Production**: Neon.tech PostgreSQL with connection pooling
+- **Migrations**: Drizzle Kit for schema management
+
+### Build Scripts
+- **prepare-deploy.js**: Compiles frontend and prepares server files
+- **build-final.sh**: Optimized build for production deployment
+- **prepare-playstore.sh**: Complete Android app preparation for Play Store
+
+### Android App Deployment
+- Comprehensive documentation for Play Store submission
+- Automated build scripts for AAB generation
+- Keystore management and signing configuration
+- Play Store asset preparation and metadata
+
+## Changelog
+
+- June 15, 2025. Initial setup
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.

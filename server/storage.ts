@@ -200,18 +200,13 @@ export class DatabaseStorage implements IStorage {
           )
         );
       
-      console.log(`[getServicesByStoreId] Serviço ID ${service.id} tem ${acceptedApplications.length} candidaturas aceitas`);
-      
       // Se houver candidatura aceita, buscar dados do montador
       if (acceptedApplications.length > 0) {
         const assemblerId = acceptedApplications[0].assemblerId;
-        console.log(`[getServicesByStoreId] Buscando montador ID ${assemblerId}`);
         
         const assembler = await this.getAssemblerById(assemblerId);
         
         if (assembler) {
-          console.log(`[getServicesByStoreId] Montador encontrado, user_id: ${assembler.userId}`);
-          
           // Buscar dados do usuário montador
           const userResult = await db
             .select({
@@ -226,8 +221,6 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
           
           if (userResult.length > 0) {
-            console.log(`[getServicesByStoreId] Nome do montador: ${userResult[0].name}`);
-            
             return {
               ...service,
               assembler: {
@@ -257,9 +250,6 @@ export class DatabaseStorage implements IStorage {
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     try {
-      console.log(`[STORAGE] getAvailableServicesForAssembler chamado para montador ID ${assembler.id} - Raio: ${assembler.workRadius} km`);
-      console.log(`[STORAGE] Dados completos do montador:`, JSON.stringify(assembler, null, 2));
-      
       // Obter apenas serviços com status 'open' (disponíveis para candidatura)
       const servicesList = await db.select({
         services: {
@@ -292,9 +282,6 @@ export class DatabaseStorage implements IStorage {
         .where(eq(services.status, 'open'))
         .orderBy(desc(services.createdAt));
       
-      // Log para depuração
-      console.log(`Encontrados ${servicesList.length} serviços no total`);
-      
       // Mapear resultados para incluir informações da loja e arquivos do projeto
       const enhancedServices = await Promise.all(servicesList.map(async result => {
         const { services: service, stores: store } = result;
@@ -312,12 +299,11 @@ export class DatabaseStorage implements IStorage {
               projectFiles = service.projectFiles;
             }
           } catch (error) {
-            console.error(`Erro ao processar projectFiles para serviço ${service.id}:`, error);
+            // Log apenas em desenvolvimento
           }
         }
         
         const storeNameFromDb = store?.name || 'Loja não especificada';
-        console.log(`[DEBUG Storage] Serviço ID ${service.id}: store.name = "${store?.name}", storeName = "${storeNameFromDb}"`);
         
         return {
           ...service,
@@ -335,12 +321,7 @@ export class DatabaseStorage implements IStorage {
       // Filtrar serviços por raio de atendimento do montador
       let filteredByDistance: (Service & { storeName: string })[] = [];
       
-      console.log(`[FILTRO DEBUG] workRadius: ${assembler.workRadius}, tipo: ${typeof assembler.workRadius}`);
-      
       if (assembler.workRadius && assembler.workRadius > 0) {
-        console.log(`[FILTRO RAIO] Iniciando filtro: ${assembler.workRadius} km para montador ${assembler.id} em ${assembler.city}, ${assembler.state}`);
-        console.log(`[FILTRO RAIO] Total de serviços antes do filtro: ${enhancedServices.length}`);
-        
         // Importar função de cálculo de distância
         const { calculateDistance, geocodeFromCEP, getCityCoordinates } = await import('./geocoding');
         
@@ -351,9 +332,7 @@ export class DatabaseStorage implements IStorage {
           if (assembler.cep) {
             try {
               assemblerCoords = await geocodeFromCEP(assembler.cep);
-              console.log(`[FILTRO RAIO] Coordenadas do montador (CEP ${assembler.cep}):`, assemblerCoords);
             } catch (error) {
-              console.error(`[FILTRO RAIO] Erro ao geocodificar CEP do montador ${assembler.cep}:`, error);
               // Fallback para coordenadas da cidade
               const cityCoords = getCityCoordinates(assembler.city, assembler.state);
               assemblerCoords = {
@@ -380,7 +359,7 @@ export class DatabaseStorage implements IStorage {
                 try {
                   serviceCoords = await geocodeFromCEP(service.cep);
                 } catch (error) {
-                  console.log(`Erro ao geocodificar CEP do serviço ${service.id} (${service.cep}), usando fallback`);
+                  // Usar fallback silenciosamente
                 }
               }
               
@@ -410,7 +389,6 @@ export class DatabaseStorage implements IStorage {
                   }
                   
                   if (serviceCity && serviceState && serviceState.length === 2) {
-                    console.log(`[FILTRO RAIO] Extraindo coordenadas para ${serviceCity}, ${serviceState}`);
                     const cityCoords = getCityCoordinates(serviceCity, serviceState);
                     serviceCoords = {
                       latitude: cityCoords.lat.toString(),

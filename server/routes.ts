@@ -505,8 +505,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const serviceWithStore = service as any;
           const storeName = serviceWithStore.storeName || 'Loja não especificada';
           
-          console.log(`[DEBUG] Serviço ${service.id}: storeName = "${storeName}"`);
-          
           // Verificar status de aplicação para este serviço
           const serviceWithApp = service as any;
           
@@ -521,7 +519,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             hasChatMessages = chatMessages.length > 0;
           } catch (error) {
-            console.error(`Erro ao verificar mensagens do chat para serviço ${service.id}:`, error);
             hasChatMessages = false;
           }
           
@@ -550,8 +547,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         }));
         
-        console.log(`[DEBUG] Dados formatados para o frontend:`, JSON.stringify(formattedServices, null, 2));
-        
         res.json(formattedServices);
       } else {
         // Formatar dados também para lojistas, incluindo startDate e endDate
@@ -567,7 +562,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 projectFiles = service.projectFiles;
               }
             } catch (error) {
-              console.error(`Erro ao processar projectFiles para serviço ${service.id}:`, error);
               projectFiles = [];
             }
           }
