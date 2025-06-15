@@ -137,6 +137,13 @@ The AmigoMontador platform is a mobile-first web application that connects furni
   - Version 1.0 (code 1), SDK 22-34
   - All Play Store requirements validated
   - Created comprehensive documentation and checklists
+- June 15, 2025. Project code organization and cleanup
+  - Removed 30+ unnecessary build scripts and temporary files
+  - Organized files into logical folders: scripts/, docs/, android-release/
+  - Updated .gitignore to exclude build artifacts and sensitive files
+  - Streamlined README.md with Portuguese documentation
+  - Created PROJECT_STRUCTURE.md for clear project overview
+  - Maintained only essential files for production deployment
 
 ## User Preferences
 
