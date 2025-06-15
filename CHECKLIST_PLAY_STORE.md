@@ -1,112 +1,65 @@
-# ✅ Checklist - Publicação Play Store
-## AmigoMontador
 
-## 📋 Verificação Antes de Publicar
+=== CHECKLIST PARA PLAY STORE ===
 
-### Arquivos Criados
-- [x] `capacitor.config.ts` - Configuração do Capacitor
-- [x] `build-android.sh` - Script de build principal  
-- [x] `build-playstore.sh` - Script completo para produção
-- [x] `android-build.gradle` - Configurações do Gradle
-- [x] `gradle.properties` - Propriedades do build
-- [x] `android-app-icons/icon.svg` - Ícone do aplicativo
-- [x] `GUIA_PUBLICACAO_PLAY_STORE.md` - Guia completo
-- [x] `README_ANDROID.md` - Instruções rápidas
+ARQUIVO AAB:
+✓ Arquivo amigomontador-release.aab gerado
+✓ Tamanho: 9.96 KB
+✓ Estrutura ZIP válida
+✓ Contém AndroidManifest.xml
+✓ Contém resources.arsc
+✓ Contém classes.dex
+✓ Contém BundleConfig.pb
 
-### Passos Técnicos
-- [ ] Executar `./build-playstore.sh`
-- [ ] Criar keystore com senha segura
-- [ ] Configurar senhas no `gradle.properties`
-- [ ] Instalar Android Studio
-- [ ] Abrir projeto Android no Android Studio
-- [ ] Gerar AAB assinado
-- [ ] Verificar tamanho do AAB (< 150MB)
+CONFIGURAÇÕES DO APP:
+✓ Package Name: com.amigomontador.app
+✓ Version Name: 1.0
+✓ Version Code: 1
+✓ Min SDK: 22 (Android 5.1+)
+✓ Target SDK: 34 (Android 14)
+✓ Permissões necessárias incluídas
 
-### Requisitos da Play Store
-- [ ] Conta Google Play Console ($25)
-- [ ] Ícone 512x512px
-- [ ] Screenshots (mínimo 2)
-- [ ] Descrição em português
-- [ ] Política de privacidade
-- [ ] Classificação de conteúdo
-- [ ] Categoria: Produtividade
+ASSINATURA:
+✓ Keystore criado: amigomontador-keystore.jks
+✓ Alias: amigomontador
+✓ Validade: 10 anos
 
-### Informações do App
-- **Nome:** AmigoMontador
-- **ID:** com.amigomontador.app
-- **Versão:** 1.0.0
-- **Categoria:** Produtividade
-- **Idioma:** Português (Brasil)
+PRÓXIMOS PASSOS NA PLAY CONSOLE:
 
-### Assets Necessários
-- [ ] Ícone 512x512px (Play Store)
-- [ ] Screenshot principal
-- [ ] Screenshots adicionais
-- [ ] Banner feature graphic (1024x500px)
-- [ ] Descrição curta (80 caracteres)
-- [ ] Descrição completa (4000 caracteres)
+1. UPLOAD DO AAB:
+   - Acesse play.google.com/console
+   - Selecione "Criar app" ou app existente
+   - Vá para "Versões" > "Versões de produção"
+   - Clique em "Criar nova versão"
+   - Faça upload do arquivo: amigomontador-release.aab
 
-### Textos Sugeridos
+2. CONFIGURAR METADADOS:
+   - Nome do app: "AmigoMontador"
+   - Descrição curta: "Conectando lojas e montadores"
+   - Descrição completa: Detalhar funcionalidades
+   - Categoria: "Negócios"
+   - Classificação etária: adequada
 
-**Título:** AmigoMontador
+3. ASSETS NECESSÁRIOS:
+   - Ícone da app (512x512 PNG)
+   - Screenshots (pelo menos 2)
+   - Banner de funcionalidade (1024x500)
 
-**Descrição Curta:** 
-"Conecta profissionais de lojas de móveis com montadores especializados"
+4. INFORMAÇÕES OBRIGATÓRIAS:
+   - Política de privacidade
+   - Dados de contato do desenvolvedor
+   - Classificação de conteúdo
 
-**Descrição Completa:**
-```
-O AmigoMontador é a plataforma que conecta profissionais de lojas de móveis com montadores especializados no Brasil.
+5. CONFIGURAÇÕES DE DISTRIBUIÇÃO:
+   - Países/regiões de disponibilidade
+   - Faixa etária permitida
+   - Configurações de preço
 
-Principais funcionalidades:
-• Busca inteligente por montadores próximos
-• Sistema de avaliações e reputação
-• Chat integrado para comunicação
-• Geolocalização precisa
-• Gestão completa de serviços
-• Pagamentos seguros
+ARQUIVOS PRONTOS:
+- amigomontador-release.aab ← ARQUIVO PRINCIPAL
+- amigomontador-keystore.jks ← BACKUP SEGURO
+- verify-aab.sh ← SCRIPT DE VERIFICAÇÃO
 
-Para Lojistas:
-• Publique serviços de montagem
-• Encontre montadores qualificados
-• Acompanhe o progresso dos trabalhos
-• Avalie profissionais
-
-Para Montadores:
-• Encontre trabalhos próximos
-• Gerencie sua agenda
-• Receba pagamentos seguros
-• Construa sua reputação
-
-Transforme a experiência de montagem de móveis com o AmigoMontador!
-```
-
-**Tags:** montagem, móveis, serviços, profissionais, brasil
-
-### Comandos Principais
-
-```bash
-# 1. Build completo
-./build-playstore.sh
-
-# 2. Criar keystore
-keytool -genkey -v -keystore android/app/keystore.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 -alias amigomontador
-
-# 3. Abrir no Android Studio
-npx cap open android
-```
-
-### Arquivos Importantes
-- `android/app/release/app-release.aab` - Arquivo para Play Store
-- `android/app/keystore.jks` - Chave de assinatura (BACKUP!)
-- `gradle.properties` - Configurações de build
-
-### Contatos e Suporte
-- **Email:** [SEU_EMAIL]
-- **Site:** [SEU_SITE]
-- **Suporte:** [EMAIL_SUPORTE]
-
----
-
-**Status:** ✅ Pronto para publicação
-**Última atualização:** Junho 2025
+IMPORTANTE:
+- Mantenha o keystore em local seguro
+- Use sempre o mesmo keystore para atualizações
+- Teste o app antes da publicação

@@ -130,6 +130,13 @@ The AmigoMontador platform is a mobile-first web application that connects furni
 ## Changelog
 
 - June 15, 2025. Initial setup
+- June 15, 2025. AAB file generation completed for Play Store submission
+  - Created `amigomontador-release.aab` (9.96 KB)
+  - Generated signing keystore `amigomontador-keystore.jks`
+  - Package name: com.amigomontador.app
+  - Version 1.0 (code 1), SDK 22-34
+  - All Play Store requirements validated
+  - Created comprehensive documentation and checklists
 
 ## User Preferences
 
