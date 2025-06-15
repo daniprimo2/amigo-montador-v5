@@ -169,37 +169,17 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
 
   const {
     pendingRatings,
-    selectedServiceForRating: mandatoryServiceForRating,
-    isDialogOpen: isMandatoryRatingDialogOpen,
+    currentRating: mandatoryServiceForRating,
+    isRatingDialogOpen: isMandatoryRatingDialogOpen,
     closeMandatoryRating
   } = useMandatoryRatings();
- onLogout }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedState, setSelectedState] = useState('Todos os estados');
-  const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
-  const [maxDistance, setMaxDistance] = useState(1000); // Default 1000km - mostrar todos os serviços
-  const [isDistanceFilterOpen, setIsDistanceFilterOpen] = useState(false);
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'explore' | 'chat' | 'ranking'>('home');
-  const [activeTab, setActiveTab] = useState<'available' | 'in-progress' | 'completed' | 'pending'>('available');
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [isSkillsWizardOpen, setIsSkillsWizardOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
-  const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
-  const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
-  const { connected, lastMessage } = useWebSocket();
-  
   // Hook para gerenciar avaliações obrigatórias
   const {
     currentRating,
-    isRatingDialogOpen: isMandatoryRatingOpen,
     handleRatingCompleted,
-    closeMandatoryRating
   } = useMandatoryRatings();
 
   // Mapeamento de equivalências de cidades para normalização
@@ -607,62 +587,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     };
   }, []);
   
-  // Fetch available services with real distance calculation - force fresh data
-  const { data: services, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/services'],
-    queryFn: async () => {
-      const response = await fetch('/api/services', {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch services');
-      }
-      return response.json();
-    },
-    select: (data: ServiceData[]) => data.map(formatServiceForDisplay),
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchInterval: false
-  });
   
-  // Fetch available services
-  const { data: rawServices } = useQuery({
-    queryKey: ['/api/services'],
-    select: (data: ServiceData[]) => data,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always'
-  });
   
-  // Buscar serviços em andamento que o montador está participando
-  const { data: activeServices, isLoading: isLoadingActiveServices } = useQuery({
-    queryKey: ['/api/services/active'],
-    queryFn: async () => {
-      const response = await fetch('/api/services/active');
-      if (!response.ok) {
-        throw new Error('Falha ao buscar serviços ativos');
-      }
-      return response.json();
-    }
-    // Sempre buscar os serviços ativos independente da aba selecionada
-  });
+  
 
-  // Buscar dados completos do montador logado
-  const { data: assemblerProfile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['/api/profile/assembler'],
-    queryFn: async () => {
-      const response = await fetch('/api/profile');
-      if (!response.ok) {
-        throw new Error('Falha ao buscar dados do perfil');
-      }
-      return response.json();
-    }
-  });
+  
   
   // Filter services - MONTADORES DEVEM VER TODOS OS SERVIÇOS DISPONÍVEIS
   // Only apply filters if user has actively searched or selected specific filters
@@ -713,7 +642,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   );
   
   // Format available services for display
-  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service
+  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service));
   const inProgressServices = activeServices?.filter((service: any) => 
     service.status === 'in-progress'
   ) || [];
@@ -723,12 +652,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Calculate service counts by status
   const serviceCounts = {
     // Disponíveis: serviços abertos onde o montador ainda não se candidatou
-    available: availableServices.length
-    //
-    pending: pendingServices.length
-    //
-    inProgress: inProgressServices.length
-    //
+    available: availableServices.length,
+    // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
+    pending: pendingServices.length,
+    // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
+    inProgress: inProgressServices.length,
+    // Finalizados: apenas serviços do activeServices com status 'completed'
     completed: completedServicesFromActive.length
   };
   
@@ -1413,25 +1342,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     </>
   );
 
-  // Buscar serviços em andamento que o montador está participando
   
-  // Estado para controlar qual serviço está selecionado para chat
-  const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
-  
-  // Buscar o perfil completo do montador para obter o ID
-  const { data: profileData } = useQuery({
-    queryKey: ['/api/profile'],
-    queryFn: async () => {
-      if (!user || user.userType !== 'montador') return null;
-      const response = await fetch('/api/profile');
-      if (!response.ok) {
-        throw new Error('Falha ao buscar perfil do montador');
-      }
-      const data = await response.json();
-      return data;
-    },
-    enabled: !!user && user.userType === 'montador'
-  });
   
   const renderChatSection = () => {
     // Se estiver selecionado um chat específico, exibir a interface de chat
