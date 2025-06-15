@@ -136,7 +136,6 @@ export function PixPaymentDialog({
   // Create PIX payment
   const createPixMutation = useMutation({
     mutationFn: async (token: string) => {
-      console.log("[Frontend PIX] Enviando para backend:", { serviceId, amount, tipo: typeof amount });
       const response = await apiRequest({
         method: 'POST',
         url: '/api/payment/pix/create',
@@ -223,7 +222,6 @@ export function PixPaymentDialog({
   // Start automatic payment status polling
   const startPaymentStatusPolling = (paymentId: string, token: string) => {
     if (!paymentId || !token) {
-      console.log("PIX: ID do pagamento ou token não disponível para verificação");
       return;
     }
     

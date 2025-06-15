@@ -16,12 +16,10 @@ export function ProtectedRoute({
   // Efeito para escutar eventos de login e registro
   React.useEffect(() => {
     const handleLoginSuccess = () => {
-      console.log('ProtectedRoute: detectou evento auth:login-success');
       setForceUpdate(prev => prev + 1);
     };
 
     const handleRegisterSuccess = () => {
-      console.log('ProtectedRoute: detectou evento auth:register-success');
       setForceUpdate(prev => prev + 1);
     };
 
@@ -36,8 +34,7 @@ export function ProtectedRoute({
 
   // Log para depuração
   React.useEffect(() => {
-    console.log('ProtectedRoute para', path, ': user =', user, 'isLoading =', isLoading, 'forceUpdate =', forceUpdate);
-  }, [path, user, isLoading, forceUpdate]);
+    }, [path, user, isLoading, forceUpdate]);
 
   if (isLoading) {
     return (
@@ -50,8 +47,6 @@ export function ProtectedRoute({
   }
 
   if (!user) {
-    console.log('ProtectedRoute: redirecionando para /auth porque user =', user);
-    
     // Se estamos em uma rota protegida e não temos usuário, redirecionar para /auth
     if (window.location.pathname.includes('/lojista') || window.location.pathname.includes('/montador')) {
       window.location.href = '/auth';
@@ -65,6 +60,5 @@ export function ProtectedRoute({
     );
   }
 
-  console.log('ProtectedRoute: renderizando componente para', path);
   return <Route path={path} component={Component} />;
 }

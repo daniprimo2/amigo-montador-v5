@@ -100,8 +100,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Mutation para atualizar o status do serviço para "em andamento"
   const startServiceMutation = useMutation({
     mutationFn: async () => {
-      console.log(`[ChatInterface] Iniciando serviço ${serviceId} como "em andamento"`);
-      
       const response = await fetch(`/api/services/${serviceId}/status`, {
         method: 'PATCH',
         headers: {
@@ -118,8 +116,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       return await response.json();
     },
     onSuccess: (data) => {
-      console.log(`[ChatInterface] Serviço iniciado com sucesso:`, data);
-      
       toast({
         title: 'Serviço iniciado',
         description: 'O status do serviço foi alterado para "Em Andamento"',
@@ -133,9 +129,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
     },
     onError: (error) => {
-      console.error(`[ChatInterface] Erro ao iniciar serviço:`, error);
-      
-      toast({
+      // Error logging removed for production
+toast({
         title: 'Erro',
         description: error instanceof Error 
           ? error.message 
@@ -148,7 +143,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Mutation para completar o serviço
   const completeServiceMutation = useMutation({
     mutationFn: async () => {
-      console.log(`[ChatInterface] Completando serviço ${serviceId}`);
       setIsCompleting(true);
       
       const response = await apiRequest({
@@ -160,8 +154,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       return response;
     },
     onSuccess: () => {
-      console.log(`[ChatInterface] Serviço finalizado com sucesso`);
-      
       toast({
         title: 'Serviço finalizado com sucesso!',
         description: 'É necessário avaliar o serviço para continuar. Uma tela de avaliação será aberta automaticamente.',
@@ -179,9 +171,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       setIsCompleting(false);
     },
     onError: (error) => {
-      console.error(`[ChatInterface] Erro ao completar serviço:`, error);
-      
-      toast({
+      // Error logging removed for production
+toast({
         title: 'Erro',
         description: error instanceof Error 
           ? error.message 
@@ -212,24 +203,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
         ? `/api/services/${serviceId}/messages?assemblerId=${assemblerId}`
         : `/api/services/${serviceId}/messages`;
       
-      console.log(`[ChatInterface] Buscando mensagens para serviço ${serviceId} com URL: ${url}`);
-      
       const response = await fetch(url);
       if (!response.ok) {
-        console.error(`[ChatInterface] Erro ao buscar mensagens: ${response.status} ${response.statusText}`);
-        throw new Error('Erro ao buscar mensagens');
+        // Error logging removed for production
+throw new Error('Erro ao buscar mensagens');
       }
       const fetchedMessages = await response.json();
-      
-      console.log(`[ChatInterface] Mensagens recebidas para serviço ${serviceId}:`, fetchedMessages);
-      console.log(`[ChatInterface] Total de mensagens recebidas: ${fetchedMessages.length}`);
       
       // Garantir que as mensagens estejam ordenadas por data de envio
       const sortedMessages = fetchedMessages.sort((a: Message, b: Message) => {
         return new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
       });
       
-      console.log(`[ChatInterface] Mensagens ordenadas:`, sortedMessages);
       return sortedMessages;
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
@@ -269,8 +254,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Mutation para excluir mensagem
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      console.log(`[ChatInterface] Excluindo mensagem ${messageId}`);
-      
       const response = await fetch(`/api/services/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
@@ -287,8 +270,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       return await response.json();
     },
     onSuccess: () => {
-      console.log(`[ChatInterface] Mensagem excluída com sucesso`);
-      
       toast({
         title: 'Mensagem excluída',
         description: 'A mensagem foi excluída com sucesso',
@@ -299,9 +280,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
     },
     onError: (error) => {
-      console.error(`[ChatInterface] Erro ao excluir mensagem:`, error);
-      
-      toast({
+      // Error logging removed for production
+toast({
         title: 'Erro',
         description: error instanceof Error 
           ? error.message 
@@ -314,8 +294,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Mutation para enviar mensagem
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      console.log(`[ChatInterface] Enviando mensagem para serviço ${serviceId}`);
-      
       const response = await fetch(`/api/services/${serviceId}/messages`, {
         method: 'POST',
         headers: {
@@ -333,8 +311,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       return await response.json();
     },
     onSuccess: (data) => {
-      console.log(`[ChatInterface] Mensagem enviada com sucesso:`, data);
-      
       // Limpar campo de mensagem e atualizar a lista
       setMessage('');
       
@@ -354,9 +330,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
       }, 100);
     },
     onError: (error) => {
-      console.error(`[ChatInterface] Erro ao enviar mensagem:`, error);
-      
-      toast({
+      // Error logging removed for production
+toast({
         title: 'Erro',
         description: error instanceof Error 
           ? error.message 
@@ -425,8 +400,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           // Atualizar as listas para remover indicadores de novas mensagens
           queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
           queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
-          console.log(`[ChatInterface] Mensagens do serviço ${serviceId} marcadas como lidas`);
-        }
+          }
       } catch (error) {
         console.error('Erro ao marcar mensagens como lidas:', error);
       }
@@ -610,12 +584,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
           // Mensagens
           <div className="space-y-3">
             {(() => {
-              console.log(`[ChatInterface] Renderizando ${messages.length} mensagens no chat`);
-              console.log(`[ChatInterface] User ID atual: ${user?.id}`);
               return messages.map((msg) => {
                 const isCurrentUser = msg.senderId === user?.id;
-                console.log(`[ChatInterface] Renderizando mensagem ID ${msg.id}, senderId: ${msg.senderId}, isCurrentUser: ${isCurrentUser}`);
-                
                 return (
                 <div key={msg.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                   <div 

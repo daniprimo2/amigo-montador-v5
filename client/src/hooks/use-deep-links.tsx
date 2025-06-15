@@ -67,8 +67,7 @@ export function useDeepLinks(handlers: DeepLinkHandler = {}) {
             });
           }
         } catch (error) {
-          console.log('Capacitor App plugin não disponível');
-        }
+          }
       }
     };
 

@@ -9,10 +9,8 @@ dotenv.config();
 
 // Verificar se está usando o banco do Replit
 if (process.env.DATABASE_URL) {
-  console.log('✅ Usando banco PostgreSQL do Replit');
-} else {
-  console.log('⚠️ DATABASE_URL não encontrada');
-}
+  } else {
+  }
 
 // Configure Neon WebSocket only in serverless environments
 if (typeof WebSocket === 'undefined') {
@@ -47,11 +45,8 @@ try {
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
   db = drizzle({ client: pool, schema });
-  console.log('✅ Configuração do banco inicializada');
-} catch (error) {
+  } catch (error) {
   console.error('❌ Erro na conexão do banco:', error instanceof Error ? error.message : error);
-  console.log('📋 Solução: Configure DATABASE_URL no arquivo .env');
-  console.log('📖 Veja o arquivo CONFIGURACAO_BANCO_LOCAL.md para instruções detalhadas');
   throw error;
 }
 

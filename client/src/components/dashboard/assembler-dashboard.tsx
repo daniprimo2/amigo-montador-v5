@@ -399,15 +399,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       // Isso muda automaticamente para a seção de chat
       setDashboardSection('chat');
       
-      console.log("[AssemblerDashboard] Candidatura aceita! Atualizando interface...");
-      
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
     }
     // Quando receber confirmação de pagamento PIX
     else if (lastMessage.type === 'payment_confirmed') {
-      console.log("[AssemblerDashboard] Pagamento confirmado! Agora deve avaliar o lojista", lastMessage);
-      
       // Atualizar todas as listas de serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
@@ -429,8 +425,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
     // Quando receber notificação automática de serviço pelo lojista
     else if (lastMessage.type === 'automatic_notification') {
-      console.log("[AssemblerDashboard] Notificação automática recebida do lojista", lastMessage);
-      
       // Atualizar todas as listas de serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
@@ -469,8 +463,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
     // Quando receber notificação de pagamento disponível após confirmação
     else if (lastMessage.type === 'payment_ready') {
-      console.log("[AssemblerDashboard] Notificação de pagamento disponível recebida", lastMessage);
-      
       // Atualizar todas as listas de serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       
@@ -508,8 +500,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }
     // Quando o serviço já foi confirmado pelo montador e está pronto para pagamento
     else if (lastMessage.type === 'payment_ready') {
-      console.log("[AssemblerDashboard] Serviço confirmado e pronto para pagamento", lastMessage);
-      
       // Atualizar todas as listas de serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
@@ -538,8 +528,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       }
     }
     else if (lastMessage.type === 'service_completed') {
-      console.log("[AssemblerDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
-      
       // Atualizar todas as listas de serviços
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
@@ -753,16 +741,10 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
   
   // Debug logs para entender a categorização
-  console.log("[AssemblerDashboard] Serviços disponíveis:", availableServices.length);
-  console.log("[AssemblerDashboard] Serviços pendentes:", pendingServices.length);
-  console.log("[AssemblerDashboard] Serviços em andamento:", inProgressServices.length);
-  console.log("[AssemblerDashboard] Serviços finalizados (raw):", completedServicesFromRaw.length);
-  console.log("[AssemblerDashboard] Serviços finalizados (active):", completedServicesFromActive.length);
-  console.log("[AssemblerDashboard] Total rawServices:", rawServices?.length || 0);
-  console.log("[AssemblerDashboard] Total activeServices:", activeServices?.length || 0);
-  
+  :", completedServicesFromRaw.length);
+  :", completedServicesFromActive.length);
   // Debug detalhado para serviços pendentes
-  console.log("[AssemblerDashboard] Detalhes dos serviços pendentes:", pendingServices.map((s: any) => ({
+  => ({
     id: s.id,
     title: s.title,
     applicationStatus: s.applicationStatus,
@@ -771,12 +753,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   })));
   
   // Debug detalhado dos serviços por status
-  console.log("[AssemblerDashboard] Serviços disponíveis detalhados:", availableServices.map(s => ({ id: s.id, title: s.title, status: s.status })));
-  console.log("[AssemblerDashboard] Serviços em andamento detalhados:", inProgressServices.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
-  console.log("[AssemblerDashboard] Serviços finalizados detalhados:", completedServicesFromActive.map((s: any) => ({ id: s.id, title: s.title, status: s.status })));
+  ));
+  => ({ id: s.id, title: s.title, status: s.status })));
+  => ({ id: s.id, title: s.title, status: s.status })));
   
   // Debug completo do activeServices para entender todos os status
-  console.log("[AssemblerDashboard] Todos os activeServices com status:", activeServices?.map((s: any) => ({ id: s.id, title: s.title, status: s.status })) || []);
+  => ({ id: s.id, title: s.title, status: s.status })) || []);
   
   // Calculate service counts by status
   const serviceCounts = {
@@ -794,7 +776,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const applyMutation = useMutation({
     mutationFn: async (serviceId: number) => {
       try {
-        console.log(`Enviando candidatura para serviço ID: ${serviceId}`);
         const response = await fetch(`/api/services/${serviceId}/apply`, {
           method: "POST",
           headers: {
@@ -817,8 +798,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       }
     },
     onSuccess: (data) => {
-      console.log("Resposta da candidatura:", data);
-      
       // Refresh services list to get updated application status
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
@@ -826,8 +805,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       // Handle different response types
       if (data.isExistingApplication) {
         // User already applied - show status message
-        console.log("Candidatura já existente:", data.message);
-        
         // If application is pending, might open chat
         if (data.application?.status === 'pending') {
           const serviceId = data.application.serviceId;
@@ -839,8 +816,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       } else if (data.application?.serviceId) {
         // New application created successfully
         const serviceId = data.application.serviceId;
-        console.log(`Nova candidatura criada para serviço ID: ${serviceId}`);
-        
         // Open chat automatically for new applications
         setTimeout(() => {
           setSelectedChatService(serviceId);
@@ -862,7 +837,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   const handleApply = async (serviceId: number) => {
     try {
-      console.log(`AssemblerDashboard iniciando aplicação para serviço ${serviceId}`);
       return await applyMutation.mutateAsync(serviceId);
     } catch (error) {
       console.error(`AssemblerDashboard erro ao aplicar para serviço ${serviceId}:`, error);
@@ -1304,7 +1278,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           </div>
         </TabsContent>
 
-
       </Tabs>
     </>
   );
@@ -1496,7 +1469,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         throw new Error('Falha ao buscar perfil do montador');
       }
       const data = await response.json();
-      console.log("Perfil do montador carregado:", data);
       return data;
     },
     enabled: !!user && user.userType === 'montador'
@@ -1522,9 +1494,6 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     const pendingChats = rawServices ? rawServices.filter((service: any) => {
       return service.applicationStatus === 'pending' && service.hasApplied;
     }) : [];
-    
-    console.log('[AssemblerDashboard] Serviços com candidaturas aceitas:', activeChats);
-    console.log('[AssemblerDashboard] Serviços com candidaturas pendentes:', pendingChats);
     
     return (
       <div className="mt-2">
@@ -1634,14 +1603,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     );
   };
 
-
-
   // Reagir a novas mensagens recebidas via WebSocket
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
-      console.log("[AssemblerDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-      console.log("[AssemblerDashboard] ID do montador do perfil:", assemblerProfile?.id);
-      
       // Atualizar as listas relevantes para refletir nova mensagem
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
@@ -1689,13 +1653,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // Renderiza a seção apropriada com base na aba selecionada
   const renderDashboardContent = () => {
     // Log para diagnosticar se estamos obtendo o ID do montador corretamente
-    console.log("Renderizando dashboard com perfil:", user);
-    
     // Se estivermos na seção de chat E houver um serviço selecionado, mostrar a interface de chat
     if (dashboardSection === 'chat' && selectedChatService !== null) {
       const assemblerId = assemblerProfile?.id;
-      console.log(`Abrindo chat para serviço ${selectedChatService} com montador ID: ${assemblerId}`);
-      
       return (
         <ChatInterface 
           serviceId={selectedChatService}

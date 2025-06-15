@@ -6,8 +6,7 @@ import { queryClient } from '@/lib/queryClient';
 // Função global de debug para maior visibilidade nos logs
 const debugLogger = (context: string, message: string, data?: any) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [${context}] ${message}`, data || '');
-};
+  };
 
 type WebSocketMessage = {
   type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed';
@@ -38,8 +37,7 @@ const playNotificationSound = (type: 'message' | 'application' | 'default' = 'de
     
     audio.play().catch(error => {
       // Alguns navegadores bloqueiam a reprodução automática
-      console.log('Erro ao reproduzir som:', error);
-    });
+      });
   } catch (error) {
     console.error('Erro ao criar objeto de áudio:', error);
   }
@@ -49,7 +47,6 @@ const playNotificationSound = (type: 'message' | 'application' | 'default' = 'de
 const sendBrowserNotification = (title: string, body: string, icon: string = '/logo.png') => {
   // Verificar se o navegador suporta notificações
   if (!("Notification" in window)) {
-    console.log("Este navegador não suporta notificações desktop");
     return;
   }
   

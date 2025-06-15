@@ -17,17 +17,13 @@ export function WhatsAppSupport({ className = "" }: WhatsAppSupportProps) {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('WhatsApp button clicked - Event triggered!');
-    console.log('WhatsApp URL:', whatsappUrl);
-    
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 200);
     
     // Try to open WhatsApp
     try {
       window.open(whatsappUrl, '_blank');
-      console.log('WhatsApp window opened');
-    } catch (error) {
+      } catch (error) {
       console.error('Error opening WhatsApp:', error);
       // Fallback to direct navigation
       window.location.href = whatsappUrl;

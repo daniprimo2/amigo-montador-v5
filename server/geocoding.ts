@@ -18,7 +18,6 @@ export async function geocodeFromCEP(cep: string): Promise<GeocodeResult> {
   // Primeiro, tenta usar coordenadas específicas conhecidas (fallback imediato)
   const directCoords = getSpecificCoordinatesForCEP(cleanCep, '', '');
   if (directCoords) {
-    console.log(`[Geocoding] Usando coordenadas diretas para CEP ${cleanCep}:`, directCoords);
     return {
       latitude: directCoords.latitude,
       longitude: directCoords.longitude
@@ -26,8 +25,6 @@ export async function geocodeFromCEP(cep: string): Promise<GeocodeResult> {
   }
 
   try {
-    console.log(`[Geocoding] Buscando coordenadas para CEP: ${cleanCep}`);
-    
     // Tentativa com timeout mais curto para APIs externas
     const viacepResponse = await axios.get(`https://viacep.com.br/ws/${cleanCep}/json/`, {
       timeout: 3000,
@@ -41,12 +38,8 @@ export async function geocodeFromCEP(cep: string): Promise<GeocodeResult> {
     }
 
     const { localidade, uf, bairro, logradouro } = viacepResponse.data;
-    console.log(`[Geocoding] CEP ${cleanCep}: ${logradouro}, ${bairro}, ${localidade}/${uf}`);
-    
     // Usar coordenadas específicas baseadas no CEP para maior precisão
     const coords = getSpecificCoordinatesForCEP(cleanCep, localidade, uf);
-    
-    console.log(`[Geocoding] Coordenadas encontradas: ${coords.latitude}, ${coords.longitude}`);
     
     return {
       latitude: coords.latitude,
@@ -54,12 +47,9 @@ export async function geocodeFromCEP(cep: string): Promise<GeocodeResult> {
     };
 
   } catch (error) {
-    console.error(`[Geocoding] Erro na geocodificação para CEP ${cleanCep}:`, error);
-    
     // Fallback final com coordenadas aproximadas baseadas no prefixo do CEP
     const fallbackCoords = getFallbackCoordinatesFromCEP(cleanCep);
     if (fallbackCoords) {
-      console.log(`[Geocoding] Usando coordenadas de fallback para CEP ${cleanCep}:`, fallbackCoords);
       return fallbackCoords;
     }
     

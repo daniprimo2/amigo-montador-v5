@@ -101,11 +101,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
     
     try {
       setIsApplying(true);
-      console.log(`[AvailableServiceCard] Iniciando candidatura para serviço ID: ${service.id}`);
-      
       const response = await onApply(service.id);
-      console.log(`[AvailableServiceCard] Resposta da candidatura:`, response);
-      
       // Immediately update local state to show pending status
       setLocalHasApplied(true);
       setLocalApplicationStatus('pending');
@@ -197,25 +193,6 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
   
   // Debug logging
   const finalStatus = getApplicationStatus();
-  console.log(`[AvailableServiceCard] Service ${service.id} FULL DATA:`, service);
-  console.log(`[AvailableServiceCard] Service ${service.id} STATUS:`, {
-    'service.hasApplied': service.hasApplied,
-    'service.applicationStatus': service.applicationStatus,
-    localApplicationStatus,
-    localHasApplied,
-    'service.hasChatMessages': service.hasChatMessages,
-    computedHasApplied: hasApplied,
-    isPendingApproval,
-    isAccepted,
-    isRejected,
-    finalStatus: finalStatus,
-    'Raw service object': {
-      id: service.id,
-      hasApplied: service.hasApplied,
-      applicationStatus: service.applicationStatus
-    }
-  });
-  
   // Verificar se o preço está sendo processado corretamente
   const formattedPrice = formatPrice(service.price || '0');
 

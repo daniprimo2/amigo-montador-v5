@@ -150,12 +150,8 @@ app.use((req, res, next) => {
       reusePort: true,
     }, () => {
       log(`serving on port ${port}`);
-      console.log(`🚀 Amigo Montador running on port ${port}`);
-      console.log(`📱 Application: http://0.0.0.0:${port}`);
       if (process.env.NODE_ENV === 'production') {
-        console.log(`✅ Production deployment successful`);
-        console.log(`🌐 Health check: http://0.0.0.0:${port}/api/health`);
-      }
+        }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

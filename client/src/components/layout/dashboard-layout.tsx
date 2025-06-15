@@ -41,8 +41,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Monitorar mensagens recebidas via WebSocket e atualizar contagem
   useEffect(() => {
     if (lastMessage && lastMessage.type === 'new_message') {
-      console.log('[DashboardLayout] Nova mensagem recebida via WebSocket', lastMessage);
-      
       // Atualizar a contagem de mensagens não lidas
       refetchUnreadCount();
     }

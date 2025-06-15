@@ -48,12 +48,9 @@ class EmailService {
       this.transporter.verify((error, success) => {
         if (error) {
           console.warn('Erro na configuração do email - usando modo desenvolvimento:', error.message);
-          console.log('Para Hotmail/Outlook, você precisa de uma "senha de aplicativo" ao invés da senha normal.');
-          console.log('Instruções: https://support.microsoft.com/pt-br/account-billing/manage-app-passwords-for-two-step-verification-d6dc8c6d-4bf7-4b3b-b7b8-5ff81c78c0c1');
           this.transporter = null;
         } else {
-          console.log('Servidor de email configurado com sucesso');
-        }
+          }
       });
     } catch (error) {
       console.error('Erro ao inicializar serviço de email:', error);
@@ -66,15 +63,9 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, userName: string, resetToken: string): Promise<boolean> {
     if (!this.transporter) {
-      console.log('=== MODO DESENVOLVIMENTO - SIMULAÇÃO DE EMAIL ===');
-      console.log(`Para: ${email}`);
-      console.log(`Nome: ${userName}`);
-      console.log(`Token: ${resetToken}`);
       const baseUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
         ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
         : process.env.FRONTEND_URL || 'http://localhost:5000';
-      console.log(`Link de recuperação: ${baseUrl}/reset-password?token=${resetToken}`);
-      console.log('=== FIM DA SIMULAÇÃO ===');
       return false;
     }
 
@@ -170,7 +161,6 @@ class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('Email de recuperação enviado:', result.messageId);
       return true;
     } catch (error) {
       console.error('Erro ao enviar email de recuperação:', error);

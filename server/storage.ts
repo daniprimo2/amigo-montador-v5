@@ -395,11 +395,10 @@ export class DatabaseStorage implements IStorage {
                       longitude: cityCoords.lng.toString()
                     };
                   } else {
-                    console.log(`[FILTRO RAIO] Não foi possível extrair cidade/estado de: "${service.location}"`);
-                  }
+                    }
                 } catch (error) {
-                  console.error(`[FILTRO RAIO] Erro ao obter coordenadas da cidade para serviço ${service.id}:`, error);
-                  continue; // Pular este serviço se não conseguir obter coordenadas
+                  // Error logging removed for production
+continue; // Pular este serviço se não conseguir obter coordenadas
                 }
               }
               
@@ -412,32 +411,21 @@ export class DatabaseStorage implements IStorage {
                   parseFloat(serviceCoords.longitude)
                 );
                 
-                console.log(`[FILTRO RAIO] Serviço ${service.id}: distância ${distance.toFixed(1)} km (raio limite: ${assembler.workRadius} km)`);
-                
                 // Incluir apenas serviços dentro do raio de atendimento
                 if (distance <= assembler.workRadius) {
                   filteredByDistance.push(service);
-                  console.log(`[FILTRO RAIO] ✓ Serviço ${service.id} INCLUÍDO (${distance.toFixed(1)} km <= ${assembler.workRadius} km)`);
-                } else {
-                  console.log(`[FILTRO RAIO] ✗ Serviço ${service.id} EXCLUÍDO (${distance.toFixed(1)} km > ${assembler.workRadius} km)`);
                 }
-              } else {
-                console.warn(`[FILTRO RAIO] ✗ Serviço ${service.id} EXCLUÍDO - não foi possível calcular distância (coordenadas não encontradas)`);
-                // NÃO incluir serviços sem coordenadas válidas para manter a precisão do filtro
               }
             } catch (error) {
-              console.error(`Erro ao processar serviço ${service.id}:`, error);
+              // Erro ao processar serviço silenciosamente
             }
           }
           
-          console.log(`[FILTRO RAIO] RESULTADO FINAL: ${filteredByDistance.length} de ${enhancedServices.length} serviços dentro do raio de ${assembler.workRadius} km`);
-          
           // Log dos serviços que passaram no filtro
           if (filteredByDistance.length > 0) {
-            console.log(`[FILTRO RAIO] Serviços que passaram no filtro:`, filteredByDistance.map(s => `ID ${s.id} - ${s.title}`));
+            );
           } else {
-            console.log(`[FILTRO RAIO] ATENÇÃO: Nenhum serviço passou no filtro de raio!`);
-          }
+            }
           
         } catch (error) {
           console.error('[FILTRO RAIO] Erro ao filtrar por distância:', error);
@@ -449,25 +437,22 @@ export class DatabaseStorage implements IStorage {
             }
             return false;
           });
-          console.log(`[FILTRO RAIO] ERRO: Aplicando filtro por estado ${assembler.state}, ${filteredByDistance.length} serviços restantes`);
-        }
+          }
       } else {
-        console.log(`[FILTRO RAIO] Montador sem raio de atendimento definido (workRadius: ${assembler.workRadius}), mostrando todos os serviços`);
+        , mostrando todos os serviços`);
         filteredByDistance = enhancedServices;
       }
 
       // Se o montador tiver especialidades definidas, podemos filtrar por elas
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
         const assemblerSpecialties = assembler.specialties as string[];
-        console.log(`Filtrando por especialidades do montador: ${assemblerSpecialties.join(', ')}`);
+        }`);
         
         // Atualização: mostrar todos os serviços disponíveis para o montador, independente da especialidade
         // Isso permite que o montador veja mais oportunidades de trabalho
-        console.log(`Retornando ${filteredByDistance.length} serviços disponíveis para o montador`);
         return filteredByDistance;
       }
       
-      console.log(`Nenhuma especialidade definida para o montador, retornando ${filteredByDistance.length} serviços disponíveis`);
       // Se o montador não tiver especialidades definidas, retorna todos os serviços filtrados por distância
       return filteredByDistance;
     } catch (error) {
@@ -534,27 +519,20 @@ export class DatabaseStorage implements IStorage {
       const deleteApplicationsResult = await db
         .delete(applications)
         .where(eq(applications.serviceId, id));
-      console.log(`Candidaturas excluídas para o serviço ${id}`);
-      
       // Excluir mensagens associadas ao serviço
       const deleteMessagesResult = await db
         .delete(messages)
         .where(eq(messages.serviceId, id));
-      console.log(`Mensagens excluídas para o serviço ${id}`);
-      
       // Exclusão de avaliações relacionadas a este serviço, se houver
       const deleteRatingsResult = await db
         .delete(ratings)
         .where(eq(ratings.serviceId, id));
-      console.log(`Avaliações excluídas para o serviço ${id}`);
-        
       // Finalmente, excluir o serviço
       const deleteServiceResult = await db
         .delete(services)
         .where(eq(services.id, id));
         
-      console.log(`Serviço ID ${id} excluído com sucesso junto com seus relacionamentos`);
-    } catch (error) {
+      } catch (error) {
       console.error(`Erro ao excluir serviço ID ${id}:`, error);
       // Usando casting para acessar a propriedade message do erro
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -786,8 +764,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.id, messageId));
       
     if (message) {
-      console.log(`Tentativa de excluir mensagem ${messageId} foi bloqueada. Preservação do histórico completo.`);
-    }
+      }
     
     // Retorna sempre false, impossibilitando a exclusão de qualquer mensagem
     // para garantir a preservação completa do histórico de conversas

@@ -48,8 +48,6 @@ interface StoreServiceCardProps {
   onChatClick?: (id: number) => void;
 }
 
-
-
 export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({ 
   service, 
   onClick,
@@ -144,12 +142,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             window.dispatchEvent(event);
             
             // Log para depuração
-            console.log("[StoreServiceCard] Diálogo de avaliação solicitado para serviço:", service.id);
-          }, 500);
+            }, 500);
         } else {
-          console.log("[StoreServiceCard] Não foi possível abrir avaliação: assembler ou onRateClick indisponível", 
-            {hasAssembler: !!service.assembler, hasOnRateClick: !!onRateClick});
-        }
+          }
       } catch (error: any) {
         toast({
           title: 'Erro ao finalizar serviço',
@@ -162,8 +157,6 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
       onComplete(service.id);
     }
   };
-  
-
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -255,8 +248,6 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
           </div>
         )}
 
-
-
         {/* Datas de início e fim, e preço */}
         <div className="space-y-2 mb-3">
           {/* Datas de início e fim */}
@@ -303,9 +294,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
         <div className="flex justify-end">
           <div className="flex flex-wrap gap-1 sm:gap-2">
             {/* O botão "Montagem Concluída" foi movido para a interface de chat */}
-            
 
-            
             {service.status === 'open' && (
               <>
                 <Button 

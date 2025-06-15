@@ -117,7 +117,6 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     },
   });
 
-
   // Dados do montador (se for montador)
   const assemblerForm = useForm<AssemblerFormValues>({
     resolver: zodResolver(assemblerSchema),
@@ -194,8 +193,6 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       }
       
       const data = await response.json();
-      console.log("Perfil do usuário carregado:", data);
-      
       // Armazenar dados do perfil para uso no componente
       setProfileData(data);
       
@@ -346,8 +343,6 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
       formData.append('type', uploadType);
       const isStoreLogoUpload = uploadType === 'store-logo';
       
-      console.log(`Enviando imagem como: ${uploadType}`);
-      
       const response = await fetch('/api/profile/photo', {
         method: 'POST',
         body: formData,
@@ -479,9 +474,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
             Visualize e edite suas informações pessoais
           </DialogDescription>
         </DialogHeader>
-        
 
-        
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

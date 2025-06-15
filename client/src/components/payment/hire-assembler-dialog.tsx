@@ -144,8 +144,7 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
         if (!chatMessageResponse.ok) {
           console.error("Erro ao enviar mensagem automática de contratação");
         } else {
-          console.log("Mensagem automática de contratação enviada com sucesso");
-        }
+          }
       } catch (error) {
         console.error("Erro ao enviar mensagem automática:", error);
       }

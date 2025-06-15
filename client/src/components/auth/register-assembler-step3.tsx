@@ -140,18 +140,6 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
   const onSubmit = async (data: AssemblerStep3Data) => {
     try {
-      console.log('=== INÍCIO DO SUBMIT ===');
-      console.log('Dados do formulário:', data);
-      console.log('step1Data recebido:', step1Data);
-      console.log('step2Data recebido:', step2Data);
-      console.log('Cidade do step1Data:', step1Data?.city);
-      console.log('Arquivos selecionados:', {
-        idFront: idFrontFiles?.length,
-        idBack: idBackFiles?.length,
-        address: addressFiles?.length,
-        certificates: certFiles?.length
-      });
-
       // Verificar se a foto de perfil foi fornecida no step1
       if (!step1Data.profilePicture || step1Data.profilePicture.length === 0) {
         toast({
@@ -192,10 +180,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
 
       // Verificar se os dados bancários foram preenchidos corretamente
       const hasBankData = data.bankName && data.accountNumber && data.agency && data.holderName && data.holderDocumentNumber;
-      console.log('Dados bancários completos:', hasBankData);
-
       // Upload dos documentos obrigatórios
-      console.log('Iniciando upload dos documentos...');
       let documentUrls: Record<string, string | string[]> = {};
 
       try {
@@ -266,8 +251,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           }
         }
 
-        console.log('Upload dos documentos concluído:', documentUrls);
-      } catch (uploadError) {
+        } catch (uploadError) {
         console.error('Erro no upload dos documentos:', uploadError);
         toast({
           title: 'Erro no upload',
@@ -325,11 +309,8 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         pixKeyType: data.pixKeyType || undefined,
       };
 
-      console.log('Dados do usuário para registro:', userData);
-
       // Fazer registro usando FormData para incluir a foto de perfil
       try {
-        console.log('Fazendo requisição de registro...');
         const formData = new FormData();
         
         // Adicionar a foto de perfil
@@ -351,13 +332,8 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
           body: formData,
         });
 
-        console.log('Status da resposta:', response.status);
-        console.log('Headers da resposta:', response.headers);
-
         if (response.ok) {
           const result = await response.json();
-          console.log('Registro bem-sucedido:', result);
-          
           toast({
             title: 'Cadastro realizado com sucesso',
             description: 'Seu cadastro foi concluído! Você será redirecionado para o dashboard.',

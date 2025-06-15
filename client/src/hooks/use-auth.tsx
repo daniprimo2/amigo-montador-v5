@@ -56,7 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log('loginMutation sucesso, atualizando queryClient com usuário:', user);
       queryClient.setQueryData(["/api/user"], user);
       
       // Disparar evento de login para outros componentes
@@ -110,7 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log('registerMutation sucesso, atualizando queryClient com usuário:', user);
       queryClient.setQueryData(["/api/user"], user);
       
       // Disparar evento de registro para outros componentes
@@ -145,8 +143,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Log para depuração
-  console.log('AuthProvider - Estado do usuário:', { user, isLoading, error });
-
   return (
     <AuthContext.Provider
       value={{

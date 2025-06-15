@@ -3,33 +3,24 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.amigomontador.app',
   appName: 'AmigoMontador',
-  webDir: 'dist/client',
+  webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    allowNavigation: ['*']
+    androidScheme: 'https'
   },
   android: {
-    buildOptions: {
-      keystorePath: 'android/app/keystore.jks',
-      keystoreAlias: 'amigomontador',
-      keystorePassword: process.env.KEYSTORE_PASSWORD || '',
-      keystoreAliasPassword: process.env.KEY_PASSWORD || ''
-    }
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false // Desabilitado para produção
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      launchAutoHide: true,
-      backgroundColor: "#ffffff",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP"
+      backgroundColor: "#2563EB",
+      showSpinner: false
     },
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"]
-    },
-    LocalNotifications: {
-      smallIcon: "ic_stat_icon_config_sample",
-      iconColor: "#488AFF"
+    StatusBar: {
+      style: "dark",
+      backgroundColor: "#2563EB"
     }
   }
 };

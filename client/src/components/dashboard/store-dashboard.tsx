@@ -57,11 +57,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   useEffect(() => {
     if (!lastMessage) return;
     
-    console.log("[StoreDashboard] Nova mensagem recebida via WebSocket:", lastMessage);
-    
     if (lastMessage.type === 'new_application') {
-      console.log("[StoreDashboard] Nova candidatura recebida! Atualizando interface...", lastMessage);
-      
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
@@ -81,8 +77,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         setDashboardSection('chat');
       }
     } else if (lastMessage.type === 'new_message') {
-      console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-      
       // Atualizar as listas relevantes 
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
@@ -206,8 +200,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
         if (lastMessage.serviceId) {
           // Marcar serviço como tendo nova candidatura (isso será atualizado quando os dados forem buscados)
-          console.log(`Nova candidatura recebida para serviço ${lastMessage.serviceId}`);
-          
           // Notificar o usuário com um toast
           toast({
             title: "Nova candidatura recebida!",
@@ -221,8 +213,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           setDashboardSection('chat');
         }
       } else if (lastMessage.type === 'new_message') {
-        console.log("[StoreDashboard] Nova mensagem recebida via WebSocket", lastMessage);
-        
         // Atualizar as listas relevantes para refletir nova mensagem
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
@@ -252,8 +242,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
           });
         }
       } else if (lastMessage.type === 'payment_confirmed') {
-        console.log("[StoreDashboard] Pagamento confirmado! Agora deve avaliar o montador", lastMessage);
-        
         // Atualizar todas as listas de serviços
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
@@ -268,8 +256,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         
         // A avaliação obrigatória será exibida pelo MandatoryRatingChecker
       } else if (lastMessage.type === 'service_completed') {
-        console.log("[StoreDashboard] Serviço finalizado, abrindo tela de avaliação", lastMessage);
-        
         // Atualizar todas as listas de serviços
         queryClient.invalidateQueries({ queryKey: ['/api/services'] });
         
@@ -464,8 +450,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const createServiceMutation = useMutation({
     mutationFn: async (serviceData: any) => {
       // Log detalhado dos dados a serem enviados
-      console.log("Enviando dados para a API:", serviceData);
-      
       // Enviar os dados diretamente como JSON
       const response = await fetch('/api/services', {
         method: 'POST',
@@ -522,9 +506,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         errorDescription = `Por favor, preencha os seguintes campos: ${error.response.missingFields.join(", ")}.`;
         
         // Log detalhado dos campos faltantes e valores atuais
-        console.log("Campos obrigatórios faltantes:", error.response.missingFields);
-        console.log("Valores atuais do formulário:", newService);
-      }
+        }
       
       // Log do erro completo para depuração
       console.error("Erro completo ao criar serviço:", error);
@@ -727,10 +709,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Processar dados de serviços da API
   const processApiServices = (apiServices: any[] = []) => {
-    console.log("[StoreDashboard] Dados brutos da API:", apiServices);
-    
     const processedServices = apiServices.map(service => {
-      console.log(`[StoreDashboard] Processando serviço ID ${service.id}, status: ${service.status}`);
       return {
         id: service.id,
         title: service.title,
@@ -753,7 +732,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       };
     });
     
-    console.log("[StoreDashboard] Serviços processados:", processedServices);
     return processedServices;
   };
   
@@ -764,11 +742,6 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const openCount = allServices.filter(service => service.status === 'open').length;
   const inProgressCount = allServices.filter(service => service.status === 'in-progress').length;
   const completedCount = allServices.filter(service => service.status === 'completed').length;
-  
-  console.log("[StoreDashboard] Contagens de status:");
-  console.log(`- Em Aberto: ${openCount}`);
-  console.log(`- Em Andamento: ${inProgressCount}`);
-  console.log(`- Finalizados: ${completedCount}`);
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
@@ -1104,15 +1077,11 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
     
     // 1. PRIORIDADE MÁXIMA: Adicionar TODOS os serviços que possuem mensagens
     if (servicesWithMessages && servicesWithMessages.length > 0) {
-      console.log('[StoreDashboard] Serviços com mensagens encontrados:', servicesWithMessages);
-      
       servicesWithMessages.forEach((service: any) => {
         addedServiceIds.add(service.id);
         
         const chatType = service.status === 'completed' ? 'completed' : 
                         service.status === 'in-progress' ? 'active' : 'active';
-        
-        console.log(`[StoreDashboard] Processando serviço ${service.title} (ID: ${service.id}), status: ${service.status}, chatType: ${chatType}`);
         
         result.push({
           id: service.id,
