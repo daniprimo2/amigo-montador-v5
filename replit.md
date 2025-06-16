@@ -208,6 +208,16 @@ The AmigoMontador platform is a mobile-first web application that connects furni
   - Generated complete Portuguese documentation for Play Store submission process
   - Solution enables instant updates via web code changes without AAB republishing
   - Ready for immediate Google Play Store upload with comprehensive setup guide
+- June 16, 2025. Simplified Android configuration for Play Store deployment
+  - Removed multiple Android folders (android/, android-release/, react-native-app/, scripts/, docs/)
+  - Created single unified solution with `gerar-playstore.js` script
+  - Simplified configuration to 3 lines: APP_NAME, APP_URL, PACKAGE_NAME
+  - Automated entire build process: Java check, Android structure creation, keystore generation, AAB build
+  - Created comprehensive `GUIA_PLAYSTORE.md` in Portuguese for easy setup
+  - Updated README.md with 4-step Play Store deployment process
+  - Streamlined project structure eliminates configuration complexity
+  - One-command solution: `node gerar-playstore.js` generates complete AAB for Play Store
+  - Maintained all functionality while drastically reducing setup complexity
 
 ## User Preferences
 

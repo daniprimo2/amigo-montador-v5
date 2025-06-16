@@ -2,6 +2,16 @@
 
 Plataforma mobile-first conectando profissionais de lojas de móveis com montadores especializados no Brasil.
 
+## 📱 Play Store - Configuração Simplificada
+
+### Gerar App Android (2 minutos)
+1. **Instalar Java**: `sudo apt install openjdk-11-jdk`
+2. **Configurar**: Editar `gerar-playstore.js` (linhas 6-8) com sua URL
+3. **Gerar**: `node gerar-playstore.js`
+4. **Publicar**: Upload do `app-playstore.aab` na [Play Console](https://play.google.com/console)
+
+Ver [GUIA_PLAYSTORE.md](./GUIA_PLAYSTORE.md) para instruções detalhadas.
+
 ## Funcionalidades
 
 - Sistema dual: Lojistas e Montadores
@@ -10,7 +20,7 @@ Plataforma mobile-first conectando profissionais de lojas de móveis com montado
 - Correspondência baseada em localização
 - Integração de pagamento com PIX
 - Interface otimizada para mobile
-- App Android pronto para Play Store
+- App Android com WebView otimizado
 
 ## Tecnologias
 
@@ -53,13 +63,13 @@ npm run dev
 ## Estrutura do Projeto
 
 ```
-├── client/          # Frontend React
-├── server/          # Backend Express
-├── shared/          # Tipos e schemas compartilhados
-├── scripts/         # Scripts de build e deploy
-├── docs/            # Documentação
-├── android-release/ # Arquivos Android para produção
-└── uploads/         # Diretório de uploads
+├── gerar-playstore.js     # Script principal para Play Store
+├── GUIA_PLAYSTORE.md      # Guia completo de publicação
+├── client/                # Frontend React
+├── server/                # Backend Express
+├── shared/                # Tipos e schemas compartilhados
+├── android-playstore/     # Pasta auxiliar Android (opcional)
+└── uploads/               # Diretório de uploads
 ```
 
 ## Deploy para Produção
@@ -69,10 +79,10 @@ npm run dev
 npm run build
 ```
 
-### App Android
-Os arquivos para Android estão prontos em `android-release/`:
-- `amigomontador-release.aab` - Arquivo para Play Store
-- `amigomontador-keystore.jks` - Keystore de assinatura
+### App Android (Simplificado)
+1. Configure sua URL no arquivo `gerar-playstore.js`
+2. Execute: `node gerar-playstore.js`
+3. Upload do arquivo `app-playstore.aab` gerado na Play Console
 
 ## Licença
 
