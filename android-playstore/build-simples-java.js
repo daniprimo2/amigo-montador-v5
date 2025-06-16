@@ -151,11 +151,9 @@ try {
       
       // Limpar
       fs.rmSync(aabDir, { recursive: true });
-      return true;
     }
     
   } catch (jarError) {
     console.log('❌ Erro com JAR também:', jarError.message);
-    return false;
   }
 }
