@@ -1,0 +1,32 @@
+// Top-level build file
+buildscript {
+    ext {
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        minSdkVersion = 22
+        buildToolsVersion = "34.0.0"
+        kotlinVersion = "1.8.10"
+        gradleVersion = "8.0.2"
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.2'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+plugins {
+    id 'com.android.application' version '8.0.2' apply false
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

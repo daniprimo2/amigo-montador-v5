@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AmigoMontador</string>
+    <string name="app_description">Conectando montadores e lojas</string>
+    <string name="loading">Carregando…</string>
+    <string name="no_internet">Sem conexão com a internet</string>
+    <string name="retry">Tentar Novamente</string>
+    <string name="check_connection">Verifique sua conexão e tente novamente</string>
+</resources>
