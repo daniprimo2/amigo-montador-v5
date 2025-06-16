@@ -189,6 +189,12 @@ The AmigoMontador platform is a mobile-first web application that connects furni
   - Created comprehensive documentation for Play Store submission process
   - AAB now fully compatible with Google Play Store requirements
   - Ready for immediate Play Store upload and publication
+- June 16, 2025. Removed pre-built AAB files and signing keys for local generation
+  - Removed all .aab files (amigomontador-release.aab, amigomontador-fixed.aab, amigomontador-minimal.aab)
+  - Removed signing keystore (amigomontador-keystore.jks)
+  - Updated .gitignore to prevent future inclusion of build artifacts and signing keys
+  - App generation and signing now follows Play Store best practices for local development
+  - Enhanced security by removing sensitive signing materials from repository
 
 ## User Preferences
 
