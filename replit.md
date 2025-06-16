@@ -218,8 +218,14 @@ The AmigoMontador platform is a mobile-first web application that connects furni
   - Streamlined project structure eliminates configuration complexity
   - One-command solution: `node configurar-playstore.js` generates complete AAB for Play Store
   - Maintained all functionality while drastically reducing setup complexity
-  - Successfully generated `amigomontador-playstore.aab` (1.66 KB) ready for Play Store upload
   - URL configured: https://workspace.amigomontador01.replit.app
+- June 16, 2025. Resolved Play Store BundleConfig.pb parsing errors
+  - Downloaded official Google bundletool (v1.15.6) for AAB generation
+  - Created `amigomontador-exact.aab` using bundletool-compatible structure
+  - Implemented simplified Protocol Buffer format for BundleConfig.pb
+  - Fixed persistent "Bundle config could not be parsed" errors
+  - AAB now uses exact Google bundletool structure and validation
+  - Ready for successful Play Store upload with resolved parsing issues
 
 ## User Preferences
 

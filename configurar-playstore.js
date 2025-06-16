@@ -44,7 +44,7 @@ console.log('📦 Gerando arquivo AAB...');
 try {
   process.chdir('android-playstore');
   process.env.APP_URL = APP_URL;
-  execSync('node build-mobile-compliant.js', { stdio: 'inherit' });
+  execSync('node create-official-aab.js', { stdio: 'inherit' });
   
   // Verificar se AAB foi criado
   const aabFiles = [
