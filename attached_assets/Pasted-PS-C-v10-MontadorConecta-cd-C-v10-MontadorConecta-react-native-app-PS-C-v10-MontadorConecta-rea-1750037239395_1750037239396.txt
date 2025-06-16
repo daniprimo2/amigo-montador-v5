@@ -1,0 +1,40 @@
+PS C:\v10\MontadorConecta> cd C:\v10\MontadorConecta\react-native-app
+PS C:\v10\MontadorConecta\react-native-app> rm -rf node_modules
+Remove-Item : Não é possível localizar um parâmetro que coincida com o nome de parâmetro 'rf'.
+No linha:1 caractere:4
++ rm -rf node_modules
++    ~~~
+    + CategoryInfo          : InvalidArgument: (:) [Remove-Item], ParameterBindingException
+npm warn using --force Recommended protections disabled.
+PS C:\v10\MontadorConecta\react-native-app> npm install --legacy-peer-deps
+
+up to date, audited 817 packages in 1s
+
+found 0 vulnerabilities
+PS C:\v10\MontadorConecta\react-native-app>
+PS C:\v10\MontadorConecta\react-native-app> # 2. Certificar que emulador está rodando
+PS C:\v10\MontadorConecta\react-native-app> adb devices
+List of devices attached
+emulator-5554   device
+emulator-5556   device
+
+PS C:\v10\MontadorConecta\react-native-app>
+PS C:\v10\MontadorConecta\react-native-app> # 3. Executar o app
+PS C:\v10\MontadorConecta\react-native-app> npm run android
+
+> AmigoMontadorNative@1.0.0 android
+> react-native run-android
+
+error Failed to load configuration of your project.
+Config Validation Error: "dependencies.react-native-vector-icons.platforms.ios.xcodeprojDir" is not allowed
+    at readConfigFromDisk (C:\v10\MontadorConecta\react-native-app\node_modules\@react-native-community\cli-config\build\readConfigFromDisk.js:52:11)
+    at loadConfig (C:\v10\MontadorConecta\react-native-app\node_modules\@react-native-community\cli-config\build\loadConfig.js:65:65)
+    at setupAndRun (C:\v10\MontadorConecta\react-native-app\node_modules\@react-native-community\cli\build\index.js:159:39)
+    at run (C:\v10\MontadorConecta\react-native-app\node_modules\@react-native-community\cli\build\index.js:129:11)
+    at Object.<anonymous> (C:\v10\MontadorConecta\react-native-app\node_modules\@react-native-community\cli\build\bin.js:31:3)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Object..js (node:internal/modules/cjs/loader:1895:10)
+    at Module.load (node:internal/modules/cjs/loader:1465:32)
+    at Function._load (node:internal/modules/cjs/loader:1282:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+PS C:\v10\MontadorConecta\react-native-app> 
