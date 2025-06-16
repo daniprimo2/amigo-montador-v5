@@ -337,7 +337,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     try {
       setIsLoading(true);
       const formData = new FormData();
-      formData.append('photo', file);
+      formData.append('foto', file);
       
       // Usar o tipo de upload explícito passado para a função
       formData.append('type', uploadType);

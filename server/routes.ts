@@ -233,6 +233,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(user);
   });
 
+  // Endpoint para upload de fotos de perfil e logo da loja
+  app.post("/api/profile/photo", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      if (!req.files || !req.files.foto) {
+        return res.status(400).json({ message: "Nenhuma foto foi enviada" });
+      }
+
+      const user = req.user!;
+      const foto = req.files.foto as any;
+      const uploadType = req.body.type || 'profile'; // 'profile' ou 'store-logo'
+
+      // Verificar tipo de arquivo
+      if (!foto.mimetype.startsWith('image/')) {
+        return res.status(400).json({ message: "O arquivo deve ser uma imagem" });
+      }
+
+      // Verificar tamanho (max 5MB)
+      if (foto.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
+      }
+
+      // Definir diretório baseado no tipo de upload
+      let uploadDir: string;
+      let fileName: string;
+      
+      if (uploadType === 'store-logo') {
+        uploadDir = path.join(process.cwd(), 'uploads', 'logos');
+        fileName = `store-${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${foto.name.split('.').pop()}`;
+      } else {
+        uploadDir = path.join(process.cwd(), 'uploads', 'profiles');
+        fileName = `user-${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${foto.name.split('.').pop()}`;
+      }
+
+      // Criar diretório se não existir
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const uploadPath = path.join(uploadDir, fileName);
+      
+      // Mover arquivo para diretório de uploads
+      await foto.mv(uploadPath);
+      
+      // Gerar URL da foto
+      const photoUrl = uploadType === 'store-logo' 
+        ? `/uploads/logos/${fileName}`
+        : `/uploads/profiles/${fileName}`;
+
+      // Atualizar banco de dados baseado no tipo de upload
+      if (uploadType === 'store-logo') {
+        // Atualizar logo da loja
+        const store = await storage.getStoreByUserId(user.id);
+        if (!store) {
+          return res.status(404).json({ message: "Loja não encontrada" });
+        }
+        
+        await storage.updateStore(store.id, { logoUrl: photoUrl });
+      } else {
+        // Atualizar foto de perfil do usuário
+        await storage.updateUser(user.id, { profilePhotoUrl: photoUrl });
+      }
+
+      res.json({ 
+        success: true,
+        photoUrl: photoUrl,
+        message: uploadType === 'store-logo' ? 'Logo da loja atualizado com sucesso' : 'Foto de perfil atualizada com sucesso'
+      });
+
+    } catch (error) {
+      console.error('Erro no upload de foto:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Endpoint para obter dados do perfil completo
+  app.get("/api/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      let profileData: any = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        userType: user.userType,
+        profilePhotoUrl: user.profilePhotoUrl
+      };
+
+      if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(user.id);
+        if (store) {
+          profileData.store = store;
+        }
+      } else if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        if (assembler) {
+          profileData.assembler = assembler;
+        }
+      }
+
+      res.json(profileData);
+    } catch (error) {
+      console.error('Erro ao obter perfil:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Endpoint para atualizar dados do perfil
+  app.patch("/api/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const { user: userData, store: storeData, assembler: assemblerData } = req.body;
+
+      // Atualizar dados do usuário se fornecidos
+      if (userData) {
+        await storage.updateUser(user.id, userData);
+      }
+
+      // Atualizar dados da loja se fornecidos e usuário for lojista
+      if (storeData && user.userType === 'lojista') {
+        const existingStore = await storage.getStoreByUserId(user.id);
+        if (existingStore) {
+          await storage.updateStore(existingStore.id, storeData);
+        } else {
+          // Criar loja se não existir
+          await storage.createStore({
+            ...storeData,
+            userId: user.id
+          });
+        }
+      }
+
+      // Atualizar dados do montador se fornecidos e usuário for montador
+      if (assemblerData && user.userType === 'montador') {
+        const existingAssembler = await storage.getAssemblerByUserId(user.id);
+        if (existingAssembler) {
+          await storage.updateAssembler(existingAssembler.id, assemblerData);
+        } else {
+          // Criar perfil de montador se não existir
+          await storage.createAssembler({
+            ...assemblerData,
+            userId: user.id
+          });
+        }
+      }
+
+      res.json({ 
+        success: true,
+        message: 'Perfil atualizado com sucesso'
+      });
+
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.get("/api/services", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
