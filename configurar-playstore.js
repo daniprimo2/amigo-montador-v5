@@ -2,7 +2,7 @@
 
 // ========== CONFIGURAÇÃO SIMPLES ==========
 // Edite apenas esta linha com a URL do seu Replit:
-const APP_URL = 'https://amigomontador.replit.app';
+const APP_URL = 'https://workspace.amigomontador01.replit.app';
 // ==========================================
 
 import fs from 'fs';
