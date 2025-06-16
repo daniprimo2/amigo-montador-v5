@@ -8,13 +8,5 @@ module.exports = {
         },
       },
     },
-    'react-native-vector-icons': {
-      platforms: {
-        ios: {
-          xcodeprojDir: 'ios',
-          pbxprojPath: 'ios/AmigoMontadorNative.xcodeproj/project.pbxproj',
-        },
-      },
-    },
   },
 };
