@@ -12,20 +12,18 @@ java -version
 ```
 
 ### 2. Configurar o App
-Edite o arquivo `gerar-playstore.js` nas linhas 6-8:
+Edite o arquivo `configurar-playstore.js` na linha 4:
 ```javascript
-const APP_NAME = 'Seu App';           // Nome do seu app
-const APP_URL = 'https://seu-app.replit.app';  // URL do seu Replit
-const PACKAGE = 'com.seuapp.app';     // Nome único do pacote
+const APP_URL = 'https://seu-app.replit.app';  // Sua URL do Replit
 ```
 
 ### 3. Gerar o Arquivo para Play Store
 ```bash
 # Executar uma vez
-node gerar-playstore.js
+node configurar-playstore.js
 ```
 
-O arquivo `app-playstore.aab` será criado na pasta raiz.
+O arquivo AAB será criado automaticamente.
 
 ### 4. Publicar na Play Store
 

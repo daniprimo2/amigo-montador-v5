@@ -6,9 +6,9 @@ Plataforma mobile-first conectando profissionais de lojas de móveis com montado
 
 ### Gerar App Android (2 minutos)
 1. **Instalar Java**: `sudo apt install openjdk-11-jdk`
-2. **Configurar**: Editar `gerar-playstore.js` (linhas 6-8) com sua URL
-3. **Gerar**: `node gerar-playstore.js`
-4. **Publicar**: Upload do `app-playstore.aab` na [Play Console](https://play.google.com/console)
+2. **Configurar**: Editar `configurar-playstore.js` (linha 4) com sua URL do Replit
+3. **Gerar**: `node configurar-playstore.js`
+4. **Publicar**: Upload do arquivo AAB gerado na [Play Console](https://play.google.com/console)
 
 Ver [GUIA_PLAYSTORE.md](./GUIA_PLAYSTORE.md) para instruções detalhadas.
 
@@ -63,13 +63,13 @@ npm run dev
 ## Estrutura do Projeto
 
 ```
-├── gerar-playstore.js     # Script principal para Play Store
-├── GUIA_PLAYSTORE.md      # Guia completo de publicação
-├── client/                # Frontend React
-├── server/                # Backend Express
-├── shared/                # Tipos e schemas compartilhados
-├── android-playstore/     # Pasta auxiliar Android (opcional)
-└── uploads/               # Diretório de uploads
+├── configurar-playstore.js # Script principal para Play Store
+├── GUIA_PLAYSTORE.md       # Guia completo de publicação
+├── client/                 # Frontend React
+├── server/                 # Backend Express
+├── shared/                 # Tipos e schemas compartilhados
+├── android-playstore/      # Estrutura Android (automatizada)
+└── uploads/                # Diretório de uploads
 ```
 
 ## Deploy para Produção
@@ -80,9 +80,9 @@ npm run build
 ```
 
 ### App Android (Simplificado)
-1. Configure sua URL no arquivo `gerar-playstore.js`
-2. Execute: `node gerar-playstore.js`
-3. Upload do arquivo `app-playstore.aab` gerado na Play Console
+1. Configure sua URL no arquivo `configurar-playstore.js`
+2. Execute: `node configurar-playstore.js`
+3. Upload do arquivo AAB gerado na Play Console
 
 ## Licença
 
