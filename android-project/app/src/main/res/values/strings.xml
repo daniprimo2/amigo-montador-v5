@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Amigo Montador</string>
+    <string name="loading">Carregando...</string>
+    <string name="error_connection">Erro de conexão</string>
+    <string name="retry">Tentar novamente</string>
+</resources>
