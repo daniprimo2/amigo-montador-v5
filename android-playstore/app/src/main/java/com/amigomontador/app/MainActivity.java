@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private final int PERMISSION_REQUEST_CODE = 200;
     
     // URL do seu app no Replit - será configurada automaticamente
-    private static final String APP_URL = "https://amigo-montador.replit.app";
+    private static final String APP_URL = "https://workspace.amigomontador01.replit.app";
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {

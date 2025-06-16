@@ -43,7 +43,8 @@ if (fs.existsSync(mainActivityPath)) {
 console.log('📦 Gerando arquivo AAB...');
 try {
   process.chdir('android-playstore');
-  execSync('node build-aab.js', { stdio: 'inherit' });
+  process.env.APP_URL = APP_URL;
+  execSync('node build-simples-java.js', { stdio: 'inherit' });
   
   // Verificar se AAB foi criado
   const aabFiles = [
