@@ -311,7 +311,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   };
   
   // Processar upload de foto
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, uploadType = 'profile-photo') => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>, uploadType = 'profile') => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -646,15 +646,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                         className="h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = '';
                           target.style.display = 'none';
-                          target.parentElement!.innerHTML += `
-                            <div class="h-full w-full rounded-full flex items-center justify-center">
-                              <svg class="h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 8.3C20 9.7 19.7 10.9 19.2 11.9C18.1 14.1 15.7 15.5 13 15.9V19C13 19.6 12.6 20 12 20C11.4 20 11 19.6 11 19V15.9C8.3 15.5 5.9 14.1 4.8 11.9C4.3 10.9 4 9.7 4 8.3V6C4 5.4 4.4 5 5 5H8V3C8 2.4 8.4 2 9 2H15C15.6 2 16 2.4 16 3V5H19C19.6 5 20 5.4 20 6V8.3ZM7 8C6.4 8 6 7.6 6 7C6 6.4 6.4 6 7 6C7.6 6 8 6.4 8 7C8 7.6 7.6 8 7 8ZM17 8C16.4 8 16 7.6 16 7C16 6.4 16.4 6 17 6C17.6 6 18 6.4 18 7C18 7.6 17.6 8 17 8Z"></path>
-                              </svg>
-                            </div>
-                          `;
+                          // Safely trigger re-render to show fallback
+                          setLogoUrl(null);
                         }}
                       />
                     ) : (
