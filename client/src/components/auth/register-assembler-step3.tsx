@@ -269,6 +269,7 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         name: step1Data.name,
         email: step1Data.email,
         phone: step1Data.phone,
+        birthDate: step1Data.birthDate, // Campo obrigatório que estava faltando
         userType: 'montador' as const,
         
         // Dados de documento do step1 (CPF/CNPJ para PIX)
