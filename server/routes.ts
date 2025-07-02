@@ -12,6 +12,7 @@ import fileUpload from 'express-fileupload';
 import axios from 'axios';
 import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
 import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
+import { processDateField } from './utils/date-converter.js';
 import { emailService } from './email-service.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
@@ -441,6 +442,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Geocodificar o CEP para obter latitude e longitude
+      let latitude = '0';
+      let longitude = '0';
+      
+      try {
+        const coords = await geocodeFromCEP(serviceData.cep.trim());
+        latitude = coords.latitude;
+        longitude = coords.longitude;
+      } catch (error) {
+        console.log('Erro na geocodificação, usando coordenadas padrão:', error);
+        // Usar coordenadas padrão (São Paulo) se a geocodificação falhar
+        latitude = '-23.5505199';
+        longitude = '-46.6333094';
+      }
+
+      // Processar as datas do campo date (formato: "DD/MM/YYYY - DD/MM/YYYY")
+      const { startDate, endDate } = processDateField(serviceData.date.trim());
+
       // Criar o serviço
       const newService = await storage.createService({
         storeId: store.id,
@@ -450,9 +469,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         address: serviceData.address.trim(),
         addressNumber: serviceData.addressNumber.trim(),
         cep: serviceData.cep.trim(),
-        date: serviceData.date.trim(),
+        latitude: latitude,
+        longitude: longitude,
+        startDate: startDate,
+        endDate: endDate,
         price: serviceData.price.toString(),
         materialType: serviceData.materialType.trim(),
+        projectFiles: '[]', // Array vazio para serviços sem arquivos
         status: 'open'
       });
 
@@ -531,6 +554,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectFilesData = JSON.stringify(base64Files);
       }
 
+      // Geocodificar o CEP para obter latitude e longitude
+      let latitude = '0';
+      let longitude = '0';
+      
+      try {
+        const coords = await geocodeFromCEP(serviceData.cep.trim());
+        latitude = coords.latitude;
+        longitude = coords.longitude;
+      } catch (error) {
+        console.log('Erro na geocodificação, usando coordenadas padrão:', error);
+        // Usar coordenadas padrão (São Paulo) se a geocodificação falhar
+        latitude = '-23.5505199';
+        longitude = '-46.6333094';
+      }
+
+      // Processar as datas do campo date (formato: "DD/MM/YYYY - DD/MM/YYYY")
+      const { startDate, endDate } = processDateField(serviceData.date.trim());
+
       // Criar o serviço
       const newService = await storage.createService({
         storeId: store.id,
@@ -540,7 +581,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         address: serviceData.address.trim(),
         addressNumber: serviceData.addressNumber.trim(),
         cep: serviceData.cep.trim(),
-        date: serviceData.date.trim(),
+        latitude: latitude,
+        longitude: longitude,
+        startDate: startDate,
+        endDate: endDate,
         price: serviceData.price.toString(),
         materialType: serviceData.materialType.trim(),
         projectFiles: projectFilesData,
