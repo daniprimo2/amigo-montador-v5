@@ -278,6 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true,
+        photoUrl: imageBase64,
         photoData: imageBase64,
         message: uploadType === 'store-logo' ? 'Logo da loja atualizado com sucesso' : 'Foto de perfil atualizada com sucesso'
       });
@@ -302,13 +303,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         phone: user.phone,
         userType: user.userType,
-        profilePhotoData: user.profilePhotoData
+        profilePhotoData: user.profilePhotoData,
+        profilePhotoUrl: user.profilePhotoData
       };
 
       if (user.userType === 'lojista') {
         const store = await storage.getStoreByUserId(user.id);
         if (store) {
-          profileData.store = store;
+          profileData.store = {
+            ...store,
+            logoUrl: store.logoData
+          };
         }
       } else if (user.userType === 'montador') {
         const assembler = await storage.getAssemblerByUserId(user.id);
