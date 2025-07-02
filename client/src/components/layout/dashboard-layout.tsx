@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NotificationBadge from '@/components/ui/notification-badge';
+import { ProfileDialog } from '@/components/dashboard/profile-dialog';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -21,6 +22,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const queryClient = useQueryClient();
   // Define the tabs with a state to track which tab is active
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore' | 'ranking'>('home');
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
   
   // Buscar contagem de mensagens não lidas do servidor
   const { data: unreadData = { count: 0 }, refetch: refetchUnreadCount } = useQuery({
@@ -212,6 +214,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     if (user) {
       fetchUserData();
     }
+
+    // Listen for profile photo updates
+    const handleProfilePhotoUpdate = () => {
+      if (user) {
+        fetchUserData();
+      }
+    };
+
+    window.addEventListener('profile-photo-updated', handleProfilePhotoUpdate);
+    
+    return () => {
+      window.removeEventListener('profile-photo-updated', handleProfilePhotoUpdate);
+    };
   }, [user]);
 
   return (
@@ -243,11 +258,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               />
             </button>
             <button 
-              onClick={handleLogout}
-              className="w-12 h-12 rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors"
-              title="Sair"
+              onClick={() => setShowProfileDialog(true)}
+              className="w-12 h-12 rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors overflow-hidden"
+              title="Ver perfil"
             >
-              <LogOut className="h-5 w-5 text-gray-600" />
+              {profilePhotoData ? (
+                <img 
+                  src={profilePhotoData} 
+                  alt="Foto de perfil" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="h-5 w-5 text-gray-600" />
+              )}
             </button>
           </div>
         </div>
@@ -266,6 +289,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {renderNavigation()}
         </div>
       </div>
+
+      {/* Profile Dialog */}
+      <ProfileDialog 
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        onLogout={handleLogout}
+      />
     </div>
   );
 };

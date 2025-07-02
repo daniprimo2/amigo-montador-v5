@@ -367,6 +367,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         // Invalidar cache do usuário para atualizar a foto em todos os componentes
         queryClient.invalidateQueries({ queryKey: ['/api/user'] });
         queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
+        // Emitir evento para atualizar foto no header
+        window.dispatchEvent(new CustomEvent('profile-photo-updated'));
         toast({
           title: 'Sucesso',
           description: 'Foto de perfil atualizada com sucesso!',
@@ -509,16 +511,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '';
                         target.style.display = 'none';
-                        target.parentElement!.innerHTML += `
-                          <div class="h-full w-full rounded-full flex items-center justify-center">
-                            <svg class="h-16 w-16 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                              <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                          </div>
-                        `;
+                        // Não manipular innerHTML diretamente, deixar o fallback aparecer
                       }}
                     />
                   ) : (
