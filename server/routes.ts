@@ -271,6 +271,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Converter imagem para base64
+      console.log('Tipo de foto.data:', typeof foto.data);
+      console.log('foto.data é Buffer?', Buffer.isBuffer(foto.data));
+      console.log('Tamanho de foto.data:', foto.data ? foto.data.length : 'undefined');
+      
+      if (!foto.data || foto.data.length === 0) {
+        console.error('Dados da imagem estão vazios!');
+        return res.status(400).json({ message: "Dados da imagem não foram recebidos corretamente" });
+      }
+      
       const imageBase64 = `data:${foto.mimetype};base64,${foto.data.toString('base64')}`;
       console.log('Imagem convertida para base64. Tamanho:', imageBase64.length, 'caracteres');
 
