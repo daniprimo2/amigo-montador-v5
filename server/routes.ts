@@ -258,32 +258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
       }
 
-      // Definir diretório baseado no tipo de upload
-      let uploadDir: string;
-      let fileName: string;
-      
-      if (uploadType === 'store-logo') {
-        uploadDir = path.join(process.cwd(), 'uploads', 'logos');
-        fileName = `store-${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${foto.name.split('.').pop()}`;
-      } else {
-        uploadDir = path.join(process.cwd(), 'uploads', 'profiles');
-        fileName = `user-${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${foto.name.split('.').pop()}`;
-      }
-
-      // Criar diretório se não existir
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const uploadPath = path.join(uploadDir, fileName);
-      
-      // Mover arquivo para diretório de uploads
-      await foto.mv(uploadPath);
-      
-      // Gerar URL da foto
-      const photoUrl = uploadType === 'store-logo' 
-        ? `/uploads/logos/${fileName}`
-        : `/uploads/profiles/${fileName}`;
+      // Converter imagem para base64
+      const imageBase64 = `data:${foto.mimetype};base64,${foto.data.toString('base64')}`;
 
       // Atualizar banco de dados baseado no tipo de upload
       if (uploadType === 'store-logo') {
@@ -293,15 +269,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Loja não encontrada" });
         }
         
-        await storage.updateStore(store.id, { logoUrl: photoUrl });
+        await storage.updateStore(store.id, { logoData: imageBase64 });
       } else {
         // Atualizar foto de perfil do usuário
-        await storage.updateUser(user.id, { profilePhotoUrl: photoUrl });
+        await storage.updateUser(user.id, { profilePhotoData: imageBase64 });
       }
 
       res.json({ 
         success: true,
-        photoUrl: photoUrl,
+        photoData: imageBase64,
         message: uploadType === 'store-logo' ? 'Logo da loja atualizado com sucesso' : 'Foto de perfil atualizada com sucesso'
       });
 
@@ -325,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         phone: user.phone,
         userType: user.userType,
-        profilePhotoUrl: user.profilePhotoUrl
+        profilePhotoData: user.profilePhotoData
       };
 
       if (user.userType === 'lojista') {

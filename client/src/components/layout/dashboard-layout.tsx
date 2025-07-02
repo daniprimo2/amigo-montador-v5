@@ -181,8 +181,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Get user data including store for lojista
   const { user } = useAuth();
-  const [storeLogoUrl, setStoreLogoUrl] = useState<string | null>(null);
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [storeLogoData, setStoreLogoData] = useState<string | null>(null);
+  const [profilePhotoData, setProfilePhotoData] = useState<string | null>(null);
 
   // Fetch store logo and profile photo on mount for any user type
   useEffect(() => {
@@ -193,15 +193,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           const data = await response.json();
           
           // Set store logo if user is lojista
-          if (user?.userType === 'lojista' && data.store?.logoUrl) {
-            setStoreLogoUrl(data.store.logoUrl);
+          if (user?.userType === 'lojista' && data.store?.logoData) {
+            setStoreLogoData(data.store.logoData);
           }
           
-          // Set profile photo URL if available for any user type
-          if (data.profilePhotoUrl) {
-            setProfilePhotoUrl(data.profilePhotoUrl);
-          } else if (user?.profileData && typeof user.profileData === 'object' && 'photoUrl' in user.profileData) {
-            setProfilePhotoUrl(user.profileData.photoUrl as string);
+          // Set profile photo data if available for any user type
+          if (data.profilePhotoData) {
+            setProfilePhotoData(data.profilePhotoData);
+          } else if (user?.profileData && typeof user.profileData === 'object' && 'photoData' in user.profileData) {
+            setProfilePhotoData(user.profileData.photoData as string);
           }
         }
       } catch (error) {

@@ -106,23 +106,11 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
       }
       
-      // Gerar nome de arquivo único para foto de perfil
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${profileFile.name}`;
-      const profileUploadsDir = path.join(process.cwd(), 'uploads', 'profiles');
-      
-      // Criar diretório se não existir
-      if (!fs.existsSync(profileUploadsDir)) {
-        fs.mkdirSync(profileUploadsDir, { recursive: true });
-      }
-      
-      const uploadPath = path.join(profileUploadsDir, fileName);
-      
-      // Mover arquivo para diretório de uploads
-      await profileFile.mv(uploadPath);
-      const profilePhotoUrl = `/uploads/profiles/${fileName}`;
+      // Converter foto de perfil para base64
+      const profilePhotoData = `data:${profileFile.mimetype};base64,${profileFile.data.toString('base64')}`;
 
       // Para lojistas, também verificar se o logo foi fornecido (obrigatório)
-      let logoUrl = '';
+      let logoData = '';
       if (req.body.userType === 'lojista') {
         if (!req.files || !req.files.logoFile) {
           return res.status(400).json({ message: "Logo da loja é obrigatório" });
@@ -140,20 +128,8 @@ export function setupAuth(app: Express) {
           return res.status(400).json({ message: "O logo deve ter menos de 10MB" });
         }
         
-        // Gerar nome de arquivo único para logo
-        const logoFileName = `logo-${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${logoFile.name}`;
-        const logoUploadsDir = path.join(process.cwd(), 'uploads', 'logos');
-        
-        // Criar diretório se não existir
-        if (!fs.existsSync(logoUploadsDir)) {
-          fs.mkdirSync(logoUploadsDir, { recursive: true });
-        }
-        
-        const logoUploadPath = path.join(logoUploadsDir, logoFileName);
-        
-        // Mover arquivo para diretório de uploads
-        await logoFile.mv(logoUploadPath);
-        logoUrl = `/uploads/logos/${logoFileName}`;
+        // Converter logo para base64
+        logoData = `data:${logoFile.mimetype};base64,${logoFile.data.toString('base64')}`;
       }
 
       // Separar dados baseados no tipo de usuário
@@ -169,7 +145,7 @@ export function setupAuth(app: Express) {
         phone: req.body.phone,
         birthDate: req.body.birthDate,
         userType: req.body.userType,
-        profilePhotoUrl,
+        profilePhotoData,
         profileData: {}
       });
 
@@ -188,7 +164,7 @@ export function setupAuth(app: Express) {
           city: req.body.city,
           state: req.body.state,
           phone: req.body.storePhone,
-          logoUrl: logoUrl,
+          logoData: logoData,
           materialTypes: req.body.materialTypes || []
         };
         await storage.createStore(storeData);
@@ -223,11 +199,11 @@ export function setupAuth(app: Express) {
             workRadius: parseInt(req.body.workRadius) || 0,
             rating: 0,
             documents: req.body.documents || [],
-            rgFrontUrl: req.body.rgFrontUrl || '',
-            rgBackUrl: req.body.rgBackUrl || '',
-            proofOfAddressUrl: req.body.proofOfAddressUrl || '',
+            rgFrontData: req.body.rgFrontData || '',
+            rgBackData: req.body.rgBackData || '',
+            proofOfAddressData: req.body.proofOfAddressData || '',
             professionalDescription: req.body.professionalDescription || '',
-            certificatesUrls: req.body.certificatesUrls || []
+            certificatesData: req.body.certificatesData || []
           };
         await storage.createAssembler(assemblerData);
         // Criar informações bancárias se fornecidas

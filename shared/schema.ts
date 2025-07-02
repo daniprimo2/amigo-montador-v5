@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   birthDate: text("birth_date").notNull(), // Data de nascimento no formato DD/MM/YYYY
   userType: text("user_type").notNull(), // 'lojista' ou 'montador'
-  profilePhotoUrl: text("profile_photo_url").notNull(), // URL da foto de perfil
+  profilePhotoData: text("profile_photo_data").notNull(), // Imagem em base64
   profileData: jsonb("profile_data"), // Dados adicionais específicos para cada tipo de usuário
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -39,7 +39,7 @@ export const stores = pgTable("stores", {
   city: text("city").notNull(),
   state: text("state").notNull(),
   phone: text("phone"),
-  logoUrl: text("logo_url").notNull(),
+  logoData: text("logo_data").notNull(), // Logo em base64
   materialTypes: jsonb("material_types"), // ['marcenaria', 'plano-corte', 'fabrica']
 });
 
@@ -58,14 +58,14 @@ export const assemblers = pgTable("assemblers", {
   experience: text("experience"),
   workRadius: integer("work_radius").default(20),
   rating: integer("rating"),
-  documents: jsonb("documents"), // URLs para documentos
+  documents: jsonb("documents"), // Dados dos documentos em base64
   documentType: text("document_type"), // 'cpf' ou 'cnpj'
   documentNumber: text("document_number"), // CPF: XXX.XXX.XXX-XX ou CNPJ: XX.XXX.XXX/XXXX-XX
   // Documentos obrigatórios
-  rgFrontUrl: text("rg_front_url").notNull(), // RG/CNH frente (obrigatório)
-  rgBackUrl: text("rg_back_url").notNull(), // RG/CNH verso (obrigatório)
-  proofOfAddressUrl: text("proof_of_address_url").notNull(), // Comprovante de residência (obrigatório)
-  certificatesUrls: jsonb("certificates_urls"), // Certificados profissionais (opcional)
+  rgFrontData: text("rg_front_data").notNull(), // RG/CNH frente em base64 (obrigatório)
+  rgBackData: text("rg_back_data").notNull(), // RG/CNH verso em base64 (obrigatório)
+  proofOfAddressData: text("proof_of_address_data").notNull(), // Comprovante de residência em base64 (obrigatório)
+  certificatesData: jsonb("certificates_data"), // Certificados profissionais em base64 (opcional)
   // Novos campos para perfil completo
   experienceYears: integer("experience_years").default(0), // Anos de experiência numérico
   serviceTypes: jsonb("service_types"), // ['residencial', 'corporativo', 'lojas_parceiras']
@@ -91,7 +91,7 @@ export const services = pgTable("services", {
   price: text("price").notNull(),
   status: text("status").notNull().default("open"), // 'open', 'in-progress', 'completed', 'cancelled'
   materialType: text("material_type").notNull(),
-  projectFiles: jsonb("project_files").notNull(), // URLs para arquivos do projeto
+  projectFiles: jsonb("project_files").notNull(), // Arquivos do projeto em base64
   paymentReference: text("payment_reference"), // Referência do pagamento PIX
   paymentStatus: text("payment_status").default("pending"), // 'pending', 'proof_submitted', 'confirmed', 'rejected'
   paymentProof: text("payment_proof"), // Comprovante de pagamento enviado
@@ -187,7 +187,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   birthDate: true,
   userType: true,
-  profilePhotoUrl: true,
+  profilePhotoData: true,
   profileData: true,
 });
 
