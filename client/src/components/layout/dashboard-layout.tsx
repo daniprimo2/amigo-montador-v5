@@ -91,7 +91,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <NotificationBadge
         count={unreadCount}
         type="message"
-        size="lg"
+        size="md"
         className={activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}
         showPulse={false}
       />
@@ -102,7 +102,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-5 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -111,7 +111,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Home className="h-6 w-6 mb-1" />
+            <Home className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Início</span>
           </button>
           <button 
@@ -122,7 +122,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <List className="h-6 w-6 mb-1" />
+            <List className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Serviços</span>
           </button>
           <button 
@@ -133,15 +133,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Trophy className="h-6 w-6 mb-1" />
+            <Trophy className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
+          <button 
+            onClick={handleLogout}
+            className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"
+            title="Voltar ao login"
+          >
+            <LogOut className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Sair</span>
+          </button>
         </div>
       );
     } else {
       return (
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-5 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -150,7 +158,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Home className="h-6 w-6 mb-1" />
+            <Home className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Início</span>
           </button>
           <button 
@@ -161,7 +169,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Map className="h-6 w-6 mb-1" />
+            <Map className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Explorar</span>
           </button>
           <button 
@@ -172,10 +180,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Trophy className="h-6 w-6 mb-1" />
+            <Trophy className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
+          <button 
+            onClick={handleLogout}
+            className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"
+            title="Voltar ao login"
+          >
+            <LogOut className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Sair</span>
+          </button>
         </div>
       );
     }
@@ -243,7 +259,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <button 
               className="text-white relative p-2 rounded-full hover:bg-white/10 transition-colors"
               onClick={() => handleTabChange('chat')} 
@@ -256,6 +272,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 className="text-white"
                 showPulse={hasUnreadMessage}
               />
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="text-white p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center"
+              title="Voltar ao login"
+            >
+              <LogOut className="h-5 w-5" />
             </button>
             <button 
               onClick={() => setShowProfileDialog(true)}
