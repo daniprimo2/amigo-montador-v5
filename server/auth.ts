@@ -208,9 +208,18 @@ export function setupAuth(app: Express) {
           } else {
           }
       } else if (userType === 'montador') {
+        // Log para debug dos dados recebidos
+        console.log('Dados do montador recebidos:', {
+          documentType: req.body.documentType,
+          documentNumber: req.body.documentNumber,
+          rgFrontUrl: req.body.rgFrontUrl,
+          rgBackUrl: req.body.rgBackUrl,
+          proofOfAddressUrl: req.body.proofOfAddressUrl,
+          certificatesUrls: req.body.certificatesUrls
+        });
+
         const assemblerData = {
             userId: user.id,
-            birthDate: new Date().toISOString().split('T')[0],
             address: req.body.address || '',
             addressNumber: req.body.addressNumber || '',
             neighborhood: req.body.neighborhood || '',
@@ -218,16 +227,19 @@ export function setupAuth(app: Express) {
             city: req.body.city || '',
             state: req.body.state || '',
             specialties: req.body.specialties || [],
-            technicalAssistance: req.body.technicalAssistance === 'yes',
+            technicalAssistance: req.body.technicalAssistance || false,
             experience: req.body.experience || '',
-            workRadius: parseInt(req.body.workRadius) || 0,
+            workRadius: parseInt(req.body.radius) || 20,
             rating: 0,
-            documents: req.body.documents || [],
-            rgFrontData: req.body.rgFrontData || '',
-            rgBackData: req.body.rgBackData || '',
-            proofOfAddressData: req.body.proofOfAddressData || '',
-            professionalDescription: req.body.professionalDescription || '',
-            certificatesData: req.body.certificatesData || []
+            documents: req.body.documents || {},
+            documentType: req.body.documentType || '',
+            documentNumber: req.body.documentNumber || '',
+            // Usar os URLs dos documentos que vêm do upload
+            rgFrontData: req.body.rgFrontUrl || '',
+            rgBackData: req.body.rgBackUrl || '',
+            proofOfAddressData: req.body.proofOfAddressUrl || '',
+            certificatesData: req.body.certificatesUrls || [],
+            professionalDescription: req.body.professionalDescription || ''
           };
         await storage.createAssembler(assemblerData);
         // Criar informações bancárias se fornecidas

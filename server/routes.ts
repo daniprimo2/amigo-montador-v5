@@ -234,6 +234,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(user);
   });
 
+  // Endpoint para upload geral de documentos (converte para base64)
+  app.post("/api/upload", async (req, res) => {
+    try {
+      if (!req.files || !req.files.file) {
+        return res.status(400).json({ message: "Nenhum arquivo foi enviado" });
+      }
+
+      const file = req.files.file as any;
+
+      console.log('Upload de documento:', {
+        nome: file.name,
+        tipo: file.mimetype,
+        tamanho: file.size
+      });
+
+      // Verificar tamanho (max 10MB para documentos)
+      if (file.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ message: "O arquivo deve ter menos de 10MB" });
+      }
+
+      // Ler arquivo para buffer
+      let fileBuffer: Buffer;
+      
+      if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
+        fileBuffer = fs.readFileSync(file.tempFilePath);
+        // Limpar arquivo temporário
+        fs.unlinkSync(file.tempFilePath);
+      } else if (file.data && file.data.length > 0) {
+        fileBuffer = file.data;
+      } else {
+        return res.status(400).json({ message: "Dados do arquivo não foram recebidos corretamente" });
+      }
+      
+      // Converter para base64
+      const fileBase64 = `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
+      
+      console.log('Arquivo convertido para base64. Tamanho:', fileBase64.length, 'caracteres');
+
+      // Retornar dados do arquivo em base64
+      res.json({
+        url: fileBase64, // Para compatibilidade com o código frontend que espera 'url'
+        data: fileBase64,
+        filename: file.name,
+        mimetype: file.mimetype,
+        size: file.size
+      });
+
+    } catch (error) {
+      console.error('Erro no upload de documento:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Endpoint para upload de fotos de perfil e logo da loja
   app.post("/api/profile/photo", async (req, res) => {
     try {
