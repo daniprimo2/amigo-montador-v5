@@ -408,5 +408,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Criar novo serviço
+  app.post("/api/services", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      // Verificar se o usuário é lojista
+      if (user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
+      }
+
+      // Obter dados da loja
+      const store = await storage.getStoreByUserId(user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      const serviceData = req.body;
+      
+      // Validar campos obrigatórios
+      const requiredFields = ['title', 'description', 'location', 'address', 'addressNumber', 'cep', 'date', 'price', 'materialType'];
+      const missingFields = requiredFields.filter(field => !serviceData[field] || serviceData[field].toString().trim() === '');
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: "Campos obrigatórios não preenchidos",
+          missingFields: missingFields
+        });
+      }
+
+      // Criar o serviço
+      const newService = await storage.createService({
+        storeId: store.id,
+        title: serviceData.title.trim(),
+        description: serviceData.description.trim(),
+        location: serviceData.location.trim(),
+        address: serviceData.address.trim(),
+        addressNumber: serviceData.addressNumber.trim(),
+        cep: serviceData.cep.trim(),
+        date: serviceData.date.trim(),
+        price: serviceData.price.toString(),
+        materialType: serviceData.materialType.trim(),
+        status: 'open'
+      });
+
+      res.json({
+        success: true,
+        service: newService,
+        message: "Serviço criado com sucesso"
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar serviço:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Criar serviço com upload de arquivos
+  app.post("/api/services/with-files", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      // Verificar se o usuário é lojista
+      if (user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
+      }
+
+      // Obter dados da loja
+      const store = await storage.getStoreByUserId(user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Processar dados do serviço enviados como JSON no FormData
+      let serviceData;
+      try {
+        serviceData = JSON.parse(req.body.serviceData);
+      } catch (error) {
+        return res.status(400).json({ message: "Dados do serviço inválidos" });
+      }
+      
+      // Validar campos obrigatórios
+      const requiredFields = ['title', 'description', 'location', 'address', 'addressNumber', 'cep', 'date', 'price', 'materialType'];
+      const missingFields = requiredFields.filter(field => !serviceData[field] || serviceData[field].toString().trim() === '');
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: "Campos obrigatórios não preenchidos",
+          missingFields: missingFields
+        });
+      }
+
+      // Processar arquivos PDF se enviados
+      let projectFilesData = '';
+      if (req.files && req.files.projectFiles) {
+        const files = Array.isArray(req.files.projectFiles) ? req.files.projectFiles : [req.files.projectFiles];
+        
+        // Validar arquivos
+        for (const file of files) {
+          if (!file.name.toLowerCase().endsWith('.pdf')) {
+            return res.status(400).json({ message: `O arquivo ${file.name} não é um PDF` });
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            return res.status(400).json({ message: `O arquivo ${file.name} excede o limite de 10MB` });
+          }
+        }
+
+        // Converter arquivos para base64 e concatenar
+        const base64Files = files.map(file => ({
+          name: file.name,
+          data: `data:${file.mimetype};base64,${file.data.toString('base64')}`
+        }));
+        
+        projectFilesData = JSON.stringify(base64Files);
+      }
+
+      // Criar o serviço
+      const newService = await storage.createService({
+        storeId: store.id,
+        title: serviceData.title.trim(),
+        description: serviceData.description.trim(),
+        location: serviceData.location.trim(),
+        address: serviceData.address.trim(),
+        addressNumber: serviceData.addressNumber.trim(),
+        cep: serviceData.cep.trim(),
+        date: serviceData.date.trim(),
+        price: serviceData.price.toString(),
+        materialType: serviceData.materialType.trim(),
+        projectFiles: projectFilesData,
+        status: 'open'
+      });
+
+      res.json({
+        success: true,
+        service: newService,
+        message: "Serviço criado com sucesso com arquivos"
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar serviço com arquivos:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }
