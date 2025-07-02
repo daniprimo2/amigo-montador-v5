@@ -24,29 +24,9 @@ function Router() {
     return <TestResetPage />;
   }
   
-  // Redirecionamento: recuperação de senha apenas via app móvel
+  // Redirecionar para a página de recuperação de senha
   if (location.startsWith("/reset-password")) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">🔗 Recuperação de Senha</h1>
-          <p className="text-gray-600 mb-6">
-            A recuperação de senha funciona exclusivamente através do aplicativo móvel AmigoMontador.
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-blue-800 text-sm">
-              📱 Abra este link no seu dispositivo móvel com o app AmigoMontador instalado.
-            </p>
-          </div>
-          <button 
-            onClick={() => window.location.href = '/auth'}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Voltar ao Login
-          </button>
-        </div>
-      </div>
-    );
+    return <ResetPasswordPage />;
   }
   
   return (

@@ -9,12 +9,3 @@ vite.config.ts.*
 .env.local
 .env.production.local
 temp/
-android-release/
-*.keystore
-*.jks
-*.aab
-*.key
-*.p12
-*.pem
-release-key.keystore
-*-release-key.keystore

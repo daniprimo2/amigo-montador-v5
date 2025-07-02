@@ -2,18 +2,18 @@
 
 ## Overview
 
-The AmigoMontador platform is a mobile-first web application that connects furniture store professionals with skilled installers in Brazil. The platform facilitates service management, communication, and payment processing, with a focus on mobile optimization and Android app deployment to the Google Play Store.
+The AmigoMontador platform is a responsive web application that connects furniture store professionals with skilled installers in Brazil. The platform facilitates service management, communication, and payment processing, optimized for both desktop and mobile web browsers.
 
 ## System Architecture
 
 ### Frontend Architecture
 - **Framework**: React with TypeScript
 - **Build Tool**: Vite for fast development and optimized production builds
-- **Styling**: Tailwind CSS with mobile-first responsive design
+- **Styling**: Tailwind CSS with responsive design
 - **UI Components**: Radix UI components for accessibility and consistency
 - **State Management**: React Query for server state management
 - **Routing**: Wouter for lightweight client-side routing
-- **Mobile Optimization**: Safe area support, touch targets, and Android/iOS specific optimizations
+- **Responsive Design**: Mobile-first approach optimized for all screen sizes
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js server
@@ -23,11 +23,7 @@ The AmigoMontador platform is a mobile-first web application that connects furni
 - **File Uploads**: Express-fileupload middleware
 - **Real-time Communication**: WebSocket integration for chat functionality
 
-### Mobile App Architecture
-- **Framework**: Capacitor for native mobile app generation
-- **Target Platforms**: Android (Google Play Store ready)
-- **App Configuration**: Optimized for Android API 22-34 compatibility
-- **Build System**: Gradle with custom configurations for Play Store deployment
+
 
 ## Key Components
 
@@ -46,7 +42,7 @@ The AmigoMontador platform is a mobile-first web application that connects furni
 ### Communication System
 - Real-time messaging between stores and installers
 - File sharing capabilities for project documentation
-- Push notification support for mobile app
+- Browser notification support for web application
 
 ### Payment Integration
 - PIX payment integration (Brazilian instant payment system)
@@ -94,10 +90,7 @@ The AmigoMontador platform is a mobile-first web application that connects furni
 - **Geocoding**: Brazilian CEP to coordinates conversion services
 - **File Storage**: Local file system with organized upload directories
 
-### Mobile Development
-- **Capacitor**: Native mobile app framework
-- **Android Studio**: Required for AAB generation and Play Store deployment
-- **Java JDK 11+**: Required for Android development
+
 
 ## Deployment Strategy
 
@@ -105,27 +98,12 @@ The AmigoMontador platform is a mobile-first web application that connects furni
 - **Development**: Vite dev server with hot module replacement
 - **Production**: Static build with optimized assets
 - **Hosting**: Can be deployed to any static hosting provider or Node.js server
-
-### Mobile Application
-- **Android**: AAB (Android App Bundle) generation for Google Play Store
-- **Signing**: Keystore-based signing for production releases
-- **Distribution**: Google Play Store with comprehensive metadata and assets
+- **Build**: Standard Vite build process for optimized production bundle
 
 ### Database
 - **Development**: Local PostgreSQL or cloud-based Neon.tech
 - **Production**: Neon.tech PostgreSQL with connection pooling
 - **Migrations**: Drizzle Kit for schema management
-
-### Build Scripts
-- **prepare-deploy.js**: Compiles frontend and prepares server files
-- **build-final.sh**: Optimized build for production deployment
-- **prepare-playstore.sh**: Complete Android app preparation for Play Store
-
-### Android App Deployment
-- Comprehensive documentation for Play Store submission
-- Automated build scripts for AAB generation
-- Keystore management and signing configuration
-- Play Store asset preparation and metadata
 
 ## Changelog
 
@@ -226,6 +204,14 @@ The AmigoMontador platform is a mobile-first web application that connects furni
   - Fixed persistent "Bundle config could not be parsed" errors
   - AAB now uses exact Google bundletool structure and validation
   - Ready for successful Play Store upload with resolved parsing issues
+- January 2, 2025. Converted project to web-only application
+  - Removed all Android/mobile app components and directories (android/, android-playstore/, android-project/)
+  - Uninstalled Capacitor dependencies (@capacitor/android, @capacitor/cli, @capacitor/core)
+  - Deleted mobile-specific configuration files (capacitor.config.ts, configurar-playstore.js, GUIA_PLAYSTORE.md)
+  - Cleaned up build scripts and removed Android-related commands from package.json
+  - Updated project documentation to reflect web-only focus
+  - Maintained all core functionality for responsive web application
+  - Project now optimized exclusively for desktop and mobile web browsers
 
 ## User Preferences
 

@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile-first optimizations for Android and iOS */
+/* Responsive web optimizations */
 @layer utilities {
-  /* Safe area support for notched devices */
+  /* Safe area support for modern browsers with safe areas */
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -21,7 +21,7 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* Enhanced touch targets for mobile */
+  /* Enhanced touch targets for touchscreen devices */
   .touch-target {
     min-height: 48px;
     min-width: 48px;
@@ -35,7 +35,7 @@
     user-select: none;
   }
   
-  /* Smooth scrolling for better mobile experience */
+  /* Smooth scrolling for better user experience */
   .smooth-scroll {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
@@ -46,7 +46,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* Mobile-optimized borders and shadows */
+  /* Responsive card styling */
   .mobile-card {
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);

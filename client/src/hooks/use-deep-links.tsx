@@ -44,35 +44,7 @@ export function useDeepLinks(handlers: DeepLinkHandler = {}) {
       }
     };
 
-    // Listener para deep links no Capacitor (quando disponível)
-    const setupCapacitorDeepLinks = async () => {
-      // Capacitor será configurado apenas em builds móveis
-      // Em desenvolvimento web, usar apenas detecção de URL padrão
-      if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform) {
-        try {
-          // Usar importação condicional que só funciona em ambiente Capacitor real
-          const { App } = (window as any).Capacitor.Plugins;
-          
-          if (App) {
-            // Listener para quando o app é aberto via deep link
-            App.addListener('appUrlOpen', (event: { url: string }) => {
-              handleDeepLink(event.url);
-            });
-
-            // Verificar se há uma URL inicial
-            App.getLaunchUrl().then((result: any) => {
-              if (result && result.url) {
-                handleDeepLink(result.url);
-              }
-            });
-          }
-        } catch (error) {
-          }
-      }
-    };
-
     checkInitialUrl();
-    setupCapacitorDeepLinks();
 
     // Cleanup não é necessário para este caso de uso
     return () => {};
