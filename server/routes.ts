@@ -241,6 +241,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
+      console.log('Upload de foto iniciado para usuário:', req.user?.id);
+      console.log('Arquivos recebidos:', req.files ? Object.keys(req.files) : 'nenhum');
+      console.log('Tipo de upload:', req.body.type);
+
       if (!req.files || !req.files.foto) {
         return res.status(400).json({ message: "Nenhuma foto foi enviada" });
       }
@@ -248,6 +252,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const foto = req.files.foto as any;
       const uploadType = req.body.type || 'profile'; // 'profile' ou 'store-logo'
+
+      console.log('Detalhes do arquivo:', {
+        nome: foto.name,
+        tipo: foto.mimetype,
+        tamanho: foto.size,
+        uploadType: uploadType
+      });
 
       // Verificar tipo de arquivo
       if (!foto.mimetype.startsWith('image/')) {
@@ -261,6 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Converter imagem para base64
       const imageBase64 = `data:${foto.mimetype};base64,${foto.data.toString('base64')}`;
+      console.log('Imagem convertida para base64. Tamanho:', imageBase64.length, 'caracteres');
 
       // Atualizar banco de dados baseado no tipo de upload
       if (uploadType === 'store-logo') {
@@ -270,10 +282,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Loja não encontrada" });
         }
         
+        console.log('Atualizando logo da loja. Store ID:', store.id);
         await storage.updateStore(store.id, { logoData: imageBase64 });
       } else {
+        console.log('Atualizando foto de perfil do usuário. User ID:', user.id);
         // Atualizar foto de perfil do usuário
-        await storage.updateUser(user.id, { profilePhotoData: imageBase64 });
+        const updatedUser = await storage.updateUser(user.id, { profilePhotoData: imageBase64 });
+        console.log('Usuário atualizado. Nova foto tem', updatedUser.profilePhotoData?.length || 0, 'caracteres');
       }
 
       res.json({ 
