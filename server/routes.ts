@@ -273,14 +273,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Converter imagem para base64
       console.log('Tipo de foto.data:', typeof foto.data);
       console.log('foto.data é Buffer?', Buffer.isBuffer(foto.data));
-      console.log('Tamanho de foto.data:', foto.data ? foto.data.length : 'undefined');
+      console.log('foto.tempFilePath:', foto.tempFilePath);
       
-      if (!foto.data || foto.data.length === 0) {
-        console.error('Dados da imagem estão vazios!');
+      let imageBuffer: Buffer;
+      
+      // Como useTempFiles está ativado, precisamos ler do arquivo temporário
+      if (foto.tempFilePath && fs.existsSync(foto.tempFilePath)) {
+        console.log('Lendo arquivo temporário:', foto.tempFilePath);
+        imageBuffer = fs.readFileSync(foto.tempFilePath);
+        console.log('Arquivo lido. Tamanho do buffer:', imageBuffer.length);
+      } else if (foto.data && foto.data.length > 0) {
+        // Fallback para dados em memória
+        console.log('Usando dados em memória');
+        imageBuffer = foto.data;
+      } else {
+        console.error('Nenhum dado de imagem encontrado!');
         return res.status(400).json({ message: "Dados da imagem não foram recebidos corretamente" });
       }
       
-      const imageBase64 = `data:${foto.mimetype};base64,${foto.data.toString('base64')}`;
+      const imageBase64 = `data:${foto.mimetype};base64,${imageBuffer.toString('base64')}`;
       console.log('Imagem convertida para base64. Tamanho:', imageBase64.length, 'caracteres');
 
       // Atualizar banco de dados baseado no tipo de upload
@@ -298,6 +309,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Atualizar foto de perfil do usuário
         const updatedUser = await storage.updateUser(user.id, { profilePhotoData: imageBase64 });
         console.log('Usuário atualizado. Nova foto tem', updatedUser.profilePhotoData?.length || 0, 'caracteres');
+      }
+
+      // Limpar arquivo temporário se existir
+      if (foto.tempFilePath && fs.existsSync(foto.tempFilePath)) {
+        try {
+          fs.unlinkSync(foto.tempFilePath);
+          console.log('Arquivo temporário removido:', foto.tempFilePath);
+        } catch (cleanupError) {
+          console.warn('Erro ao remover arquivo temporário:', cleanupError);
+        }
       }
 
       res.json({ 
@@ -575,10 +596,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Converter arquivos para base64 e concatenar
-        const base64Files = files.map(file => ({
-          name: file.name,
-          data: `data:${file.mimetype};base64,${file.data.toString('base64')}`
-        }));
+        const base64Files = files.map(file => {
+          let fileBuffer: Buffer;
+          
+          // Como useTempFiles está ativado, precisamos ler do arquivo temporário
+          if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
+            fileBuffer = fs.readFileSync(file.tempFilePath);
+          } else if (file.data && file.data.length > 0) {
+            // Fallback para dados em memória
+            fileBuffer = file.data;
+          } else {
+            throw new Error(`Dados do arquivo ${file.name} não foram recebidos corretamente`);
+          }
+          
+          return {
+            name: file.name,
+            data: `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`
+          };
+        });
         
         projectFilesData = JSON.stringify(base64Files);
       }
@@ -620,6 +655,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'open'
       });
 
+      // Limpar arquivos temporários se existirem
+      if (req.files && req.files.projectFiles) {
+        const files = Array.isArray(req.files.projectFiles) ? req.files.projectFiles : [req.files.projectFiles];
+        files.forEach(file => {
+          if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
+            try {
+              fs.unlinkSync(file.tempFilePath);
+              console.log('Arquivo temporário removido:', file.tempFilePath);
+            } catch (cleanupError) {
+              console.warn('Erro ao remover arquivo temporário:', cleanupError);
+            }
+          }
+        });
+      }
+
       res.json({
         success: true,
         service: newService,
@@ -628,6 +678,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('Erro ao criar serviço com arquivos:', error);
+      
+      // Limpar arquivos temporários em caso de erro também
+      if (req.files && req.files.projectFiles) {
+        const files = Array.isArray(req.files.projectFiles) ? req.files.projectFiles : [req.files.projectFiles];
+        files.forEach(file => {
+          if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
+            try {
+              fs.unlinkSync(file.tempFilePath);
+              console.log('Arquivo temporário removido após erro:', file.tempFilePath);
+            } catch (cleanupError) {
+              console.warn('Erro ao remover arquivo temporário após erro:', cleanupError);
+            }
+          }
+        });
+      }
+      
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });

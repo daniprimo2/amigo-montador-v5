@@ -107,7 +107,19 @@ export function setupAuth(app: Express) {
       }
       
       // Converter foto de perfil para base64
-      const profilePhotoData = `data:${profileFile.mimetype};base64,${profileFile.data.toString('base64')}`;
+      let profileBuffer: Buffer;
+      
+      // Como useTempFiles está ativado, precisamos ler do arquivo temporário
+      if (profileFile.tempFilePath && fs.existsSync(profileFile.tempFilePath)) {
+        profileBuffer = fs.readFileSync(profileFile.tempFilePath);
+      } else if (profileFile.data && profileFile.data.length > 0) {
+        // Fallback para dados em memória
+        profileBuffer = profileFile.data;
+      } else {
+        return res.status(400).json({ message: "Dados da foto de perfil não foram recebidos corretamente" });
+      }
+      
+      const profilePhotoData = `data:${profileFile.mimetype};base64,${profileBuffer.toString('base64')}`;
 
       // Para lojistas, também verificar se o logo foi fornecido (obrigatório)
       let logoData = '';
@@ -129,7 +141,19 @@ export function setupAuth(app: Express) {
         }
         
         // Converter logo para base64
-        logoData = `data:${logoFile.mimetype};base64,${logoFile.data.toString('base64')}`;
+        let logoBuffer: Buffer;
+        
+        // Como useTempFiles está ativado, precisamos ler do arquivo temporário
+        if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
+          logoBuffer = fs.readFileSync(logoFile.tempFilePath);
+        } else if (logoFile.data && logoFile.data.length > 0) {
+          // Fallback para dados em memória
+          logoBuffer = logoFile.data;
+        } else {
+          return res.status(400).json({ message: "Dados do logo não foram recebidos corretamente" });
+        }
+        
+        logoData = `data:${logoFile.mimetype};base64,${logoBuffer.toString('base64')}`;
       }
 
       // Separar dados baseados no tipo de usuário
@@ -225,6 +249,28 @@ export function setupAuth(app: Express) {
           }
       }
 
+      // Limpar arquivos temporários
+      if (profileFile && profileFile.tempFilePath && fs.existsSync(profileFile.tempFilePath)) {
+        try {
+          fs.unlinkSync(profileFile.tempFilePath);
+          console.log('Arquivo temporário de perfil removido:', profileFile.tempFilePath);
+        } catch (cleanupError) {
+          console.warn('Erro ao remover arquivo temporário de perfil:', cleanupError);
+        }
+      }
+      
+      if (req.body.userType === 'lojista' && req.files && req.files.logoFile) {
+        const logoFile = req.files.logoFile as any;
+        if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
+          try {
+            fs.unlinkSync(logoFile.tempFilePath);
+            console.log('Arquivo temporário de logo removido:', logoFile.tempFilePath);
+          } catch (cleanupError) {
+            console.warn('Erro ao remover arquivo temporário de logo:', cleanupError);
+          }
+        }
+      }
+
       // Login automático após registro
       req.login(user, (err) => {
         if (err) return next(err);
@@ -232,6 +278,32 @@ export function setupAuth(app: Express) {
       });
     } catch (error) {
       console.error("Erro no registro:", error);
+      
+      // Limpar arquivos temporários em caso de erro também
+      if (req.files && req.files.profilePicture) {
+        const profileFile = req.files.profilePicture as any;
+        if (profileFile.tempFilePath && fs.existsSync(profileFile.tempFilePath)) {
+          try {
+            fs.unlinkSync(profileFile.tempFilePath);
+            console.log('Arquivo temporário de perfil removido após erro:', profileFile.tempFilePath);
+          } catch (cleanupError) {
+            console.warn('Erro ao remover arquivo temporário de perfil após erro:', cleanupError);
+          }
+        }
+      }
+      
+      if (req.body.userType === 'lojista' && req.files && req.files.logoFile) {
+        const logoFile = req.files.logoFile as any;
+        if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
+          try {
+            fs.unlinkSync(logoFile.tempFilePath);
+            console.log('Arquivo temporário de logo removido após erro:', logoFile.tempFilePath);
+          } catch (cleanupError) {
+            console.warn('Erro ao remover arquivo temporário de logo após erro:', cleanupError);
+          }
+        }
+      }
+      
       return res.status(500).json({ message: "Erro ao registrar usuário" });
     }
   });
