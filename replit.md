@@ -366,6 +366,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Fixed issue where notifications were showing to all users instead of specific recipients
   - Browser notifications now use unique tags: amigomontador-user-{userId}-{timestamp}
   - System properly validates message recipient before displaying notifications
+- January 3, 2025. Fixed duplicate service status issue for assemblers
+  - Resolved problem where same service appeared in both "Disponível" and "Aguardando Lojista" tabs
+  - Modified /api/services/available endpoint to exclude services where assembler has already applied
+  - Services now appear uniquely: not applied services in "Disponível", applied services in "Aguardando Lojista"
+  - Improved service filtering logic to prevent status duplication in assembler dashboard
+  - Enhanced user experience by ensuring each service appears in only one appropriate tab
 
 ## User Preferences
 

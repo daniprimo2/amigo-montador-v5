@@ -615,7 +615,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      res.json(servicesWithStoreInfo);
+      // Filter out services where the assembler has already applied
+      // These should only appear in the "Aguardando Lojista" tab (from /api/services/active)
+      const availableServicesOnly = servicesWithStoreInfo.filter(service => !service.hasApplied);
+
+      res.json(availableServicesOnly);
     } catch (error) {
       console.error('Erro ao buscar serviços disponíveis:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
