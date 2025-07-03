@@ -1731,10 +1731,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let assemblerId: number | undefined;
       
       // If there's an accepted application, get the assembler ID
+      console.log('🔍 Buscando candidaturas aceitas...');
       const applications = await storage.getApplicationsByServiceId(serviceId);
+      console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
+      
       const acceptedApplication = applications.find(app => app.status === 'accepted');
       if (acceptedApplication) {
         assemblerId = acceptedApplication.assemblerId;
+        console.log('✅ Montador aceito encontrado:', assemblerId);
+      } else {
+        console.log('⚠️ Nenhum montador aceito encontrado - mensagem será geral');
       }
       
       // Create a detailed payment proof message with visual content
@@ -1753,14 +1759,32 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
       // Send automatic payment proof message to chat
       console.log('✅ Enviando mensagem de comprovante para o chat...');
-      const messageResult = await storage.createMessage({
-        serviceId: serviceId,
-        senderId: req.user.id,
-        assemblerId: assemblerId,
-        content: proofContent,
-        messageType: 'payment_proof'
-      });
-      console.log('✅ Mensagem criada:', messageResult);
+      // If no accepted assembler yet, send a general message to all applicants
+      if (!assemblerId && applications.length > 0) {
+        // Send message to each assembler who applied
+        for (const app of applications) {
+          const messageResult = await storage.createMessage({
+            serviceId: serviceId,
+            senderId: req.user.id,
+            assemblerId: app.assemblerId,
+            content: proofContent,
+            messageType: 'payment_proof'
+          });
+          console.log(`✅ Mensagem criada para montador ${app.assemblerId}:`, messageResult);
+        }
+      } else if (assemblerId) {
+        // Send to specific accepted assembler
+        const messageResult = await storage.createMessage({
+          serviceId: serviceId,
+          senderId: req.user.id,
+          assemblerId: assemblerId,
+          content: proofContent,
+          messageType: 'payment_proof'
+        });
+        console.log('✅ Mensagem criada para montador aceito:', messageResult);
+      } else {
+        console.log('⚠️ Nenhum montador para enviar o comprovante');
+      }
 
       // Notify all other assemblers who applied to this service that it has been started
       console.log('🔔 Buscando outros montadores para notificar...');
@@ -1774,21 +1798,28 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         for (const application of otherAssemblers) {
           try {
             console.log(`🔄 Notificando montador ID ${application.assemblerId}...`);
-            const assemblerUser = await storage.getAssemblerById(application.assemblerId);
-            if (assemblerUser) {
-              console.log(`✅ Montador encontrado: ${assemblerUser.userId} - ${assemblerUser.name}`);
-              const notificationMessage = {
-                type: 'service_started_with_other',
-                serviceId: serviceId,
-                serviceTitle: service.title,
-                message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
-                timestamp: new Date().toISOString()
-              };
-              
-              // Send WebSocket notification to the assembler
-              console.log('📤 Enviando notificação WebSocket...');
-              const notificationSent = global.sendNotification(assemblerUser.userId, notificationMessage);
-              console.log(`📡 Notificação enviada: ${notificationSent ? 'Sucesso' : 'Falhou'}`);
+            const assemblerRecord = await storage.getAssemblerById(application.assemblerId);
+            if (assemblerRecord) {
+              // Get the user data for the assembler
+              const assemblerUser = await storage.getUser(assemblerRecord.userId);
+              if (assemblerUser) {
+                console.log(`✅ Montador encontrado: ${assemblerUser.id} - ${assemblerUser.name}`);
+                const notificationMessage = {
+                  type: 'service_started_with_other',
+                  serviceId: serviceId,
+                  serviceTitle: service.title,
+                  message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
+                  timestamp: new Date().toISOString()
+                };
+                
+                // Send WebSocket notification to the assembler
+                console.log('📤 Enviando notificação WebSocket...');
+                const notificationSent = global.sendNotification(assemblerUser.id, notificationMessage);
+                console.log(`📡 Notificação enviada: ${notificationSent ? 'Sucesso' : 'Falhou'}`);
+                console.log(`🔍 ID do usuário usado para notificação: ${assemblerUser.id}`);
+              } else {
+                console.log(`❌ Dados do usuário não encontrados para montador ID: ${assemblerRecord.userId}`);
+              }
             } else {
               console.log(`❌ Montador não encontrado para ID: ${application.assemblerId}`);
             }
