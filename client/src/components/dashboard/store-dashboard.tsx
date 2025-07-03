@@ -761,7 +761,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         price: service.price,
         // Contagem de candidaturas será implementada posteriormente
         candidates: 0,
-        status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled',
+        status: service.status as 'open' | 'in-progress' | 'completed' | 'cancelled' | 'awaiting_evaluation',
         // Keep all original fields for the service card
         description: service.description,
         materialType: service.materialType,
@@ -782,13 +782,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // Debug: Contar status dos serviços
   const openCount = allServices.filter(service => service.status === 'open').length;
   const inProgressCount = allServices.filter(service => service.status === 'in-progress').length;
-  const completedCount = allServices.filter(service => service.status === 'completed').length;
+  const completedCount = allServices.filter(service => service.status === 'completed' || service.status === 'awaiting_evaluation').length;
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
     if (activeTab === 'in-progress') return service.status === 'in-progress';
-    if (activeTab === 'completed') return service.status === 'completed';
+    if (activeTab === 'completed') return service.status === 'completed' || service.status === 'awaiting_evaluation';
     return true;
   }).sort((a, b) => {
     // Para serviços "Em Andamento", ordenar por data de início (mais próxima primeiro)
@@ -876,7 +876,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
-            <div className="text-lg font-bold text-green-700 mb-1">{allServices.filter(service => service.status === 'completed').length}</div>
+            <div className="text-lg font-bold text-green-700 mb-1">{completedCount}</div>
             <div className="text-sm font-semibold text-gray-700">Finalizados</div>
           </div>
         </div>
@@ -951,7 +951,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             <div className="flex items-center justify-center w-10 h-10 bg-green-500 rounded-full mx-auto mb-2">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
-            <div className="text-lg font-bold text-green-700 mb-1">{allServices.filter(service => service.status === 'completed').length}</div>
+            <div className="text-lg font-bold text-green-700 mb-1">{completedCount}</div>
             <div className="text-sm font-semibold text-gray-700">Finalizados</div>
           </div>
         </div>
