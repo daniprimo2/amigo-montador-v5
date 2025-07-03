@@ -14,9 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { QrCode, Copy, Check, AlertCircle, CreditCard, DollarSign } from 'lucide-react';
+import { QrCode, Copy, Check, AlertCircle, CreditCard, DollarSign, Calendar } from 'lucide-react';
 import { RatingDialog } from '@/components/rating/rating-dialog';
 import { MandatoryRatingDialog } from '@/components/rating/mandatory-rating-dialog';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Label } from '@/components/ui/label';
 
 interface PixPaymentDialogProps {
   isOpen: boolean;
@@ -57,6 +61,7 @@ export function PixPaymentDialog({
   const [currentToken, setCurrentToken] = useState<string>('');
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [showMandatoryRating, setShowMandatoryRating] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   // The amount should be displayed exactly as stored in the service
@@ -143,7 +148,8 @@ export function PixPaymentDialog({
           serviceId,
           amount,
           description: `Pagamento do serviço: ${serviceTitle}`,
-          token
+          token,
+          paymentDate: selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: ptBR }) : null
         }
       });
       return await response.json();
@@ -398,14 +404,71 @@ export function PixPaymentDialog({
                   R$ {actualAmount}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Clique abaixo para gerar o código PIX
+                  Valor do serviço a ser pago
                 </p>
               </CardContent>
             </Card>
 
+            <div className="space-y-4">
+              <Label className="text-sm font-medium text-gray-700">
+                Data do pagamento
+              </Label>
+              
+              {/* Display selected date */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">
+                      Data selecionada
+                    </p>
+                    <p className="text-base font-semibold text-blue-900">
+                      {selectedDate ? format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione uma data"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calendar Component */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
+                <div className="flex justify-center">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    locale={ptBR}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-lg mx-auto"
+                    classNames={{
+                      months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                      month: "space-y-4 w-full",
+                      caption: "flex justify-center pt-1 relative items-center mb-4",
+                      caption_label: "text-lg font-semibold text-gray-800",
+                      nav: "space-x-1 flex items-center",
+                      nav_button: "h-8 w-8 bg-gray-100 hover:bg-gray-200 rounded-full p-0 opacity-70 hover:opacity-100 transition-all duration-200",
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex w-full",
+                      head_cell: "text-gray-500 rounded-md w-10 font-medium text-sm flex-1 text-center py-2",
+                      row: "flex w-full mt-1",
+                      cell: "text-center text-sm p-0 relative flex-1 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                      day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-blue-100 hover:text-blue-900 rounded-lg transition-all duration-200 mx-auto",
+                      day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white shadow-md",
+                      day_today: "bg-gray-100 text-gray-900 font-bold border-2 border-blue-300",
+                      day_outside: "text-gray-300 opacity-50",
+                      day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             <Button 
               onClick={handleGeneratePixPayment}
-              disabled={generateTokenMutation.isPending || createPixMutation.isPending}
+              disabled={generateTokenMutation.isPending || createPixMutation.isPending || !selectedDate}
               className="w-full"
             >
               {generateTokenMutation.isPending || createPixMutation.isPending 
@@ -413,6 +476,12 @@ export function PixPaymentDialog({
                 : "Gerar Pagamento PIX"
               }
             </Button>
+            
+            {!selectedDate && (
+              <p className="text-sm text-amber-600 text-center">
+                Selecione uma data para continuar
+              </p>
+            )}
           </div>
         )}
 
@@ -426,6 +495,11 @@ export function PixPaymentDialog({
                 </CardTitle>
                 <CardDescription>
                   Valor: R$ {pixData.amount}
+                  {selectedDate && (
+                    <div className="mt-1 text-blue-600">
+                      Data: {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </div>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
