@@ -171,6 +171,7 @@ export class DatabaseStorage implements IStorage {
       const coords = await geocoding.geocodeFromCEP(assembler.cep || '');
       assemblerLat = parseFloat(coords.latitude);
       assemblerLng = parseFloat(coords.longitude);
+      console.log(`Montador ID ${assembler.id} (CEP: ${assembler.cep}): Coordenadas obtidas = ${assemblerLat}, ${assemblerLng}`);
     } catch (error) {
       console.log('Erro ao geocodificar CEP do montador, usando coordenadas padrão:', error);
       // Use São Paulo coordinates as fallback
@@ -189,7 +190,7 @@ export class DatabaseStorage implements IStorage {
       try {
         const geocoding = await import('./geocoding.js');
         distance = geocoding.calculateDistance(assemblerLat, assemblerLng, serviceLat, serviceLng);
-        console.log(`Serviço ID ${service.id}: Distância calculada = ${distance.toFixed(2)}km`);
+        console.log(`Serviço ID ${service.id}: Coordenadas (${serviceLat}, ${serviceLng}), Distância calculada = ${distance.toFixed(2)}km`);
       } catch (error) {
         console.log('Erro ao calcular distância:', error);
         distance = 999; // Set high distance if calculation fails
