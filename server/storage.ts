@@ -173,8 +173,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
-    // Get ALL services regardless of status - services should always be visible as requested
+    // Get services based on clear status rules to prevent duplicates
     const allServices = await db.select().from(services)
+      .where(inArray(services.status, ['open', 'in-progress', 'completed', 'awaiting_evaluation']))
       .orderBy(desc(services.createdAt));
     
     // Get services where this assembler has applications
@@ -194,9 +195,20 @@ export class DatabaseStorage implements IStorage {
     
     const acceptedServiceIds = new Set(acceptedApplications.map(app => app.serviceId));
     
-    // SHOW ALL SERVICES - regardless of status as requested by user
-    // Services should not disappear from the screen
-    const availableServices = allServices;
+    // Apply consistent status-based visibility rules to prevent duplicates
+    const availableServices = allServices.filter(service => {
+      // Open services: visible to all assemblers
+      if (service.status === 'open') {
+        return true;
+      }
+      
+      // In-progress, completed, awaiting_evaluation: only visible to accepted assembler
+      if (['in-progress', 'completed', 'awaiting_evaluation'].includes(service.status)) {
+        return acceptedServiceIds.has(service.id);
+      }
+      
+      return false;
+    });
     
     console.log(`Total de serviços encontrados: ${allServices.length}`);
     console.log(`Serviços abertos (visíveis a todos): ${allServices.filter(s => s.status === 'open').length}`);

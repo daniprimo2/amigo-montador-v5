@@ -386,6 +386,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced connection logging to track user-specific connection states
   - Fixed notification delivery by using consistent global sendNotification function
   - Added connection persistence mechanisms to prevent premature disconnections during evaluation workflow
+- January 3, 2025. Fixed service status duplication system to ensure unique service categorization
+  - Implemented clear status separation to prevent services appearing in multiple categories simultaneously
+  - Fixed backend filtering in getAvailableServicesForAssemblerWithDistance to apply consistent status rules
+  - Updated API routes to prevent duplicate service listings between "Disponível" and "Aguardando Lojista" tabs
+  - Modified frontend logic to ensure each service appears in only one status category
+  - Services now follow strict categorization: rawServices for "Disponível", activeServices for other statuses
+  - Eliminated conflicting service states that were compromising application flow integrity
 
 ## User Preferences
 

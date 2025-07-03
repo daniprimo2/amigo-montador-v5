@@ -626,9 +626,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      // SHOW ALL SERVICES - user requested services should not disappear regardless of status
-      // Services should be visible on screen regardless of whether applied or not
-      const availableServicesOnly = servicesWithStoreInfo;
+      // Apply consistent filtering to prevent duplicate statuses
+      // Only show services where assembler hasn't applied (these go to "Disponível")
+      // Applied services will appear in "Aguardando Lojista" via /api/services/active
+      const availableServicesOnly = servicesWithStoreInfo.filter(service => !service.hasApplied);
 
       res.json(availableServicesOnly);
     } catch (error) {

@@ -699,37 +699,33 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   // State to track services that have been applied to locally
   const [appliedServices, setAppliedServices] = useState<Set<number>>(new Set());
   
-  // Filtrar serviços por status para cada aba
-  // Pending services: ALL services where user has applied - regardless of status
+  // CLEAR STATUS SEPARATION - Each service appears in only ONE category
+  // Available services: from rawServices (not applied yet)
+  const availableServices = (rawServices || [])
+    .filter((service: any) => !appliedServices.has(service.id))
+    .map(service => formatServiceForDisplay(service));
+  
+  // Pending services: from activeServices where user applied but waiting
   const pendingServices = (activeServices || []).filter((service: any) => 
-    service.hasApplied  // Show all applied services regardless of status
+    service.hasApplied && service.applicationStatus === 'pending'
   );
   
-  // ALL SERVICES should be visible regardless of status - as requested by user
-  // Services should not disappear from the screen
-  const availableServicesRaw = (rawServices || []).filter((service: any) => 
-    // Show all services that haven't been applied to locally
-    !appliedServices.has(service.id)
-  );
-  
-  // Format available services for display
-  const availableServices = availableServicesRaw.map(service => formatServiceForDisplay(service));
-  const inProgressServices = activeServices?.filter((service: any) => 
+  // In-progress services: from activeServices with in-progress status
+  const inProgressServices = (activeServices || []).filter((service: any) => 
     service.status === 'in-progress'
-  ) || [];
-  const completedServicesFromRaw = rawServices?.filter(s => s.status === 'completed') || [];
-  const completedServicesFromActive = activeServices?.filter((s: any) => s.status === 'completed') || [];
+  );
   
-  // Calculate service counts by status
+  // Completed services: from activeServices with completed/awaiting status
+  const completedServices = (activeServices || []).filter((service: any) => 
+    service.status === 'completed' || service.status === 'awaiting_evaluation'
+  );
+  
+  // Calculate service counts by status - Each service counted only once
   const serviceCounts = {
-    // Disponíveis: serviços abertos onde o montador ainda não se candidatou
     available: availableServices.length,
-    // Aguardando Lojista: serviços onde o montador aplicou mas está pendente
     pending: pendingServices.length,
-    // Em andamento: apenas contar serviços do activeServices com status 'in-progress'
     inProgress: inProgressServices.length,
-    // Finalizados: apenas serviços do activeServices com status 'completed'
-    completed: completedServicesFromActive.length
+    completed: completedServices.length
   };
   
   // Handle applying for a service
@@ -1144,11 +1140,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 // Show error message
                 (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
                                   </div>)
-              ) : (completedServicesFromRaw.length > 0 || completedServicesFromActive.length > 0) ? (
-                // Show completed services from both sources
+              ) : (completedServices.length > 0) ? (
+                // Show completed services - no duplicates
                 (<>
-                  {/* Show completed services from rawServices */}
-                  {completedServicesFromRaw.map(service => (
+                  {/* Show completed services from unified source */}
+                  {completedServices.map(service => (
                     <CompletedServiceCard 
                       key={`raw-${service.id}`} 
                       service={{
@@ -1177,66 +1173,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       }}
                     />
                   ))}
-                  {/* Show completed chat services */}
-                  {completedServicesFromActive.map((service: any) => (
-                    <CompletedServiceCard 
-                      key={`chat-${service.id}`}
-                      service={{
-                        id: service.id,
-                        title: service.title,
-                        location: service.location || '',
-                        date: service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Data não especificada',
-                        price: service.price ? (() => {
-                          const normalizedPrice = service.price.replace(',', '.');
-                          const numericPrice = parseFloat(normalizedPrice);
-                          if (isNaN(numericPrice)) return `R$ ${service.price}`;
-                          return new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                          }).format(numericPrice);
-                        })() : '',
-                        store: typeof service.store === 'object' && service.store?.name ? service.store.name : (typeof service.store === 'string' ? service.store : 'Loja não especificada'),
-                        type: service.materialType || 'Não especificado',
-                        completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined
-                      }}
-                      onChatClick={(serviceId) => {
-                        setSelectedChatService(serviceId);
-                        setDashboardSection('chat');
-                      }}
-                    />
-                  ))}
-                  {/* Seção de conversas finalizadas */}
-                  {completedServicesFromActive.filter((service: any) => service.applicationStatus).length > 0 && (
-                    <div className="p-4 border-t bg-gray-50">
-                      <h4 className="text-md font-medium mb-3 text-gray-700">Ver Conversas Finalizadas</h4>
-                      <div className="space-y-3">
-                        {completedServicesFromActive.filter((service: any) => service.applicationStatus).map((service: any) => (
-                          <div 
-                            key={`completed-chat-${service.id}`} 
-                            className="bg-white rounded-lg shadow-sm p-3 hover:bg-gray-100 cursor-pointer transition-colors border border-gray-200"
-                            onClick={() => setSelectedChatService(service.id)}
-                          >
-                            <div className="flex justify-between items-center">
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <h4 className="font-medium text-gray-800">{service.title}</h4>
-                                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Finalizado
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-500 mt-1">
-                                  Loja: {service.store?.name || 'Não especificada'}
-                                </p>
-                              </div>
-                              <MessageSquare className="h-5 w-5 text-gray-400" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  
                 </>)
               ) : (
                 // Show empty state
