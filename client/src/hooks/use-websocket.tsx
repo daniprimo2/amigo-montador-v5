@@ -9,8 +9,8 @@ const debugLogger = (context: string, message: string, data?: any) => {
   };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed' | 'evaluation_required' | 'service_started_with_other';
-  message: string;
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed' | 'evaluation_required' | 'service_started_with_other' | 'ping' | 'pong';
+  message?: string;
   serviceId?: number;
   serviceTitle?: string;
   timestamp?: string;
@@ -128,19 +128,39 @@ export function useWebSocket() {
         };
         socket.send(JSON.stringify(authMessage));
         debugLogger('WebSocket', 'Mensagem de autenticação enviada', authMessage);
+        
+        // Configurar heartbeat para manter conexão viva
+        const heartbeatInterval = setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'ping' }));
+          } else {
+            clearInterval(heartbeatInterval);
+          }
+        }, 30000); // Ping a cada 30 segundos
+        
+        // Armazenar referência do intervalo para limpeza
+        (socket as any).heartbeatInterval = heartbeatInterval;
       };
 
       socket.onclose = (event) => {
         debugLogger('WebSocket', `Conexão fechada: Código ${event.code}, Motivo: ${event.reason || 'Não especificado'}`);
         setConnected(false);
         
-        // Tentar reconectar após 5 segundos apenas se o componente ainda estiver montado
-        if (user) {
-          debugLogger('WebSocket', 'Agendando reconexão em 5 segundos');
+        // Limpar heartbeat se existir
+        if ((socket as any).heartbeatInterval) {
+          clearInterval((socket as any).heartbeatInterval);
+        }
+        
+        // Tentar reconectar após 2 segundos apenas se o componente ainda estiver montado
+        // e se não foi um fechamento intencional (código 1000)
+        if (user && event.code !== 1000) {
+          debugLogger('WebSocket', 'Agendando reconexão em 2 segundos');
           setTimeout(() => {
-            debugLogger('WebSocket', 'Tentando reconexão automática');
-            connect();
-          }, 5000);
+            if (user) { // Verificar novamente se o usuário ainda está logado
+              debugLogger('WebSocket', 'Tentando reconexão automática');
+              connect();
+            }
+          }, 2000);
         }
       };
 
@@ -168,6 +188,11 @@ export function useWebSocket() {
             detail: { type: data.type, data } 
           });
           window.dispatchEvent(notificationEvent);
+          
+          // Ignorar mensagens de heartbeat
+          if (data.type === 'ping' || data.type === 'pong') {
+            return;
+          }
           
           // Processar diferentes tipos de mensagem
           if (data.type === 'new_application') {

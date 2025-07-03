@@ -165,6 +165,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             assemblerClients.add(ws);
             console.log(`🔧 Montador adicionado. Total montadores: ${assemblerClients.size}`);
           }
+        } else if (data.type === 'ping') {
+          // Responder ao heartbeat ping para manter conexão viva
+          ws.send(JSON.stringify({ type: 'pong' }));
         }
       } catch (error) {
         console.error('❌ Erro ao processar mensagem WebSocket:', error);

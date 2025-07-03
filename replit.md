@@ -372,6 +372,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Services now appear uniquely: not applied services in "Disponível", applied services in "Aguardando Lojista"
   - Improved service filtering logic to prevent status duplication in assembler dashboard
   - Enhanced user experience by ensuring each service appears in only one appropriate tab
+- January 3, 2025. Fixed WebSocket connection stability for assembler evaluation notifications
+  - Resolved issue where assembler WebSocket connections were disconnecting prematurely
+  - Added heartbeat/ping-pong mechanism to maintain WebSocket connections alive
+  - Implemented faster reconnection (2 seconds) for non-intentional disconnections
+  - Added proper ping handling on server-side to respond to client heartbeat signals
+  - Enhanced WebSocket message type definitions to include ping/pong messages
+  - Fixed assembler evaluation notification system to ensure store evaluation screen appears after service completion
+  - System now properly maintains stable connections for real-time evaluation notifications
 
 ## User Preferences
 
