@@ -1118,7 +1118,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                             maximumFractionDigits: 2
                           }).format(numericPrice);
                         })(),
-                        store: service.store || 'Loja não especificada',
+                        store: typeof service.store === 'object' && service.store?.name ? service.store.name : (typeof service.store === 'string' ? service.store : 'Loja não especificada'),
                         type: service.materialType || service.type || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined
   }}
@@ -1148,7 +1148,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                             maximumFractionDigits: 2
                           }).format(numericPrice);
                         })() : '',
-                        store: service.store || 'Loja não especificada',
+                        store: typeof service.store === 'object' && service.store?.name ? service.store.name : (typeof service.store === 'string' ? service.store : 'Loja não especificada'),
                         type: service.materialType || 'Não especificado',
                         completedAt: service.completedAt ? new Date(service.completedAt).toLocaleDateString('pt-BR') : undefined
                       }}
@@ -1467,7 +1467,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                             </span>
                           </div>
                           <p className="text-sm text-gray-500">
-                            Loja: {service.store || 'Não especificada'}
+                            Loja: {typeof service.store === 'object' && service.store?.name ? service.store.name : (typeof service.store === 'string' ? service.store : 'Não especificada')}
                           </p>
                           <p className="text-sm text-gray-400 mt-1">
                             Converse com o lojista sobre os detalhes do serviço
