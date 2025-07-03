@@ -176,16 +176,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Função global para enviar notificações
   global.sendNotification = function(userId: number, message: any): boolean {
+    console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
+    console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
+    
     const connection = userConnections.get(userId);
     if (connection && connection.readyState === WebSocket.OPEN) {
       try {
         connection.send(JSON.stringify(message));
+        console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
         return true;
       } catch (error) {
+        console.log(`❌ Erro ao enviar notificação: ${error}`);
         return false;
       }
+    } else {
+      console.log(`❌ Conexão não encontrada ou fechada para usuário ${userId}`);
+      return false;
     }
-    return false;
   };
 
   global.notifyNewMessage = async function(serviceId: number, senderId: number): Promise<void> {
