@@ -742,6 +742,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending evaluations for current user - MUST come before generic :serviceId route
+  app.get("/api/services/pending-evaluations", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Get services that are awaiting evaluation where user is involved
+      let awaitingServices: Array<{id: number, title: string, storeId: number, status: string}> = [];
+      
+      if (req.user.userType === 'lojista') {
+        // Get store services awaiting evaluation
+        const userStore = await storage.getStoreByUserId(req.user.id);
+        if (!userStore) {
+          return res.json({ pendingRatings: [], hasPendingRatings: false });
+        }
+        
+        awaitingServices = await db.select({
+          id: services.id,
+          title: services.title,
+          storeId: services.storeId,
+          status: services.status
+        })
+        .from(services)
+        .where(
+          and(
+            eq(services.status, 'awaiting_evaluation'),
+            eq(services.storeId, userStore.id)
+          )
+        );
+      } else {
+        // Get assembler services awaiting evaluation via applications
+        const userAssembler = await storage.getAssemblerByUserId(req.user.id);
+        if (!userAssembler) {
+          return res.json({ pendingRatings: [], hasPendingRatings: false });
+        }
+        
+        const serviceResults = await db.select({
+          id: services.id,
+          title: services.title,
+          storeId: services.storeId,
+          status: services.status
+        })
+        .from(services)
+        .innerJoin(applications, and(
+          eq(applications.serviceId, services.id),
+          eq(applications.assemblerId, userAssembler.id),
+          eq(applications.status, 'accepted')
+        ))
+        .where(eq(services.status, 'awaiting_evaluation'));
+        
+        awaitingServices = serviceResults;
+      }
+
+      // Filter services where user hasn't rated yet
+      const pendingEvaluations = [];
+      
+      for (const service of awaitingServices) {
+        // Determine who the user should rate
+        let toUserId: number;
+        let otherUserType: string;
+        let otherUserName: string;
+
+        if (req.user.userType === 'lojista') {
+          // Store owner should rate the assembler
+          // Find the accepted application for this service
+          const acceptedApplication = await db.select()
+            .from(applications)
+            .where(
+              and(
+                eq(applications.serviceId, service.id),
+                eq(applications.status, 'accepted')
+              )
+            )
+            .limit(1);
+
+          if (acceptedApplication.length === 0) continue;
+
+          const assembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
+          if (!assembler) continue;
+          
+          const assemblerUser = await storage.getUser(assembler.userId);
+          if (!assemblerUser) continue;
+          
+          toUserId = assembler.userId;
+          otherUserType = 'montador';
+          otherUserName = assemblerUser.name;
+        } else {
+          // Assembler should rate the store
+          const store = await storage.getStore(service.storeId);
+          if (!store) continue;
+          
+          const storeUser = await storage.getUser(store.userId);
+          if (!storeUser) continue;
+          
+          toUserId = store.userId;
+          otherUserType = 'lojista';
+          otherUserName = storeUser.name;
+        }
+
+        // Check if user has already rated this service
+        const existingRating = await storage.getRatingByServiceIdAndUser(service.id, req.user.id, toUserId);
+        
+        if (!existingRating) {
+          pendingEvaluations.push({
+            serviceId: service.id,
+            serviceName: service.title,
+            otherUserName: otherUserName,
+            otherUserType: otherUserType
+          });
+        }
+      }
+
+      // Debug logging for troubleshooting
+      console.log(`🔍 Avaliações pendentes para usuário ${req.user.id} (${req.user.userType}):`, {
+        awaitingServicesCount: awaitingServices.length,
+        pendingEvaluationsCount: pendingEvaluations.length,
+        services: awaitingServices.map(s => ({ id: s.id, title: s.title, status: s.status })),
+        pendingEvaluations: pendingEvaluations.map(p => ({ 
+          serviceId: p.serviceId, 
+          serviceName: p.serviceName, 
+          otherUserName: p.otherUserName, 
+          otherUserType: p.otherUserType 
+        }))
+      });
+
+      res.json({
+        pendingRatings: pendingEvaluations,
+        hasPendingRatings: pendingEvaluations.length > 0
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar avaliações pendentes:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Rota para buscar detalhes de um serviço específico
   app.get("/api/services/:serviceId", async (req, res) => {
     try {
@@ -2224,7 +2361,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           storage.createMessage({
             serviceId: serviceId,
             assemblerId: acceptedApplication[0].assemblerId,
-            senderId: 0, // System message
+            senderId: storeUser.id, // Use store user ID instead of system
             content: `🔔 AVALIAÇÃO OBRIGATÓRIA: Você precisa avaliar o lojista ${storeUser.name} para finalizar este serviço. Clique no botão de avaliação no chat ou acesse a aba de avaliações pendentes.`,
             messageType: 'system_notification' as const
           }).then(() => {
@@ -2525,142 +2662,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
     }
   });
 
-  // Get pending evaluations for current user
-  app.get("/api/services/pending-evaluations", async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
 
-      // Get services that are awaiting evaluation where user is involved
-      let awaitingServices: Array<{id: number, title: string, storeId: number, status: string}> = [];
-      
-      if (req.user.userType === 'lojista') {
-        // Get store services awaiting evaluation
-        const userStore = await storage.getStoreByUserId(req.user.id);
-        if (!userStore) {
-          return res.json({ pendingRatings: [], hasPendingRatings: false });
-        }
-        
-        awaitingServices = await db.select({
-          id: services.id,
-          title: services.title,
-          storeId: services.storeId,
-          status: services.status
-        })
-        .from(services)
-        .where(
-          and(
-            eq(services.status, 'awaiting_evaluation'),
-            eq(services.storeId, userStore.id)
-          )
-        );
-      } else {
-        // Get assembler services awaiting evaluation via applications
-        const userAssembler = await storage.getAssemblerByUserId(req.user.id);
-        if (!userAssembler) {
-          return res.json({ pendingRatings: [], hasPendingRatings: false });
-        }
-        
-        const serviceResults = await db.select({
-          id: services.id,
-          title: services.title,
-          storeId: services.storeId,
-          status: services.status
-        })
-        .from(services)
-        .innerJoin(applications, and(
-          eq(applications.serviceId, services.id),
-          eq(applications.assemblerId, userAssembler.id),
-          eq(applications.status, 'accepted')
-        ))
-        .where(eq(services.status, 'awaiting_evaluation'));
-        
-        awaitingServices = serviceResults;
-      }
-
-      // Filter services where user hasn't rated yet
-      const pendingEvaluations = [];
-      
-      for (const service of awaitingServices) {
-        // Determine who the user should rate
-        let toUserId: number;
-        let otherUserType: string;
-        let otherUserName: string;
-
-        if (req.user.userType === 'lojista') {
-          // Store owner should rate the assembler
-          // Find the accepted application for this service
-          const acceptedApplication = await db.select()
-            .from(applications)
-            .where(
-              and(
-                eq(applications.serviceId, service.id),
-                eq(applications.status, 'accepted')
-              )
-            )
-            .limit(1);
-
-          if (acceptedApplication.length === 0) continue;
-
-          const assembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
-          if (!assembler) continue;
-          
-          const assemblerUser = await storage.getUser(assembler.userId);
-          if (!assemblerUser) continue;
-          
-          toUserId = assembler.userId;
-          otherUserType = 'montador';
-          otherUserName = assemblerUser.name;
-        } else {
-          // Assembler should rate the store
-          const store = await storage.getStore(service.storeId);
-          if (!store) continue;
-          
-          const storeUser = await storage.getUser(store.userId);
-          if (!storeUser) continue;
-          
-          toUserId = store.userId;
-          otherUserType = 'lojista';
-          otherUserName = storeUser.name;
-        }
-
-        // Check if user has already rated this service
-        const existingRating = await storage.getRatingByServiceIdAndUser(service.id, req.user.id, toUserId);
-        
-        if (!existingRating) {
-          pendingEvaluations.push({
-            serviceId: service.id,
-            serviceName: service.title,
-            otherUserName: otherUserName,
-            otherUserType: otherUserType
-          });
-        }
-      }
-
-      // Debug logging for troubleshooting
-      console.log(`🔍 Avaliações pendentes para usuário ${req.user.id} (${req.user.userType}):`, {
-        awaitingServicesCount: awaitingServices.length,
-        pendingEvaluationsCount: pendingEvaluations.length,
-        services: awaitingServices.map(s => ({ id: s.id, title: s.title, status: s.status })),
-        pendingEvaluations: pendingEvaluations.map(p => ({ 
-          serviceId: p.serviceId, 
-          serviceName: p.serviceName, 
-          otherUserName: p.otherUserName, 
-          otherUserType: p.otherUserType 
-        }))
-      });
-
-      res.json({
-        pendingRatings: pendingEvaluations,
-        hasPendingRatings: pendingEvaluations.length > 0
-      });
-
-    } catch (error) {
-      console.error('Erro ao buscar avaliações pendentes:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
 
   // Analytics Dashboard API
   app.get("/api/analytics/dashboard", async (req, res) => {
