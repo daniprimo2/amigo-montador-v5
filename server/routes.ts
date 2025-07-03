@@ -1752,6 +1752,32 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         messageType: 'payment_proof'
       });
 
+      // Notify all other assemblers who applied to this service that it has been started
+      const allApplications = await storage.getApplicationsByServiceId(serviceId);
+      const otherAssemblers = allApplications.filter(app => app.assemblerId !== assemblerId);
+      
+      if (otherAssemblers.length > 0) {
+        for (const application of otherAssemblers) {
+          try {
+            const assemblerUser = await storage.getAssemblerById(application.assemblerId);
+            if (assemblerUser) {
+              const notificationMessage = {
+                type: 'service_started_with_other',
+                serviceId: serviceId,
+                serviceTitle: service.title,
+                message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
+                timestamp: new Date().toISOString()
+              };
+              
+              // Send WebSocket notification to the assembler
+              global.sendNotification(assemblerUser.userId, notificationMessage);
+            }
+          } catch (error) {
+            console.error('Erro ao notificar montador:', error);
+          }
+        }
+      }
+
       res.json({
         success: true,
         message: "Pagamento confirmado e serviço atualizado para Em Andamento"

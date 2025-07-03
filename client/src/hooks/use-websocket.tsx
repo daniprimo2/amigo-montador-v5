@@ -9,9 +9,10 @@ const debugLogger = (context: string, message: string, data?: any) => {
   };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed' | 'evaluation_required';
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed' | 'evaluation_required' | 'service_started_with_other';
   message: string;
   serviceId?: number;
+  serviceTitle?: string;
   timestamp?: string;
   serviceData?: any; // Para carregar informações do serviço quando necessário
   amount?: string; // Para notificações de pagamento
@@ -212,6 +213,23 @@ export function useWebSocket() {
               variant: 'default',
               className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg animate-pulse-once'
             });
+          } else if (data.type === 'service_started_with_other') {
+            playNotificationSound();
+            sendBrowserNotification('📋 Serviço iniciado', data.message || 'Um serviço foi iniciado com outro montador');
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/services/available'] });
+            
+            toast({
+              title: '📋 Serviço iniciado',
+              description: data.message,
+              duration: 8000,
+              variant: 'default',
+              className: 'bg-orange-100 border-orange-500 border-2 font-medium shadow-lg animate-pulse-once'
+            });
+            
+            if ('vibrate' in navigator) {
+              navigator.vibrate([100, 50, 100]);
+            }
           }
         } catch (error) {
           debugLogger('WebSocket', 'Erro ao processar mensagem', error);
