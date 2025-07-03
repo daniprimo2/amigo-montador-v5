@@ -779,7 +779,7 @@ toast({
 
         
         {/* Verificar se o serviço está finalizado para desabilitar envio de mensagens */}
-        {service?.status === 'completed' ? (
+        {(service?.status === 'completed' || service?.status === 'awaiting_evaluation') ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
             <div className="flex items-center justify-center gap-2 text-yellow-700">
               <CheckSquare className="h-5 w-5" />

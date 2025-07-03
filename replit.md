@@ -393,6 +393,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Modified frontend logic to ensure each service appears in only one status category
   - Services now follow strict categorization: rawServices for "Disponível", activeServices for other statuses
   - Eliminated conflicting service states that were compromising application flow integrity
+- January 3, 2025. Implemented chat restrictions for completed services
+  - Added frontend validation to prevent message sending in completed and awaiting_evaluation status services
+  - Added backend API validation to block message creation for finalized services
+  - Chat interface now displays "Serviço Finalizado" message with read-only status for completed services
+  - Message history is preserved but new communication is disabled for finished services
+  - Enhanced user experience by clearly indicating when conversations are closed
 
 ## User Preferences
 

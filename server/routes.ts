@@ -1088,6 +1088,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
+      // Verificar se o serviço está finalizado - bloquear envio de mensagens
+      if (service.status === 'completed' || service.status === 'awaiting_evaluation') {
+        return res.status(400).json({ 
+          message: "Não é possível enviar mensagens para serviços finalizados",
+          error: "SERVICE_COMPLETED"
+        });
+      }
+
       // Determinar o assemblerId para a mensagem
       let messageAssemblerId = assemblerId;
       if (user.userType === 'montador') {
