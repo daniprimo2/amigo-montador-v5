@@ -196,6 +196,24 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     enabled: !!user
   });
 
+  // Debug logs para investigar os dados
+  React.useEffect(() => {
+    if (activeServices) {
+      console.log('=== DEBUG activeServices ===');
+      console.log('activeServices:', activeServices);
+      console.log('activeServices length:', activeServices.length);
+      activeServices.forEach((service: any, index: number) => {
+        console.log(`Service ${index}:`, {
+          id: service.id,
+          title: service.title,
+          status: service.status,
+          applicationStatus: service.applicationStatus,
+          hasApplied: service.hasApplied
+        });
+      });
+    }
+  }, [activeServices]);
+
   const { data: assemblerProfile } = useQuery({
     queryKey: [`/api/assemblers/${user?.id}`],
     enabled: !!user?.id
@@ -927,11 +945,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 (<div className="p-8 text-center text-red-500">Erro ao carregar serviços. Por favor, tente novamente.
                                   </div>)
               ) : (() => {
-                // Filter services with pending application status
-                const pendingServices = (rawServices || []).filter((service: any) => 
-                  service.applicationStatus === 'pending' && service.hasApplied
-                );
-                
+                // Use the already filtered pending services from activeServices
                 return pendingServices.length > 0 ? (
                   // Show pending services
                   (pendingServices.map(service => (
@@ -1395,7 +1409,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     }) : [];
     
     // Mostrar serviços onde o montador se candidatou mas ainda está pendente
-    const pendingChats = rawServices ? rawServices.filter((service: any) => {
+    const pendingChats = activeServices ? activeServices.filter((service: any) => {
       return service.applicationStatus === 'pending' && service.hasApplied;
     }) : [];
     
