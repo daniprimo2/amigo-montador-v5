@@ -218,14 +218,16 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Database stores prices in American format (0.01) but displays in Brazilian format (R$ 0,01)
   - Fixed price interpretation across StoreServiceCard, AvailableServiceCard, CompletedServiceCard, and ServiceDetailsDialog components
   - Small currency values now display correctly according to Brazilian currency standards
-- January 3, 2025. Implemented comprehensive chat notification system
+- January 3, 2025. Implemented comprehensive chat notification system with auto-reset functionality
   - Added visual notification badge with unread message counter on chat icon
   - Created animated notification effects including pulse, bounce, and glow animations
   - Implemented browser notifications and sound alerts when new messages arrive
   - Added API endpoint /api/messages/unread-count for fetching unread message counts
+  - Created API endpoint /api/services/:serviceId/messages/mark-read for marking messages as read
   - Enhanced NotificationBadge component with customizable animations and visual states
   - Integrated device vibration support for mobile users when notifications appear
-  - System now provides clear visual feedback whenever new messages are received
+  - Implemented automatic notification reset when users open and view conversations
+  - System now provides clear visual feedback and automatically clears notifications when messages are viewed
 
 ## User Preferences
 
