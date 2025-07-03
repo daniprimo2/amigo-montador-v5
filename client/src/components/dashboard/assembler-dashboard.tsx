@@ -666,7 +666,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
 
   // Filtrar serviços por status para cada aba
   // Pending services: services where user has applied but waiting for store approval
-  const pendingServices = (rawServices || []).filter((service: any) => 
+  const pendingServices = (activeServices || []).filter((service: any) => 
     service.applicationStatus === 'pending' && service.hasApplied
   );
   
