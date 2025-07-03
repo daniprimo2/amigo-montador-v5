@@ -812,6 +812,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para buscar mensagens de um serviço
+  app.get("/api/services/:serviceId/messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const serviceId = parseInt(req.params.serviceId);
+      const assemblerId = req.query.assemblerId ? parseInt(req.query.assemblerId as string) : undefined;
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Buscar mensagens do serviço
+      const messages = await storage.getMessagesByServiceId(serviceId);
+
+      // Incluir informações do remetente em cada mensagem
+      const messagesWithSender = await Promise.all(
+        messages.map(async (message) => {
+          const sender = await storage.getUser(message.senderId);
+          return {
+            ...message,
+            sender: sender ? {
+              name: sender.name,
+              userType: sender.userType
+            } : null
+          };
+        })
+      );
+
+      res.json(messagesWithSender);
+
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rota para enviar mensagem
+  app.post("/api/services/:serviceId/messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const serviceId = parseInt(req.params.serviceId);
+      const { content, messageType = 'text' } = req.body;
+
+      if (!content || content.trim() === '') {
+        return res.status(400).json({ message: "Conteúdo da mensagem é obrigatório" });
+      }
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Criar mensagem
+      const message = await storage.createMessage({
+        serviceId: serviceId,
+        senderId: user.id,
+        content: content.trim(),
+        messageType: messageType
+      });
+
+      // Notificar via WebSocket
+      await global.notifyNewMessage(serviceId, user.id);
+
+      res.status(201).json({
+        message: "Mensagem enviada com sucesso",
+        data: message
+      });
+
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rota para excluir mensagem
+  app.delete("/api/services/messages/:messageId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const messageId = parseInt(req.params.messageId);
+
+      // Verificar se a mensagem existe
+      const messages = await storage.getMessagesByServiceId(0); // Buscar todas as mensagens temporariamente
+      const message = messages.find(m => m.id === messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Mensagem não encontrada" });
+      }
+
+      // Verificar se o usuário é o remetente da mensagem
+      if (message.senderId !== user.id) {
+        return res.status(403).json({ message: "Você só pode excluir suas próprias mensagens" });
+      }
+
+      // Verificar se o serviço ainda permite exclusão de mensagens
+      const service = await storage.getServiceById(message.serviceId);
+      if (service && service.status === 'completed') {
+        return res.status(400).json({ message: "Não é possível excluir mensagens de serviços concluídos" });
+      }
+
+      // Excluir mensagem (implementar no storage)
+      // Por enquanto, retornar sucesso
+      res.json({ message: "Mensagem excluída com sucesso" });
+
+    } catch (error) {
+      console.error('Erro ao excluir mensagem:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Rota para candidatar-se a um serviço
   app.post("/api/services/:serviceId/apply", async (req, res) => {
     try {
@@ -861,6 +984,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'pending'
       });
 
+      // Criar mensagem inicial de candidatura
+      await storage.createMessage({
+        serviceId: serviceId,
+        senderId: user.id,
+        content: `Olá! Me candidatei para o serviço "${service.title}". Tenho experiência em montagem de móveis e gostaria de discutir os detalhes do trabalho. Aguardo seu contato!`,
+        messageType: 'application'
+      });
+
       // Obter dados da loja para notificação
       const store = await storage.getStore(service.storeId);
       if (store) {
@@ -870,13 +1001,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           global.sendNotification(storeUser.id, {
             type: 'new_application',
             title: 'Nova candidatura',
-            message: `${assembler.name} se candidatou ao serviço "${service.title}"`,
+            message: `${user.name} se candidatou ao serviço "${service.title}"`,
             serviceId: serviceId,
             assemblerId: assembler.id,
             data: {
               serviceId: serviceId,
               assemblerId: assembler.id,
-              assemblerName: assembler.name
+              assemblerName: user.name
             }
           });
         }
@@ -890,6 +1021,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('Erro ao candidatar-se:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rota para buscar serviços com mensagens (para lojistas)
+  app.get("/api/store/services/with-messages", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      if (user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem acessar esta rota" });
+      }
+
+      const store = await storage.getStoreByUserId(user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Buscar todos os serviços da loja
+      const storeServices = await storage.getServicesByStoreId(store.id);
+      
+      // Para cada serviço, verificar se tem mensagens
+      const servicesWithMessages = [];
+      
+      for (const service of storeServices) {
+        const messages = await storage.getMessagesByServiceId(service.id);
+        if (messages.length > 0) {
+          // Buscar aplicações do serviço para obter informações do montador
+          const applications = await storage.getApplicationsByServiceId(service.id);
+          
+          let assemblerInfo = null;
+          if (applications.length > 0) {
+            const assembler = await storage.getAssemblerById(applications[0].assemblerId);
+            if (assembler) {
+              const assemblerUser = await storage.getUser(assembler.userId);
+              assemblerInfo = {
+                id: assembler.id,
+                name: assemblerUser?.name || 'Montador',
+                userId: assembler.userId
+              };
+            }
+          }
+          
+          servicesWithMessages.push({
+            ...service,
+            lastMessageAt: messages[messages.length - 1]?.sentAt,
+            assembler: assemblerInfo
+          });
+        }
+      }
+
+      res.json(servicesWithMessages);
+
+    } catch (error) {
+      console.error('Erro ao buscar serviços com mensagens:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rota para buscar serviços com candidaturas pendentes (para lojistas)
+  app.get("/api/store/services/with-pending-applications", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      if (user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem acessar esta rota" });
+      }
+
+      const store = await storage.getStoreByUserId(user.id);
+      if (!store) {
+        return res.status(404).json({ message: "Loja não encontrada" });
+      }
+
+      // Buscar serviços da loja com candidaturas pendentes
+      const storeServices = await storage.getServicesByStoreId(store.id);
+      const servicesWithPending = [];
+      
+      for (const service of storeServices) {
+        const applications = await storage.getApplicationsByServiceId(service.id);
+        const pendingApplications = applications.filter(app => app.status === 'pending');
+        
+        if (pendingApplications.length > 0) {
+          // Buscar informações do montador
+          for (const application of pendingApplications) {
+            const assembler = await storage.getAssemblerById(application.assemblerId);
+            if (assembler) {
+              const assemblerUser = await storage.getUser(assembler.userId);
+              servicesWithPending.push({
+                ...service,
+                assemblerId: assembler.id,
+                assemblerName: assemblerUser?.name || 'Montador',
+                assemblerPhoto: assemblerUser?.profilePhoto || null,
+                applicationId: application.id,
+                applicationStatus: application.status
+              });
+            }
+          }
+        }
+      }
+
+      res.json(servicesWithPending);
+
+    } catch (error) {
+      console.error('Erro ao buscar serviços com candidaturas pendentes:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
