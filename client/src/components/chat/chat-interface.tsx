@@ -746,12 +746,15 @@ toast({
                             onError={(e) => {
                               // Fallback se a imagem não carregar
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = `
-                                <div class="p-4 text-center text-gray-500">
-                                  <p>Comprovante de pagamento PIX</p>
-                                  <p class="text-xs mt-1">Clique para visualizar: <a href="${msg.content}" target="_blank" class="text-blue-500 hover:underline">Abrir comprovante</a></p>
-                                </div>
-                              `;
+                              const parentElement = e.currentTarget.parentElement;
+                              if (parentElement) {
+                                parentElement.innerHTML = `
+                                  <div class="p-4 text-center text-gray-500">
+                                    <p>Comprovante de pagamento PIX</p>
+                                    <p class="text-xs mt-1">Clique para visualizar: <a href="${msg.content}" target="_blank" class="text-blue-500 hover:underline">Abrir comprovante</a></p>
+                                  </div>
+                                `;
+                              }
                             }}
                           />
                         </div>
@@ -881,7 +884,9 @@ toast({
                           // Fallback if image fails to load
                           e.currentTarget.src = '';
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement!.innerHTML = `
+                          const parentElement = e.currentTarget.parentElement;
+                          if (parentElement) {
+                            parentElement.innerHTML = `
                             <div class="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
                               <svg class="h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -889,6 +894,7 @@ toast({
                               </svg>
                             </div>
                           `;
+                          }
                         }}
                       />
                     ) : userProfile.userType === 'lojista' && userProfile.store?.logoUrl ? (
@@ -900,7 +906,9 @@ toast({
                           // Fallback if image fails to load
                           e.currentTarget.src = '';
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement!.innerHTML = `
+                          const parentElement = e.currentTarget.parentElement;
+                          if (parentElement) {
+                            parentElement.innerHTML = `
                             <div class="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
                               <svg class="h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -908,6 +916,7 @@ toast({
                               </svg>
                             </div>
                           `;
+                          }
                         }}
                       />
                     ) : (
