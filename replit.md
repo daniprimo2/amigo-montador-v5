@@ -405,6 +405,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Updated dashboard section state management to include 'analytics' option
   - Added event handling for analytics navigation with proper tab switching
   - Analytics dashboard now accessible through main navigation tabs for comprehensive service performance tracking
+- January 3, 2025. Fixed service status duplication system for assemblers
+  - Resolved critical issue where services appeared in both "Disponível" and "Aguardando Lojista" tabs simultaneously
+  - Updated getAvailableServicesForAssembler method in storage to filter out services where assembler already applied
+  - Enhanced frontend filtering logic in AssemblerDashboard to prevent duplicate service listings
+  - Services now appear uniquely in correct category: available services in "Disponível", applied services in "Aguardando Lojista"
+  - Eliminated status conflicts that were compromising user experience and application workflow integrity
 
 ## User Preferences
 
