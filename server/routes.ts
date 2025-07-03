@@ -157,6 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`✅ Usuário ${data.userId} (${data.userType}) autenticado no WebSocket`);
           console.log(`📊 Total de conexões ativas: ${userConnections.size}`);
+          console.log(`🗺️ Conexões mapeadas: ${Array.from(userConnections.keys()).join(', ')}`);
           
           if (data.userType === 'lojista') {
             storeClients.add(ws);
@@ -2077,43 +2078,28 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         }
       };
 
-      // Notify store owner to evaluate assembler
+      // Send evaluation notifications using global notification function
       console.log('🔔 Enviando notificação de avaliação para LOJISTA:', {
         userId: storeUser.id,
         userName: storeUser.name,
         evaluateUser: assemblerUser.name
       });
       
-      if (wss) {
-        let storeNotificationSent = false;
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN && (client as any).userId === storeUser.id) {
-            try {
-              const wsMessage = {
-                type: 'evaluation_required',
-                serviceId: serviceId,
-                serviceData: serviceData,
-                userId: storeUser.id,
-                evaluateUser: {
-                  id: assemblerUser.id,
-                  name: assemblerUser.name,
-                  type: 'montador'
-                },
-                message: 'É necessário avaliar o montador para finalizar o serviço.'
-              };
-              client.send(JSON.stringify(wsMessage));
-              storeNotificationSent = true;
-              console.log('✅ Notificação enviada para lojista:', storeUser.name);
-            } catch (error) {
-              console.error('Erro ao enviar notificação WebSocket para lojista:', error);
-            }
-          }
-        });
-        
-        if (!storeNotificationSent) {
-          console.log('❌ Nenhuma conexão WebSocket encontrada para lojista:', storeUser.name);
-        }
-      }
+      const storeNotificationMessage = {
+        type: 'evaluation_required',
+        serviceId: serviceId,
+        serviceData: serviceData,
+        userId: storeUser.id,
+        evaluateUser: {
+          id: assemblerUser.id,
+          name: assemblerUser.name,
+          type: 'montador'
+        },
+        message: 'É necessário avaliar o montador para finalizar o serviço.'
+      };
+      
+      const storeNotificationSent = global.sendNotification(storeUser.id, storeNotificationMessage);
+      console.log(`✅ Notificação enviada para lojista: ${storeNotificationSent ? 'Sucesso' : 'Falhou'}`);
 
       // Notify assembler to evaluate store
       console.log('🔔 Enviando notificação de avaliação para MONTADOR:', {
@@ -2122,36 +2108,22 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         evaluateUser: storeUser.name
       });
       
-      if (wss) {
-        let assemblerNotificationSent = false;
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN && (client as any).userId === assemblerUser.id) {
-            try {
-              const wsMessage = {
-                type: 'evaluation_required',
-                serviceId: serviceId,
-                serviceData: serviceData,
-                userId: assemblerUser.id,
-                evaluateUser: {
-                  id: storeUser.id,
-                  name: storeUser.name,
-                  type: 'lojista'
-                },
-                message: 'É necessário avaliar o lojista para finalizar o serviço.'
-              };
-              client.send(JSON.stringify(wsMessage));
-              assemblerNotificationSent = true;
-              console.log('✅ Notificação enviada para montador:', assemblerUser.name);
-            } catch (error) {
-              console.error('Erro ao enviar notificação WebSocket para montador:', error);
-            }
-          }
-        });
-        
-        if (!assemblerNotificationSent) {
-          console.log('❌ Nenhuma conexão WebSocket encontrada para montador:', assemblerUser.name);
-        }
-      }
+      const assemblerNotificationMessage = {
+        type: 'evaluation_required',
+        serviceId: serviceId,
+        serviceData: serviceData,
+        userId: assemblerUser.id,
+        evaluateUser: {
+          id: storeUser.id,
+          name: storeUser.name,
+          type: 'lojista'
+        },
+        message: 'É necessário avaliar o lojista para finalizar o serviço.'
+      };
+      
+      const assemblerNotificationSent = global.sendNotification(assemblerUser.id, assemblerNotificationMessage);
+      console.log(`✅ Notificação enviada para montador: ${assemblerNotificationSent ? 'Sucesso' : 'Falhou'}`);
+      console.log(`🔍 ID do montador usado para notificação: ${assemblerUser.id}`);
 
       res.json({
         success: true,
