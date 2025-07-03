@@ -282,6 +282,11 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Date information included in payment data and displayed in PIX details
   - Calendar uses Brazilian Portuguese locale with intuitive interface
   - Payment workflow now includes: select date → generate PIX → process payment
+- January 3, 2025. Removed test buttons from production interface
+  - Removed "Test" button from dashboard layout (notification testing no longer needed)
+  - Removed "🧪 Testar Comprovante PIX" button from chat interface (payment proof testing complete)
+  - Notification system and payment workflow now fully functional without test elements
+  - Cleaner production interface without development testing buttons
 
 ## User Preferences
 

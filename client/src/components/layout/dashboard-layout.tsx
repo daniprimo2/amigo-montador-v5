@@ -339,17 +339,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 showPulse={hasUnreadMessage}
               />
             </button>
-            {/* Test button for demonstration */}
-            <button 
-              className="text-white text-xs p-2 rounded-full hover:bg-white/10 transition-colors"
-              onClick={() => {
-                setTestUnreadCount(testUnreadCount === 0 ? 3 : 0);
-                setHasNewMessage(true);
-              }}
-              title="Testar notificação"
-            >
-              Test
-            </button>
+
             <button 
               onClick={handleLogout}
               className="text-white p-2 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center"

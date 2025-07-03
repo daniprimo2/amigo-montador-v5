@@ -781,46 +781,7 @@ toast({
       
       {/* Área de entrada de mensagem */}
       <div className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-b-lg shadow-sm border-t border-gray-200">
-        {/* Botão de teste de comprovante PIX - apenas para desenvolvimento */}
-        {process.env.NODE_ENV === 'development' && user?.userType === 'lojista' && (
-          <div className="mb-2">
-            <Button
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/payment/pix/simulate-confirm', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ serviceId })
-                  });
-                  
-                  if (response.ok) {
-                    toast({
-                      title: 'Teste realizado',
-                      description: 'Comprovante de pagamento enviado no chat',
-                    });
-                    // Atualizar mensagens
-                    messagesQuery.refetch();
-                  } else {
-                    toast({
-                      title: 'Erro no teste',
-                      description: 'Não foi possível simular o pagamento',
-                      variant: 'destructive'
-                    });
-                  }
-                } catch (error) {
-                  console.error('Erro ao testar comprovante:', error);
-                }
-              }}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              🧪 Testar Comprovante PIX
-            </Button>
-          </div>
-        )}
+
         
         {/* Verificar se o serviço está finalizado para desabilitar envio de mensagens */}
         {service?.status === 'completed' ? (
