@@ -196,23 +196,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     enabled: !!user
   });
 
-  // Debug logs para investigar os dados
-  React.useEffect(() => {
-    if (activeServices) {
-      console.log('=== DEBUG activeServices ===');
-      console.log('activeServices:', activeServices);
-      console.log('activeServices length:', activeServices.length);
-      activeServices.forEach((service: any, index: number) => {
-        console.log(`Service ${index}:`, {
-          id: service.id,
-          title: service.title,
-          status: service.status,
-          applicationStatus: service.applicationStatus,
-          hasApplied: service.hasApplied
-        });
-      });
-    }
-  }, [activeServices]);
+
 
   const { data: assemblerProfile } = useQuery({
     queryKey: [`/api/assemblers/${user?.id}`],
