@@ -812,5 +812,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para candidatar-se a um serviço
+  app.post("/api/services/:serviceId/apply", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const serviceId = parseInt(req.params.serviceId);
+      
+      // Verificar se o usuário é montador
+      if (user.userType !== 'montador') {
+        return res.status(403).json({ message: "Apenas montadores podem se candidatar a serviços" });
+      }
+
+      // Obter dados do montador
+      const assembler = await storage.getAssemblerByUserId(user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Dados do montador não encontrados" });
+      }
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se o serviço está disponível
+      if (service.status !== 'open') {
+        return res.status(400).json({ message: "Este serviço não está mais disponível" });
+      }
+
+      // Verificar se o montador já se candidatou
+      const existingApplication = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
+      if (existingApplication) {
+        return res.status(200).json({ 
+          message: "Você já se candidatou a este serviço. Aguarde a resposta do lojista.",
+          application: existingApplication,
+          alreadyApplied: true
+        });
+      }
+
+      // Criar candidatura
+      const application = await storage.createApplication({
+        serviceId: serviceId,
+        assemblerId: assembler.id,
+        status: 'pending'
+      });
+
+      // Obter dados da loja para notificação
+      const store = await storage.getStore(service.storeId);
+      if (store) {
+        const storeUser = await storage.getUser(store.userId);
+        if (storeUser) {
+          // Enviar notificação WebSocket para o lojista
+          global.sendNotification(storeUser.id, {
+            type: 'new_application',
+            title: 'Nova candidatura',
+            message: `${assembler.name} se candidatou ao serviço "${service.title}"`,
+            serviceId: serviceId,
+            assemblerId: assembler.id,
+            data: {
+              serviceId: serviceId,
+              assemblerId: assembler.id,
+              assemblerName: assembler.name
+            }
+          });
+        }
+      }
+
+      res.status(201).json({
+        message: "Candidatura enviada com sucesso",
+        application: application,
+        success: true
+      });
+
+    } catch (error) {
+      console.error('Erro ao candidatar-se:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }
