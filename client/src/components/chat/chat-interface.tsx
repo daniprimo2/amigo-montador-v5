@@ -645,21 +645,19 @@ toast({
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
-            {/* Botão de Pagamento PIX - aparece quando há montador aceito ou serviço em andamento */}
+            {/* Botão de Pagamento PIX - sempre disponível durante desenvolvimento para testes */}
             {service && service.price && (
-              (service.hasAcceptedApplication || service.status === 'in-progress') && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200 relative group"
-                  onClick={() => setIsPixPaymentDialogOpen(true)}
-                  title="⚠️ Modo de Desenvolvimento: API PIX em desenvolvimento, usar botão de teste"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Pagar via PIX
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                </Button>
-              )
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200 relative group"
+                onClick={() => setIsPixPaymentDialogOpen(true)}
+                title="⚠️ Modo de Desenvolvimento: API PIX em desenvolvimento, usar botão de teste"
+              >
+                <CreditCard className="h-4 w-4" />
+                Pagar via PIX
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+              </Button>
             )}
             
             {/* Botão de Contratar Montador / Repassar para Montador */}

@@ -324,6 +324,8 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Modified "Simular Pagamento" button to "🧪 Teste Gerar Comprovante" with orange styling for visibility
   - Added visual warning message explaining API is in development and test button is temporary solution
   - Enhanced PIX payment button in chat interface with warning tooltip and pulsing indicator
+  - Removed service status restrictions from PIX payment button to always show during development
+  - PIX payment button now appears for all services with prices, regardless of application status
   - Temporary testing solution allows normal site workflow while PIX API development continues
   - Clear messaging informs users this is development mode functionality
 
