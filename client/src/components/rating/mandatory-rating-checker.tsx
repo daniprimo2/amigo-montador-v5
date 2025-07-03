@@ -23,7 +23,7 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
   const [showRatingDialog, setShowRatingDialog] = useState(false);
 
   const { data: mandatoryRatings, refetch } = useQuery<MandatoryRatingResponse>({
-    queryKey: ['/api/mandatory-ratings'],
+    queryKey: ['/api/services/pending-evaluations'],
     refetchInterval: 30000, // Check every 30 seconds
     refetchOnWindowFocus: true,
   });

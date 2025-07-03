@@ -1827,14 +1827,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      // Update service status to completed
-      await storage.updateServiceStatus(serviceId, 'completed');
+      // Update service status to awaiting evaluation
+      await storage.updateServiceStatus(serviceId, 'awaiting_evaluation');
 
       // Send transfer notification message
       await storage.createMessage({
         serviceId: serviceId,
         senderId: req.user.id,
-        content: `Pagamento transferido para o montador! Valor: R$ ${service.price}. Serviço concluído.`,
+        content: `Pagamento transferido para o montador! Valor: R$ ${service.price}. Agora é necessário que ambos avaliem o serviço para finalizá-lo.`,
         messageType: 'transfer_notification' as const
       });
 
@@ -1844,6 +1844,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Erro ao transferir pagamento:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rating API endpoints
+  // Submit rating for a service
+  app.post("/api/services/:serviceId/rate", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const serviceId = parseInt(req.params.serviceId);
+      const { rating, comment, emojiRating } = req.body;
+
+      if (!serviceId || !rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Dados inválidos" });
+      }
+
+      // Get service details
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Get user's store or assembler info to determine who they are rating
+      const userStore = await storage.getStoreByUserId(req.user.id);
+      const userAssembler = await storage.getAssemblerByUserId(req.user.id);
+
+      let toUserId: number;
+      let fromUserType: string;
+      let toUserType: string;
+
+      if (userStore && userStore.id === service.storeId) {
+        // User is the store owner, rating the assembler
+        // Find accepted application for this service
+        const acceptedApplication = await db.select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+
+        if (acceptedApplication.length === 0) {
+          return res.status(404).json({ message: "Nenhum montador aceito encontrado para este serviço" });
+        }
+
+        const serviceAssembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
+        if (!serviceAssembler) {
+          return res.status(404).json({ message: "Montador não encontrado" });
+        }
+        toUserId = serviceAssembler.userId;
+        fromUserType = 'lojista';
+        toUserType = 'montador';
+      } else if (userAssembler) {
+        // Check if user is the accepted assembler for this service
+        const acceptedApplication = await db.select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.assemblerId, userAssembler.id),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+
+        if (acceptedApplication.length === 0) {
+          return res.status(403).json({ message: "Você não tem permissão para avaliar este serviço" });
+        }
+
+        // User is the assembler, rating the store
+        const serviceStore = await storage.getStore(service.storeId);
+        if (!serviceStore) {
+          return res.status(404).json({ message: "Loja não encontrada" });
+        }
+        toUserId = serviceStore.userId;
+        fromUserType = 'montador';
+        toUserType = 'lojista';
+      } else {
+        return res.status(403).json({ message: "Você não tem permissão para avaliar este serviço" });
+      }
+
+      // Check if user has already rated this service
+      const existingRating = await storage.getRatingByServiceIdAndUser(serviceId, req.user.id, toUserId);
+      if (existingRating) {
+        return res.status(400).json({ message: "Você já avaliou este serviço" });
+      }
+
+      // Create the rating
+      const ratingData = {
+        serviceId: serviceId,
+        fromUserId: req.user.id,
+        toUserId: toUserId,
+        fromUserType: fromUserType,
+        toUserType: toUserType,
+        rating: rating,
+        comment: comment || null,
+        emojiRating: emojiRating || null
+      };
+
+      const newRating = await storage.createRating(ratingData);
+
+      // Check if both parties have now rated each other
+      const otherRating = await storage.getRatingByServiceIdAndUser(serviceId, toUserId, req.user.id);
+      
+      if (otherRating) {
+        // Both parties have rated each other, now we can mark the service as completed
+        await storage.updateServiceStatus(serviceId, 'completed');
+        
+        // Send notification message about completion
+        await storage.createMessage({
+          serviceId: serviceId,
+          senderId: req.user.id,
+          content: `Avaliação mútua concluída! O serviço foi finalizado com sucesso.`,
+          messageType: 'evaluation_completed' as const
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Avaliação enviada com sucesso",
+        rating: newRating,
+        serviceCompleted: !!otherRating
+      });
+
+    } catch (error) {
+      console.error('Erro ao enviar avaliação:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get ratings for a service
+  app.get("/api/services/:serviceId/ratings", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const serviceId = parseInt(req.params.serviceId);
+      if (!serviceId) {
+        return res.status(400).json({ message: "ID do serviço inválido" });
+      }
+
+      const ratings = await storage.getRatingsByServiceId(serviceId);
+      res.json(ratings);
+
+    } catch (error) {
+      console.error('Erro ao buscar avaliações:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get pending evaluations for current user
+  app.get("/api/services/pending-evaluations", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Get services that are awaiting evaluation where user is involved
+      let awaitingServices: Array<{id: number, title: string, storeId: number, status: string}> = [];
+      
+      if (req.user.userType === 'lojista') {
+        // Get store services awaiting evaluation
+        const userStore = await storage.getStoreByUserId(req.user.id);
+        if (!userStore) {
+          return res.json({ pendingRatings: [], hasPendingRatings: false });
+        }
+        
+        awaitingServices = await db.select({
+          id: services.id,
+          title: services.title,
+          storeId: services.storeId,
+          status: services.status
+        })
+        .from(services)
+        .where(
+          and(
+            eq(services.status, 'awaiting_evaluation'),
+            eq(services.storeId, userStore.id)
+          )
+        );
+      } else {
+        // Get assembler services awaiting evaluation via applications
+        const userAssembler = await storage.getAssemblerByUserId(req.user.id);
+        if (!userAssembler) {
+          return res.json({ pendingRatings: [], hasPendingRatings: false });
+        }
+        
+        const serviceResults = await db.select({
+          id: services.id,
+          title: services.title,
+          storeId: services.storeId,
+          status: services.status
+        })
+        .from(services)
+        .innerJoin(applications, and(
+          eq(applications.serviceId, services.id),
+          eq(applications.assemblerId, userAssembler.id),
+          eq(applications.status, 'accepted')
+        ))
+        .where(eq(services.status, 'awaiting_evaluation'));
+        
+        awaitingServices = serviceResults;
+      }
+
+      // Filter services where user hasn't rated yet
+      const pendingEvaluations = [];
+      
+      for (const service of awaitingServices) {
+        // Determine who the user should rate
+        let toUserId: number;
+        let otherUserType: string;
+        let otherUserName: string;
+
+        if (req.user.userType === 'lojista') {
+          // Store owner should rate the assembler
+          // Find the accepted application for this service
+          const acceptedApplication = await db.select()
+            .from(applications)
+            .where(
+              and(
+                eq(applications.serviceId, service.id),
+                eq(applications.status, 'accepted')
+              )
+            )
+            .limit(1);
+
+          if (acceptedApplication.length === 0) continue;
+
+          const assembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
+          if (!assembler) continue;
+          
+          const assemblerUser = await storage.getUser(assembler.userId);
+          if (!assemblerUser) continue;
+          
+          toUserId = assembler.userId;
+          otherUserType = 'montador';
+          otherUserName = assemblerUser.name;
+        } else {
+          // Assembler should rate the store
+          const store = await storage.getStore(service.storeId);
+          if (!store) continue;
+          
+          const storeUser = await storage.getUser(store.userId);
+          if (!storeUser) continue;
+          
+          toUserId = store.userId;
+          otherUserType = 'lojista';
+          otherUserName = storeUser.name;
+        }
+
+        // Check if user has already rated this service
+        const existingRating = await storage.getRatingByServiceIdAndUser(service.id, req.user.id, toUserId);
+        
+        if (!existingRating) {
+          pendingEvaluations.push({
+            serviceId: service.id,
+            serviceName: service.title,
+            otherUserName: otherUserName,
+            otherUserType: otherUserType
+          });
+        }
+      }
+
+      res.json({
+        pendingRatings: pendingEvaluations,
+        hasPendingRatings: pendingEvaluations.length > 0
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar avaliações pendentes:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });

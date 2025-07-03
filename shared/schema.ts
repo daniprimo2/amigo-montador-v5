@@ -6,6 +6,7 @@ import { z } from "zod";
 export const SERVICE_STATUS = {
   OPEN: 'open',
   IN_PROGRESS: 'in-progress', 
+  AWAITING_EVALUATION: 'awaiting_evaluation',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled'
 } as const;

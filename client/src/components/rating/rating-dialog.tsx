@@ -65,20 +65,36 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
 
   const onSubmit = async (data: RatingFormValues) => {
     try {
-      await apiRequest(`/api/services/${serviceId}/rate`, 'POST', {
-        rating: data.rating,
-        comment: data.comment,
-        emojiRating: data.emojiRating,
+      const response = await apiRequest({
+        method: 'POST',
+        url: `/api/services/${serviceId}/rate`,
+        data: {
+          rating: data.rating,
+          comment: data.comment,
+          emojiRating: data.emojiRating,
+        }
       });
 
+      const result = await response.json();
+
       // Mostrar toast de sucesso
-      toast({
-        title: 'Avaliação enviada com sucesso!',
-        description: `Você avaliou ${toUserName} pelo serviço ${serviceName}.`,
-      });
+      if (result.serviceCompleted) {
+        toast({
+          title: '🎉 Serviço finalizado!',
+          description: `Avaliação mútua concluída! O serviço foi finalizado com sucesso.`,
+        });
+      } else {
+        toast({
+          title: 'Avaliação enviada com sucesso!',
+          description: `Você avaliou ${toUserName}. Aguarde a avaliação da outra parte para finalizar o serviço.`,
+        });
+      }
 
       // Invalidar consultas relacionadas
       queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/ratings`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
       
       // Fechar o diálogo
       onOpenChange(false);
