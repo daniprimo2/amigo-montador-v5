@@ -102,19 +102,19 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
       // Formatar a data para o formato esperado pelo backend (DD/MM/YYYY)
       const formattedDate = date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "";
       
-      // Enviar a solicitação de contratação (que inclui aceitação da candidatura)
+      // Enviar a atualização do serviço
       const response = await apiRequest({
-        method: "POST",
-        url: `/api/services/${serviceId}/hire`,
+        method: "PATCH",
+        url: `/api/services/${serviceId}`,
         data: {
-          assemblerId: assemblerId,
           price: formattedPrice,
-          date: formattedDate
+          date: formattedDate,
+          status: "in-progress" // Alterar o status para "em andamento"
         },
       });
       
       if (!response.ok) {
-        throw new Error("Falha ao contratar o montador");
+        throw new Error("Falha ao atualizar o serviço");
       }
       
       return await response.json();
