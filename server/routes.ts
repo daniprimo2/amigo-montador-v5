@@ -481,6 +481,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para serviços ativos do montador (onde ele tem candidaturas)
+  app.get("/api/services/active", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      // Only assemblers can access this endpoint
+      if (user.userType !== 'montador') {
+        return res.status(403).json({ message: "Apenas montadores podem acessar serviços ativos" });
+      }
+
+      // Get assembler profile
+      const assembler = await storage.getAssemblerByUserId(user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Perfil de montador não encontrado" });
+      }
+
+      // Get all applications from this assembler
+      const allApplications = await db.select({
+        id: applications.id,
+        serviceId: applications.serviceId,
+        status: applications.status,
+        createdAt: applications.createdAt
+      })
+      .from(applications)
+      .where(eq(applications.assemblerId, assembler.id));
+
+      const activeServices = [];
+
+      // For each application, get the service details
+      for (const application of allApplications) {
+        const service = await storage.getServiceById(application.serviceId);
+        if (service) {
+          const store = await storage.getStore(service.storeId);
+          
+          activeServices.push({
+            ...service,
+            applicationStatus: application.status,
+            hasApplied: true,
+            applicationId: application.id,
+            store: store ? {
+              id: store.id,
+              name: store.name,
+              city: store.city,
+              state: store.state
+            } : null
+          });
+        }
+      }
+
+      res.json(activeServices);
+    } catch (error) {
+      console.error('Erro ao buscar serviços ativos:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Endpoint específico deve vir antes do genérico
   app.get("/api/services/available", async (req, res) => {
     try {
