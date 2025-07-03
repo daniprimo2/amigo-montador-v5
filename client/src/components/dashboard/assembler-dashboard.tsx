@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown, Clock, Circle, Timer, Loader, CheckCircle, FolderOpen, PlayCircle, Trophy, Wrench } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal, MessageSquare, Wifi, Star, CheckCheck, ChevronRight, User, ChevronDown, Clock, Circle, Timer, Loader, CheckCircle, FolderOpen, PlayCircle, Trophy, Wrench, BarChart3 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AvailableServiceCard from './available-service-card';
@@ -22,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { RankingSection } from '@/components/ranking/ranking-section';
+import { AnalyticsDashboard } from '@/components/analytics/analytics-dashboard';
 
 interface AssemblerDashboardProps {
   onLogout: () => void;
@@ -1572,6 +1573,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         return renderChatSection();
       case 'ranking':
         return renderRankingSection();
+      case 'analytics':
+        return <AnalyticsDashboard onBack={() => setDashboardSection('home')} />;
       default:
         return renderHomeSection();
     }

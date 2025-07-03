@@ -22,6 +22,7 @@ import { PendingEvaluationsModal } from './pending-evaluations-modal';
 import { RankingSection } from '@/components/ranking/ranking-section';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MandatoryRatingChecker } from '@/components/rating/mandatory-rating-checker';
+import { AnalyticsDashboard } from '@/components/analytics/analytics-dashboard';
 
 interface StoreDashboardProps {
   onLogout: () => void;
@@ -36,7 +37,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'open' | 'in-progress' | 'completed'>('open');
-  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'ranking'>('home');
+  const [dashboardSection, setDashboardSection] = useState<'home' | 'services' | 'chat' | 'ranking' | 'analytics'>('home');
   const [showPendingEvaluations, setShowPendingEvaluations] = useState(false);
   const { connected, lastMessage } = useWebSocket();
   
@@ -1489,6 +1490,8 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         return renderChatSection();
       case 'ranking':
         return renderRankingSection();
+      case 'analytics':
+        return <AnalyticsDashboard onBack={() => setDashboardSection('home')} />;
       default:
         return renderHomeSection();
     }

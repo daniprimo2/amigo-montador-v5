@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy, MessageCircle } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy, MessageCircle, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -22,7 +22,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { lastMessage } = useWebSocket();
   const queryClient = useQueryClient();
   // Define the tabs with a state to track which tab is active
-  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore' | 'ranking'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore' | 'ranking' | 'analytics'>('home');
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
@@ -96,7 +96,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
   
   // Function to handle tab changes and communicate with parent components
-  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'explore' | 'ranking') => {
+  const handleTabChange = (tab: 'home' | 'services' | 'chat' | 'explore' | 'ranking' | 'analytics') => {
     setActiveTab(tab);
     
     // Não navega para outra rota, apenas emite o evento para mudar a aba
@@ -166,7 +166,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-7 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -188,6 +188,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           >
             <List className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Serviços</span>
+          </button>
+          <button 
+            onClick={() => handleTabChange('analytics')}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'analytics' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
+          >
+            <BarChart3 className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Analytics</span>
           </button>
           <button 
             onClick={() => handleTabChange('ranking')}
@@ -214,7 +225,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       );
     } else {
       return (
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-7 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -236,6 +247,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           >
             <Map className="h-5 w-5 mb-1" />
             <span className="text-xs font-medium">Explorar</span>
+          </button>
+          <button 
+            onClick={() => handleTabChange('analytics')}
+            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+              activeTab === 'analytics' 
+                ? 'text-primary bg-primary/10 scale-105' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+            }`}
+          >
+            <BarChart3 className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium">Analytics</span>
           </button>
           <button 
             onClick={() => handleTabChange('ranking')}
