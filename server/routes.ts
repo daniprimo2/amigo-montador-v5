@@ -2237,9 +2237,23 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         // Both parties have rated each other, now we can mark the service as completed
         await storage.updateServiceStatus(serviceId, 'completed');
         
+        // Get the assembler ID for proper conversation routing
+        const acceptedApplication = await db.select()
+          .from(applications)
+          .where(
+            and(
+              eq(applications.serviceId, serviceId),
+              eq(applications.status, 'accepted')
+            )
+          )
+          .limit(1);
+        
+        const assemblerId = acceptedApplication.length > 0 ? acceptedApplication[0].assemblerId : null;
+        
         // Send notification message about completion
         await storage.createMessage({
           serviceId: serviceId,
+          assemblerId: assemblerId,
           senderId: req.user.id,
           content: `Avaliação mútua concluída! O serviço foi finalizado com sucesso.`,
           messageType: 'evaluation_completed' as const

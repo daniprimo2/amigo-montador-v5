@@ -344,6 +344,11 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Implemented automatic service finalization when both parties complete mutual evaluation
   - Enhanced MandatoryRatingDialog with completion status feedback and better UX messaging
   - System now provides seamless workflow: transfer → immediate evaluation prompts → automatic completion
+- January 3, 2025. Verified and enhanced mutual evaluation completion system
+  - Confirmed service completion only occurs after both parties (store owner and assembler) complete their evaluations
+  - Service status progression: open → in-progress → awaiting_evaluation → completed (only after mutual ratings)
+  - Fixed completion message to include proper assemblerId for correct conversation routing
+  - System properly prevents premature service finalization through single completion pathway with mutual evaluation check
 
 ## User Preferences
 
