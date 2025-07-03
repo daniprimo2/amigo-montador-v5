@@ -1538,5 +1538,315 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PIX Payment endpoints
+  // Generate PIX authentication token
+  app.post("/api/payment/pix/token", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      // Generate a secure token for PIX authentication
+      const token = crypto.randomBytes(32).toString('hex');
+      
+      res.json({
+        success: true,
+        token
+      });
+    } catch (error) {
+      console.error('Erro ao gerar token PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Create PIX payment
+  app.post("/api/payment/pix/create", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, amount, description, token } = req.body;
+      
+      // Validate required fields
+      if (!serviceId || !amount || !token) {
+        return res.status(400).json({ message: "Dados incompletos" });
+      }
+
+      // Verify service exists and user has access
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Generate PIX payment data
+      const paymentId = crypto.randomBytes(16).toString('hex');
+      const reference = `AMG-${Date.now()}-${serviceId}`;
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+      
+      // Mock PIX code for demonstration
+      const pixCode = `00020126580014br.gov.bcb.pix0136${paymentId}520400005303986540${amount}5802BR5925AMIGO MONTADOR LTDA6009SAO PAULO62070503***63044B2A`;
+      
+      // Generate QR code as data URL (mock)
+      const qrCodeData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`;
+
+      res.json({
+        success: true,
+        pixCode,
+        qrCode: qrCodeData,
+        reference,
+        amount: parseFloat(amount),
+        expiresAt: expiresAt.toISOString(),
+        paymentId
+      });
+    } catch (error) {
+      console.error('Erro ao criar pagamento PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Check PIX payment status
+  app.post("/api/payment/pix/status", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { paymentId, token } = req.body;
+      
+      if (!paymentId || !token) {
+        return res.status(400).json({ message: "Dados incompletos" });
+      }
+
+      // In a real implementation, this would check with the payment provider
+      // For now, we simulate that payments are not completed automatically
+      res.json({
+        success: true,
+        isCompleted: false,
+        paymentData: null
+      });
+    } catch (error) {
+      console.error('Erro ao verificar status PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Simulate PIX payment confirmation for testing
+  app.post("/api/payment/pix/simulate-confirm", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId } = req.body;
+      
+      if (!serviceId) {
+        return res.status(400).json({ message: "ID do serviço é obrigatório" });
+      }
+
+      // Get service details
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Update service status to "Em Andamento" when payment is confirmed
+      await storage.updateServiceStatus(serviceId, 'in-progress');
+
+      // Get user info for payment proof
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Generate automatic payment proof message
+      const timestamp = new Date().toLocaleString('pt-BR');
+      const proofData = {
+        serviceId: serviceId,
+        amount: service.price,
+        reference: `AMG-${Date.now()}-${serviceId}`,
+        payerName: user.name,
+        timestamp
+      };
+
+      // Generate payment proof image
+      const proofImage = generatePaymentProofImage(proofData);
+
+      // Send automatic payment proof message to chat
+      await storage.createMessage({
+        serviceId: serviceId,
+        senderId: req.user.id,
+        content: `Pagamento PIX confirmado automaticamente! Valor: R$ ${service.price}`,
+        messageType: 'payment_proof'
+      });
+
+      res.json({
+        success: true,
+        message: "Pagamento confirmado e serviço atualizado para Em Andamento"
+      });
+    } catch (error) {
+      console.error('Erro ao simular confirmação PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Confirm PIX payment with proof
+  app.post("/api/payment/pix/confirm", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, paymentProof, paymentReference, isAutomatic } = req.body;
+      
+      if (!serviceId || !paymentProof) {
+        return res.status(400).json({ message: "Dados incompletos" });
+      }
+
+      // Get service details
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Update service status to "Em Andamento" when payment proof is submitted
+      await storage.updateServiceStatus(serviceId, 'in-progress');
+
+      // Get user info for payment proof
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      let messageContent = paymentProof;
+      let proofImage = null;
+
+      // If it's an automatic payment, generate a visual proof
+      if (isAutomatic) {
+        const timestamp = new Date().toLocaleString('pt-BR');
+        const proofData = {
+          serviceId: serviceId,
+          amount: service.price,
+          reference: paymentReference || `AMG-${Date.now()}-${serviceId}`,
+          payerName: user.name,
+          timestamp
+        };
+
+        proofImage = generatePaymentProofImage(proofData);
+        messageContent = `Pagamento PIX confirmado automaticamente! Valor: R$ ${service.price}`;
+      }
+
+      // Send payment proof message to chat
+      const messageData = {
+        serviceId: serviceId,
+        senderId: req.user.id,
+        content: messageContent,
+        messageType: 'payment_proof' as const
+      };
+
+      await storage.createMessage(messageData);
+
+      res.json({
+        success: true,
+        message: "Comprovante enviado e serviço atualizado para Em Andamento"
+      });
+    } catch (error) {
+      console.error('Erro ao confirmar pagamento PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Test payment proof button - enables after payment proof is uploaded
+  app.post("/api/payment/pix/test-proof", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId } = req.body;
+      
+      if (!serviceId) {
+        return res.status(400).json({ message: "ID do serviço é obrigatório" });
+      }
+
+      // Get service details
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Check if service has payment proof (look for payment_proof messages)
+      const messages = await storage.getMessagesByServiceId(serviceId);
+      const hasPaymentProof = messages.some(msg => msg.messageType === 'payment_proof');
+
+      if (!hasPaymentProof) {
+        return res.status(400).json({ message: "Nenhum comprovante de pagamento encontrado" });
+      }
+
+      // Simulate payment proof validation
+      // In a real implementation, this would validate the payment with the bank/payment provider
+      
+      res.json({
+        success: true,
+        message: "Comprovante validado com sucesso. Botão de repasse habilitado.",
+        canTransfer: true
+      });
+    } catch (error) {
+      console.error('Erro ao testar comprovante PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Transfer payment to assembler
+  app.post("/api/payment/pix/transfer", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId } = req.body;
+      
+      if (!serviceId) {
+        return res.status(400).json({ message: "ID do serviço é obrigatório" });
+      }
+
+      // Get service details
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Check if user is the store owner
+      if (req.user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem fazer repasses" });
+      }
+
+      // Get store info
+      const store = await storage.getStoreByUserId(req.user.id);
+      if (!store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Update service status to completed
+      await storage.updateServiceStatus(serviceId, 'completed');
+
+      // Send transfer notification message
+      await storage.createMessage({
+        serviceId: serviceId,
+        senderId: req.user.id,
+        content: `Pagamento transferido para o montador! Valor: R$ ${service.price}. Serviço concluído.`,
+        messageType: 'transfer_notification' as const
+      });
+
+      res.json({
+        success: true,
+        message: "Pagamento transferido com sucesso e serviço concluído"
+      });
+    } catch (error) {
+      console.error('Erro ao transferir pagamento:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }
