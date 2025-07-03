@@ -261,6 +261,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - System now automatically updates service status workflow: open → in-progress → completed
   - Payment proof validation enables assembler transfer button for store owners
   - Real-time chat integration with payment notifications and visual proof sharing
+- January 3, 2025. Enhanced button functionality for payment workflow completion
+  - "Contratar Montador" button dynamically changes to "Repassar para Montador" after payment proof
+  - Visual differentiation: green for hiring, purple for payment transfer
+  - Conditional logic detects payment_proof messages in chat to trigger button transformation
+  - Integrated transfer endpoint automatically completes service and notifies assembler
+  - Seamless workflow: hire → pay → proof → transfer → complete
 
 ## User Preferences
 
