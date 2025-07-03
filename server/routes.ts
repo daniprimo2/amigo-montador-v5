@@ -1719,11 +1719,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate payment proof image
       const proofImage = generatePaymentProofImage(proofData);
 
+      // Get the assembler for this service to include in the message
+      let assemblerId: number | undefined;
+      
+      // If there's an accepted application, get the assembler ID
+      const applications = await storage.getApplicationsByServiceId(serviceId);
+      const acceptedApplication = applications.find(app => app.status === 'accepted');
+      if (acceptedApplication) {
+        assemblerId = acceptedApplication.assemblerId;
+      }
+      
+      // Create a detailed payment proof message with visual content
+      const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
+
+💰 Valor Pago: R$ ${service.price}
+📅 Data: ${timestamp}
+📋 Referência: ${proofData.reference}
+👤 Pagador: ${user.name}
+🏪 Serviço: ${service.title}
+
+✅ Status: PAGAMENTO CONFIRMADO
+✅ Serviço atualizado para "Em Andamento"
+
+Este é um comprovante automático gerado pelo sistema de teste PIX.`;
+
       // Send automatic payment proof message to chat
       await storage.createMessage({
         serviceId: serviceId,
         senderId: req.user.id,
-        content: `Pagamento PIX confirmado automaticamente! Valor: R$ ${service.price}`,
+        assemblerId: assemblerId,
+        content: proofContent,
         messageType: 'payment_proof'
       });
 

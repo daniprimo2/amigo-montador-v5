@@ -328,6 +328,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - PIX payment button now appears for all services with prices, regardless of application status
   - Temporary testing solution allows normal site workflow while PIX API development continues
   - Clear messaging informs users this is development mode functionality
+- January 3, 2025. Enhanced automatic payment proof display in chat
+  - Implemented automatic payment proof generation when "Teste Gerar Comprovante" button is clicked
+  - Created detailed payment proof message with transaction details and timestamps
+  - Added special visual styling for payment proof messages with green background and credit card icon
+  - Payment proof messages now include assembler ID for proper conversation routing
+  - Enhanced message content with formatted payment details and reference numbers
+  - Service status automatically updates to "Em Andamento" when payment proof is generated
+  - Clear visual distinction between regular messages and payment confirmation messages
 
 ## User Preferences
 

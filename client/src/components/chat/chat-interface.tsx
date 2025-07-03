@@ -733,31 +733,22 @@ toast({
                     </div>
                     {/* Renderizar conteúdo baseado no tipo de mensagem */}
                     {msg.messageType === 'payment_proof' ? (
-                      <div className="space-y-2">
-                        <div className="text-sm">Comprovante de pagamento PIX:</div>
-                        <div className="border rounded-lg overflow-hidden">
-                          <img 
-                            src={msg.content} 
-                            alt="Comprovante de pagamento PIX"
-                            className="max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => {
-                              // Abrir imagem em uma nova aba para visualização completa
-                              window.open(msg.content, '_blank');
-                            }}
-                            onError={(e) => {
-                              // Fallback se a imagem não carregar
-                              e.currentTarget.style.display = 'none';
-                              const parentElement = e.currentTarget.parentElement;
-                              if (parentElement) {
-                                parentElement.innerHTML = `
-                                  <div class="p-4 text-center text-gray-500">
-                                    <p>Comprovante de pagamento PIX</p>
-                                    <p class="text-xs mt-1">Clique para visualizar: <a href="${msg.content}" target="_blank" class="text-blue-500 hover:underline">Abrir comprovante</a></p>
-                                  </div>
-                                `;
-                              }
-                            }}
-                          />
+                      <div className={`space-y-3 p-4 rounded-lg border-2 ${
+                        isCurrentUser 
+                          ? 'bg-green-500 border-green-300 text-white' 
+                          : 'bg-green-50 border-green-300 text-green-800'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-5 w-5" />
+                          <span className="font-bold text-lg">COMPROVANTE PIX</span>
+                        </div>
+                        <div className="bg-white/20 rounded p-3">
+                          <div className="break-words whitespace-pre-wrap text-sm font-mono">
+                            {msg.content}
+                          </div>
+                        </div>
+                        <div className={`text-xs font-medium ${isCurrentUser ? 'text-green-100' : 'text-green-700'}`}>
+                          ✅ Pagamento confirmado automaticamente pelo sistema
                         </div>
                       </div>
                     ) : (
