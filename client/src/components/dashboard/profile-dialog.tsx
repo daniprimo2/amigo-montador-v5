@@ -235,8 +235,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
           phone: data.store.phone || '',
         });
         
-        // Verificar se existe logo da loja
-        if (data.store.logoUrl) {
+        // Verificar se existe logo da loja e se é válido
+        if (data.store.logoUrl && data.store.logoUrl.length > 30) {
+          // Verificar se é um data URL válido (tem pelo menos o prefixo + algum conteúdo)
           setLogoUrl(data.store.logoUrl);
         } else {
           setLogoUrl(null);

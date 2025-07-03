@@ -143,17 +143,53 @@ export function setupAuth(app: Express) {
         // Converter logo para base64
         let logoBuffer: Buffer;
         
+        console.log('Processando logo da loja:', {
+          nome: logoFile.name,
+          tipo: logoFile.mimetype,
+          tamanho: logoFile.size,
+          temTempFile: !!logoFile.tempFilePath,
+          tempFileExists: logoFile.tempFilePath ? fs.existsSync(logoFile.tempFilePath) : false,
+          temData: !!logoFile.data,
+          tamanhoData: logoFile.data ? logoFile.data.length : 0
+        });
+        
         // Como useTempFiles está ativado, precisamos ler do arquivo temporário
         if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
           logoBuffer = fs.readFileSync(logoFile.tempFilePath);
+          console.log('Logo lido do arquivo temporário, tamanho do buffer:', logoBuffer.length);
         } else if (logoFile.data && logoFile.data.length > 0) {
           // Fallback para dados em memória
           logoBuffer = logoFile.data;
+          console.log('Logo lido da memória, tamanho do buffer:', logoBuffer.length);
         } else {
+          console.error('Erro: Dados do logo não foram recebidos corretamente');
+          console.log('Detalhes do erro:', {
+            tempFilePath: logoFile.tempFilePath,
+            tempFileExists: logoFile.tempFilePath ? fs.existsSync(logoFile.tempFilePath) : false,
+            hasData: !!logoFile.data,
+            dataLength: logoFile.data ? logoFile.data.length : 0
+          });
           return res.status(400).json({ message: "Dados do logo não foram recebidos corretamente" });
         }
         
+        // Verificar se o buffer não está vazio
+        if (!logoBuffer || logoBuffer.length === 0) {
+          console.error('Erro: Buffer do logo está vazio');
+          return res.status(400).json({ message: "Dados do logo estão corrompidos" });
+        }
+        
         logoData = `data:${logoFile.mimetype};base64,${logoBuffer.toString('base64')}`;
+        console.log('Logo convertido para base64, tamanho final:', logoData.length, 'caracteres');
+        
+        // Limpar arquivo temporário se existir
+        if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
+          try {
+            fs.unlinkSync(logoFile.tempFilePath);
+            console.log('Arquivo temporário do logo removido:', logoFile.tempFilePath);
+          } catch (cleanupError) {
+            console.warn('Erro ao remover arquivo temporário do logo:', cleanupError);
+          }
+        }
       }
 
       // Separar dados baseados no tipo de usuário
