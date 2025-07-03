@@ -228,6 +228,16 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Integrated device vibration support for mobile users when notifications appear
   - Implemented automatic notification reset when users open and view conversations
   - System now provides clear visual feedback and automatically clears notifications when messages are viewed
+- January 3, 2025. Fixed critical service listing issue for assemblers
+  - Resolved authentication problems preventing service access for assembler users
+  - Fixed API route conflicts where /api/services/:serviceId was intercepting /api/services/available requests
+  - Corrected database query issues in getServicesByStoreId method using proper Drizzle ORM syntax
+  - Updated password hash for Lucas Rodrigues Montador user to enable proper login functionality
+  - Fixed schema inconsistencies in passwordResetTokens table (used vs usedAt field)
+  - Corrected geographical coordinates for Service ID 3 from center of Brazil to proper Carapicuíba location
+  - Verified distance calculation system working correctly (both services at 0km from assembler location)
+  - Services now properly categorized: pending applications appear in "Aguardando Lojista" tab, available services in "Serviços Disponíveis"
+  - System successfully displays all relevant services within 20km radius for assembler users
 
 ## User Preferences
 
