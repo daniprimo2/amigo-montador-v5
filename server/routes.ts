@@ -512,6 +512,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para buscar detalhes de um serviço específico
+  app.get("/api/services/:serviceId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const serviceId = parseInt(req.params.serviceId);
+
+      // Buscar o serviço
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Buscar todas as candidaturas para este serviço
+      const applications = await storage.getApplicationsByServiceId(serviceId);
+      
+      // Para lojistas, incluir informações das candidaturas
+      if (user.userType === 'lojista') {
+        // Verificar se o usuário é dono do serviço
+        const store = await storage.getStoreByUserId(user.id);
+        if (!store || service.storeId !== store.id) {
+          return res.status(403).json({ message: "Acesso negado a este serviço" });
+        }
+
+        // Verificar se há candidatura aceita
+        const acceptedApplication = applications.find(app => app.status === 'accepted');
+        const hasAcceptedApplication = !!acceptedApplication;
+
+        res.json({
+          ...service,
+          hasAcceptedApplication,
+          acceptedApplicationId: acceptedApplication?.id || null,
+          totalApplications: applications.length,
+          pendingApplications: applications.filter(app => app.status === 'pending').length
+        });
+      } else if (user.userType === 'montador') {
+        // Para montadores, verificar se têm candidatura neste serviço
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        if (!assembler) {
+          return res.status(404).json({ message: "Dados do montador não encontrados" });
+        }
+
+        const userApplication = applications.find(app => app.assemblerId === assembler.id);
+        
+        res.json({
+          ...service,
+          hasApplied: !!userApplication,
+          applicationStatus: userApplication?.status || null,
+          applicationId: userApplication?.id || null
+        });
+      } else {
+        res.json(service);
+      }
+
+    } catch (error) {
+      console.error('Erro ao buscar serviço:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Criar novo serviço
   app.post("/api/services", async (req, res) => {
     try {

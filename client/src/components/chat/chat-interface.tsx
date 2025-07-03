@@ -574,17 +574,19 @@ toast({
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
           <div className="flex gap-2">
-            {/* Botão de Pagamento PIX - aparece quando o serviço está contratado */}
-            {service && (service.status === 'accepted' || service.status === 'in-progress' || service.status === 'hired') && service.price && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200"
-                onClick={() => setIsPixPaymentDialogOpen(true)}
-              >
-                <CreditCard className="h-4 w-4" />
-                Pagar via PIX
-              </Button>
+            {/* Botão de Pagamento PIX - aparece quando há montador aceito ou serviço em andamento */}
+            {service && service.price && (
+              (service.hasAcceptedApplication || service.status === 'in-progress') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200"
+                  onClick={() => setIsPixPaymentDialogOpen(true)}
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Pagar via PIX
+                </Button>
+              )
             )}
             
             {/* Botão de Contratar Montador - aparece apenas quando serviço não está contratado */}
