@@ -772,7 +772,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get services within 20km radius with distance calculation
+      console.log(`Buscando serviços para montador ${assembler.id} (CEP: ${assembler.cep})`);
       const servicesWithDistance = await storage.getAvailableServicesForAssemblerWithDistance(assembler);
+      console.log(`Encontrados ${servicesWithDistance.length} serviços dentro do raio de 20km`);
       
       // Get store information and applications for each service
       const servicesWithStoreInfo = await Promise.all(

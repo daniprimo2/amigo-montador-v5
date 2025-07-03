@@ -160,14 +160,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
     const allServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    console.log(`Total de serviços abertos encontrados: ${allServices.length}`);
     
     // Get assembler coordinates from CEP
     let assemblerLat: number;
     let assemblerLng: number;
     
     try {
-      const { geocodeFromCEP } = require('./geocoding.js');
-      const coords = await geocodeFromCEP(assembler.cep || '');
+      const geocoding = await import('./geocoding.js');
+      const coords = await geocoding.geocodeFromCEP(assembler.cep || '');
       assemblerLat = parseFloat(coords.latitude);
       assemblerLng = parseFloat(coords.longitude);
     } catch (error) {
@@ -186,8 +187,9 @@ export class DatabaseStorage implements IStorage {
       
       let distance = 0;
       try {
-        const { calculateDistance } = require('./geocoding.js');
-        distance = calculateDistance(assemblerLat, assemblerLng, serviceLat, serviceLng);
+        const geocoding = await import('./geocoding.js');
+        distance = geocoding.calculateDistance(assemblerLat, assemblerLng, serviceLat, serviceLng);
+        console.log(`Serviço ID ${service.id}: Distância calculada = ${distance.toFixed(2)}km`);
       } catch (error) {
         console.log('Erro ao calcular distância:', error);
         distance = 999; // Set high distance if calculation fails
@@ -195,10 +197,13 @@ export class DatabaseStorage implements IStorage {
       
       // Only include services within 20km radius
       if (distance <= 20) {
+        console.log(`Serviço ID ${service.id}: INCLUÍDO (distância: ${distance.toFixed(2)}km <= 20km)`);
         servicesWithDistance.push({
           ...service,
           distance: Math.round(distance * 100) / 100 // Round to 2 decimal places
         });
+      } else {
+        console.log(`Serviço ID ${service.id}: EXCLUÍDO (distância: ${distance.toFixed(2)}km > 20km)`);
       }
     }
     
