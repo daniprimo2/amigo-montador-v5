@@ -173,31 +173,36 @@ export class DatabaseStorage implements IStorage {
     
     const assemblerServiceIds = new Set(assemblerApplications.map(app => app.serviceId));
     
-    // Get services that have applications from OTHER assemblers (not this one)
-    const otherApplications = await db.select({ serviceId: applications.serviceId })
+    // Get services where this assembler has been accepted (is the chosen assembler)
+    const acceptedApplications = await db.select({ serviceId: applications.serviceId })
       .from(applications)
       .where(and(
-        inArray(applications.status, ['pending', 'accepted']),
-        not(eq(applications.assemblerId, assembler.id))
-      ))
-      .groupBy(applications.serviceId);
+        eq(applications.assemblerId, assembler.id),
+        eq(applications.status, 'accepted')
+      ));
     
-    const serviceIdsWithOtherApplications = new Set(otherApplications.map(row => row.serviceId));
+    const acceptedServiceIds = new Set(acceptedApplications.map(app => app.serviceId));
     
     // Include services where:
-    // 1. The assembler has applied/been accepted (his own services)
-    // 2. Open services without applications from others  
-    // 3. Completed/awaiting_evaluation services where he participated
+    // 1. Service is "open" - visible to ALL assemblers
+    // 2. Service is "in-progress", "completed", or "awaiting_evaluation" - only visible to the ACCEPTED assembler
     const availableServices = allServices.filter(service => {
-      const hasAssemblerApplication = assemblerServiceIds.has(service.id);
-      const hasOtherApplications = serviceIdsWithOtherApplications.has(service.id);
-      const isCompleted = ['completed', 'awaiting_evaluation', 'in-progress'].includes(service.status);
+      if (service.status === 'open') {
+        // All open services are visible to all assemblers
+        return true;
+      }
       
-      return hasAssemblerApplication || (!hasOtherApplications && service.status === 'open') || (isCompleted && hasAssemblerApplication);
+      if (['in-progress', 'completed', 'awaiting_evaluation'].includes(service.status)) {
+        // Only show to the assembler who was accepted for this service
+        return acceptedServiceIds.has(service.id);
+      }
+      
+      return false;
     });
     
     console.log(`Total de serviços encontrados: ${allServices.length}`);
-    console.log(`Serviços com candidaturas de outros montadores: ${serviceIdsWithOtherApplications.size}`);
+    console.log(`Serviços abertos (visíveis a todos): ${allServices.filter(s => s.status === 'open').length}`);
+    console.log(`Serviços onde montador foi aceito: ${acceptedServiceIds.size}`);
     console.log(`Serviços disponíveis para este montador: ${availableServices.length}`);
     
     // Get assembler coordinates from CEP
