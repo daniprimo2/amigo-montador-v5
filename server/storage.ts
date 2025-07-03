@@ -168,8 +168,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
-    const result = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
-    return result;
+    // Get all open services
+    const openServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    
+    // Get services where this assembler has already applied
+    const assemblerApplications = await db.select({ serviceId: applications.serviceId })
+      .from(applications)
+      .where(eq(applications.assemblerId, assembler.id));
+    
+    const appliedServiceIds = new Set(assemblerApplications.map(app => app.serviceId));
+    
+    // Return only services where the assembler hasn't applied yet
+    return openServices.filter(service => !appliedServiceIds.has(service.id));
   }
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {

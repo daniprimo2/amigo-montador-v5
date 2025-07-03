@@ -702,8 +702,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   // CLEAR STATUS SEPARATION - Each service appears in only ONE category
   // Available services: from rawServices (not applied yet)
+  // Additional filter to prevent showing services where user has already applied
   const availableServices = (rawServices || [])
-    .filter((service: any) => !appliedServices.has(service.id))
+    .filter((service: any) => {
+      // Check local applied services
+      if (appliedServices.has(service.id)) return false;
+      
+      // Check if service exists in activeServices (where user already applied)
+      const alreadyApplied = (activeServices || []).some((activeService: any) => 
+        activeService.id === service.id
+      );
+      
+      return !alreadyApplied;
+    })
     .map(service => formatServiceForDisplay(service));
   
   // Pending services: from activeServices where user applied but waiting
