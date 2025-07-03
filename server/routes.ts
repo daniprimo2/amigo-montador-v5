@@ -853,6 +853,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para marcar mensagens como lidas
+  app.post("/api/services/:serviceId/messages/mark-read", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const serviceId = parseInt(req.params.serviceId);
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Marcar mensagens como lidas
+      await storage.markMessagesAsRead(serviceId, user.id);
+
+      res.json({ 
+        success: true,
+        message: "Mensagens marcadas como lidas" 
+      });
+
+    } catch (error) {
+      console.error('Erro ao marcar mensagens como lidas:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Rota para enviar mensagem
   app.post("/api/services/:serviceId/messages", async (req, res) => {
     try {

@@ -225,6 +225,44 @@ throw new Error('Erro ao buscar mensagens');
   // Recuperar detalhes do serviço (para o título e status)
   const { data: service } = serviceQuery;
 
+  // Mutation para marcar mensagens como lidas
+  const markMessagesAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/services/${serviceId}/messages/mark-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao marcar mensagens como lidas');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Invalidar a query de contagem de mensagens não lidas
+      queryClient.invalidateQueries({ queryKey: ['/api/messages/unread-count'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao marcar mensagens como lidas:', error);
+    }
+  });
+
+  // Marcar mensagens como lidas quando o chat carrega
+  useEffect(() => {
+    if (!isLoading && messages && messages.length > 0 && user) {
+      // Verificar se há mensagens não lidas (enviadas por outros usuários)
+      const hasUnreadMessages = messages.some(msg => msg.senderId !== user.id);
+      
+      if (hasUnreadMessages) {
+        markMessagesAsReadMutation.mutate();
+      }
+    }
+  }, [isLoading, messages, user, serviceId]);
+
   // Buscar perfil do parceiro de conversa baseado nas mensagens
   useEffect(() => {
     const fetchChatPartnerProfile = async () => {
