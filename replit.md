@@ -276,6 +276,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Only after mutual evaluation completion does service status change to "completed"
   - Enhanced rating dialog with immediate feedback on mutual completion status
   - Seamless workflow: transfer → immediate evaluation prompts → both evaluate → service completed
+- January 3, 2025. Restored calendar functionality to PIX payment system
+  - Added date selection calendar to PIX payment dialog with visual date picker
+  - Implemented mandatory date selection before PIX generation
+  - Date information included in payment data and displayed in PIX details
+  - Calendar uses Brazilian Portuguese locale with intuitive interface
+  - Payment workflow now includes: select date → generate PIX → process payment
 
 ## User Preferences
 
