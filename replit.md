@@ -295,6 +295,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - System now displays services where assembler has applied, been accepted, or completed work
   - Corrected geographical coordinates for all services to ensure proper distance calculations
   - Enhanced service discovery to include historical and current work for assemblers
+- January 3, 2025. Implemented proper service visibility based on status
+  - Services with status "Disponível" (open) are now visible to ALL assemblers
+  - Services with status "Em Andamento" (in-progress) are now visible only to the selected assembler
+  - Services with status "Aguardando Avaliação" and "Concluído" remain visible only to the accepted assembler
+  - Updated getAvailableServicesForAssemblerWithDistance method to properly filter services by status
+  - Enhanced logging to track service visibility: open services visible to all, accepted services visible to assigned assembler
+  - System correctly implements service lifecycle visibility rules for assemblers
 
 ## User Preferences
 
