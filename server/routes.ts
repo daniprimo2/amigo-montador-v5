@@ -1120,7 +1120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...service,
                 assemblerId: assembler.id,
                 assemblerName: assemblerUser?.name || 'Montador',
-                assemblerPhoto: assemblerUser?.profilePhoto || null,
+                assemblerPhoto: assemblerUser?.profilePhotoData || null,
                 applicationId: application.id,
                 applicationStatus: application.status
               });

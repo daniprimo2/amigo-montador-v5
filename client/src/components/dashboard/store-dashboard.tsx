@@ -1127,13 +1127,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         if (service.pendingApplications && service.pendingApplications.length > 0) {
           // Para cada candidatura pendente, criar um item separado
           service.pendingApplications.forEach((app: any) => {
-            if (app.assembler) {
+            if (app.assembler && typeof app.assembler === 'object') {
               result.push({
                 id: service.id,
                 title: service.title,
                 status: 'pending_application',
-                assemblerName: app.assembler.name,
-                assemblerId: app.assembler.id,
+                assemblerName: app.assembler.name || 'Montador',
+                assemblerId: app.assembler.id || null,
                 applicationId: app.id,
                 hasNewMessages: false,
                 hasNewApplications: true,
