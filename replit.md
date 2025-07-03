@@ -311,6 +311,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Migrated existing messages to include proper assemblerId based on application records
   - Each conversation is now completely separate: Store Owner ↔ Assembler A, Store Owner ↔ Assembler B
   - System now properly isolates chat conversations preventing message sharing between different assemblers
+- January 3, 2025. Enhanced store owner chat visibility to show all conversations for their services
+  - Updated API endpoint to return ALL individual conversations between store owner and each assembler
+  - Modified store dashboard to display separate conversation entries for each assembler interaction
+  - Implemented unique conversation IDs to prevent duplicate conversation merging
+  - Enhanced UI to clearly show "Conversa com: [Assembler Name]" and message count for each conversation
+  - Store owners now see complete conversation history regardless of service status or assembler count
+  - System ensures no conversation is hidden: pending, active, and completed chats all visible
+  - Each service can now display multiple conversation entries if multiple assemblers have interacted
 
 ## User Preferences
 

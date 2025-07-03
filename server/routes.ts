@@ -1236,35 +1236,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar todos os serviços da loja
       const storeServices = await storage.getServicesByStoreId(store.id);
       
-      // Para cada serviço, verificar se tem mensagens
+      // Para cada serviço, buscar TODAS as conversas individuais com montadores
       const servicesWithMessages = [];
       
       for (const service of storeServices) {
-        const messages = await storage.getMessagesByServiceId(service.id);
-        if (messages.length > 0) {
-          // Buscar aplicações do serviço para obter informações do montador
-          const applications = await storage.getApplicationsByServiceId(service.id);
+        // Buscar todas as aplicações do serviço para identificar os montadores que interagiram
+        const applications = await storage.getApplicationsByServiceId(service.id);
+        
+        for (const application of applications) {
+          // Para cada montador, verificar se há mensagens específicas dessa conversa
+          const messages = await storage.getMessagesByServiceAndAssembler(service.id, application.assemblerId);
           
-          let assemblerInfo = null;
-          if (applications.length > 0) {
-            const assembler = await storage.getAssemblerById(applications[0].assemblerId);
+          if (messages.length > 0) {
+            // Buscar informações do montador
+            const assembler = await storage.getAssemblerById(application.assemblerId);
+            let assemblerInfo = null;
+            
             if (assembler) {
               const assemblerUser = await storage.getUser(assembler.userId);
               assemblerInfo = {
                 id: assembler.id,
                 name: assemblerUser?.name || 'Montador',
-                userId: assembler.userId
+                userId: assembler.userId,
+                applicationStatus: application.status
               };
             }
+            
+            servicesWithMessages.push({
+              ...service,
+              lastMessageAt: messages[messages.length - 1]?.sentAt,
+              assembler: assemblerInfo,
+              assemblerId: application.assemblerId, // ID específico do montador para esta conversa
+              conversationId: `${service.id}-${application.assemblerId}`, // ID único da conversa
+              messageCount: messages.length
+            });
           }
-          
-          servicesWithMessages.push({
-            ...service,
-            lastMessageAt: messages[messages.length - 1]?.sentAt,
-            assembler: assemblerInfo
-          });
         }
       }
+
+      // Ordenar por última mensagem (mais recente primeiro)
+      servicesWithMessages.sort((a, b) => {
+        const dateA = new Date(a.lastMessageAt || 0);
+        const dateB = new Date(b.lastMessageAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
 
       res.json(servicesWithMessages);
 

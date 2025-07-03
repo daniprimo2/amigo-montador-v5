@@ -1102,37 +1102,45 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   // IMPORTANTE: Combinar TODOS os serviços com mensagens para garantir que nenhuma conversa desapareça
   const servicesWithChat = React.useMemo(() => {
     const result: Array<any> = [];
-    const addedServiceIds = new Set(); // Para evitar duplicatas
+    const addedConversationIds = new Set(); // Para evitar duplicatas baseado em conversationId único
     
-    // 1. PRIORIDADE MÁXIMA: Adicionar TODOS os serviços que possuem mensagens
+    // 1. PRIORIDADE MÁXIMA: Adicionar TODAS as conversas individuais que possuem mensagens
     if (servicesWithMessages && servicesWithMessages.length > 0) {
       servicesWithMessages.forEach((service: any) => {
-        addedServiceIds.add(service.id);
+        const conversationId = service.conversationId || `${service.id}-${service.assemblerId}`;
         
-        const chatType = service.status === 'completed' ? 'completed' : 
-                        service.status === 'in-progress' ? 'active' : 'active';
-        
-        result.push({
-          id: service.id,
-          title: service.title,
-          status: service.status,
-          assemblerName: service.assembler ? service.assembler.name : 'Montador não identificado',
-          assemblerId: service.assembler ? service.assembler.id : null,
-          hasNewMessages: false, // Será atualizado pelo WebSocket
-          hasNewApplications: false,
-          chatType: chatType,
-          messageCount: service.messageCount || 0,
-          lastMessageAt: service.lastMessageAt,
-          hasConversation: true // GARANTIR que sempre tenha conversa disponível
-        });
+        if (!addedConversationIds.has(conversationId)) {
+          addedConversationIds.add(conversationId);
+          
+          const chatType = service.status === 'completed' ? 'completed' : 
+                          service.status === 'in-progress' ? 'active' : 'active';
+          
+          result.push({
+            id: service.id,
+            title: service.title,
+            status: service.status,
+            assemblerName: service.assembler ? service.assembler.name : 'Montador não identificado',
+            assemblerId: service.assembler ? service.assembler.id : null,
+            hasNewMessages: false, // Será atualizado pelo WebSocket
+            hasNewApplications: false,
+            chatType: chatType,
+            messageCount: service.messageCount || 0,
+            lastMessageAt: service.lastMessageAt,
+            hasConversation: true, // GARANTIR que sempre tenha conversa disponível
+            conversationId: conversationId, // ID único da conversa
+            applicationStatus: service.assembler?.applicationStatus || 'accepted'
+          });
+        }
       });
     }
     
-    // 2. Adicionar serviços com candidaturas aceitas que ainda não foram incluídos
+    // 2. Adicionar serviços com candidaturas aceitas que ainda não foram incluídos (fallback)
     if (activeServices && activeServices.length > 0) {
       activeServices.forEach((service: any) => {
-        if (!addedServiceIds.has(service.id) && service.assembler && service.assembler.id) {
-          addedServiceIds.add(service.id);
+        const conversationId = `${service.id}-${service.assembler?.id}`;
+        
+        if (!addedConversationIds.has(conversationId) && service.assembler && service.assembler.id) {
+          addedConversationIds.add(conversationId);
           
           const chatType = service.status === 'completed' ? 'completed' : 'active';
           
@@ -1144,7 +1152,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
             assemblerId: service.assembler.id,
             hasNewMessages: service.hasNewMessages || false,
             hasNewApplications: false,
-            chatType: chatType
+            chatType: chatType,
+            conversationId: conversationId,
+            applicationStatus: 'accepted'
           });
         }
       });
@@ -1231,7 +1241,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 <div className="space-y-3">
                   {pendingApplications.map((service) => (
                     <div 
-                      key={`${service.id}-${service.assemblerId}`} 
+                      key={service.conversationId || `${service.id}-${service.assemblerId}`} 
                       className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors border-2 border-blue-400"
                       onClick={() => {
                         setSelectedChatService(service.id);
@@ -1287,7 +1297,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                 <div className="space-y-3">
                   {activeChats.map((service) => (
                     <div 
-                      key={`${service.id}-${service.assemblerId}`} 
+                      key={service.conversationId || `${service.id}-${service.assemblerId}`} 
                       className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => {
                         setSelectedChatService(service.id);
@@ -1321,8 +1331,13 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
                                 <div className="flex flex-col gap-1">
                                 <p className="text-sm text-gray-500 flex items-center gap-1">
                                   <User className="h-4 w-4" />
-                                  <span>Montador: {service.assembler?.name || service.assemblerName}</span>
+                                  <span>Conversa com: {service.assembler?.name || service.assemblerName}</span>
                                 </p>
+                                {service.messageCount && (
+                                  <p className="text-xs text-gray-400 ml-5">
+                                    {service.messageCount} mensagens
+                                  </p>
+                                )}
                                 {service.assembler && (
                                   <div className="text-xs text-gray-400 ml-5">
                                     {service.assembler.phone && (
