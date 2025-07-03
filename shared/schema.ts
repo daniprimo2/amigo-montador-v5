@@ -117,6 +117,7 @@ export const applications = pgTable("applications", {
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   serviceId: integer("service_id").notNull().references(() => services.id),
+  assemblerId: integer("assembler_id").references(() => assemblers.id), // ID do montador na conversa (null para mensagens gerais)
   senderId: integer("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   messageType: text("message_type").default("text"), // 'text', 'payment_proof', 'payment_confirmation'

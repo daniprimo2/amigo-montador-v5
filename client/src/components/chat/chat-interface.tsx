@@ -29,6 +29,7 @@ interface ChatInterfaceProps {
 interface Message {
   id: number;
   serviceId: number;
+  assemblerId?: number; // ID do montador para esta conversa específica
   senderId: number;
   content: string;
   messageType?: string;
@@ -367,7 +368,7 @@ toast({
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, assemblerId }),
       });
       
       if (!response.ok) {

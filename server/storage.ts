@@ -42,6 +42,7 @@ export interface IStorage {
   acceptApplication(id: number, serviceId: number): Promise<void>;
   
   getMessagesByServiceId(serviceId: number): Promise<Message[]>;
+  getMessagesByServiceAndAssembler(serviceId: number, assemblerId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(serviceId: number, userId: number): Promise<void>;
   getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number>;
@@ -308,6 +309,17 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(messages).where(eq(messages.serviceId, serviceId)).orderBy(messages.sentAt);
     } catch (error) {
       console.error('Erro ao buscar mensagens:', error);
+      return [];
+    }
+  }
+
+  async getMessagesByServiceAndAssembler(serviceId: number, assemblerId: number): Promise<Message[]> {
+    try {
+      return await db.select().from(messages)
+        .where(and(eq(messages.serviceId, serviceId), eq(messages.assemblerId, assemblerId)))
+        .orderBy(messages.sentAt);
+    } catch (error) {
+      console.error('Erro ao buscar mensagens por serviço e montador:', error);
       return [];
     }
   }

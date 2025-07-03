@@ -1432,9 +1432,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const renderChatSection = () => {
     // Se estiver selecionado um chat específico, exibir a interface de chat
     if (selectedChatService !== null) {
+      const assemblerId = assemblerProfile?.id;
       return (
         <ChatInterface 
-          serviceId={selectedChatService} 
+          serviceId={selectedChatService}
+          assemblerId={assemblerId} 
           onBack={() => setSelectedChatService(null)} 
         />
       );

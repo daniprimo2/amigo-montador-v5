@@ -947,6 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
+      const user = req.user!;
       const serviceId = parseInt(req.params.serviceId);
       const assemblerId = req.query.assemblerId ? parseInt(req.query.assemblerId as string) : undefined;
 
@@ -956,8 +957,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Buscar mensagens do serviço
-      const messages = await storage.getMessagesByServiceId(serviceId);
+      let messages: any[] = [];
+
+      // Se um assemblerId foi fornecido (lojista visualizando conversa específica)
+      if (assemblerId) {
+        // Buscar mensagens específicas entre o lojista e o montador
+        messages = await storage.getMessagesByServiceAndAssembler(serviceId, assemblerId);
+      } else {
+        // Determinar o assemblerId baseado no usuário logado
+        if (user.userType === 'montador') {
+          // Montador só pode ver suas próprias mensagens
+          const assembler = await storage.getAssemblerByUserId(user.id);
+          if (assembler) {
+            messages = await storage.getMessagesByServiceAndAssembler(serviceId, assembler.id);
+          }
+        } else if (user.userType === 'lojista') {
+          // Lojista precisa especificar qual conversa quer ver
+          return res.status(400).json({ message: "ID do montador é obrigatório para lojistas" });
+        }
+      }
 
       // Incluir informações do remetente em cada mensagem
       const messagesWithSender = await Promise.all(
@@ -1020,7 +1038,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = req.user!;
       const serviceId = parseInt(req.params.serviceId);
-      const { content, messageType = 'text' } = req.body;
+      const { content, messageType = 'text', assemblerId } = req.body;
 
       if (!content || content.trim() === '') {
         return res.status(400).json({ message: "Conteúdo da mensagem é obrigatório" });
@@ -1032,9 +1050,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
+      // Determinar o assemblerId para a mensagem
+      let messageAssemblerId = assemblerId;
+      if (user.userType === 'montador') {
+        // Se o usuário é um montador, usar seu próprio assemblerId
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        if (assembler) {
+          messageAssemblerId = assembler.id;
+        }
+      } else if (user.userType === 'lojista' && !assemblerId) {
+        // Lojista deve especificar com qual montador está conversando
+        return res.status(400).json({ message: "ID do montador é obrigatório para lojistas" });
+      }
+
       // Criar mensagem
       const message = await storage.createMessage({
         serviceId: serviceId,
+        assemblerId: messageAssemblerId,
         senderId: user.id,
         content: content.trim(),
         messageType: messageType

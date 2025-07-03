@@ -302,6 +302,15 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Updated getAvailableServicesForAssemblerWithDistance method to properly filter services by status
   - Enhanced logging to track service visibility: open services visible to all, accepted services visible to assigned assembler
   - System correctly implements service lifecycle visibility rules for assemblers
+- January 3, 2025. Implemented individual chat conversations between store owners and each assembler
+  - Fixed critical issue where all assemblers for the same service shared the same chat conversation
+  - Added assembler_id column to messages table to enable separate conversations per assembler
+  - Updated message storage and retrieval to filter conversations by specific assembler
+  - Modified chat API endpoints to require assemblerId parameter for proper conversation isolation
+  - Updated both store dashboard and assembler dashboard to pass correct assemblerId to chat interface
+  - Migrated existing messages to include proper assemblerId based on application records
+  - Each conversation is now completely separate: Store Owner ↔ Assembler A, Store Owner ↔ Assembler B
+  - System now properly isolates chat conversations preventing message sharing between different assemblers
 
 ## User Preferences
 
