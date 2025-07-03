@@ -204,6 +204,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     enabled: !!user?.id
   });
 
+  // Fetch user profile with dynamic rating data
+  const { data: userProfileData } = useQuery({
+    queryKey: ['/api/profile'],
+    enabled: !!user?.id
+  });
+
   const {
     pendingRatings,
     currentRating: mandatoryServiceForRating,
@@ -860,14 +866,14 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           </div>
           
           {/* Exibir avaliação média do montador */}
-          {assemblerProfile && assemblerProfile.rating && (
+          {userProfileData && userProfileData.averageRating > 0 && (
             <div className="flex items-center mt-1">
               <div className="flex items-center text-yellow-500">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
                     className={`h-4 w-4 ${
-                      star <= (assemblerProfile?.rating || 0)
+                      star <= (userProfileData?.averageRating || 0)
                         ? 'text-yellow-500 fill-yellow-500'
                         : 'text-gray-300'
                     }`}
@@ -875,7 +881,8 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                 ))}
               </div>
               <span className="text-sm ml-2 text-gray-600">
-                {assemblerProfile?.rating ? assemblerProfile.rating.toFixed(1) : '0.0'} Avaliação média
+                {userProfileData?.averageRating ? userProfileData.averageRating.toFixed(1) : '0.0'} Avaliação média
+                {userProfileData?.totalRatings && ` (${userProfileData.totalRatings} ${userProfileData.totalRatings === 1 ? 'avaliação' : 'avaliações'})`}
               </span>
             </div>
           )}

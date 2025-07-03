@@ -501,6 +501,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
+      
+      // Fetch user's average rating and total ratings count
+      const ratingData = await storage.getUserAverageRating(user.id);
+      
       let profileData: any = {
         id: user.id,
         name: user.name,
@@ -508,7 +512,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: user.phone,
         userType: user.userType,
         profilePhotoData: user.profilePhotoData,
-        profilePhotoUrl: user.profilePhotoData
+        profilePhotoUrl: user.profilePhotoData,
+        averageRating: ratingData.averageRating,
+        totalRatings: ratingData.totalRatings
       };
 
       if (user.userType === 'lojista') {

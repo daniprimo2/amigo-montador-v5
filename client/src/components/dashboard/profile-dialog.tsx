@@ -89,6 +89,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
+  const [totalRatings, setTotalRatings] = useState<number>(0);
   const [profileData, setProfileData] = useState<any>(null);
   const [isEditingProfessional, setIsEditingProfessional] = useState(false);
   const [showBankDialog, setShowBankDialog] = useState(false);
@@ -210,11 +211,18 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
         setProfilePhoto(null);
       }
       
-      // Obter a avaliação tanto para montador quanto para lojista
-      if (user?.userType === 'montador' && data.assembler) {
-        setUserRating(data.assembler.rating || 0);
-      } else if (user?.userType === 'lojista') {
-        setUserRating(data.rating || 0);
+      // Obter a avaliação dinâmica tanto para montador quanto para lojista
+      if (data.averageRating !== undefined) {
+        setUserRating(data.averageRating);
+      } else {
+        setUserRating(0);
+      }
+      
+      // Obter o total de avaliações
+      if (data.totalRatings !== undefined) {
+        setTotalRatings(data.totalRatings);
+      } else {
+        setTotalRatings(0);
       }
       
       // Se for lojista, atualizar formulário da loja e verificar logo
@@ -534,7 +542,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                           <Star
                             key={star}
                             className={`h-3 w-3 ${
-                              star <= userRating
+                              star <= (userRating || 0)
                                 ? 'text-yellow-500 fill-yellow-500'
                                 : 'text-gray-300'
                             }`}
@@ -542,14 +550,14 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
                         ))}
                       </div>
                       <span className="font-medium text-yellow-700 text-sm">
-                        {userRating > 0 ? userRating.toFixed(1) : '0.0'}
+                        {userRating && userRating > 0 ? userRating.toFixed(1) : '0.0'}
                       </span>
                     </div>
                     <span className="text-xs text-gray-500 mt-1">
                       {userRating > 0 
                         ? (user?.userType === 'lojista' 
-                            ? 'Avaliação dos montadores' 
-                            : 'Avaliação média')
+                            ? `Avaliação dos montadores (${totalRatings} ${totalRatings === 1 ? 'avaliação' : 'avaliações'})` 
+                            : `Avaliação média (${totalRatings} ${totalRatings === 1 ? 'avaliação' : 'avaliações'})`)
                         : (user?.userType === 'lojista' 
                             ? 'Ainda sem avaliações de montadores' 
                             : 'Ainda sem avaliações')
