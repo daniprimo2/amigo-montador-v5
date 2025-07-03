@@ -1708,6 +1708,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update service status to "Em Andamento" when payment is confirmed
       await storage.updateServiceStatus(serviceId, 'in-progress');
 
+      // Get all applications for this service first
+      console.log('🔍 Buscando candidaturas...');
+      const applications = await storage.getApplicationsByServiceId(serviceId);
+      console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
+      
+      // Check if there's an accepted application
+      let acceptedApplication = applications.find(app => app.status === 'accepted');
+      let assemblerId: number | undefined;
+
+      // If no assembler is accepted yet, auto-accept the first applicant for testing
+      if (!acceptedApplication && applications.length > 0) {
+        console.log('🔄 Auto-aceitando primeiro candidato para teste...');
+        const firstApplication = applications[0];
+        await storage.acceptApplication(firstApplication.id, serviceId);
+        assemblerId = firstApplication.assemblerId;
+        console.log(`✅ Montador ${assemblerId} aceito automaticamente`);
+      } else if (acceptedApplication) {
+        assemblerId = acceptedApplication.assemblerId;
+        console.log('✅ Montador aceito encontrado:', assemblerId);
+      }
+
       // Get user info for payment proof
       const user = await storage.getUser(req.user.id);
       if (!user) {
@@ -1726,22 +1747,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate payment proof image
       const proofImage = generatePaymentProofImage(proofData);
-
-      // Get the assembler for this service to include in the message
-      let assemblerId: number | undefined;
-      
-      // If there's an accepted application, get the assembler ID
-      console.log('🔍 Buscando candidaturas aceitas...');
-      const applications = await storage.getApplicationsByServiceId(serviceId);
-      console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
-      
-      const acceptedApplication = applications.find(app => app.status === 'accepted');
-      if (acceptedApplication) {
-        assemblerId = acceptedApplication.assemblerId;
-        console.log('✅ Montador aceito encontrado:', assemblerId);
-      } else {
-        console.log('⚠️ Nenhum montador aceito encontrado - mensagem será geral');
-      }
       
       // Create a detailed payment proof message with visual content
       const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
@@ -1757,23 +1762,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
-      // Send automatic payment proof message to chat
-      console.log('✅ Enviando mensagem de comprovante para o chat...');
-      // If no accepted assembler yet, send a general message to all applicants
-      if (!assemblerId && applications.length > 0) {
-        // Send message to each assembler who applied
-        for (const app of applications) {
-          const messageResult = await storage.createMessage({
-            serviceId: serviceId,
-            senderId: req.user.id,
-            assemblerId: app.assemblerId,
-            content: proofContent,
-            messageType: 'payment_proof'
-          });
-          console.log(`✅ Mensagem criada para montador ${app.assemblerId}:`, messageResult);
-        }
-      } else if (assemblerId) {
-        // Send to specific accepted assembler
+      // Send payment proof message only to the accepted assembler
+      console.log('✅ Enviando mensagem de comprovante para o montador aceito...');
+      if (assemblerId) {
         const messageResult = await storage.createMessage({
           serviceId: serviceId,
           senderId: req.user.id,
@@ -1781,18 +1772,15 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           content: proofContent,
           messageType: 'payment_proof'
         });
-        console.log('✅ Mensagem criada para montador aceito:', messageResult);
+        console.log(`✅ Comprovante enviado para montador aceito (ID: ${assemblerId}):`, messageResult);
       } else {
-        console.log('⚠️ Nenhum montador para enviar o comprovante');
+        console.log('❌ Nenhum montador aceito encontrado para enviar o comprovante');
       }
 
-      // Notify all other assemblers who applied to this service that it has been started
-      console.log('🔔 Buscando outros montadores para notificar...');
-      const allApplications = await storage.getApplicationsByServiceId(serviceId);
-      console.log('📋 Total de candidaturas encontradas:', allApplications.length);
-      
-      const otherAssemblers = allApplications.filter(app => app.assemblerId !== assemblerId);
-      console.log('👥 Montadores a serem notificados:', otherAssemblers.length);
+      // Notify all other assemblers (who were NOT accepted) that the service started with another
+      console.log('🔔 Notificando outros montadores que não foram aceitos...');
+      const otherAssemblers = applications.filter(app => app.assemblerId !== assemblerId);
+      console.log('👥 Montadores rejeitados a serem notificados:', otherAssemblers.length);
       
       if (otherAssemblers.length > 0) {
         for (const application of otherAssemblers) {
