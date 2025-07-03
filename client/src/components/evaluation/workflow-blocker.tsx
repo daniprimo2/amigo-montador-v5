@@ -152,7 +152,7 @@ export function WorkflowBlocker({ userType, onBlockingStateChange }: WorkflowBlo
   if (userType === 'montador' && isBlocked && currentEvaluation) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
-        <div className="bg-white rounded-xl p-6 m-4 max-w-md w-full shadow-2xl">
+        <div className="bg-white rounded-xl p-6 m-4 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
           {/* Header de bloqueio */}
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -177,7 +177,7 @@ export function WorkflowBlocker({ userType, onBlockingStateChange }: WorkflowBlo
             </Alert>
           )}
 
-          {/* Diálogo de avaliação incorporado */}
+          {/* Formulário de avaliação incorporado diretamente */}
           <MandatoryRatingDialog
             isOpen={true}
             onClose={handleEvaluationComplete}
@@ -186,6 +186,7 @@ export function WorkflowBlocker({ userType, onBlockingStateChange }: WorkflowBlo
             otherUserName={immediateEvaluation?.otherUserName || currentEvaluation.otherUserName}
             otherUserType={immediateEvaluation?.otherUserType || currentEvaluation.otherUserType}
             currentUserType={userType}
+            embedded={true}
           />
         </div>
       </div>

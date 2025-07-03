@@ -16,6 +16,7 @@ interface MandatoryRatingDialogProps {
   otherUserName: string;
   otherUserType: 'lojista' | 'montador';
   currentUserType: 'lojista' | 'montador';
+  embedded?: boolean; // When true, renders without Dialog wrapper
 }
 
 export function MandatoryRatingDialog({
@@ -25,7 +26,8 @@ export function MandatoryRatingDialog({
   serviceTitle,
   otherUserName,
   otherUserType,
-  currentUserType
+  currentUserType,
+  embedded = false
 }: MandatoryRatingDialogProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -101,6 +103,94 @@ export function MandatoryRatingDialog({
   const otherUserTypeLabel = otherUserType === 'lojista' ? 'da loja' : 'do montador';
   const currentUserAction = currentUserType === 'lojista' ? 'contratou' : 'realizou';
 
+  // Rating form content
+  const ratingFormContent = (
+    <div className="space-y-6 py-4">
+      {/* Header for embedded mode */}
+      {embedded && (
+        <div className="text-center mb-6">
+          <h3 className="text-lg font-semibold mb-2">
+            Avaliação Obrigatória
+          </h3>
+          <p className="text-sm text-gray-600">
+            Para finalizar o serviço "{serviceTitle}", você precisa avaliar {otherUserTypeLabel} {otherUserName}.
+          </p>
+        </div>
+      )}
+
+      {/* Rating Stars */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          Como você avalia o {otherUserType === 'lojista' ? 'atendimento da loja' : 'trabalho do montador'}?
+        </Label>
+        <div className="flex justify-center space-x-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              className="p-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              onMouseEnter={() => setHoveredRating(star)}
+              onMouseLeave={() => setHoveredRating(0)}
+              onClick={() => setRating(star)}
+            >
+              <Star
+                className={`w-8 h-8 ${
+                  star <= (hoveredRating || rating)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                } transition-colors`}
+              />
+            </button>
+          ))}
+        </div>
+        {rating > 0 && (
+          <p className="text-center text-sm text-gray-600">
+            {rating === 1 && "Muito ruim"}
+            {rating === 2 && "Ruim"}
+            {rating === 3 && "Regular"}
+            {rating === 4 && "Bom"}
+            {rating === 5 && "Excelente"}
+          </p>
+        )}
+      </div>
+
+      {/* Comment */}
+      <div className="space-y-2">
+        <Label htmlFor="comment" className="text-sm font-medium">
+          Comentário (opcional)
+        </Label>
+        <Textarea
+          id="comment"
+          placeholder={`Conte como foi sua experiência com ${otherUserTypeLabel} ${otherUserName}...`}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+          className="resize-none"
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col space-y-2">
+        <Button 
+          onClick={handleSubmit}
+          disabled={rating === 0 || submitRatingMutation.isPending}
+          className="w-full"
+        >
+          {submitRatingMutation.isPending ? "Enviando..." : "Enviar Avaliação"}
+        </Button>
+        
+        <p className="text-xs text-gray-500 text-center">
+          Esta avaliação é obrigatória para finalizar o serviço.
+        </p>
+      </div>
+    </div>
+  );
+
+  // Return embedded form or Dialog wrapped form
+  if (embedded) {
+    return ratingFormContent;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={() => {}} modal>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
@@ -112,74 +202,7 @@ export function MandatoryRatingDialog({
             Para finalizar o serviço "{serviceTitle}", você precisa avaliar {otherUserTypeLabel} {otherUserName}.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Rating Stars */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              Como você avalia o {otherUserType === 'lojista' ? 'atendimento da loja' : 'trabalho do montador'}?
-            </Label>
-            <div className="flex justify-center space-x-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  className="p-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-                  onMouseEnter={() => setHoveredRating(star)}
-                  onMouseLeave={() => setHoveredRating(0)}
-                  onClick={() => setRating(star)}
-                >
-                  <Star
-                    className={`w-8 h-8 ${
-                      star <= (hoveredRating || rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
-                    } transition-colors`}
-                  />
-                </button>
-              ))}
-            </div>
-            {rating > 0 && (
-              <p className="text-center text-sm text-gray-600">
-                {rating === 1 && "Muito ruim"}
-                {rating === 2 && "Ruim"}
-                {rating === 3 && "Regular"}
-                {rating === 4 && "Bom"}
-                {rating === 5 && "Excelente"}
-              </p>
-            )}
-          </div>
-
-          {/* Comment */}
-          <div className="space-y-2">
-            <Label htmlFor="comment" className="text-sm font-medium">
-              Comentário (opcional)
-            </Label>
-            <Textarea
-              id="comment"
-              placeholder={`Conte como foi sua experiência com ${otherUserTypeLabel} ${otherUserName}...`}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col space-y-2">
-            <Button 
-              onClick={handleSubmit}
-              disabled={rating === 0 || submitRatingMutation.isPending}
-              className="w-full"
-            >
-              {submitRatingMutation.isPending ? "Enviando..." : "Enviar Avaliação"}
-            </Button>
-            
-            <p className="text-xs text-gray-500 text-center">
-              Esta avaliação é obrigatória para finalizar o serviço.
-            </p>
-          </div>
-        </div>
+        {ratingFormContent}
       </DialogContent>
     </Dialog>
   );
