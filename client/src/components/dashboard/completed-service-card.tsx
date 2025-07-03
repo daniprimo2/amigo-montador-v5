@@ -30,7 +30,8 @@ export const CompletedServiceCard: React.FC<CompletedServiceCardProps> = ({
       return price;
     }
     
-    // Converte string para número - o valor já vem correto da API
+    // O preço vem do banco no formato americano (ponto como decimal)
+    // Converte diretamente para número
     const numericPrice = parseFloat(price);
     
     // Se o valor for inválido, retorna o valor original

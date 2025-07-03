@@ -70,8 +70,14 @@ export const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
 
   // Função para formatar o preço corretamente
   const formatPrice = (price: string): string => {
-    // Remove caracteres não numéricos e converte para número
-    const numericPrice = parseFloat(price.replace(/[^\d.,]/g, '').replace(',', '.'));
+    // Se já está formatado como moeda, retorna como está
+    if (price.includes('R$')) {
+      return price;
+    }
+    
+    // O preço vem do banco no formato americano (ponto como decimal)
+    // Converte diretamente para número
+    const numericPrice = parseFloat(price);
     
     // Se o valor for inválido, retorna o valor original
     if (isNaN(numericPrice)) {

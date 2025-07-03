@@ -69,9 +69,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
       return price;
     }
     
-    // Converte formato brasileiro para formato numérico (vírgula para ponto)
-    const normalizedPrice = price.replace(/\./g, '').replace(',', '.');
-    const numericPrice = parseFloat(normalizedPrice);
+    // O preço vem do banco no formato americano (ponto como decimal)
+    // Converte diretamente para número sem processar vírgulas
+    const numericPrice = parseFloat(price);
     
     // Se o valor for inválido, retorna o valor original
     if (isNaN(numericPrice)) {

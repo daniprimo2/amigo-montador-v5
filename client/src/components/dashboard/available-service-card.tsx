@@ -58,10 +58,9 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
       return price;
     }
     
-    // Converte string brasileira (vírgula como decimal) para número
-    // Substitui vírgula por ponto para conversão correta
-    const normalizedPrice = price.replace(',', '.');
-    const numericPrice = parseFloat(normalizedPrice);
+    // O preço vem do banco no formato americano (ponto como decimal)
+    // Converte diretamente para número
+    const numericPrice = parseFloat(price);
     
     // Se o valor for inválido, retorna o valor original formatado
     if (isNaN(numericPrice)) {
