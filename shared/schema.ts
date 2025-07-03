@@ -275,11 +275,6 @@ export const insertStoreSchema = createInsertSchema(stores).refine(
 export const insertAssemblerSchema = createInsertSchema(assemblers).extend({
   documentType: z.enum(['cpf', 'cnpj']).optional(),
   documentNumber: z.string().optional(),
-  birthDate: z.string().refine(validateBirthDate, {
-    message: "Data de nascimento deve estar no formato DD/MM/YYYY e ser uma data válida"
-  }).refine(isAdult, {
-    message: "Você deve ter pelo menos 18 anos para se cadastrar"
-  }),
 }).refine(
   (data) => {
     // If documentType and documentNumber are provided, validate them

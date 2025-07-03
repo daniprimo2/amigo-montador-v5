@@ -149,6 +149,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [selectedServiceForConfirm, setSelectedServiceForConfirm] = useState<any>(null);
   const [selectedServiceForPayment, setSelectedServiceForPayment] = useState<any>(null);
   const [selectedServiceForRating, setSelectedServiceForRating] = useState<any>(null);
+  const [selectedChatService, setSelectedChatService] = useState<number | null>(null);
 
   const { lastMessage } = useWebSocket(user?.id);
   // Queries
