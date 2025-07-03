@@ -78,7 +78,7 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
       return `R$ ${price}`;
     }
     
-    // Formata como moeda brasileira
+    // Formata como moeda brasileira garantindo que valores pequenos como 0,01 sejam exibidos corretamente
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
