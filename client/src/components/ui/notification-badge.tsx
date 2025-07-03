@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +8,8 @@ interface NotificationBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   showPulse?: boolean;
+  hasNewMessage?: boolean;
+  onAnimationComplete?: () => void;
 }
 
 export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
@@ -15,8 +17,30 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
   type = 'bell',
   size = 'md',
   className,
-  showPulse = false
+  showPulse = false,
+  hasNewMessage = false,
+  onAnimationComplete
 }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showBadgeBounce, setShowBadgeBounce] = useState(false);
+
+  // Trigger animation when new message arrives
+  useEffect(() => {
+    if (hasNewMessage && count > 0) {
+      setIsAnimating(true);
+      setShowBadgeBounce(true);
+      
+      // Reset animation after duration
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+        setShowBadgeBounce(false);
+        onAnimationComplete?.();
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasNewMessage, count, onAnimationComplete]);
+
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-5 w-5',
@@ -37,6 +61,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         className={cn(
           sizeClasses[size],
           showPulse && count > 0 ? 'animate-pulse-once' : '',
+          isAnimating ? 'animate-notification-pulse' : '',
           "transition-all duration-200"
         )} 
       />
@@ -47,6 +72,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
             "flex items-center justify-center px-1",
             "border-2 border-white shadow-sm",
             "animate-in zoom-in-50 duration-200",
+            showBadgeBounce ? 'animate-badge-bounce' : '',
             badgeSizeClasses[size]
           )}
           style={{

@@ -6,6 +6,7 @@ import { useWebSocket } from '@/hooks/use-websocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import NotificationBadge from '@/components/ui/notification-badge';
 import { ProfileDialog } from '@/components/dashboard/profile-dialog';
+import { useNotification } from '@/hooks/use-notification';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -23,6 +24,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Define the tabs with a state to track which tab is active
   const [activeTab, setActiveTab] = useState<'home' | 'services' | 'chat' | 'explore' | 'ranking'>('home');
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
+  const { showNotification } = useNotification();
   
   // Buscar contagem de mensagens não lidas do servidor
   const { data: unreadData = { count: 0 }, refetch: refetchUnreadCount } = useQuery({
@@ -39,6 +43,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   
   const unreadCount = unreadData.count;
   const hasUnreadMessage = unreadCount > 0;
+  
+  // Detectar quando uma nova mensagem chega
+  useEffect(() => {
+    if (unreadCount > previousUnreadCount && previousUnreadCount >= 0) {
+      setHasNewMessage(true);
+      
+      // Mostrar notificação visual e sonora
+      showNotification({
+        title: 'Nova mensagem recebida',
+        body: 'Você tem uma nova mensagem no chat',
+        icon: '/favicon.ico'
+      });
+      
+      // Vibrar dispositivo se suportado
+      if ('vibrate' in navigator) {
+        navigator.vibrate(200);
+      }
+    }
+    setPreviousUnreadCount(unreadCount);
+  }, [unreadCount, previousUnreadCount, showNotification]);
   
   // Monitorar mensagens recebidas via WebSocket e atualizar contagem
   useEffect(() => {
@@ -86,6 +110,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         activeTab === 'chat' 
           ? 'text-primary bg-primary/10 scale-105' 
           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
+      } ${
+        hasUnreadMessage && activeTab !== 'chat' 
+          ? 'chat-button-glow-active' 
+          : hasUnreadMessage 
+            ? 'chat-button-glow' 
+            : ''
       }`}
     >
       <NotificationBadge
@@ -94,6 +124,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         size="md"
         className={activeTab === 'chat' ? 'text-primary' : 'text-gray-500'}
         showPulse={false}
+        hasNewMessage={hasNewMessage}
+        onAnimationComplete={() => setHasNewMessage(false)}
       />
       <span className="text-xs font-medium mt-1">Chat</span>
     </button>
