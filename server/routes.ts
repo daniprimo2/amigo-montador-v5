@@ -1196,11 +1196,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'pending'
       });
 
-      // Criar mensagem inicial de candidatura
+      // Criar mensagem inicial de candidatura com informações detalhadas
+      const assemblerInfo = [];
+      if (assembler.experience) {
+        assemblerInfo.push(`Experiência: ${assembler.experience}`);
+      }
+      if (assembler.rating && assembler.rating > 0) {
+        assemblerInfo.push(`Avaliação: ${assembler.rating}/5 estrelas`);
+      }
+      if (assembler.city && assembler.state) {
+        assemblerInfo.push(`Localização: ${assembler.city}, ${assembler.state}`);
+      }
+      if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
+        assemblerInfo.push(`Especialidades: ${assembler.specialties.join(', ')}`);
+      }
+      
+      const detailedInfo = assemblerInfo.length > 0 ? `\n\n📋 Informações do profissional:\n${assemblerInfo.join('\n')}` : '';
+      
       await storage.createMessage({
         serviceId: serviceId,
+        assemblerId: assembler.id, // Incluir assemblerId para isolamento de conversas
         senderId: user.id,
-        content: `Olá! Me candidatei para o serviço "${service.title}". Tenho experiência em montagem de móveis e gostaria de discutir os detalhes do trabalho. Aguardo seu contato!`,
+        content: `Olá! Me candidatei para o serviço "${service.title}". Tenho experiência em montagem de móveis e gostaria de discutir os detalhes do trabalho. Aguardo seu contato!${detailedInfo}`,
         messageType: 'application'
       });
 
@@ -1210,18 +1227,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const storeUser = await storage.getUser(store.userId);
         if (storeUser) {
           // Enviar notificação WebSocket para o lojista
-          global.sendNotification(storeUser.id, {
+          const notificationData = {
             type: 'new_application',
-            title: 'Nova candidatura',
-            message: `${user.name} se candidatou ao serviço "${service.title}"`,
+            title: 'Nova candidatura recebida',
+            message: `${user.name} se candidatou ao serviço "${service.title}". Verifique as mensagens para mais detalhes.`,
             serviceId: serviceId,
             assemblerId: assembler.id,
             data: {
               serviceId: serviceId,
               assemblerId: assembler.id,
-              assemblerName: user.name
+              assemblerName: user.name,
+              assemblerExperience: assembler.experience || 'Não informado',
+              assemblerRating: assembler.rating || 0,
+              assemblerLocation: `${assembler.city}, ${assembler.state}`
             }
-          });
+          };
+          
+          // Enviar notificação WebSocket
+          global.sendNotification(storeUser.id, notificationData);
+          
+          // Log da notificação enviada
+          console.log(`✅ Notificação de nova candidatura enviada para lojista ${storeUser.name} (ID: ${storeUser.id})`);
+          console.log(`📋 Serviço: ${service.title} (ID: ${serviceId})`);
+          console.log(`👤 Montador: ${user.name} (ID: ${assembler.id})`);
         }
       }
 

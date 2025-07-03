@@ -61,6 +61,17 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
       // Invalidar queries manualmente para garantir atualização
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-messages'] });
+      
+      // Automaticamente redirecionar para a seção de chat para mostrar nova candidatura
+      setTimeout(() => {
+        setDashboardSection('chat');
+        toast({
+          title: "Nova candidatura recebida!",
+          description: `${lastMessage.data?.assemblerName} se candidatou ao seu serviço. Verifique o chat para mais detalhes.`,
+          duration: 8000
+        });
+      }, 1000);
       
       // Se houver um serviceId, marcar esse serviço como tendo uma nova candidatura
       if (lastMessage.serviceId) {
