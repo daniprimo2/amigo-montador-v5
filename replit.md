@@ -336,6 +336,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced message content with formatted payment details and reference numbers
   - Service status automatically updates to "Em Andamento" when payment proof is generated
   - Clear visual distinction between regular messages and payment confirmation messages
+- January 3, 2025. Implemented immediate evaluation workflow for payment transfer completion
+  - Enhanced WebSocket notification system to trigger immediate evaluation dialogs for both users
+  - Updated MandatoryRatingChecker to listen for WebSocket events and display evaluation screens instantly
+  - Modified transfer payment endpoint to send immediate evaluation_required notifications
+  - Added visual feedback showing service completion status after both evaluations
+  - Implemented automatic service finalization when both parties complete mutual evaluation
+  - Enhanced MandatoryRatingDialog with completion status feedback and better UX messaging
+  - System now provides seamless workflow: transfer → immediate evaluation prompts → automatic completion
 
 ## User Preferences
 

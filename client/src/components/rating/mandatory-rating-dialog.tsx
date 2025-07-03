@@ -42,15 +42,29 @@ export function MandatoryRatingDialog({
       });
       return await response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Avaliação enviada",
-        description: `Obrigado por avaliar ${otherUserType === 'lojista' ? 'a loja' : 'o montador'}!`,
-      });
+    onSuccess: (response) => {
+      // Check if service was completed after both evaluations
+      if (response.serviceCompleted) {
+        toast({
+          title: "🎉 Serviço finalizado!",
+          description: "Ambas as avaliações foram concluídas. O serviço foi finalizado automaticamente.",
+          duration: 8000,
+          className: 'bg-green-100 border-green-500 border-2 font-medium shadow-lg'
+        });
+      } else {
+        toast({
+          title: "✅ Avaliação enviada",
+          description: `Obrigado por avaliar ${otherUserType === 'lojista' ? 'a loja' : 'o montador'}! Aguardando avaliação da outra parte.`,
+          duration: 6000,
+          className: 'bg-blue-100 border-blue-500 border-2'
+        });
+      }
       
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/mandatory-ratings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
       
       // Reset form
       setRating(0);

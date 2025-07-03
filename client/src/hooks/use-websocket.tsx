@@ -230,6 +230,37 @@ export function useWebSocket() {
             if ('vibrate' in navigator) {
               navigator.vibrate([100, 50, 100]);
             }
+          } else if (data.type === 'evaluation_required') {
+            // Notificação de avaliação obrigatória
+            playNotificationSound();
+            sendBrowserNotification('⭐ Avaliação obrigatória', data.message || 'É necessário avaliar o serviço para finalizá-lo');
+            
+            // Invalidar queries para atualizar listas
+            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
+            
+            // Disparar evento personalizado para abrir o diálogo de avaliação imediatamente
+            const evaluationEvent = new CustomEvent('mandatory-evaluation-required', { 
+              detail: { 
+                serviceId: data.serviceId,
+                serviceData: data.serviceData,
+                userId: data.userId,
+                evaluateUser: data.evaluateUser
+              } 
+            });
+            window.dispatchEvent(evaluationEvent);
+            
+            toast({
+              title: '⭐ Avaliação obrigatória',
+              description: data.message || 'É necessário avaliar o serviço para finalizá-lo',
+              duration: 10000,
+              variant: 'default',
+              className: 'bg-purple-100 border-purple-500 border-2 font-medium shadow-lg animate-pulse-once'
+            });
+            
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200, 100, 200]);
+            }
           }
         } catch (error) {
           debugLogger('WebSocket', 'Erro ao processar mensagem', error);
