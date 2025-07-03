@@ -33,7 +33,8 @@ interface ServiceData {
   title: string;
   description: string;
   location: string;
-  date: string;
+  startDate: string; // Data de início do serviço
+  endDate: string; // Data de término do serviço
   price: string; // price é uma string no banco de dados
   type?: string;
   materialType?: string;
@@ -48,12 +49,44 @@ interface ServiceData {
 
 // Format data for display in the UI
 const formatServiceForDisplay = (service: ServiceData & { startDate?: string; endDate?: string; projectFiles?: any; distance?: string }) => {
+  // Format the date display based on startDate and endDate
+  let formattedDate = 'Data não informada';
+  
+  if (service.startDate) {
+    try {
+      const startDate = new Date(service.startDate);
+      if (!isNaN(startDate.getTime())) {
+        formattedDate = startDate.toLocaleDateString('pt-BR', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        // If there's an end date and it's different from start date, show range
+        if (service.endDate) {
+          const endDate = new Date(service.endDate);
+          if (!isNaN(endDate.getTime()) && endDate.getTime() !== startDate.getTime()) {
+            formattedDate += ' - ' + endDate.toLocaleDateString('pt-BR', {
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao formatar data do serviço:', error);
+    }
+  }
+  
   return {
     id: service.id,
     title: service.title,
     location: service.location,
     distance: service.distance || 'Distância não calculada', // Use calculated distance from backend
-    date: service.date || 'Data não informada', // Manter o formato original do backend
+    date: formattedDate, // Usar a data formatada baseada em startDate e endDate
     startDate: service.startDate || null, // Incluir startDate do backend
     endDate: service.endDate || null, // Incluir endDate do backend
     price: (() => {
