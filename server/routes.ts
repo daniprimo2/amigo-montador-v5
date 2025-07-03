@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Função global para enviar notificações
+  // Função global para enviar notificações com retry e fallback
   global.sendNotification = function(userId: number, message: any): boolean {
     console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
     console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
@@ -217,6 +217,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } else {
       console.log(`❌ Conexão não encontrada ou fechada para usuário ${userId}`);
+      
+      // Try to find any active connection for this user (multiple tabs scenario)
+      for (const [connectedUserId, ws] of userConnections.entries()) {
+        if (connectedUserId === userId && ws.readyState === WebSocket.OPEN) {
+          try {
+            ws.send(JSON.stringify(message));
+            console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
+            return true;
+          } catch (error) {
+            console.log(`❌ Erro na conexão alternativa: ${error}`);
+          }
+        }
+      }
+      
+      console.log(`❌ Todas as tentativas de notificação falharam para usuário ${userId}`);
       return false;
     }
   };
@@ -2142,6 +2157,24 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         const assemblerNotificationSent = global.sendNotification(assemblerUser.id, assemblerNotificationMessage);
         console.log(`✅ Notificação enviada para montador: ${assemblerNotificationSent ? 'Sucesso' : 'Falhou'}`);
         console.log(`🔍 ID do montador usado para notificação: ${assemblerUser.id}`);
+        
+        // If WebSocket notification failed, create a persistent notification message
+        if (!assemblerNotificationSent) {
+          console.log('⚠️ Notificação WebSocket falhou. Criando notificação persistente no chat...');
+          
+          // Create a system message to ensure the assembler knows they need to evaluate
+          storage.createMessage({
+            serviceId: serviceId,
+            assemblerId: acceptedApplication[0].assemblerId,
+            senderId: 0, // System message
+            content: `🔔 AVALIAÇÃO OBRIGATÓRIA: Você precisa avaliar o lojista ${storeUser.name} para finalizar este serviço. Clique no botão de avaliação no chat ou acesse a aba de avaliações pendentes.`,
+            messageType: 'system_notification' as const
+          }).then(() => {
+            console.log('✅ Notificação persistente criada no chat');
+          }).catch(error => {
+            console.error('❌ Erro ao criar notificação persistente:', error);
+          });
+        }
       }, 1000); // Wait 1 second before sending assembler notification
 
       res.json({
@@ -2259,6 +2292,24 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       // Check if both parties have now rated each other
       const otherRating = await storage.getRatingByServiceIdAndUser(serviceId, toUserId, req.user.id);
       
+      console.log(`🔍 Verificando avaliações mútuas para serviço ${serviceId}:`, {
+        currentUserRating: {
+          fromUserId: req.user.id,
+          toUserId: toUserId,
+          fromUserType: fromUserType,
+          toUserType: toUserType,
+          rating: rating
+        },
+        otherUserRating: otherRating ? {
+          fromUserId: otherRating.fromUserId,
+          toUserId: otherRating.toUserId,
+          fromUserType: otherRating.fromUserType,
+          toUserType: otherRating.toUserType,
+          rating: otherRating.rating
+        } : null,
+        mutualEvaluationComplete: !!otherRating
+      });
+      
       if (otherRating) {
         // Both parties have rated each other, now we can mark the service as completed
         await storage.updateServiceStatus(serviceId, 'completed');
@@ -2284,6 +2335,15 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           content: `Avaliação mútua concluída! O serviço foi finalizado com sucesso.`,
           messageType: 'evaluation_completed' as const
         });
+        
+        console.log(`✅ Serviço ${serviceId} COMPLETADO após avaliações mútuas`);
+      } else {
+        // Only one party has rated, service should remain in awaiting_evaluation status
+        console.log(`⏳ Serviço ${serviceId} aguardando avaliação da outra parte (${fromUserType} → ${toUserType})`);
+        console.log(`⚠️ ALERTA: Serviço ${serviceId} NÃO pode ser completado até que ambas as partes avaliem`);
+        
+        // Ensure the service remains in awaiting_evaluation status
+        await storage.updateServiceStatus(serviceId, 'awaiting_evaluation');
       }
 
       res.json({
@@ -2519,6 +2579,19 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           });
         }
       }
+
+      // Debug logging for troubleshooting
+      console.log(`🔍 Avaliações pendentes para usuário ${req.user.id} (${req.user.userType}):`, {
+        awaitingServicesCount: awaitingServices.length,
+        pendingEvaluationsCount: pendingEvaluations.length,
+        services: awaitingServices.map(s => ({ id: s.id, title: s.title, status: s.status })),
+        pendingEvaluations: pendingEvaluations.map(p => ({ 
+          serviceId: p.serviceId, 
+          serviceName: p.serviceName, 
+          otherUserName: p.otherUserName, 
+          otherUserType: p.otherUserType 
+        }))
+      });
 
       res.json({
         pendingRatings: pendingEvaluations,
