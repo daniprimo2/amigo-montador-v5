@@ -176,20 +176,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     ws.on('close', () => {
-      console.log('🔌 Conexão WebSocket fechada');
-      
-      // Remover conexão do usuário
       const userId = (ws as any).userId;
-      if (userId) {
-        userConnections.delete(userId);
-        console.log(`❌ Usuário ${userId} removido das conexões WebSocket`);
-      }
+      const userType = (ws as any).userType;
+      console.log(`🔌 Conexão WebSocket fechada para usuário ${userId} (${userType})`);
       
-      // Remover dos grupos de clientes
-      storeClients.delete(ws);
-      assemblerClients.delete(ws);
-      
-      console.log(`📊 Conexões restantes: ${userConnections.size} total, ${storeClients.size} lojistas, ${assemblerClients.size} montadores`);
+      // Add small delay before removing connection to handle rapid reconnections
+      setTimeout(() => {
+        // Check if this connection is still the active one for this user
+        const currentConnection = userConnections.get(userId);
+        if (currentConnection === ws) {
+          userConnections.delete(userId);
+          console.log(`❌ Usuário ${userId} removido das conexões WebSocket`);
+        } else {
+          console.log(`🔄 Usuário ${userId} já tem nova conexão ativa, mantendo`);
+        }
+        
+        // Remover dos grupos de clientes
+        storeClients.delete(ws);
+        assemblerClients.delete(ws);
+        
+        console.log(`📊 Conexões restantes: ${userConnections.size} total, ${storeClients.size} lojistas, ${assemblerClients.size} montadores`);
+      }, 500); // 500ms delay before cleanup
     });
   });
 
@@ -2101,29 +2108,32 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       const storeNotificationSent = global.sendNotification(storeUser.id, storeNotificationMessage);
       console.log(`✅ Notificação enviada para lojista: ${storeNotificationSent ? 'Sucesso' : 'Falhou'}`);
 
-      // Notify assembler to evaluate store
-      console.log('🔔 Enviando notificação de avaliação para MONTADOR:', {
-        userId: assemblerUser.id,
-        userName: assemblerUser.name,
-        evaluateUser: storeUser.name
-      });
-      
-      const assemblerNotificationMessage = {
-        type: 'evaluation_required',
-        serviceId: serviceId,
-        serviceData: serviceData,
-        userId: assemblerUser.id,
-        evaluateUser: {
-          id: storeUser.id,
-          name: storeUser.name,
-          type: 'lojista'
-        },
-        message: 'É necessário avaliar o lojista para finalizar o serviço.'
-      };
-      
-      const assemblerNotificationSent = global.sendNotification(assemblerUser.id, assemblerNotificationMessage);
-      console.log(`✅ Notificação enviada para montador: ${assemblerNotificationSent ? 'Sucesso' : 'Falhou'}`);
-      console.log(`🔍 ID do montador usado para notificação: ${assemblerUser.id}`);
+      // Add delay before sending assembler notification to ensure connection stability
+      setTimeout(() => {
+        console.log('🔔 Enviando notificação de avaliação para MONTADOR (com delay):', {
+          userId: assemblerUser.id,
+          userName: assemblerUser.name,
+          evaluateUser: storeUser.name
+        });
+        
+        const assemblerNotificationMessage = {
+          type: 'evaluation_required',
+          serviceId: serviceId,
+          serviceData: serviceData,
+          userId: assemblerUser.id,
+          evaluateUser: {
+            id: storeUser.id,
+            name: storeUser.name,
+            type: 'lojista'
+          },
+          message: 'É necessário avaliar o lojista para finalizar o serviço.'
+        };
+        
+        console.log(`🔍 Verificando conexões antes de enviar: ${Array.from(userConnections.keys()).join(', ')}`);
+        const assemblerNotificationSent = global.sendNotification(assemblerUser.id, assemblerNotificationMessage);
+        console.log(`✅ Notificação enviada para montador: ${assemblerNotificationSent ? 'Sucesso' : 'Falhou'}`);
+        console.log(`🔍 ID do montador usado para notificação: ${assemblerUser.id}`);
+      }, 1000); // Wait 1 second before sending assembler notification
 
       res.json({
         success: true,

@@ -380,6 +380,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced WebSocket message type definitions to include ping/pong messages
   - Fixed assembler evaluation notification system to ensure store evaluation screen appears after service completion
   - System now properly maintains stable connections for real-time evaluation notifications
+- January 3, 2025. Enhanced evaluation notification timing and connection management
+  - Added 1-second delay for assembler evaluation notifications to prevent timing conflicts
+  - Improved WebSocket connection cleanup with delayed removal to handle rapid reconnections
+  - Enhanced connection logging to track user-specific connection states
+  - Fixed notification delivery by using consistent global sendNotification function
+  - Added connection persistence mechanisms to prevent premature disconnections during evaluation workflow
 
 ## User Preferences
 
