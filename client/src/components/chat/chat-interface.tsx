@@ -79,6 +79,30 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Validar serviceId antes de continuar
+  if (!serviceId || isNaN(Number(serviceId)) || Number(serviceId) <= 0) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50">
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-lg font-semibold text-red-600">Erro: ID do serviço inválido</h2>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-400" />
+            <p>Não foi possível carregar o chat. ID do serviço inválido.</p>
+            <Button className="mt-4" onClick={onBack}>Voltar</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   const [message, setMessage] = useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isPixPaymentDialogOpen, setIsPixPaymentDialogOpen] = useState(false);
@@ -94,7 +118,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Query para buscar dados do serviço
   const serviceQuery = useQuery<Service>({
     queryKey: [`/api/services/${serviceId}`],
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    enabled: !!serviceId && !isNaN(Number(serviceId)) && Number(serviceId) > 0
   });
   
   // Mutation para atualizar o status do serviço para "em andamento"
@@ -218,6 +243,7 @@ throw new Error('Erro ao buscar mensagens');
       return sortedMessages;
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
+    enabled: !!serviceId && !isNaN(Number(serviceId)) && Number(serviceId) > 0
   });
 
   const { data: messages = [], isLoading } = messagesQuery;
