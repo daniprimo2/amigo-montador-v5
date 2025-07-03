@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy } from 'lucide-react';
+import { Bell, Home, List, MessageSquare, Map, LogOut, User, Trophy, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -99,10 +99,37 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     </button>
   );
 
+  // Componente para o botão de suporte
+  const SupportButton = () => {
+    const handleSupportClick = () => {
+      const whatsappNumber = "5511993505241";
+      const message = encodeURIComponent("Olá Leonardo! Preciso de ajuda com o Amigo Montador. 🏠🔧");
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+      
+      try {
+        window.open(whatsappUrl, '_blank');
+      } catch (error) {
+        console.error('Error opening WhatsApp:', error);
+        window.location.href = whatsappUrl;
+      }
+    };
+
+    return (
+      <button 
+        onClick={handleSupportClick}
+        className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-green-500 hover:text-green-700 hover:bg-green-50 active:scale-95"
+        title="Suporte via WhatsApp"
+      >
+        <MessageCircle className="h-5 w-5 mb-1" />
+        <span className="text-xs font-medium">Suporte</span>
+      </button>
+    );
+  };
+
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-6 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -137,6 +164,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
+          <SupportButton />
           <button 
             onClick={handleLogout}
             className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"
@@ -149,7 +177,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       );
     } else {
       return (
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-6 gap-1">
           <button 
             onClick={() => handleTabChange('home')}
             className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
@@ -184,6 +212,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <span className="text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
+          <SupportButton />
           <button 
             onClick={handleLogout}
             className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"

@@ -1,7 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { WhatsAppSupport } from "@/components/ui/whatsapp-support";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import StoreDashboardPage from "@/pages/store-dashboard-page";
@@ -49,7 +48,6 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        <WhatsAppSupport />
       </TooltipProvider>
     </AuthProvider>
   );
