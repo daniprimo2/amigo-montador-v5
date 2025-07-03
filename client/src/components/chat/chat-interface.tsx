@@ -251,6 +251,9 @@ throw new Error('Erro ao buscar mensagens');
   // Recuperar detalhes do serviço (para o título e status)
   const { data: service } = serviceQuery;
 
+  // Function to check if there's a payment proof in the messages
+  const hasPaymentProof = messages?.some(msg => msg.messageType === 'payment_proof') || false;
+
   // Mutation para marcar mensagens como lidas
   const markMessagesAsReadMutation = useMutation({
     mutationFn: async () => {
@@ -400,6 +403,47 @@ toast({
         description: error instanceof Error 
           ? error.message 
           : 'Não foi possível enviar a mensagem. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mutation para transferir pagamento para montador
+  const transferPixPaymentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/payment/pix/transfer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ serviceId }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao transferir pagamento');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Pagamento Transferido',
+        description: 'O pagamento foi transferido para o montador e o serviço foi concluído.',
+      });
+      
+      // Invalidar queries para atualizar mensagens e serviços
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}/messages`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/services/${serviceId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erro',
+        description: error instanceof Error ? error.message : 'Erro ao transferir pagamento',
         variant: 'destructive',
       });
     }
@@ -615,16 +659,31 @@ toast({
               )
             )}
             
-            {/* Botão de Contratar Montador - aparece apenas quando serviço não está contratado */}
-            {service && service.status === 'open' && (
+            {/* Botão de Contratar Montador / Repassar para Montador */}
+            {service && (service.status === 'open' || (service.status === 'in-progress' && hasPaymentProof)) && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-green-600 border-green-600 hover:bg-green-50"
-                onClick={() => setIsHireDialogOpen(true)}
+                className={`gap-1 ${hasPaymentProof 
+                  ? 'text-purple-600 border-purple-600 hover:bg-purple-50' 
+                  : 'text-green-600 border-green-600 hover:bg-green-50'
+                }`}
+                onClick={() => {
+                  if (hasPaymentProof) {
+                    transferPixPaymentMutation.mutate();
+                  } else {
+                    setIsHireDialogOpen(true);
+                  }
+                }}
+                disabled={transferPixPaymentMutation.isPending}
               >
                 <DollarSign className="h-4 w-4" />
-                Contratar Montador
+                {transferPixPaymentMutation.isPending 
+                  ? 'Processando...' 
+                  : hasPaymentProof 
+                    ? 'Repassar para Montador' 
+                    : 'Contratar Montador'
+                }
               </Button>
             )}
           </div>
