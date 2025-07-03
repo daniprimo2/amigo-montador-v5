@@ -9,12 +9,18 @@ const debugLogger = (context: string, message: string, data?: any) => {
   };
 
 type WebSocketMessage = {
-  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed';
+  type: 'connection' | 'new_application' | 'new_message' | 'application_accepted' | 'service_completed' | 'automatic_notification' | 'service_confirmed' | 'payment_ready' | 'payment_confirmed' | 'evaluation_required';
   message: string;
   serviceId?: number;
   timestamp?: string;
   serviceData?: any; // Para carregar informações do serviço quando necessário
   amount?: string; // Para notificações de pagamento
+  userId?: number; // Para identificar o usuário alvo da mensagem
+  evaluateUser?: {
+    id: number;
+    name: string;
+    type: 'lojista' | 'montador';
+  };
 };
 
 // Função para tocar som de notificação

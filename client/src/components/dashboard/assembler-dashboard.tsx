@@ -578,8 +578,38 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
           });
         }
       }
+    } else if (lastMessage.type === 'evaluation_required') {
+      // Mostrar tela de avaliação imediatamente
+      if (lastMessage.userId === user?.id && lastMessage.evaluateUser) {
+        setSelectedServiceForRating({
+          id: lastMessage.serviceId,
+          title: lastMessage.serviceData?.title || 'Serviço',
+          store: {
+            id: lastMessage.evaluateUser.id,
+            userId: lastMessage.evaluateUser.id,
+            name: lastMessage.evaluateUser.name
+          }
+        });
+        
+        // Abrir diálogo de avaliação obrigatória
+        setIsRatingDialogOpen(true);
+        
+        // Notificar o usuário
+        toast({
+          title: '⭐ Avaliação Obrigatória',
+          description: lastMessage.message,
+          duration: 10000,
+          variant: 'default',
+          className: 'bg-yellow-100 border-yellow-500 border-2 font-medium shadow-lg'
+        });
+
+        // Invalidar queries para atualizar dados
+        queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/services/pending-evaluations'] });
+      }
     }
-  }, [lastMessage, queryClient, toast]);
+  }, [lastMessage, queryClient, toast, user]);
   
   // Escuta os eventos de mudança de aba do layout
   useEffect(() => {

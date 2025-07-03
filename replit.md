@@ -267,6 +267,15 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Conditional logic detects payment_proof messages in chat to trigger button transformation
   - Integrated transfer endpoint automatically completes service and notifies assembler
   - Seamless workflow: hire → pay → proof → transfer → complete
+- January 3, 2025. Implemented mandatory mutual evaluation system for service completion
+  - Added new service status "awaiting_evaluation" to schema and system
+  - Created comprehensive rating API endpoints (/api/services/:serviceId/rate, /api/services/pending-evaluations)
+  - Modified "Repassar para Montador" button to trigger immediate evaluation workflow for both parties
+  - Implemented WebSocket notifications to show evaluation dialog automatically to both users
+  - Service completion now requires both store owner and assembler to rate each other
+  - Only after mutual evaluation completion does service status change to "completed"
+  - Enhanced rating dialog with immediate feedback on mutual completion status
+  - Seamless workflow: transfer → immediate evaluation prompts → both evaluate → service completed
 
 ## User Preferences
 

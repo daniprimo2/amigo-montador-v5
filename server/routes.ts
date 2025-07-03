@@ -1830,6 +1830,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update service status to awaiting evaluation
       await storage.updateServiceStatus(serviceId, 'awaiting_evaluation');
 
+      // Get assembler info for the service
+      const acceptedApplication = await db.select()
+        .from(applications)
+        .where(
+          and(
+            eq(applications.serviceId, serviceId),
+            eq(applications.status, 'accepted')
+          )
+        )
+        .limit(1);
+
+      if (acceptedApplication.length === 0) {
+        return res.status(404).json({ message: "Montador não encontrado para este serviço" });
+      }
+
+      const assembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
+      if (!assembler) {
+        return res.status(404).json({ message: "Dados do montador não encontrados" });
+      }
+
+      const assemblerUser = await storage.getUser(assembler.userId);
+      const storeUser = await storage.getUser(req.user.id);
+
+      if (!assemblerUser || !storeUser) {
+        return res.status(404).json({ message: "Dados dos usuários não encontrados" });
+      }
+
       // Send transfer notification message
       await storage.createMessage({
         serviceId: serviceId,
@@ -1837,6 +1864,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: `Pagamento transferido para o montador! Valor: R$ ${service.price}. Agora é necessário que ambos avaliem o serviço para finalizá-lo.`,
         messageType: 'transfer_notification' as const
       });
+
+      // Send immediate evaluation notifications to both parties via WebSocket
+      const serviceData = {
+        id: service.id,
+        title: service.title,
+        storeData: {
+          id: store.id,
+          userId: storeUser.id,
+          name: storeUser.name
+        },
+        assemblerData: {
+          id: assembler.id,
+          userId: assemblerUser.id,
+          name: assemblerUser.name
+        }
+      };
+
+      // Notify store owner to evaluate assembler
+      if (wss) {
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            try {
+              const wsMessage = {
+                type: 'evaluation_required',
+                serviceId: serviceId,
+                serviceData: serviceData,
+                userId: storeUser.id,
+                evaluateUser: {
+                  id: assemblerUser.id,
+                  name: assemblerUser.name,
+                  type: 'montador'
+                },
+                message: 'É necessário avaliar o montador para finalizar o serviço.'
+              };
+              client.send(JSON.stringify(wsMessage));
+            } catch (error) {
+              console.error('Erro ao enviar notificação WebSocket para lojista:', error);
+            }
+          }
+        });
+      }
+
+      // Notify assembler to evaluate store
+      if (wss) {
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            try {
+              const wsMessage = {
+                type: 'evaluation_required',
+                serviceId: serviceId,
+                serviceData: serviceData,
+                userId: assemblerUser.id,
+                evaluateUser: {
+                  id: storeUser.id,
+                  name: storeUser.name,
+                  type: 'lojista'
+                },
+                message: 'É necessário avaliar o lojista para finalizar o serviço.'
+              };
+              client.send(JSON.stringify(wsMessage));
+            } catch (error) {
+              console.error('Erro ao enviar notificação WebSocket para montador:', error);
+            }
+          }
+        });
+      }
 
       res.json({
         success: true,
