@@ -1361,7 +1361,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
             (filteredServices.map(service => (
               <AvailableServiceCard 
                 key={service.id} 
-                service={service} 
+                service={formatServiceForDisplay(service)} 
                 onApply={handleApply}
                 activeServices={activeServices || []}
               />
