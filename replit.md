@@ -212,6 +212,12 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Updated project documentation to reflect web-only focus
   - Maintained all core functionality for responsive web application
   - Project now optimized exclusively for desktop and mobile web browsers
+- January 3, 2025. Fixed price formatting for small Brazilian currency values
+  - Resolved issue where R$ 0,01 was being displayed as R$ 1,00
+  - Updated formatPrice functions in all service card components to correctly handle database values
+  - Database stores prices in American format (0.01) but displays in Brazilian format (R$ 0,01)
+  - Fixed price interpretation across StoreServiceCard, AvailableServiceCard, CompletedServiceCard, and ServiceDetailsDialog components
+  - Small currency values now display correctly according to Brazilian currency standards
 
 ## User Preferences
 
