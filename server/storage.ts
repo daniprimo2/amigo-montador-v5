@@ -161,8 +161,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
+    // Get all open services
     const allServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    
+    // Get services that have pending or accepted applications
+    const servicesWithApplications = await db.select({ serviceId: applications.serviceId })
+      .from(applications)
+      .where(inArray(applications.status, ['pending', 'accepted']))
+      .groupBy(applications.serviceId);
+    
+    const serviceIdsWithApplications = new Set(servicesWithApplications.map(row => row.serviceId));
+    
+    // Filter out services that have pending or accepted applications
+    const availableServices = allServices.filter(service => !serviceIdsWithApplications.has(service.id));
+    
     console.log(`Total de serviços abertos encontrados: ${allServices.length}`);
+    console.log(`Serviços com candidaturas pendentes/aceitas: ${serviceIdsWithApplications.size}`);
+    console.log(`Serviços realmente disponíveis: ${availableServices.length}`);
     
     // Get assembler coordinates from CEP
     let assemblerLat: number;
@@ -184,7 +199,7 @@ export class DatabaseStorage implements IStorage {
     // Calculate distance for each service and filter by 20km radius
     const servicesWithDistance = [];
     
-    for (const service of allServices) {
+    for (const service of availableServices) {
       const serviceLat = parseFloat(service.latitude);
       const serviceLng = parseFloat(service.longitude);
       
@@ -258,6 +273,8 @@ export class DatabaseStorage implements IStorage {
     await db.update(applications).set({ status: 'accepted' }).where(eq(applications.id, id));
     await db.update(applications).set({ status: 'rejected' })
       .where(and(eq(applications.serviceId, serviceId), not(eq(applications.id, id))));
+    // Update service status to 'in-progress' when an application is accepted
+    await db.update(services).set({ status: 'in-progress' }).where(eq(services.id, serviceId));
   }
 
   async getMessagesByServiceId(serviceId: number): Promise<Message[]> {
