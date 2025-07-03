@@ -358,6 +358,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Star ratings now display in user profiles and throughout the platform reflecting real evaluation data
   - Ranking tab shows top performers categorized by user type with comprehensive rating statistics
   - System ensures stars displayed in profiles accurately reflect actual evaluations received from completed services
+- January 3, 2025. Fixed notification system to be unique per user
+  - Updated WebSocket message handling to filter notifications by user ID
+  - Added user-specific notification tags to prevent browser notification duplicates
+  - Enhanced sendBrowserNotification function to accept userId parameter for unique identification
+  - Updated all notification calls to include user ID for proper filtering
+  - Fixed issue where notifications were showing to all users instead of specific recipients
+  - Browser notifications now use unique tags: amigomontador-user-{userId}-{timestamp}
+  - System properly validates message recipient before displaying notifications
 
 ## User Preferences
 

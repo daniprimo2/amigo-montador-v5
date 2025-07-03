@@ -54,7 +54,7 @@ export const useNotification = () => {
     };
   }, []);
 
-  const showNotification = (options: NotificationOptions) => {
+  const showNotification = (options: NotificationOptions & { userId?: number }) => {
     // Play sound notification
     if (audioRef.current && (audioRef.current as any).playNotificationSound && !options.silent) {
       try {
@@ -67,13 +67,15 @@ export const useNotification = () => {
     // Show browser notification if permission granted
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
+        const uniqueTag = `amigomontador-user-${options.userId || 'unknown'}-${Date.now()}`;
         const notification = new Notification(options.title, {
           body: options.body,
           icon: options.icon || '/favicon.ico',
           badge: '/favicon.ico',
-          tag: 'amigomontador-chat',
+          tag: uniqueTag,
           silent: options.silent || false,
-        } as NotificationOptions & { badge?: string; tag?: string });
+          requireInteraction: false,
+        } as NotificationOptions & { badge?: string; tag?: string; requireInteraction?: boolean });
 
         // Auto-close notification after 4 seconds
         setTimeout(() => {

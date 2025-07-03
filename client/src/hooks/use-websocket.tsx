@@ -50,8 +50,8 @@ const playNotificationSound = (type: 'message' | 'application' | 'default' = 'de
   }
 };
 
-// Função para enviar notificação do navegador
-const sendBrowserNotification = (title: string, body: string, icon: string = '/logo.png') => {
+// Função para enviar notificação do navegador única por usuário
+const sendBrowserNotification = (title: string, body: string, icon: string = '/logo.png', userId?: number) => {
   // Verificar se o navegador suporta notificações
   if (!("Notification" in window)) {
     return;
@@ -59,13 +59,27 @@ const sendBrowserNotification = (title: string, body: string, icon: string = '/l
   
   // Verificar a permissão
   if (Notification.permission === "granted") {
-    // Se for permitido, criar notificação
-    new Notification(title, { body, icon });
+    // Criar notificação com tag única por usuário para evitar duplicatas
+    const notificationTag = `amigomontador-user-${userId || 'unknown'}-${Date.now()}`;
+    new Notification(title, { 
+      body, 
+      icon, 
+      tag: notificationTag,
+      requireInteraction: false,
+      silent: false
+    });
   } else if (Notification.permission !== "denied") {
     // Caso contrário, pedir permissão
     Notification.requestPermission().then(permission => {
       if (permission === "granted") {
-        new Notification(title, { body, icon });
+        const notificationTag = `amigomontador-user-${userId || 'unknown'}-${Date.now()}`;
+        new Notification(title, { 
+          body, 
+          icon, 
+          tag: notificationTag,
+          requireInteraction: false,
+          silent: false
+        });
       }
     });
   }
@@ -140,6 +154,12 @@ export function useWebSocket() {
           const data = JSON.parse(event.data) as WebSocketMessage;
           debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
           
+          // Verificar se a mensagem é destinada a este usuário
+          if (data.userId && data.userId !== user.id) {
+            debugLogger('WebSocket', `Mensagem não destinada a este usuário (${user.id}), ignorando mensagem para usuário ${data.userId}`);
+            return;
+          }
+          
           // Atualizar último estado da mensagem e enviar evento de notificação
           setLastMessage(data);
           
@@ -152,7 +172,7 @@ export function useWebSocket() {
           // Processar diferentes tipos de mensagem
           if (data.type === 'new_application') {
             playNotificationSound('application');
-            sendBrowserNotification('🔔 Nova candidatura', data.message || 'Um montador se candidatou ao seu serviço');
+            sendBrowserNotification('🔔 Nova candidatura', data.message || 'Um montador se candidatou ao seu serviço', '/logo.png', user.id);
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
             queryClient.invalidateQueries({ queryKey: ['/api/store/services/with-applications'] });
             
@@ -165,7 +185,7 @@ export function useWebSocket() {
             });
           } else if (data.type === 'new_message') {
             playNotificationSound('message');
-            sendBrowserNotification('💬 Nova mensagem recebida!', data.message || 'Você recebeu uma nova mensagem. Clique para visualizar.');
+            sendBrowserNotification('💬 Nova mensagem recebida!', data.message || 'Você recebeu uma nova mensagem. Clique para visualizar.', '/logo.png', user.id);
             
             if (data.serviceId) {
               queryClient.invalidateQueries({ queryKey: [`/api/services/${data.serviceId}/messages`] });
@@ -186,7 +206,7 @@ export function useWebSocket() {
             }
           } else if (data.type === 'application_accepted') {
             playNotificationSound('application');
-            sendBrowserNotification('✅ Candidatura aceita!', data.message || 'Uma loja aceitou sua candidatura para um serviço');
+            sendBrowserNotification('✅ Candidatura aceita!', data.message || 'Uma loja aceitou sua candidatura para um serviço', '/logo.png', user.id);
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
             
             toast({
@@ -202,7 +222,7 @@ export function useWebSocket() {
             }
           } else if (data.type === 'service_completed') {
             playNotificationSound();
-            sendBrowserNotification('🌟 Serviço finalizado!', 'Por favor, avalie sua experiência com este serviço.');
+            sendBrowserNotification('🌟 Serviço finalizado!', 'Por favor, avalie sua experiência com este serviço.', '/logo.png', user.id);
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
             
             if (data.serviceId && data.serviceData) {
@@ -224,7 +244,7 @@ export function useWebSocket() {
             });
           } else if (data.type === 'service_started_with_other') {
             playNotificationSound();
-            sendBrowserNotification('📋 Serviço iniciado', data.message || 'Um serviço foi iniciado com outro montador');
+            sendBrowserNotification('📋 Serviço iniciado', data.message || 'Um serviço foi iniciado com outro montador', '/logo.png', user.id);
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
             queryClient.invalidateQueries({ queryKey: ['/api/services/available'] });
             
@@ -242,7 +262,7 @@ export function useWebSocket() {
           } else if (data.type === 'evaluation_required') {
             // Notificação de avaliação obrigatória
             playNotificationSound();
-            sendBrowserNotification('⭐ Avaliação obrigatória', data.message || 'É necessário avaliar o serviço para finalizá-lo');
+            sendBrowserNotification('⭐ Avaliação obrigatória', data.message || 'É necessário avaliar o serviço para finalizá-lo', '/logo.png', user.id);
             
             // Invalidar queries para atualizar listas
             queryClient.invalidateQueries({ queryKey: ['/api/services'] });
