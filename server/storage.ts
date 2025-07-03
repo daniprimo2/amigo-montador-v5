@@ -1,7 +1,7 @@
-import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
+import { eq, and, not, isNotNull, isNull, or, sql, inArray, desc } from "drizzle-orm";
 import { db } from "./db.js";
 import { 
-  users, stores, assemblers, services, applications, messages, ratings, bankAccounts, passwordResetTokens,
+  users, stores, assemblers, services, applications, messages, messageReads, ratings, bankAccounts, passwordResetTokens,
   type User, type Store, type Assembler, type Service, type Application, type Message, type Rating, type BankAccount, type PasswordResetToken,
   type InsertUser, type InsertStore, type InsertAssembler, type InsertService, type InsertApplication, 
   type InsertMessage, type InsertRating, type InsertBankAccount, type InsertPasswordResetToken
@@ -258,7 +258,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessagesByServiceId(serviceId: number): Promise<Message[]> {
-    return await db.select().from(messages).where(eq(messages.serviceId, serviceId)).orderBy(messages.timestamp);
+    try {
+      return await db.select().from(messages).where(eq(messages.serviceId, serviceId)).orderBy(messages.sentAt);
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      return [];
+    }
   }
 
   async createMessage(messageData: InsertMessage): Promise<Message> {
@@ -267,18 +272,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markMessagesAsRead(serviceId: number, userId: number): Promise<void> {
-    await db.update(messages)
-      .set({ isRead: true })
-      .where(and(eq(messages.serviceId, serviceId), not(eq(messages.senderId, userId))));
+    try {
+      // Buscar mensagens não lidas do serviço
+      const allMessages = await db.select({ id: messages.id })
+        .from(messages)
+        .where(and(
+          eq(messages.serviceId, serviceId),
+          not(eq(messages.senderId, userId))
+        ));
+
+      // Marcar cada mensagem como lida
+      for (const message of allMessages) {
+        await db.insert(messageReads).values({
+          messageId: message.id,
+          userId: userId
+        }).onConflictDoNothing();
+      }
+    } catch (error) {
+      console.error('Erro ao marcar mensagens como lidas:', error);
+    }
   }
 
   async getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number> {
     const result = await db.select({ count: sql`count(*)` })
       .from(messages)
+      .leftJoin(messageReads, and(
+        eq(messageReads.messageId, messages.id),
+        eq(messageReads.userId, userId)
+      ))
       .where(and(
         eq(messages.serviceId, serviceId),
         not(eq(messages.senderId, userId)),
-        eq(messages.isRead, false)
+        isNull(messageReads.messageId)
       ));
     return Number(result[0]?.count || 0);
   }
@@ -289,13 +314,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTotalUnreadMessageCount(userId: number): Promise<number> {
-    const result = await db.select({ count: sql`count(*)` })
-      .from(messages)
-      .where(and(
-        not(eq(messages.senderId, userId)),
-        eq(messages.isRead, false)
-      ));
-    return Number(result[0]?.count || 0);
+    try {
+      const result = await db.select({ count: sql`count(*)` })
+        .from(messages)
+        .leftJoin(messageReads, and(
+          eq(messageReads.messageId, messages.id),
+          eq(messageReads.userId, userId)
+        ))
+        .where(and(
+          not(eq(messages.senderId, userId)),
+          isNull(messageReads.messageId)
+        ));
+      return Number(result[0]?.count || 0);
+    } catch (error) {
+      console.error('Erro ao buscar contagem total de mensagens não lidas:', error);
+      return 0;
+    }
   }
 
   async getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined> {
