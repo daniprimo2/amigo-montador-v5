@@ -938,7 +938,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para contratar montador
+  app.post("/api/services/:serviceId/hire", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
 
+      const user = req.user!;
+      const serviceId = parseInt(req.params.serviceId);
+      const { assemblerId, price, date } = req.body;
+
+      // Verificar se o usuário é lojista
+      if (user.userType !== 'lojista') {
+        return res.status(403).json({ message: "Apenas lojistas podem contratar montadores" });
+      }
+
+      // Verificar se o serviço existe
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Verificar se o usuário é dono do serviço
+      const store = await storage.getStoreByUserId(user.id);
+      if (!store || store.id !== service.storeId) {
+        return res.status(403).json({ message: "Acesso negado a este serviço" });
+      }
+
+      // Buscar a candidatura específica do montador
+      const application = await storage.getApplicationByServiceAndAssembler(serviceId, assemblerId);
+      if (!application) {
+        return res.status(404).json({ message: "Candidatura não encontrada" });
+      }
+
+      // Aceitar a candidatura (rejeita as outras automaticamente)
+      await storage.acceptApplication(application.id, serviceId);
+
+      // Atualizar os dados do serviço
+      await storage.updateService(serviceId, {
+        price: price,
+        date: date,
+        status: 'in-progress'
+      });
+
+      // Buscar dados do montador para notificação
+      const assembler = await storage.getAssemblerById(assemblerId);
+      if (assembler) {
+        const assemblerUser = await storage.getUser(assembler.userId);
+        if (assemblerUser) {
+          // Criar mensagem de confirmação da contratação
+          await storage.createMessage({
+            serviceId: serviceId,
+            senderId: user.id,
+            content: `✅ Montador contratado! Valor: R$ ${price.replace('.', ',')} | Data: ${date}`,
+            messageType: 'hire_confirmation'
+          });
+
+          // Enviar notificação WebSocket
+          if (global.sendNotification) {
+            global.sendNotification(assemblerUser.id, {
+              type: 'service_confirmed',
+              title: 'Você foi contratado!',
+              message: `Parabéns! Você foi contratado para o serviço "${service.title}"`,
+              serviceId: serviceId,
+              data: {
+                serviceId: serviceId,
+                serviceName: service.title,
+                price: price,
+                date: date
+              }
+            });
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Montador contratado com sucesso",
+        service: await storage.getServiceById(serviceId)
+      });
+
+    } catch (error) {
+      console.error('Erro ao contratar montador:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
 
   // Rota para buscar mensagens de um serviço
   app.get("/api/services/:serviceId/messages", async (req, res) => {
