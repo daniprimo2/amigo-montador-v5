@@ -173,9 +173,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
-    // Get all services (open, in-progress, completed, awaiting_evaluation)
+    // Get ALL services regardless of status - services should always be visible as requested
     const allServices = await db.select().from(services)
-      .where(inArray(services.status, ['open', 'in-progress', 'completed', 'awaiting_evaluation']))
       .orderBy(desc(services.createdAt));
     
     // Get services where this assembler has applications
@@ -195,27 +194,14 @@ export class DatabaseStorage implements IStorage {
     
     const acceptedServiceIds = new Set(acceptedApplications.map(app => app.serviceId));
     
-    // Include services where:
-    // 1. Service is "open" - visible to ALL assemblers
-    // 2. Service is "in-progress", "completed", or "awaiting_evaluation" - only visible to the ACCEPTED assembler
-    const availableServices = allServices.filter(service => {
-      if (service.status === 'open') {
-        // All open services are visible to all assemblers
-        return true;
-      }
-      
-      if (['in-progress', 'completed', 'awaiting_evaluation'].includes(service.status)) {
-        // Only show to the assembler who was accepted for this service
-        return acceptedServiceIds.has(service.id);
-      }
-      
-      return false;
-    });
+    // SHOW ALL SERVICES - regardless of status as requested by user
+    // Services should not disappear from the screen
+    const availableServices = allServices;
     
     console.log(`Total de serviços encontrados: ${allServices.length}`);
     console.log(`Serviços abertos (visíveis a todos): ${allServices.filter(s => s.status === 'open').length}`);
     console.log(`Serviços onde montador foi aceito: ${acceptedServiceIds.size}`);
-    console.log(`Serviços disponíveis para este montador: ${availableServices.length}`);
+    console.log(`TODOS OS SERVIÇOS disponíveis para este montador: ${availableServices.length}`);
     
     // Get assembler coordinates from CEP
     let assemblerLat: number;

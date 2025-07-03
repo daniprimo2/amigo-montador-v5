@@ -700,17 +700,15 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   const [appliedServices, setAppliedServices] = useState<Set<number>>(new Set());
   
   // Filtrar serviços por status para cada aba
-  // Pending services: services where user has applied but waiting for store approval
+  // Pending services: ALL services where user has applied - regardless of status
   const pendingServices = (activeServices || []).filter((service: any) => 
-    service.applicationStatus === 'pending' && service.hasApplied
+    service.hasApplied  // Show all applied services regardless of status
   );
   
-  // Available services: open status but not yet applied (excluding pending ones)
-  // Also exclude services that have been applied to locally
+  // ALL SERVICES should be visible regardless of status - as requested by user
+  // Services should not disappear from the screen
   const availableServicesRaw = (rawServices || []).filter((service: any) => 
-    service.status === 'open' && 
-    !service.hasApplied && 
-    service.applicationStatus !== 'pending' &&
+    // Show all services that haven't been applied to locally
     !appliedServices.has(service.id)
   );
   

@@ -626,9 +626,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      // Filter out services where the assembler has already applied
-      // These should only appear in the "Aguardando Lojista" tab (from /api/services/active)
-      const availableServicesOnly = servicesWithStoreInfo.filter(service => !service.hasApplied);
+      // SHOW ALL SERVICES - user requested services should not disappear regardless of status
+      // Services should be visible on screen regardless of whether applied or not
+      const availableServicesOnly = servicesWithStoreInfo;
 
       res.json(availableServicesOnly);
     } catch (error) {
