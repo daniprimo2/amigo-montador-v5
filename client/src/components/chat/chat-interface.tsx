@@ -882,8 +882,8 @@ toast({
                       <h3 className="text-sm font-medium text-gray-500">Localização</h3>
                       <p className="text-base">
                         {userProfile.city && userProfile.state 
-                          ? `${userProfile.city}, ${userProfile.state}`
-                          : userProfile.city || userProfile.state}
+                          ? `${String(userProfile.city)}, ${String(userProfile.state)}`
+                          : String(userProfile.city || userProfile.state || '')}
                       </p>
                     </div>
                   )}
@@ -907,8 +907,8 @@ toast({
                           <h3 className="text-sm font-medium text-gray-500">Localidade da Loja</h3>
                           <p className="text-base">
                             {userProfile.store.city && userProfile.store.state 
-                              ? `${userProfile.store.city}, ${userProfile.store.state}`
-                              : userProfile.store.city || userProfile.store.state}
+                              ? `${String(userProfile.store.city)}, ${String(userProfile.store.state)}`
+                              : String(userProfile.store.city || userProfile.store.state || '')}
                           </p>
                         </div>
                       )}
@@ -927,7 +927,7 @@ toast({
                                 key={index}
                                 className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
                               >
-                                {specialty}
+                                {String(specialty)}
                               </span>
                             ))}
                           </div>
