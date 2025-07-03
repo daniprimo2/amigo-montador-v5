@@ -1218,5 +1218,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para obter contagem de mensagens não lidas
+  app.get("/api/messages/unread-count", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const unreadCount = await storage.getTotalUnreadMessageCount(user.id);
+      
+      res.json({ count: unreadCount });
+    } catch (error) {
+      console.error('Erro ao buscar contagem de mensagens não lidas:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }

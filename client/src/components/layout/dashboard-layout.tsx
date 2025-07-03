@@ -26,6 +26,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
+  const [testUnreadCount, setTestUnreadCount] = useState(0);
   const { showNotification } = useNotification();
   
   // Buscar contagem de mensagens não lidas do servidor
@@ -41,8 +42,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     refetchInterval: 10000, // Atualizar a cada 10 segundos
   });
   
-  const unreadCount = unreadData.count;
+  // Use test count to demonstrate notification or real data if available
+  const realUnreadCount = unreadData.count || 0;
+  const unreadCount = Math.max(realUnreadCount, testUnreadCount);
   const hasUnreadMessage = unreadCount > 0;
+  
+
   
   // Detectar quando uma nova mensagem chega
   useEffect(() => {
@@ -333,6 +338,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 className="text-white"
                 showPulse={hasUnreadMessage}
               />
+            </button>
+            {/* Test button for demonstration */}
+            <button 
+              className="text-white text-xs p-2 rounded-full hover:bg-white/10 transition-colors"
+              onClick={() => {
+                setTestUnreadCount(testUnreadCount === 0 ? 3 : 0);
+                setHasNewMessage(true);
+              }}
+              title="Testar notificação"
+            >
+              Test
             </button>
             <button 
               onClick={handleLogout}

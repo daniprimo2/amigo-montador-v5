@@ -24,6 +24,8 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showBadgeBounce, setShowBadgeBounce] = useState(false);
 
+
+
   // Trigger animation when new message arrives
   useEffect(() => {
     if (hasNewMessage && count > 0) {
@@ -68,15 +70,16 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
       {count > 0 && (
         <span 
           className={cn(
-            "absolute -top-1 -right-1 bg-red-500 text-white font-medium rounded-full",
+            "absolute -top-1 -right-1 bg-red-500 text-white font-bold rounded-full",
             "flex items-center justify-center px-1",
-            "border-2 border-white shadow-sm",
+            "border-2 border-white shadow-lg",
             "animate-in zoom-in-50 duration-200",
             showBadgeBounce ? 'animate-badge-bounce' : '',
             badgeSizeClasses[size]
           )}
           style={{
-            minWidth: size === 'sm' ? '12px' : size === 'md' ? '16px' : '20px'
+            minWidth: size === 'sm' ? '14px' : size === 'md' ? '18px' : '22px',
+            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
           }}
         >
           {count > 99 ? '99+' : count}
