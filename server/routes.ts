@@ -17,6 +17,64 @@ import { emailService } from './email-service.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
+// Middleware to check for mandatory evaluations for assemblers
+async function checkMandatoryEvaluations(req: any, res: any, next: any) {
+  // Only apply this check to assemblers (montadores)
+  if (!req.user || req.user.userType !== 'montador') {
+    return next();
+  }
+
+  try {
+    // Get assembler info
+    const userAssembler = await storage.getAssemblerByUserId(req.user.id);
+    if (!userAssembler) {
+      return next();
+    }
+
+    // Check for services awaiting evaluation where assembler was accepted
+    const serviceResults = await db.select({
+      id: services.id,
+      title: services.title,
+      storeId: services.storeId,
+      status: services.status
+    })
+    .from(services)
+    .innerJoin(applications, and(
+      eq(applications.serviceId, services.id),
+      eq(applications.assemblerId, userAssembler.id),
+      eq(applications.status, 'accepted')
+    ))
+    .where(eq(services.status, 'awaiting_evaluation'));
+
+    // Check if assembler has any pending evaluations
+    for (const service of serviceResults) {
+      // Check if assembler has already rated for this service
+      const existingRating = await storage.getRatingByServiceIdAndUser(
+        service.id,
+        req.user.id,
+        service.storeId // We need to get the actual store user ID, but this is a simplified check
+      );
+
+      if (!existingRating) {
+        // Found a service where assembler hasn't provided evaluation yet
+        return res.status(423).json({
+          message: "Você deve avaliar serviços pendentes antes de continuar usando o aplicativo.",
+          requiresEvaluation: true,
+          serviceId: service.id,
+          serviceTitle: service.title
+        });
+      }
+    }
+
+    // No pending evaluations, proceed
+    next();
+  } catch (error) {
+    console.error('Erro ao verificar avaliações obrigatórias:', error);
+    // In case of error, don't block the user but log the issue
+    next();
+  }
+}
+
 // Function to generate payment proof image as SVG
 function generatePaymentProofImage(data: {
   serviceId: number;
@@ -530,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint para serviços ativos do montador (onde ele tem candidaturas)
-  app.get("/api/services/active", async (req, res) => {
+  app.get("/api/services/active", checkMandatoryEvaluations, async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
@@ -590,7 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint específico deve vir antes do genérico
-  app.get("/api/services/available", async (req, res) => {
+  app.get("/api/services/available", checkMandatoryEvaluations, async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
@@ -1083,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para enviar mensagem
-  app.post("/api/services/:serviceId/messages", async (req, res) => {
+  app.post("/api/services/:serviceId/messages", checkMandatoryEvaluations, async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
@@ -1187,7 +1245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para candidatar-se a um serviço
-  app.post("/api/services/:serviceId/apply", async (req, res) => {
+  app.post("/api/services/:serviceId/apply", checkMandatoryEvaluations, async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });

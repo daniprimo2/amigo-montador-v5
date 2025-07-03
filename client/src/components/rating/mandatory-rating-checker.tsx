@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MandatoryRatingDialog } from "./mandatory-rating-dialog";
+import { WorkflowBlocker } from "@/components/evaluation/workflow-blocker";
 import { useAuth } from "@/hooks/use-auth";
 
 // Estado global para controlar se há um diálogo ativo
@@ -23,6 +24,13 @@ interface MandatoryRatingCheckerProps {
 }
 
 export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheckerProps) {
+  // Para montadores, usar o sistema de bloqueio completo
+  // Para lojistas, manter o sistema atual (não bloqueante)
+  if (currentUserType === 'montador') {
+    return <WorkflowBlocker userType="montador" />;
+  }
+
+  // Sistema original para lojistas (não bloqueante)
   const [currentRatingIndex, setCurrentRatingIndex] = useState(0);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [immediateEvaluation, setImmediateEvaluation] = useState<{
