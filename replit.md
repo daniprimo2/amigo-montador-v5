@@ -319,6 +319,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Store owners now see complete conversation history regardless of service status or assembler count
   - System ensures no conversation is hidden: pending, active, and completed chats all visible
   - Each service can now display multiple conversation entries if multiple assemblers have interacted
+- January 3, 2025. Implemented temporary PIX payment testing solution for development phase
+  - Added development warning in PIX payment dialog explaining temporary nature of test functionality
+  - Modified "Simular Pagamento" button to "🧪 Teste Gerar Comprovante" with orange styling for visibility
+  - Added visual warning message explaining API is in development and test button is temporary solution
+  - Enhanced PIX payment button in chat interface with warning tooltip and pulsing indicator
+  - Temporary testing solution allows normal site workflow while PIX API development continues
+  - Clear messaging informs users this is development mode functionality
 
 ## User Preferences
 

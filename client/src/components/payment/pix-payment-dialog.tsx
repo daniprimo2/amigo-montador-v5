@@ -551,6 +551,21 @@ export function PixPaymentDialog({
               </CardContent>
             </Card>
 
+            {/* Temporary development warning */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-1">⚠️ Modo de Desenvolvimento</p>
+                  <p className="text-xs">
+                    A API de contratação do Montador via meio de pagamento PIX ainda está em desenvolvimento. 
+                    O botão "Teste Gerar Comprovante" é uma solução temporária para simular a confirmação 
+                    de pagamento e permitir que o fluxo do site continue normalmente.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <Button 
                 onClick={() => setStep('proof')}
@@ -562,10 +577,10 @@ export function PixPaymentDialog({
               <Button 
                 onClick={() => simulatePaymentConfirmation.mutate()}
                 disabled={simulatePaymentConfirmation.isPending}
-                className="flex-1"
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                 variant="default"
               >
-                {simulatePaymentConfirmation.isPending ? 'Simulando...' : 'Simular Pagamento'}
+                {simulatePaymentConfirmation.isPending ? 'Simulando...' : '🧪 Teste Gerar Comprovante'}
               </Button>
             </div>
           </div>

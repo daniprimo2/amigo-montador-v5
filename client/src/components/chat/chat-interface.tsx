@@ -651,11 +651,13 @@ toast({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200"
+                  className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200 relative group"
                   onClick={() => setIsPixPaymentDialogOpen(true)}
+                  title="⚠️ Modo de Desenvolvimento: API PIX em desenvolvimento, usar botão de teste"
                 >
                   <CreditCard className="h-4 w-4" />
                   Pagar via PIX
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
                 </Button>
               )
             )}
