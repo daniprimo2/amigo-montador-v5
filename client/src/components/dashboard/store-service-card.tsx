@@ -268,11 +268,11 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                 </span>
               </div>
             </div>
-          ) : service.date ? (
+          ) : service.startDate ? (
             <div className="flex items-center">
               <CalendarIcon className="h-4 w-4 text-gray-400 mr-1 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-gray-600 truncate">
-                {service.date}
+                {new Date(service.startDate).toLocaleDateString('pt-BR')}
               </span>
             </div>
           ) : (
@@ -372,7 +372,9 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
             title: service.title,
             description: service.description,
             location: service.location,
-            date: service.date,
+            date: service.startDate && service.endDate ? 
+              `${new Date(service.startDate).toLocaleDateString('pt-BR')} - ${new Date(service.endDate).toLocaleDateString('pt-BR')}` : 
+              service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Data não especificada',
             price: service.price,
             materialType: service.materialType,
             cep: service.cep,

@@ -755,7 +755,9 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         id: service.id,
         title: service.title,
         location: service.location,
-        date: service.date,
+        date: service.startDate && service.endDate ? 
+          `${new Date(service.startDate).toLocaleDateString('pt-BR')} - ${new Date(service.endDate).toLocaleDateString('pt-BR')}` : 
+          service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Data não especificada',
         startDate: service.startDate,
         endDate: service.endDate,
         price: service.price,

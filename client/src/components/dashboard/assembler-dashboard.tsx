@@ -124,25 +124,15 @@ const getServiceDates = (services?: ServiceData[]) => {
   
   services.forEach(service => {
     try {
-      // Tenta extrair o dia da data do serviço
-      const dateString = service.date;
-      
-      // Verifica se contém um intervalo (formato "2025-05-15 - 2025-05-30")
-      if (dateString.includes(' - ')) {
-        const [startDate] = dateString.split(' - ');
-        const day = new Date(startDate).getDate().toString();
-        if (!dates.includes(day)) {
-          dates.push(day);
-        }
-      } else {
-        // Formato data normal
-        const day = new Date(dateString).getDate().toString();
+      // Tenta extrair o dia da data do serviço usando startDate
+      if (service.startDate) {
+        const day = new Date(service.startDate).getDate().toString();
         if (!isNaN(Number(day)) && !dates.includes(day)) {
           dates.push(day);
         }
       }
     } catch (e) {
-      console.error('Erro ao processar data:', service.date);
+      console.error('Erro ao processar data:', service.startDate);
     }
   });
   
@@ -1030,7 +1020,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                       <div className="text-sm text-gray-500 mb-2">
                         <p>Loja: {typeof service.store === 'object' && service.store?.name ? service.store.name : (service.store || 'Não especificada')}</p>
                         <p>Local: {service.location || 'Não especificado'}</p>
-                        <p>Data: {service.date || 'Não especificada'}</p>
+                        <p>Data: {service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Não especificada'}</p>
                       </div>
                       <div className="flex justify-between items-center mt-3">
                         <div className="text-primary font-semibold">
@@ -1111,7 +1101,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                     <div className="text-sm text-gray-500 mb-2">
                       <p>Loja: {service.store?.name || 'Não especificada'}</p>
                       <p>Local: {service.location || 'Não especificado'}</p>
-                      <p>Data: {service.date ? new Date(service.date).toLocaleDateString('pt-BR') : 'Não especificada'}</p>
+                      <p>Data: {service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Não especificada'}</p>
                     </div>
                     <div className="flex justify-between items-center mt-3">
                       <div className="text-primary font-semibold">
@@ -1170,7 +1160,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
                         id: service.id,
                         title: service.title,
                         location: service.location || '',
-                        date: new Date(service.date).toLocaleDateString('pt-BR'),
+                        date: service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Data não especificada',
                         price: (() => {
                           const normalizedPrice = service.price.replace(',', '.');
                           const numericPrice = parseFloat(normalizedPrice);

@@ -228,7 +228,7 @@ export const AvailableServiceCard: React.FC<AvailableServiceCardProps> = ({
         <div className="flex items-center text-xs sm:text-sm text-gray-600">
           <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400 flex-shrink-0" />
           <span className="truncate">
-            {service.date}
+            {service.startDate ? new Date(service.startDate).toLocaleDateString('pt-BR') : 'Data não especificada'}
           </span>
         </div>
       </div>

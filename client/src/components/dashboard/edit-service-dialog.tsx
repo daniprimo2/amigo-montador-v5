@@ -82,15 +82,12 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
       endDateFormatted = formatISODateForInput(service.endDate);
     }
 
-    // Se não há startDate/endDate diretos, tentar extrair da propriedade date
-    if (!startDateFormatted && !endDateFormatted && service.date) {
-      if (service.date.includes('-')) {
-        const [startDateStr, endDateStr] = service.date.split('-').map((d: string) => d.trim());
-        startDateFormatted = formatDateForInput(startDateStr);
-        endDateFormatted = formatDateForInput(endDateStr);
-      } else {
-        startDateFormatted = formatDateForInput(service.date);
-      }
+    // Se ainda não há datas formatadas, usar valores padrão
+    if (!startDateFormatted) {
+      startDateFormatted = '';
+    }
+    if (!endDateFormatted) {
+      endDateFormatted = '';
     }
 
     // Resetar o estado do formulário com os dados do serviço
