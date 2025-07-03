@@ -238,6 +238,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Verified distance calculation system working correctly (both services at 0km from assembler location)
   - Services now properly categorized: pending applications appear in "Aguardando Lojista" tab, available services in "Serviços Disponíveis"
   - System successfully displays all relevant services within 20km radius for assembler users
+- January 3, 2025. Fixed service application tab management system
+  - Implemented proper service filtering between "Available" and "Pending" tabs
+  - Added local state tracking to immediately remove services from "Available" tab when user applies
+  - Services now automatically move from "Available" to "Pending" tabs upon application
+  - Prevents duplicate applications by hiding applied services from available list
+  - Added error handling to restore services if application fails
+  - System provides instant visual feedback during application process
 
 ## User Preferences
 
