@@ -144,13 +144,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getServicesByStoreId(storeId: number, status?: string): Promise<Service[]> {
-    let query = db.select().from(services).where(eq(services.storeId, storeId));
-    
     if (status) {
-      query = query.where(eq(services.status, status));
+      return await db.select().from(services)
+        .where(and(eq(services.storeId, storeId), eq(services.status, status)))
+        .orderBy(desc(services.createdAt));
     }
     
-    return await query.orderBy(desc(services.createdAt));
+    return await db.select().from(services)
+      .where(eq(services.storeId, storeId))
+      .orderBy(desc(services.createdAt));
   }
 
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
@@ -387,7 +389,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markPasswordResetTokenAsUsed(tokenId: number): Promise<void> {
-    await db.update(passwordResetTokens).set({ used: true }).where(eq(passwordResetTokens.id, tokenId));
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, tokenId));
   }
 
   async deleteExpiredPasswordResetTokens(): Promise<void> {

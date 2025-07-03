@@ -857,7 +857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const allApplications = await storage.getApplicationsByServiceId(service.id);
           const acceptedApplication = allApplications.find(app => app.status === 'accepted');
           
-          const serviceWithInfo = {
+          return {
             ...service,
             store: store ? {
               id: store.id,
@@ -870,10 +870,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             applicationStatus: existingApplication?.status || null,
             isAssigned: !!acceptedApplication
           };
-          
-          console.log(`Serviço ${service.id} processado: hasApplied=${serviceWithInfo.hasApplied}, applicationStatus=${serviceWithInfo.applicationStatus}, isAssigned=${serviceWithInfo.isAssigned}`);
-          
-          return serviceWithInfo;
         })
       );
 
