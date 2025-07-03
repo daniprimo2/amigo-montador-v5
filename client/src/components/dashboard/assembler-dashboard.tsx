@@ -1723,20 +1723,7 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
         onOpenChange={setIsSkillsWizardOpen}
       />
       
-      {/* Diálogo de Avaliação Obrigatória */}
-      {currentRating && (
-        <MandatoryRatingDialog
-          isOpen={isMandatoryRatingOpen}
-          onClose={closeMandatoryRating}
-          serviceId={currentRating.serviceId}
-          serviceTitle={currentRating.serviceName}
-          otherUserName={currentRating.otherUserName}
-          otherUserType={currentRating.userType === 'montador' ? 'lojista' : 'montador'}
-          currentUserType={currentRating.userType}
-        />
-      )}
-      
-      {/* Verificador de Avaliações Obrigatórias */}
+      {/* Verificador de Avaliações Obrigatórias - sistema unificado */}
       <MandatoryRatingChecker currentUserType="montador" />
     </div>
   );

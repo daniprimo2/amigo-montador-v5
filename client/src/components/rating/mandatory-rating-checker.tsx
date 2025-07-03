@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { MandatoryRatingDialog } from "./mandatory-rating-dialog";
 import { useAuth } from "@/hooks/use-auth";
 
+// Estado global para controlar se há um diálogo ativo
+let globalDialogActive = false;
+
 interface MandatoryRating {
   serviceId: number;
   serviceName: string;
@@ -41,8 +44,9 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
     const handleMandatoryEvaluation = (event: CustomEvent) => {
       const { serviceId, serviceData, userId, evaluateUser } = event.detail;
       
-      // Verificar se a notificação é para o usuário atual
-      if (user && userId === user.id) {
+      // Verificar se a notificação é para o usuário atual e se não há diálogo já aberto
+      if (user && userId === user.id && !showRatingDialog && !globalDialogActive) {
+        globalDialogActive = true;
         setImmediateEvaluation({
           serviceId,
           serviceTitle: serviceData?.title || 'Serviço',
@@ -50,6 +54,9 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
           otherUserType: evaluateUser?.type || (currentUserType === 'lojista' ? 'montador' : 'lojista')
         });
         setShowRatingDialog(true);
+        
+        // Limpar avaliações pendentes para evitar duplicação
+        setCurrentRatingIndex(0);
       }
     };
 
@@ -58,19 +65,23 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
     return () => {
       window.removeEventListener('mandatory-evaluation-required', handleMandatoryEvaluation as EventListener);
     };
-  }, [user, currentUserType]);
+  }, [user, currentUserType, showRatingDialog]);
 
   useEffect(() => {
     if (mandatoryRatings && mandatoryRatings.hasPendingRatings && mandatoryRatings.pendingRatings && mandatoryRatings.pendingRatings.length > 0) {
-      // Show the first pending rating dialog only if there's no immediate evaluation
-      if (!immediateEvaluation) {
+      // Show the first pending rating dialog only if there's no immediate evaluation and no dialog active
+      if (!immediateEvaluation && !showRatingDialog && !globalDialogActive) {
+        globalDialogActive = true;
         setCurrentRatingIndex(0);
         setShowRatingDialog(true);
       }
     }
-  }, [mandatoryRatings, immediateEvaluation]);
+  }, [mandatoryRatings, immediateEvaluation, showRatingDialog]);
 
   const handleRatingComplete = () => {
+    // Limpar estado global
+    globalDialogActive = false;
+    
     if (immediateEvaluation) {
       // Se era uma avaliação imediata, limpar e aguardar outras pendentes
       setImmediateEvaluation(null);
@@ -83,6 +94,7 @@ export function MandatoryRatingChecker({ currentUserType }: MandatoryRatingCheck
       if (mandatoryRatings && mandatoryRatings.pendingRatings && nextIndex < mandatoryRatings.pendingRatings.length) {
         // Show next rating dialog
         setCurrentRatingIndex(nextIndex);
+        globalDialogActive = true; // Reativar para próximo diálogo
       } else {
         // All ratings completed
         setShowRatingDialog(false);

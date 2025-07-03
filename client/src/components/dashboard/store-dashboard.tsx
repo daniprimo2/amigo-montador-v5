@@ -1687,28 +1687,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
         onLogout={onLogout}
       />
       
-      {/* Modal de Avaliação */}
-      {selectedServiceForRating && (
-        <RatingDialog
-          open={isRatingDialogOpen}
-          onOpenChange={setIsRatingDialogOpen}
-          serviceId={selectedServiceForRating.id}
-          toUserId={selectedServiceForRating.assembler?.userId || 0}
-          toUserName={selectedServiceForRating.assembler?.name || 'Montador'}
-          serviceName={selectedServiceForRating.title}
-          onSuccess={() => {
-            // Atualizar listas de serviços após avaliação
-            queryClient.invalidateQueries({ queryKey: ['/api/services'] });
-            // Notificar usuário sobre avaliação
-            toast({
-              title: 'Avaliação enviada',
-              description: 'Obrigado por avaliar o serviço realizado.',
-            });
-          }}
-        />
-      )}
-      
-      {/* Verificador de Avaliações Obrigatórias */}
+      {/* Verificador de Avaliações Obrigatórias - agora é o único sistema de avaliação */}
       <MandatoryRatingChecker currentUserType="lojista" />
     </div>
   );
