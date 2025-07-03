@@ -831,6 +831,11 @@ toast({
           serviceId={serviceId}
           amount={String(service?.price || '0')}
           serviceTitle={service?.title || 'Serviço'}
+          assemblerInfo={assemblerId && chatPartnerProfile?.userType === 'montador' ? {
+            id: assemblerId,
+            name: chatPartnerProfile.name,
+            userId: chatPartnerProfile.id
+          } : undefined}
         />
       )}
       
