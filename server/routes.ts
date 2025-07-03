@@ -2294,6 +2294,93 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
     }
   });
 
+  // Get user profile with ratings
+  app.get("/api/users/:userId/profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "ID do usuário inválido" });
+      }
+
+      // Get user basic info
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Get user's rating statistics
+      const ratingStats = await storage.getUserAverageRating(userId);
+      
+      // Get user's detailed ratings
+      const ratings = await storage.getUserRatingsWithDetails(userId);
+
+      // Get user-specific data (store or assembler)
+      let specificData = null;
+      if (user.userType === 'lojista') {
+        specificData = await storage.getStoreByUserId(userId);
+      } else if (user.userType === 'montador') {
+        specificData = await storage.getAssemblerByUserId(userId);
+      }
+
+      res.json({
+        id: user.id,
+        name: user.name,
+        userType: user.userType,
+        profilePhotoData: user.profilePhotoData,
+        averageRating: ratingStats.averageRating,
+        totalRatings: ratingStats.totalRatings,
+        ratings: ratings,
+        specificData: specificData
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get ranking of users
+  app.get("/api/ranking/:userType", async (req, res) => {
+    try {
+      const userType = req.params.userType as 'lojista' | 'montador';
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (!['lojista', 'montador'].includes(userType)) {
+        return res.status(400).json({ message: "Tipo de usuário inválido" });
+      }
+
+      const ranking = await storage.getTopRatedUsers(userType, limit);
+
+      res.json({
+        userType,
+        ranking,
+        totalUsers: ranking.length
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar ranking:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get current user rating statistics
+  app.get("/api/user/rating-stats", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const ratingStats = await storage.getUserAverageRating(req.user.id);
+      
+      res.json(ratingStats);
+
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de avaliação:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   // Get pending evaluations for current user
   app.get("/api/services/pending-evaluations", async (req, res) => {
     try {

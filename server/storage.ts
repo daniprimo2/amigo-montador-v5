@@ -64,6 +64,17 @@ export interface IStorage {
   markPasswordResetTokenAsUsed(tokenId: number): Promise<void>;
   deleteExpiredPasswordResetTokens(): Promise<void>;
   
+  getUserAverageRating(userId: number): Promise<{ averageRating: number; totalRatings: number }>;
+  getUserRatingsWithDetails(userId: number): Promise<(Rating & { fromUserName: string; fromUserType: string; serviceTitle: string })[]>;
+  getTopRatedUsers(userType: 'lojista' | 'montador', limit?: number): Promise<Array<{
+    id: number;
+    name: string;
+    userType: string;
+    averageRating: number;
+    totalRatings: number;
+    profilePhotoData: string;
+  }>>;
+  
   sessionStore: session.Store;
 }
 
@@ -450,6 +461,81 @@ export class DatabaseStorage implements IStorage {
   async deleteExpiredPasswordResetTokens(): Promise<void> {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     await db.delete(passwordResetTokens).where(sql`created_at < ${oneDayAgo}`);
+  }
+
+  async getUserAverageRating(userId: number): Promise<{ averageRating: number; totalRatings: number }> {
+    const result = await db.select({
+      averageRating: sql<number>`COALESCE(AVG(${ratings.rating}), 0)`,
+      totalRatings: sql<number>`COUNT(${ratings.id})`
+    })
+    .from(ratings)
+    .where(eq(ratings.toUserId, userId));
+
+    return {
+      averageRating: Number(result[0]?.averageRating || 0),
+      totalRatings: Number(result[0]?.totalRatings || 0)
+    };
+  }
+
+  async getUserRatingsWithDetails(userId: number): Promise<(Rating & { fromUserName: string; fromUserType: string; serviceTitle: string })[]> {
+    const result = await db.select({
+      id: ratings.id,
+      serviceId: ratings.serviceId,
+      fromUserId: ratings.fromUserId,
+      toUserId: ratings.toUserId,
+      fromUserType: ratings.fromUserType,
+      toUserType: ratings.toUserType,
+      rating: ratings.rating,
+      comment: ratings.comment,
+      emojiRating: ratings.emojiRating,
+      punctualityRating: ratings.punctualityRating,
+      qualityRating: ratings.qualityRating,
+      complianceRating: ratings.complianceRating,
+      createdAt: ratings.createdAt,
+      fromUserName: users.name,
+      serviceTitle: services.title
+    })
+    .from(ratings)
+    .innerJoin(users, eq(ratings.fromUserId, users.id))
+    .innerJoin(services, eq(ratings.serviceId, services.id))
+    .where(eq(ratings.toUserId, userId))
+    .orderBy(desc(ratings.createdAt));
+
+    return result as any[];
+  }
+
+  async getTopRatedUsers(userType: 'lojista' | 'montador', limit: number = 10): Promise<Array<{
+    id: number;
+    name: string;
+    userType: string;
+    averageRating: number;
+    totalRatings: number;
+    profilePhotoData: string;
+  }>> {
+    const result = await db.select({
+      id: users.id,
+      name: users.name,
+      userType: users.userType,
+      profilePhotoData: users.profilePhotoData,
+      averageRating: sql<number>`COALESCE(AVG(${ratings.rating}), 0)`,
+      totalRatings: sql<number>`COUNT(${ratings.id})`
+    })
+    .from(users)
+    .leftJoin(ratings, eq(ratings.toUserId, users.id))
+    .where(eq(users.userType, userType))
+    .groupBy(users.id, users.name, users.userType, users.profilePhotoData)
+    .having(sql`COUNT(${ratings.id}) > 0`)
+    .orderBy(desc(sql`AVG(${ratings.rating})`), desc(sql`COUNT(${ratings.id})`))
+    .limit(limit);
+
+    return result.map(row => ({
+      id: row.id,
+      name: row.name,
+      userType: row.userType,
+      averageRating: Number(row.averageRating || 0),
+      totalRatings: Number(row.totalRatings || 0),
+      profilePhotoData: row.profilePhotoData
+    }));
   }
 }
 

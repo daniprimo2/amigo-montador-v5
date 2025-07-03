@@ -11,17 +11,16 @@ import { RatingStars } from '@/components/rating/rating-stars';
 interface RankingItem {
   id: number;
   name: string;
-  city: string;
-  state: string;
-  rating: number;
-  userType: 'lojista' | 'montador';
-  logoUrl?: string;
-  specialties?: string[];
+  userType: string;
+  averageRating: number;
+  totalRatings: number;
+  profilePhotoData: string;
 }
 
 interface RankingResponse {
-  type: string;
+  userType: string;
   ranking: RankingItem[];
+  totalUsers: number;
 }
 
 export const RankingSection: React.FC = () => {
@@ -31,7 +30,7 @@ export const RankingSection: React.FC = () => {
   const { data: rankingData, isLoading } = useQuery<RankingResponse>({
     queryKey: ['/api/ranking', selectedType],
     queryFn: async () => {
-      const response = await fetch(`/api/ranking?type=${selectedType}`);
+      const response = await fetch(`/api/ranking/${selectedType}`);
       if (!response.ok) {
         throw new Error('Erro ao buscar ranking');
       }
@@ -149,30 +148,21 @@ export const RankingSection: React.FC = () => {
                     
                     <div className="flex items-center space-x-4 mt-1">
                       <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {item.city}, {item.state}
+                        <Star className="h-3 w-3 mr-1" />
+                        {item.totalRatings} {item.totalRatings === 1 ? 'avaliação' : 'avaliações'}
                       </div>
                       
-                      {selectedType === 'montador' && item.specialties && item.specialties.length > 0 && (
-                        <div className="flex items-center space-x-1">
-                          {item.specialties.slice(0, 2).map((specialty, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">
-                              {specialty}
-                            </Badge>
-                          ))}
-                          {item.specialties.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{item.specialties.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Badge variant="outline" className="text-xs">
+                          {item.userType === 'montador' ? 'Montador' : 'Lojista'}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RatingStars rating={item.rating} size="sm" />
+                    <RatingStars rating={item.averageRating} size="sm" />
                     <span className="text-sm font-medium text-gray-700">
-                      {item.rating.toFixed(1)}
+                      {item.averageRating.toFixed(1)}
                     </span>
                   </div>
                 </div>
