@@ -110,6 +110,8 @@ function getSpecificCoordinatesForCEP(cep: string, city: string, state: string):
   const specificCEPs: Record<string, { lat: number; lng: number }> = {
     // Carapicuíba - SP (montador no CEP 06320-290) - Centro
     '06320290': { lat: -23.522300, lng: -46.835600 },
+    // Carapicuíba - SP (montador no CEP 06390-210) - Vila Nossa Senhora Aparecida
+    '06390210': { lat: -23.522300, lng: -46.835600 },
     
     // Serviços em Carapicuíba - SP com coordenadas geográficas reais distintas
     '06332190': { lat: -23.515000, lng: -46.830000 }, // Jardim Santa Tereza
