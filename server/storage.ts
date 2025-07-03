@@ -1,4 +1,4 @@
-import { eq, and, not, isNotNull, isNull, or, sql, inArray, desc } from "drizzle-orm";
+import { eq, and, not, ne, isNotNull, isNull, or, sql, inArray, desc } from "drizzle-orm";
 import { db } from "./db.js";
 import { 
   users, stores, assemblers, services, applications, messages, messageReads, ratings, bankAccounts, passwordResetTokens,
@@ -161,23 +161,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
-    // Get all open services
-    const allServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    // Get all services (open, in-progress, completed, awaiting_evaluation)
+    const allServices = await db.select().from(services)
+      .where(inArray(services.status, ['open', 'in-progress', 'completed', 'awaiting_evaluation']))
+      .orderBy(desc(services.createdAt));
     
-    // Get services that have pending or accepted applications
-    const servicesWithApplications = await db.select({ serviceId: applications.serviceId })
+    // Get services where this assembler has applications
+    const assemblerApplications = await db.select({ serviceId: applications.serviceId, status: applications.status })
       .from(applications)
-      .where(inArray(applications.status, ['pending', 'accepted']))
+      .where(eq(applications.assemblerId, assembler.id));
+    
+    const assemblerServiceIds = new Set(assemblerApplications.map(app => app.serviceId));
+    
+    // Get services that have applications from OTHER assemblers (not this one)
+    const otherApplications = await db.select({ serviceId: applications.serviceId })
+      .from(applications)
+      .where(and(
+        inArray(applications.status, ['pending', 'accepted']),
+        not(eq(applications.assemblerId, assembler.id))
+      ))
       .groupBy(applications.serviceId);
     
-    const serviceIdsWithApplications = new Set(servicesWithApplications.map(row => row.serviceId));
+    const serviceIdsWithOtherApplications = new Set(otherApplications.map(row => row.serviceId));
     
-    // Filter out services that have pending or accepted applications
-    const availableServices = allServices.filter(service => !serviceIdsWithApplications.has(service.id));
+    // Include services where:
+    // 1. The assembler has applied/been accepted (his own services)
+    // 2. Open services without applications from others  
+    // 3. Completed/awaiting_evaluation services where he participated
+    const availableServices = allServices.filter(service => {
+      const hasAssemblerApplication = assemblerServiceIds.has(service.id);
+      const hasOtherApplications = serviceIdsWithOtherApplications.has(service.id);
+      const isCompleted = ['completed', 'awaiting_evaluation', 'in-progress'].includes(service.status);
+      
+      return hasAssemblerApplication || (!hasOtherApplications && service.status === 'open') || (isCompleted && hasAssemblerApplication);
+    });
     
-    console.log(`Total de serviços abertos encontrados: ${allServices.length}`);
-    console.log(`Serviços com candidaturas pendentes/aceitas: ${serviceIdsWithApplications.size}`);
-    console.log(`Serviços realmente disponíveis: ${availableServices.length}`);
+    console.log(`Total de serviços encontrados: ${allServices.length}`);
+    console.log(`Serviços com candidaturas de outros montadores: ${serviceIdsWithOtherApplications.size}`);
+    console.log(`Serviços disponíveis para este montador: ${availableServices.length}`);
     
     // Get assembler coordinates from CEP
     let assemblerLat: number;

@@ -287,6 +287,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Removed "🧪 Testar Comprovante PIX" button from chat interface (payment proof testing complete)
   - Notification system and payment workflow now fully functional without test elements
   - Cleaner production interface without development testing buttons
+- January 3, 2025. Fixed comprehensive service visibility for assemblers
+  - Resolved issue where Lucas Rodrigues Montadoruuuuu user couldn't see all relevant services
+  - Added CEP 06390-210 to geocoding system for correct Carapicuíba positioning
+  - Updated service filtering logic to show all relevant services: open, in-progress, completed, awaiting_evaluation
+  - Fixed password authentication for testing (password: 123456)
+  - System now displays services where assembler has applied, been accepted, or completed work
+  - Corrected geographical coordinates for all services to ensure proper distance calculations
+  - Enhanced service discovery to include historical and current work for assemblers
 
 ## User Preferences
 
