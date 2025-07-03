@@ -1393,5 +1393,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bank Account API Routes
+  // Get all bank accounts for the current user
+  app.get("/api/bank-accounts", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const bankAccounts = await storage.getBankAccountsByUserId(user.id);
+      
+      res.json(bankAccounts);
+    } catch (error) {
+      console.error('Erro ao buscar contas bancárias:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get specific bank account by ID
+  app.get("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const accountId = parseInt(req.params.id);
+      const bankAccount = await storage.getBankAccountById(accountId);
+      
+      if (!bankAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+
+      // Verify that the bank account belongs to the current user
+      if (bankAccount.userId !== user.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      res.json(bankAccount);
+    } catch (error) {
+      console.error('Erro ao buscar conta bancária:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Create new bank account
+  app.post("/api/bank-accounts", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const bankAccountData: InsertBankAccount = {
+        userId: user.id,
+        bankName: req.body.bankName,
+        accountType: req.body.accountType,
+        accountNumber: req.body.accountNumber,
+        agency: req.body.agency,
+        holderName: req.body.holderName,
+        holderDocumentType: req.body.holderDocumentType,
+        holderDocumentNumber: req.body.holderDocumentNumber,
+        pixKey: req.body.pixKey || null,
+        pixKeyType: req.body.pixKeyType || null
+      };
+
+      const newBankAccount = await storage.createBankAccount(bankAccountData);
+      
+      res.status(201).json(newBankAccount);
+    } catch (error) {
+      console.error('Erro ao criar conta bancária:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Update existing bank account
+  app.put("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const accountId = parseInt(req.params.id);
+      const existingAccount = await storage.getBankAccountById(accountId);
+      
+      if (!existingAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+
+      // Verify that the bank account belongs to the current user
+      if (existingAccount.userId !== user.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const updateData = {
+        bankName: req.body.bankName,
+        accountType: req.body.accountType,
+        accountNumber: req.body.accountNumber,
+        agency: req.body.agency,
+        holderName: req.body.holderName,
+        holderDocumentType: req.body.holderDocumentType,
+        holderDocumentNumber: req.body.holderDocumentNumber,
+        pixKey: req.body.pixKey || null,
+        pixKeyType: req.body.pixKeyType || null
+      };
+
+      const updatedAccount = await storage.updateBankAccount(accountId, updateData);
+      
+      res.json(updatedAccount);
+    } catch (error) {
+      console.error('Erro ao atualizar conta bancária:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Delete bank account
+  app.delete("/api/bank-accounts/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      const accountId = parseInt(req.params.id);
+      const existingAccount = await storage.getBankAccountById(accountId);
+      
+      if (!existingAccount) {
+        return res.status(404).json({ message: "Conta bancária não encontrada" });
+      }
+
+      // Verify that the bank account belongs to the current user
+      if (existingAccount.userId !== user.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      await storage.deleteBankAccount(accountId);
+      
+      res.json({ message: "Conta bancária removida com sucesso" });
+    } catch (error) {
+      console.error('Erro ao deletar conta bancária:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }
