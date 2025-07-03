@@ -751,5 +751,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint for available services with distance filtering for assemblers
+  app.get("/api/services/available", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const user = req.user!;
+      
+      // Only assemblers can access this endpoint
+      if (user.userType !== 'montador') {
+        return res.status(403).json({ message: "Apenas montadores podem acessar serviços disponíveis" });
+      }
+
+      // Get assembler profile
+      const assembler = await storage.getAssemblerByUserId(user.id);
+      if (!assembler) {
+        return res.status(404).json({ message: "Perfil de montador não encontrado" });
+      }
+
+      // Get services within 20km radius with distance calculation
+      const servicesWithDistance = await storage.getAvailableServicesForAssemblerWithDistance(assembler);
+      
+      // Get store information and applications for each service
+      const servicesWithStoreInfo = await Promise.all(
+        servicesWithDistance.map(async (service) => {
+          // Get store information
+          const store = await storage.getStore(service.storeId);
+          
+          // Check if assembler has already applied to this service
+          const existingApplication = await storage.getApplicationByServiceAndAssembler(service.id, assembler.id);
+          
+          // Get all applications for this service to determine status
+          const allApplications = await storage.getApplicationsByServiceId(service.id);
+          const acceptedApplication = allApplications.find(app => app.status === 'accepted');
+          
+          return {
+            ...service,
+            store: store ? {
+              id: store.id,
+              name: store.name,
+              city: store.city,
+              state: store.state
+            } : null,
+            distance: `${service.distance} km`,
+            hasApplied: !!existingApplication,
+            applicationStatus: existingApplication?.status || null,
+            isAssigned: !!acceptedApplication
+          };
+        })
+      );
+
+      res.json(servicesWithStoreInfo);
+    } catch (error) {
+      console.error('Erro ao buscar serviços disponíveis:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   return server;
 }

@@ -29,6 +29,7 @@ export interface IStorage {
   getServiceById(id: number): Promise<Service | undefined>;
   getServicesByStoreId(storeId: number, status?: string): Promise<Service[]>;
   getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]>;
+  getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]>;
   createService(service: InsertService): Promise<Service>;
   updateServiceStatus(id: number, status: string): Promise<Service>;
   updateService(id: number, serviceData: Partial<Service>): Promise<Service>;
@@ -155,6 +156,54 @@ export class DatabaseStorage implements IStorage {
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     const result = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
     return result;
+  }
+
+  async getAvailableServicesForAssemblerWithDistance(assembler: Assembler): Promise<(Service & { distance: number })[]> {
+    const allServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
+    
+    // Get assembler coordinates from CEP
+    let assemblerLat: number;
+    let assemblerLng: number;
+    
+    try {
+      const { geocodeFromCEP } = require('./geocoding.js');
+      const coords = await geocodeFromCEP(assembler.cep || '');
+      assemblerLat = parseFloat(coords.latitude);
+      assemblerLng = parseFloat(coords.longitude);
+    } catch (error) {
+      console.log('Erro ao geocodificar CEP do montador, usando coordenadas padrão:', error);
+      // Use São Paulo coordinates as fallback
+      assemblerLat = -23.5505199;
+      assemblerLng = -46.6333094;
+    }
+    
+    // Calculate distance for each service and filter by 20km radius
+    const servicesWithDistance = [];
+    
+    for (const service of allServices) {
+      const serviceLat = parseFloat(service.latitude);
+      const serviceLng = parseFloat(service.longitude);
+      
+      let distance = 0;
+      try {
+        const { calculateDistance } = require('./geocoding.js');
+        distance = calculateDistance(assemblerLat, assemblerLng, serviceLat, serviceLng);
+      } catch (error) {
+        console.log('Erro ao calcular distância:', error);
+        distance = 999; // Set high distance if calculation fails
+      }
+      
+      // Only include services within 20km radius
+      if (distance <= 20) {
+        servicesWithDistance.push({
+          ...service,
+          distance: Math.round(distance * 100) / 100 // Round to 2 decimal places
+        });
+      }
+    }
+    
+    // Sort by distance (closest first)
+    return servicesWithDistance.sort((a, b) => a.distance - b.distance);
   }
 
   async createService(serviceData: InsertService): Promise<Service> {
