@@ -411,6 +411,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced frontend filtering logic in AssemblerDashboard to prevent duplicate service listings
   - Services now appear uniquely in correct category: available services in "Disponível", applied services in "Aguardando Lojista"
   - Eliminated status conflicts that were compromising user experience and application workflow integrity
+- January 3, 2025. Fixed ranking user profile click functionality
+  - Resolved critical issue where clicking user names in ranking tab was causing application crashes
+  - Found and removed duplicate API endpoint /api/users/:userId/profile causing routing conflicts
+  - Updated remaining endpoint to provide all required data fields for user profile page
+  - Enhanced profile data structure with proper city, state, and specialties fields for assembler profiles
+  - Added profilePhotoUrl field mapping for consistent profile image display
+  - User profile pages now load correctly with complete rating history and location information
 
 ## User Preferences
 

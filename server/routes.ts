@@ -1632,86 +1632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para buscar perfil de usuário por ID (usado no chat)
-  app.get("/api/users/:userId/profile", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
 
-      const userId = parseInt(req.params.userId);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
-
-      let profileData: any = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        userType: user.userType,
-        profilePhotoData: user.profilePhotoData,
-        profilePhotoUrl: user.profilePhotoData,
-        // City e state não existem na tabela users, só nas tabelas stores e assemblers
-        city: '',
-        state: ''
-      };
-
-      if (user.userType === 'lojista') {
-        const store = await storage.getStoreByUserId(user.id);
-        if (store) {
-          // Atualizar city e state do perfil com dados da loja
-          profileData.city = store.city || '';
-          profileData.state = store.state || '';
-          
-          profileData.store = {
-            id: store.id,
-            name: store.name,
-            address: store.address,
-            city: store.city || '',
-            state: store.state || '',
-            logoUrl: store.logoData,
-            logoData: store.logoData
-          };
-        }
-      } else if (user.userType === 'montador') {
-        const assembler = await storage.getAssemblerByUserId(user.id);
-        if (assembler) {
-          // Atualizar city e state do perfil com dados do montador
-          profileData.city = assembler.city || '';
-          profileData.state = assembler.state || '';
-          
-          profileData.assembler = {
-            id: assembler.id,
-            experience: assembler.experience,
-            description: assembler.professionalDescription || '',
-            availability: assembler.availability,
-            rating: assembler.rating
-          };
-          
-          // Garantir que specialties seja sempre um array de strings
-          if (assembler.specialties) {
-            if (Array.isArray(assembler.specialties)) {
-              profileData.specialties = assembler.specialties.map(spec => 
-                typeof spec === 'string' ? spec : String(spec)
-              );
-            } else {
-              profileData.specialties = [String(assembler.specialties)];
-            }
-          } else {
-            profileData.specialties = [];
-          }
-        }
-      }
-
-      res.json(profileData);
-    } catch (error) {
-      console.error('Erro ao buscar perfil do usuário:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
 
   // Rota para obter contagem de mensagens não lidas
   app.get("/api/messages/unread-count", async (req, res) => {
@@ -2602,24 +2523,48 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       // Get user's detailed ratings
       const ratings = await storage.getUserRatingsWithDetails(userId);
 
-      // Get user-specific data (store or assembler)
-      let specificData = null;
-      if (user.userType === 'lojista') {
-        specificData = await storage.getStoreByUserId(userId);
-      } else if (user.userType === 'montador') {
-        specificData = await storage.getAssemblerByUserId(userId);
-      }
-
-      res.json({
+      // Prepare the response data
+      let profileData: any = {
         id: user.id,
         name: user.name,
         userType: user.userType,
         profilePhotoData: user.profilePhotoData,
+        profilePhotoUrl: user.profilePhotoData, // Frontend expects this field
         averageRating: ratingStats.averageRating,
         totalRatings: ratingStats.totalRatings,
         ratings: ratings,
-        specificData: specificData
-      });
+        city: '',
+        state: '',
+        specialties: []
+      };
+
+      // Get user-specific data (store or assembler)
+      if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(userId);
+        if (store) {
+          profileData.city = store.city || '';
+          profileData.state = store.state || '';
+        }
+      } else if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(userId);
+        if (assembler) {
+          profileData.city = assembler.city || '';
+          profileData.state = assembler.state || '';
+          
+          // Handle specialties - ensure it's always an array of strings
+          if (assembler.specialties) {
+            if (Array.isArray(assembler.specialties)) {
+              profileData.specialties = assembler.specialties.map(spec => 
+                typeof spec === 'string' ? spec : String(spec)
+              );
+            } else {
+              profileData.specialties = [String(assembler.specialties)];
+            }
+          }
+        }
+      }
+
+      res.json(profileData);
 
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
