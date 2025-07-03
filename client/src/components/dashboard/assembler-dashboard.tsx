@@ -666,6 +666,9 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
     return matchesSearch && matchesState && matchesDistance;
   });
 
+  // State to track services that have been applied to locally
+  const [appliedServices, setAppliedServices] = useState<Set<number>>(new Set());
+  
   // Filtrar serviços por status para cada aba
   // Pending services: services where user has applied but waiting for store approval
   const pendingServices = (activeServices || []).filter((service: any) => 
@@ -673,8 +676,12 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   );
   
   // Available services: open status but not yet applied (excluding pending ones)
+  // Also exclude services that have been applied to locally
   const availableServicesRaw = (rawServices || []).filter((service: any) => 
-    service.status === 'open' && !service.hasApplied && service.applicationStatus !== 'pending'
+    service.status === 'open' && 
+    !service.hasApplied && 
+    service.applicationStatus !== 'pending' &&
+    !appliedServices.has(service.id)
   );
   
   // Format available services for display
@@ -727,6 +734,11 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
       queryClient.invalidateQueries({ queryKey: ['/api/services'] });
       queryClient.invalidateQueries({ queryKey: ['/api/services/active'] });
       
+      // Clear applied services set after query invalidation to reflect server state
+      setTimeout(() => {
+        setAppliedServices(new Set());
+      }, 1000);
+      
       // Handle different response types
       if (data.isExistingApplication) {
         // User already applied - show status message
@@ -762,8 +774,19 @@ export const AssemblerDashboard: React.FC<AssemblerDashboardProps> = ({ onLogout
   
   const handleApply = async (serviceId: number) => {
     try {
-      return await applyMutation.mutateAsync(serviceId);
+      // Immediately mark service as applied locally to remove from available tab
+      setAppliedServices(prev => new Set(prev).add(serviceId));
+      
+      const result = await applyMutation.mutateAsync(serviceId);
+      return result;
     } catch (error) {
+      // Remove from applied services if application failed
+      setAppliedServices(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(serviceId);
+        return newSet;
+      });
+      
       console.error(`AssemblerDashboard erro ao aplicar para serviço ${serviceId}:`, error);
       throw error; // Propagando o erro para o componente AvailableServiceCard
     }
