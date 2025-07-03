@@ -142,35 +142,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Configuração WebSocket
   wss.on('connection', (ws: WebSocket, req) => {
+    console.log('🔗 Nova conexão WebSocket estabelecida');
+    
     ws.on('message', (message: string) => {
       try {
         const data = JSON.parse(message);
+        console.log('📩 Mensagem WebSocket recebida:', data);
         
         if (data.type === 'auth' && data.userId) {
+          // Associar esta conexão WebSocket ao usuário
           userConnections.set(data.userId, ws);
+          (ws as any).userId = data.userId; // Armazenar userId na conexão para filtros
+          (ws as any).userType = data.userType;
+          
+          console.log(`✅ Usuário ${data.userId} (${data.userType}) autenticado no WebSocket`);
+          console.log(`📊 Total de conexões ativas: ${userConnections.size}`);
           
           if (data.userType === 'lojista') {
             storeClients.add(ws);
+            console.log(`🏪 Lojista adicionado. Total lojistas: ${storeClients.size}`);
           } else if (data.userType === 'montador') {
             assemblerClients.add(ws);
+            console.log(`🔧 Montador adicionado. Total montadores: ${assemblerClients.size}`);
           }
         }
       } catch (error) {
-        // Error logging removed for production
+        console.error('❌ Erro ao processar mensagem WebSocket:', error);
       }
     });
 
     ws.on('close', () => {
+      console.log('🔌 Conexão WebSocket fechada');
+      
       // Remover conexão do usuário
-      const entries = Array.from(userConnections.entries());
-      for (const [userId, connection] of entries) {
-        if (connection === ws) {
-          userConnections.delete(userId);
-          break;
-        }
+      const userId = (ws as any).userId;
+      if (userId) {
+        userConnections.delete(userId);
+        console.log(`❌ Usuário ${userId} removido das conexões WebSocket`);
       }
+      
+      // Remover dos grupos de clientes
       storeClients.delete(ws);
       assemblerClients.delete(ws);
+      
+      console.log(`📊 Conexões restantes: ${userConnections.size} total, ${storeClients.size} lojistas, ${assemblerClients.size} montadores`);
     });
   });
 
@@ -2028,9 +2043,16 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       };
 
       // Notify store owner to evaluate assembler
+      console.log('🔔 Enviando notificação de avaliação para LOJISTA:', {
+        userId: storeUser.id,
+        userName: storeUser.name,
+        evaluateUser: assemblerUser.name
+      });
+      
       if (wss) {
+        let storeNotificationSent = false;
         wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
+          if (client.readyState === WebSocket.OPEN && (client as any).userId === storeUser.id) {
             try {
               const wsMessage = {
                 type: 'evaluation_required',
@@ -2045,17 +2067,30 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
                 message: 'É necessário avaliar o montador para finalizar o serviço.'
               };
               client.send(JSON.stringify(wsMessage));
+              storeNotificationSent = true;
+              console.log('✅ Notificação enviada para lojista:', storeUser.name);
             } catch (error) {
               console.error('Erro ao enviar notificação WebSocket para lojista:', error);
             }
           }
         });
+        
+        if (!storeNotificationSent) {
+          console.log('❌ Nenhuma conexão WebSocket encontrada para lojista:', storeUser.name);
+        }
       }
 
       // Notify assembler to evaluate store
+      console.log('🔔 Enviando notificação de avaliação para MONTADOR:', {
+        userId: assemblerUser.id,
+        userName: assemblerUser.name,
+        evaluateUser: storeUser.name
+      });
+      
       if (wss) {
+        let assemblerNotificationSent = false;
         wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
+          if (client.readyState === WebSocket.OPEN && (client as any).userId === assemblerUser.id) {
             try {
               const wsMessage = {
                 type: 'evaluation_required',
@@ -2070,11 +2105,17 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
                 message: 'É necessário avaliar o lojista para finalizar o serviço.'
               };
               client.send(JSON.stringify(wsMessage));
+              assemblerNotificationSent = true;
+              console.log('✅ Notificação enviada para montador:', assemblerUser.name);
             } catch (error) {
               console.error('Erro ao enviar notificação WebSocket para montador:', error);
             }
           }
         });
+        
+        if (!assemblerNotificationSent) {
+          console.log('❌ Nenhuma conexão WebSocket encontrada para montador:', assemblerUser.name);
+        }
       }
 
       res.json({

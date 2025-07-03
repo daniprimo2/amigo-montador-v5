@@ -105,6 +105,15 @@ export function useWebSocket() {
       socket.onopen = () => {
         debugLogger('WebSocket', 'Conexão estabelecida com sucesso');
         setConnected(true);
+        
+        // Enviar mensagem de autenticação para associar o WebSocket ao usuário
+        const authMessage = {
+          type: 'auth',
+          userId: user.id,
+          userType: user.userType
+        };
+        socket.send(JSON.stringify(authMessage));
+        debugLogger('WebSocket', 'Mensagem de autenticação enviada', authMessage);
       };
 
       socket.onclose = (event) => {
