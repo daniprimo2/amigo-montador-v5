@@ -76,10 +76,34 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       refetchUnreadCount();
     }
   }, [lastMessage, refetchUnreadCount]);
+
+  // Escutar eventos de limpeza de notificações do chat
+  useEffect(() => {
+    const handleChatOpened = () => {
+      setHasNewMessage(false);
+      refetchUnreadCount();
+    };
+
+    const handleMessagesViewed = () => {
+      setHasNewMessage(false);
+      refetchUnreadCount();
+    };
+
+    window.addEventListener('chat-opened', handleChatOpened);
+    window.addEventListener('chat-messages-viewed', handleMessagesViewed);
+
+    return () => {
+      window.removeEventListener('chat-opened', handleChatOpened);
+      window.removeEventListener('chat-messages-viewed', handleMessagesViewed);
+    };
+  }, [refetchUnreadCount]);
   
   // Limpar contagem quando mudar para a aba de chat
   useEffect(() => {
     if (activeTab === 'chat') {
+      // Limpar imediatamente a notificação visual quando o usuário acessa o chat
+      setHasNewMessage(false);
+      
       // Atualizar a contagem após um pequeno delay para permitir que as mensagens sejam marcadas como lidas
       setTimeout(() => {
         refetchUnreadCount();

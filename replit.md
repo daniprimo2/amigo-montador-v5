@@ -425,15 +425,21 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Modified filtering logic to place "awaiting_evaluation" services in "Em Andamento" tab instead of "Finalizados"
   - Services now correctly categorized: open services in "Em Aberto", in-progress and awaiting-evaluation in "Em Andamento", completed services in "Finalizados"
   - Status counting logic updated to reflect accurate service states in dashboard counters
-- January 4, 2025. Enhanced chat notification system for proper user isolation
+- January 4, 2025. Enhanced chat notification system with automatic dismissal and improved user isolation
   - Fixed WebSocket message routing to ensure userId field is included in all notifications
   - Updated sendNotification function to automatically add userId to all outgoing messages
   - Enhanced notifyNewMessage function to exclude message sender from receiving their own notifications
   - Improved WebSocket connection management to prevent multiple connections per user
   - Added comprehensive logging for notification debugging and user-specific message filtering
   - Fixed client-side validation to properly filter messages by user ID with detailed logging
-  - Notifications now strictly isolated per user account with sender exclusion for chat messages
-  - System ensures each user receives only relevant notifications intended for their account
+  - Implemented automatic notification dismissal when users open chat interface
+  - Added custom events for clearing notifications when chat is viewed (chat-opened, chat-messages-viewed)
+  - Enhanced chat interface to mark messages as read immediately when opened with custom event triggers
+  - Improved dashboard layout to clear notification badges when accessing chat tab
+  - Added additional WebSocket message validation to prevent self-notifications for message senders
+  - Enhanced WebSocket message type to include senderId for better sender/recipient validation
+  - Notifications now strictly isolated per user account with sender exclusion and automatic clearing when viewed
+  - System ensures each user receives only relevant notifications with immediate dismissal upon interaction
 
 ## User Preferences
 

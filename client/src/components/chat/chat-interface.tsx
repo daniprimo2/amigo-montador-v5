@@ -281,17 +281,42 @@ throw new Error('Erro ao buscar mensagens');
     }
   });
 
-  // Marcar mensagens como lidas quando o chat carrega
+  // Marcar mensagens como lidas quando o chat carrega ou quando novas mensagens chegam
   useEffect(() => {
     if (!isLoading && messages && messages.length > 0 && user) {
       // Verificar se há mensagens não lidas (enviadas por outros usuários)
       const hasUnreadMessages = messages.some(msg => msg.senderId !== user.id);
       
       if (hasUnreadMessages) {
+        // Marcar como lidas imediatamente para limpar notificações
         markMessagesAsReadMutation.mutate();
+        
+        // Disparar evento personalizado para limpar notificações visuais
+        const clearNotificationEvent = new CustomEvent('chat-messages-viewed', {
+          detail: { serviceId, userId: user.id }
+        });
+        window.dispatchEvent(clearNotificationEvent);
       }
     }
   }, [isLoading, messages, user, serviceId]);
+
+  // Marcar como lidas quando o componente é montado (usuário abriu o chat)
+  useEffect(() => {
+    if (user && serviceId) {
+      // Pequeno delay para garantir que as mensagens foram carregadas
+      const timer = setTimeout(() => {
+        markMessagesAsReadMutation.mutate();
+        
+        // Limpar notificações visuais imediatamente
+        const clearNotificationEvent = new CustomEvent('chat-opened', {
+          detail: { serviceId, userId: user.id }
+        });
+        window.dispatchEvent(clearNotificationEvent);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [serviceId, user]);
 
   // Buscar perfil do parceiro de conversa baseado nas mensagens
   useEffect(() => {

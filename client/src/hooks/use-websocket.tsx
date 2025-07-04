@@ -17,6 +17,7 @@ type WebSocketMessage = {
   serviceData?: any; // Para carregar informações do serviço quando necessário
   amount?: string; // Para notificações de pagamento
   userId?: number; // Para identificar o usuário alvo da mensagem
+  senderId?: number; // Para identificar quem enviou a mensagem original
   data?: any; // Para dados adicionais da notificação
   evaluateUser?: {
     id: number;
@@ -178,6 +179,12 @@ export function useWebSocket() {
           // Verificar se a mensagem é destinada a este usuário
           if (data.userId && data.userId !== user.id) {
             debugLogger('WebSocket', `Mensagem não destinada a este usuário (${user.id}), ignorando mensagem para usuário ${data.userId}`);
+            return;
+          }
+          
+          // Validação adicional para mensagens de chat - evitar auto-notificação
+          if (data.type === 'new_message' && data.senderId && data.senderId === user.id) {
+            debugLogger('WebSocket', `Mensagem de chat enviada pelo próprio usuário (${user.id}), ignorando auto-notificação`);
             return;
           }
           
