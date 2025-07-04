@@ -16,6 +16,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
       case 'confirmed':
       case 'hired':
         return 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200 shadow-sm';
+      case 'awaiting_evaluation':
+        return 'bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border border-purple-200 shadow-sm';
       case 'completed':
         return 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm';
       case 'cancelled':
@@ -34,6 +36,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
       case 'confirmed':
       case 'hired':
         return 'Em andamento';
+      case 'awaiting_evaluation':
+        return 'Aguardando avaliação';
       case 'completed':
         return 'Finalizado';
       case 'cancelled':
@@ -55,6 +59,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
       case 'confirmed':
       case 'hired':
         return '🟠';
+      case 'awaiting_evaluation':
+        return '⭐';
       case 'completed':
         return '✅';
       case 'cancelled':
