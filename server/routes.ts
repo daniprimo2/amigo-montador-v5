@@ -208,6 +208,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('📩 Mensagem WebSocket recebida:', data);
         
         if (data.type === 'auth' && data.userId) {
+          // Fechar conexão anterior se existir para este usuário
+          const existingConnection = userConnections.get(data.userId);
+          if (existingConnection && existingConnection !== ws) {
+            console.log(`🔄 Fechando conexão anterior para usuário ${data.userId}`);
+            existingConnection.close();
+            storeClients.delete(existingConnection);
+            assemblerClients.delete(existingConnection);
+          }
+          
           // Associar esta conexão WebSocket ao usuário
           userConnections.set(data.userId, ws);
           (ws as any).userId = data.userId; // Armazenar userId na conexão para filtros
@@ -313,24 +322,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = {
         type: 'new_message',
         serviceId: serviceId,
-        senderId: senderId
+        senderId: senderId,
+        message: 'Nova mensagem recebida no chat'
       };
 
-      // Notificar loja
-      sendNotification(store.userId, message);
+      // Notificar loja APENAS se ela não for o remetente
+      if (store.userId !== senderId) {
+        console.log(`🔔 Enviando notificação de nova mensagem para lojista ${store.userId} (remetente: ${senderId})`);
+        global.sendNotification(store.userId, message);
+      } else {
+        console.log(`⏭️ Não enviando notificação para lojista ${store.userId} - é o próprio remetente`);
+      }
 
-      // Notificar montador se existir
+      // Notificar montador se existir e não for o remetente
       const applications = await storage.getApplicationsByServiceId(serviceId);
       for (const app of applications) {
         if (app.status === 'accepted') {
           const assembler = await storage.getAssemblerById(app.assemblerId);
-          if (assembler) {
-            sendNotification(assembler.userId, message);
+          if (assembler && assembler.userId !== senderId) {
+            console.log(`🔔 Enviando notificação de nova mensagem para montador ${assembler.userId} (remetente: ${senderId})`);
+            global.sendNotification(assembler.userId, message);
+          } else if (assembler && assembler.userId === senderId) {
+            console.log(`⏭️ Não enviando notificação para montador ${assembler.userId} - é o próprio remetente`);
           }
         }
       }
     } catch (error) {
-      // Error logging removed for production
+      console.error('Erro ao notificar nova mensagem:', error);
     }
   };
 

@@ -186,6 +186,11 @@ export function useWebSocket() {
             debugLogger('WebSocket', `⚠️ Mensagem recebida sem userId - tipo: ${data.type}`, data);
           }
           
+          // Log específico para mensagens que passaram pela validação
+          if (data.userId === user.id && data.type !== 'ping' && data.type !== 'pong') {
+            debugLogger('WebSocket', `✅ Processando notificação para usuário ${user.id} - tipo: ${data.type}`, data);
+          }
+          
           // Atualizar último estado da mensagem e enviar evento de notificação
           setLastMessage(data);
           
