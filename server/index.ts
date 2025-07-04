@@ -30,16 +30,16 @@ app.use('/assets', express.static(path.join(process.cwd(), 'public/assets'), {
 
 // Health check endpoints
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
+  res.status(200).json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     port: process.env.PORT || 5000
   });
 });
 
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
+  res.status(200).json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -110,10 +110,10 @@ app.use((req, res, next) => {
       const publicPath = path.resolve(process.cwd(), "public");
       const distPublicPath = path.resolve(__dirname, "public");
       const rootIndexPath = path.resolve(process.cwd(), "index.html");
-      
+
       // Serve static assets from attached_assets
       app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
-      
+
       if (fs.existsSync(distPublicPath)) {
         // Deployment build structure (dist/public/)
         app.use(express.static(distPublicPath));
@@ -138,19 +138,10 @@ app.use((req, res, next) => {
       }
     }
 
-    // Use PORT environment variable for deployment compatibility
-    // Cloud Run and Replit deployments require proper port configuration
     const port = parseInt(process.env.PORT || '5000');
-    const host = "0.0.0.0";
-    
-    server.listen({
-      port,
-      host,
-      reusePort: true,
-    }, () => {
+
+    server.listen(port, () => {
       log(`serving on port ${port}`);
-      if (process.env.NODE_ENV === 'production') {
-        }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
