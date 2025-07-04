@@ -43,7 +43,7 @@ interface Message {
 interface Service {
   id: number;
   title: string;
-  status: 'open' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'open' | 'in-progress' | 'completed' | 'cancelled' | 'awaiting_evaluation';
   price?: string | number;
   [key: string]: any;
 }
@@ -119,6 +119,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ serviceId, assembl
   // Query para buscar dados do serviço
   const serviceQuery = useQuery<Service>({
     queryKey: [`/api/services/${serviceId}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/services/${serviceId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Erro ao buscar dados do serviço');
+      }
+      return await response.json();
+    },
     refetchOnWindowFocus: false,
     enabled: !!serviceId && !isNaN(Number(serviceId)) && Number(serviceId) > 0
   });
@@ -229,12 +238,22 @@ toast({
         ? `/api/services/${serviceId}/messages?assemblerId=${assemblerId}`
         : `/api/services/${serviceId}/messages`;
       
-      const response = await fetch(url);
+      console.log('Fetching messages from:', url);
+      
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
+      
+      console.log('Messages response status:', response.status);
+      
       if (!response.ok) {
-        // Error logging removed for production
-throw new Error('Erro ao buscar mensagens');
+        const errorText = await response.text();
+        console.error('Error fetching messages:', response.status, errorText);
+        throw new Error(`Erro ao buscar mensagens: ${response.status}`);
       }
+      
       const fetchedMessages = await response.json();
+      console.log('Fetched messages:', fetchedMessages.length, 'messages');
       
       // Garantir que as mensagens estejam ordenadas por data de envio
       const sortedMessages = fetchedMessages.sort((a: Message, b: Message) => {
@@ -244,10 +263,12 @@ throw new Error('Erro ao buscar mensagens');
       return sortedMessages;
     },
     refetchInterval: 5000, // Atualiza a cada 5 segundos como backup em caso de falha do WebSocket
-    enabled: !!serviceId && !isNaN(Number(serviceId)) && Number(serviceId) > 0
+    enabled: !!serviceId && !isNaN(Number(serviceId)) && Number(serviceId) > 0,
+    retry: 3,
+    retryDelay: 1000
   });
 
-  const { data: messages = [], isLoading } = messagesQuery;
+  const { data: messages = [], isLoading, error: messagesError } = messagesQuery;
   
   // Recuperar detalhes do serviço (para o título e status)
   const { data: service } = serviceQuery;
@@ -288,38 +309,41 @@ throw new Error('Erro ao buscar mensagens');
       const hasUnreadMessages = messages.some(msg => msg.senderId !== user.id);
       
       if (hasUnreadMessages) {
-        // Marcar como lidas imediatamente para limpar notificações
-        markMessagesAsReadMutation.mutate();
-        
         // Disparar evento personalizado para limpar notificações visuais
         const clearNotificationEvent = new CustomEvent('chat-messages-viewed', {
           detail: { serviceId, userId: user.id }
         });
         window.dispatchEvent(clearNotificationEvent);
+        
+        // Marcar como lidas com delay para evitar race conditions
+        const timer = setTimeout(() => {
+          markMessagesAsReadMutation.mutate();
+        }, 500);
+        
+        return () => clearTimeout(timer);
       }
     }
-  }, [isLoading, messages, user, serviceId, markMessagesAsReadMutation]);
+  }, [isLoading, messages, user, serviceId]);
 
   // Marcar como lidas quando o componente é montado (usuário abriu o chat)
   useEffect(() => {
     if (user && serviceId) {
-      // Marcar como lidas imediatamente quando o chat for aberto
-      markMessagesAsReadMutation.mutate();
-      
       // Limpar notificações visuais imediatamente
       const clearNotificationEvent = new CustomEvent('chat-opened', {
         detail: { serviceId, userId: user.id }
       });
       window.dispatchEvent(clearNotificationEvent);
       
-      // Também marcar após um pequeno delay para garantir sincronização
+      // Marcar como lidas após um delay para garantir que as mensagens foram carregadas
       const timer = setTimeout(() => {
-        markMessagesAsReadMutation.mutate();
-      }, 1000);
+        if (!isLoading) {
+          markMessagesAsReadMutation.mutate();
+        }
+      }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [serviceId, user, markMessagesAsReadMutation]);
+  }, [serviceId, user]);
 
   // Buscar perfil do parceiro de conversa baseado nas mensagens
   useEffect(() => {
@@ -721,7 +745,23 @@ toast({
       
       {/* Área de mensagens */}
       <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
-        {isLoading ? (
+        {messagesError ? (
+          // Error state
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <AlertTriangle className="h-12 w-12 text-red-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Erro ao carregar mensagens</h3>
+            <p className="text-gray-500 mb-4">
+              {messagesError instanceof Error ? messagesError.message : 'Não foi possível carregar as mensagens'}
+            </p>
+            <Button 
+              onClick={() => messagesQuery.refetch()} 
+              variant="outline"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        ) : isLoading ? (
           // Esqueletos para carregamento
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
