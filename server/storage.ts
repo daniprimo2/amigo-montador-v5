@@ -392,6 +392,36 @@ export class DatabaseStorage implements IStorage {
 
   async getTotalUnreadMessageCount(userId: number): Promise<number> {
     try {
+      // First, get user details to determine if they're a store owner or assembler
+      const user = await this.getUser(userId);
+      if (!user) return 0;
+
+      let serviceIds: number[] = [];
+
+      if (user.userType === 'lojista') {
+        // For store owners, get services they own
+        const store = await this.getStoreByUserId(userId);
+        if (store) {
+          const ownedServices = await db.select({ id: services.id })
+            .from(services)
+            .where(eq(services.storeId, store.id));
+          serviceIds = ownedServices.map(s => s.id);
+        }
+      } else if (user.userType === 'montador') {
+        // For assemblers, get services where they have applications (especially accepted ones)
+        const assembler = await this.getAssemblerByUserId(userId);
+        if (assembler) {
+          const participatingServices = await db.select({ serviceId: applications.serviceId })
+            .from(applications)
+            .where(eq(applications.assemblerId, assembler.id));
+          serviceIds = participatingServices.map(a => a.serviceId);
+        }
+      }
+
+      // If no services found, user has no conversations
+      if (serviceIds.length === 0) return 0;
+
+      // Count unread messages only from services where user participates
       const result = await db.select({ count: sql`count(*)` })
         .from(messages)
         .leftJoin(messageReads, and(
@@ -399,9 +429,12 @@ export class DatabaseStorage implements IStorage {
           eq(messageReads.userId, userId)
         ))
         .where(and(
-          not(eq(messages.senderId, userId)),
-          isNull(messageReads.messageId)
+          inArray(messages.serviceId, serviceIds), // CRITICAL: Only count messages from user's services
+          not(eq(messages.senderId, userId)), // Don't count own messages
+          isNull(messageReads.messageId) // Only unread messages
         ));
+      
+      console.log(`📊 Contagem de mensagens não lidas para usuário ${userId}: ${result[0]?.count || 0} (de ${serviceIds.length} serviços)`);
       return Number(result[0]?.count || 0);
     } catch (error) {
       console.error('Erro ao buscar contagem total de mensagens não lidas:', error);
