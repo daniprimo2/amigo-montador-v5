@@ -269,23 +269,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Função global para enviar notificações com retry e fallback
   global.sendNotification = function(userId: number, message: any): boolean {
+    // VALIDAÇÃO CRÍTICA: Verificar se o userId é válido
+    if (!userId || typeof userId !== 'number' || userId <= 0) {
+      console.log(`🚫 ERRO CRÍTICO: userId inválido: ${userId}`);
+      return false;
+    }
+    
     console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
     console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
     
-    // Ensure message includes userId for client-side filtering
+    // ISOLAMENTO TOTAL: Garantir que a mensagem só pode ser para este usuário específico
     const messageWithUserId = {
       ...message,
-      userId: userId
+      userId: userId,
+      targetUserId: userId, // Campo adicional para validação dupla
+      timestamp: Date.now()
     };
     
     const connection = userConnections.get(userId);
     if (connection && connection.readyState === WebSocket.OPEN) {
-      try {
-        connection.send(JSON.stringify(messageWithUserId));
-        console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
-        return true;
-      } catch (error) {
-        console.log(`❌ Erro ao enviar notificação: ${error}`);
+      // Validação adicional: verificar se a conexão realmente pertence ao usuário
+      if ((connection as any).userId === userId) {
+        try {
+          connection.send(JSON.stringify(messageWithUserId));
+          console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
+          return true;
+        } catch (error) {
+          console.log(`❌ Erro ao enviar notificação: ${error}`);
+          return false;
+        }
+      } else {
+        console.log(`🚫 ERRO CRÍTICO: Conexão não pertence ao usuário ${userId}`);
         return false;
       }
     } else {
@@ -296,12 +310,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < connections.length; i++) {
         const [connectedUserId, ws] = connections[i];
         if (connectedUserId === userId && ws.readyState === WebSocket.OPEN) {
-          try {
-            ws.send(JSON.stringify(messageWithUserId));
-            console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
-            return true;
-          } catch (error) {
-            console.log(`❌ Erro na conexão alternativa: ${error}`);
+          // Validação tripla: verificar múltiplas condições
+          if ((ws as any).userId === userId && connectedUserId === userId) {
+            try {
+              ws.send(JSON.stringify(messageWithUserId));
+              console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
+              return true;
+            } catch (error) {
+              console.log(`❌ Erro na conexão alternativa: ${error}`);
+            }
+          } else {
+            console.log(`🚫 ERRO CRÍTICO: Validação tripla falhou para usuário ${userId}`);
           }
         }
       }

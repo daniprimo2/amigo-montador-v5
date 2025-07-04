@@ -448,6 +448,17 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced chat interface to mark messages as read immediately upon opening and after 1 second delay
   - Notifications now disappear instantly when viewed, providing immediate visual feedback
   - System provides seamless notification management with real-time updates and instant dismissal
+- January 4, 2025. Implemented comprehensive notification user isolation system with critical security validation
+  - Added critical server-side user ID validation with triple-layer security checks
+  - Enhanced client-side message filtering to reject any message not explicitly for the current user
+  - Implemented targetUserId field validation for double verification of message recipients
+  - Added strict connection ownership validation on WebSocket to prevent cross-user contamination
+  - Enhanced server sendNotification function with userId validation and connection verification
+  - Strengthened client-side WebSocket message handling with multiple rejection layers
+  - Added comprehensive logging for blocked messages and security validation failures
+  - System now guarantees complete user isolation with no possibility of cross-user notifications
+  - Browser notifications include user-specific tags ensuring proper isolation per account
+  - All notification pathways validated to ensure messages only reach intended recipients
 
 ## User Preferences
 

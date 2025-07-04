@@ -176,26 +176,34 @@ export function useWebSocket() {
           const data = JSON.parse(event.data) as WebSocketMessage;
           debugLogger('WebSocket', `Mensagem recebida: ${data.type}`, data);
           
-          // Verificar se a mensagem é destinada a este usuário
+          // VALIDAÇÃO CRÍTICA: Verificar se a mensagem é destinada a este usuário
+          // Rejeitar qualquer mensagem que não seja explicitamente para este usuário
           if (data.userId && data.userId !== user.id) {
-            debugLogger('WebSocket', `Mensagem não destinada a este usuário (${user.id}), ignorando mensagem para usuário ${data.userId}`);
+            debugLogger('WebSocket', `🚫 BLOQUEADO: Mensagem não destinada a este usuário (${user.id}), ignorando mensagem para usuário ${data.userId}`);
+            return;
+          }
+          
+          // Para mensagens sem userId, só aceitar tipos de sistema (ping/pong)
+          if (!data.userId && data.type !== 'ping' && data.type !== 'pong') {
+            debugLogger('WebSocket', `🚫 BLOQUEADO: Mensagem sem userId rejeitada - tipo: ${data.type}`, data);
+            return;
+          }
+          
+          // VALIDAÇÃO DUPLA: Verificar targetUserId se existir
+          if ((data as any).targetUserId && (data as any).targetUserId !== user.id) {
+            debugLogger('WebSocket', `🚫 BLOQUEADO: targetUserId não corresponde ao usuário atual (${user.id}) - targetUserId: ${(data as any).targetUserId}`);
             return;
           }
           
           // Validação adicional para mensagens de chat - evitar auto-notificação
           if (data.type === 'new_message' && data.senderId && data.senderId === user.id) {
-            debugLogger('WebSocket', `Mensagem de chat enviada pelo próprio usuário (${user.id}), ignorando auto-notificação`);
+            debugLogger('WebSocket', `🚫 BLOQUEADO: Mensagem de chat enviada pelo próprio usuário (${user.id}), ignorando auto-notificação`);
             return;
           }
           
-          // Log para debug se a mensagem não tem userId (pode indicar problema)
-          if (!data.userId && data.type !== 'ping' && data.type !== 'pong') {
-            debugLogger('WebSocket', `⚠️ Mensagem recebida sem userId - tipo: ${data.type}`, data);
-          }
-          
-          // Log específico para mensagens que passaram pela validação
+          // Log específico para mensagens que passaram pela validação rigorosa
           if (data.userId === user.id && data.type !== 'ping' && data.type !== 'pong') {
-            debugLogger('WebSocket', `✅ Processando notificação para usuário ${user.id} - tipo: ${data.type}`, data);
+            debugLogger('WebSocket', `✅ APROVADO: Processando notificação para usuário ${user.id} - tipo: ${data.type}`, data);
           }
           
           // Atualizar último estado da mensagem e enviar evento de notificação
