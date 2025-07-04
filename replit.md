@@ -440,6 +440,14 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced WebSocket message type to include senderId for better sender/recipient validation
   - Notifications now strictly isolated per user account with sender exclusion and automatic clearing when viewed
   - System ensures each user receives only relevant notifications with immediate dismissal upon interaction
+- January 4, 2025. Implemented immediate notification auto-dismissal system for enhanced user experience
+  - Enhanced notification update frequency from 10 seconds to 2-3 seconds for faster response
+  - Added immediate notification clearing when users click on notification buttons (bell icon or chat button)
+  - Implemented adaptive polling frequency: 1 second when in chat tab, 3 seconds on other tabs
+  - Added page visibility change listener to auto-update notifications when users return to the tab
+  - Enhanced chat interface to mark messages as read immediately upon opening and after 1 second delay
+  - Notifications now disappear instantly when viewed, providing immediate visual feedback
+  - System provides seamless notification management with real-time updates and instant dismissal
 
 ## User Preferences
 

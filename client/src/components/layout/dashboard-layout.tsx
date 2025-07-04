@@ -39,7 +39,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       }
       return await response.json();
     },
-    refetchInterval: 10000, // Atualizar a cada 10 segundos
+    refetchInterval: activeTab === 'chat' ? 1000 : 3000, // Atualizar mais frequentemente quando estiver no chat
   });
   
   // Use test count to demonstrate notification or real data if available
@@ -89,14 +89,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       refetchUnreadCount();
     };
 
+    // Listener para mudanças de visibilidade da página
+    const handleVisibilityChange = () => {
+      if (!document.hidden && activeTab === 'chat') {
+        // Quando o usuário volta para a aba e está no chat, atualizar notificações
+        setHasNewMessage(false);
+        refetchUnreadCount();
+      }
+    };
+
     window.addEventListener('chat-opened', handleChatOpened);
     window.addEventListener('chat-messages-viewed', handleMessagesViewed);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('chat-opened', handleChatOpened);
       window.removeEventListener('chat-messages-viewed', handleMessagesViewed);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refetchUnreadCount]);
+  }, [refetchUnreadCount, activeTab]);
   
   // Limpar contagem quando mudar para a aba de chat
   useEffect(() => {
@@ -104,10 +115,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       // Limpar imediatamente a notificação visual quando o usuário acessa o chat
       setHasNewMessage(false);
       
-      // Atualizar a contagem após um pequeno delay para permitir que as mensagens sejam marcadas como lidas
+      // Atualizar a contagem imediatamente e após um pequeno delay para garantir sincronização
+      refetchUnreadCount();
       setTimeout(() => {
         refetchUnreadCount();
-      }, 1000);
+      }, 500);
     }
   }, [activeTab, refetchUnreadCount]);
 
@@ -134,7 +146,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   // Componente para o botão de chat com indicador de notificação
   const ChatButton = () => (
     <button 
-      onClick={() => handleTabChange('chat')}
+      onClick={() => {
+        // Limpar notificações imediatamente quando o usuário clica no chat
+        setHasNewMessage(false);
+        refetchUnreadCount();
+        handleTabChange('chat');
+      }}
       className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
         activeTab === 'chat' 
           ? 'text-primary bg-primary/10 scale-105' 
@@ -374,7 +391,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="flex items-center space-x-3">
             <button 
               className="text-white relative p-2 rounded-full hover:bg-white/10 transition-colors"
-              onClick={() => handleTabChange('chat')} 
+              onClick={() => {
+                // Limpar notificações imediatamente quando o usuário clica no sino
+                setHasNewMessage(false);
+                refetchUnreadCount();
+                handleTabChange('chat');
+              }} 
               title="Ir para o chat"
             >
               <NotificationBadge

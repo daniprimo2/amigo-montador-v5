@@ -298,25 +298,28 @@ throw new Error('Erro ao buscar mensagens');
         window.dispatchEvent(clearNotificationEvent);
       }
     }
-  }, [isLoading, messages, user, serviceId]);
+  }, [isLoading, messages, user, serviceId, markMessagesAsReadMutation]);
 
   // Marcar como lidas quando o componente é montado (usuário abriu o chat)
   useEffect(() => {
     if (user && serviceId) {
-      // Pequeno delay para garantir que as mensagens foram carregadas
+      // Marcar como lidas imediatamente quando o chat for aberto
+      markMessagesAsReadMutation.mutate();
+      
+      // Limpar notificações visuais imediatamente
+      const clearNotificationEvent = new CustomEvent('chat-opened', {
+        detail: { serviceId, userId: user.id }
+      });
+      window.dispatchEvent(clearNotificationEvent);
+      
+      // Também marcar após um pequeno delay para garantir sincronização
       const timer = setTimeout(() => {
         markMessagesAsReadMutation.mutate();
-        
-        // Limpar notificações visuais imediatamente
-        const clearNotificationEvent = new CustomEvent('chat-opened', {
-          detail: { serviceId, userId: user.id }
-        });
-        window.dispatchEvent(clearNotificationEvent);
-      }, 500);
+      }, 1000);
       
       return () => clearTimeout(timer);
     }
-  }, [serviceId, user]);
+  }, [serviceId, user, markMessagesAsReadMutation]);
 
   // Buscar perfil do parceiro de conversa baseado nas mensagens
   useEffect(() => {
