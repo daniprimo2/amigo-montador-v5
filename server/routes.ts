@@ -263,10 +263,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
     console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
     
+    // Ensure message includes userId for client-side filtering
+    const messageWithUserId = {
+      ...message,
+      userId: userId
+    };
+    
     const connection = userConnections.get(userId);
     if (connection && connection.readyState === WebSocket.OPEN) {
       try {
-        connection.send(JSON.stringify(message));
+        connection.send(JSON.stringify(messageWithUserId));
         console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
         return true;
       } catch (error) {
@@ -277,10 +283,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`❌ Conexão não encontrada ou fechada para usuário ${userId}`);
       
       // Try to find any active connection for this user (multiple tabs scenario)
-      for (const [connectedUserId, ws] of userConnections.entries()) {
+      const connections = Array.from(userConnections.entries());
+      for (let i = 0; i < connections.length; i++) {
+        const [connectedUserId, ws] = connections[i];
         if (connectedUserId === userId && ws.readyState === WebSocket.OPEN) {
           try {
-            ws.send(JSON.stringify(message));
+            ws.send(JSON.stringify(messageWithUserId));
             console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
             return true;
           } catch (error) {

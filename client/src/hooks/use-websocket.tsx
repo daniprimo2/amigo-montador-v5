@@ -17,6 +17,7 @@ type WebSocketMessage = {
   serviceData?: any; // Para carregar informações do serviço quando necessário
   amount?: string; // Para notificações de pagamento
   userId?: number; // Para identificar o usuário alvo da mensagem
+  data?: any; // Para dados adicionais da notificação
   evaluateUser?: {
     id: number;
     name: string;
@@ -178,6 +179,11 @@ export function useWebSocket() {
           if (data.userId && data.userId !== user.id) {
             debugLogger('WebSocket', `Mensagem não destinada a este usuário (${user.id}), ignorando mensagem para usuário ${data.userId}`);
             return;
+          }
+          
+          // Log para debug se a mensagem não tem userId (pode indicar problema)
+          if (!data.userId && data.type !== 'ping' && data.type !== 'pong') {
+            debugLogger('WebSocket', `⚠️ Mensagem recebida sem userId - tipo: ${data.type}`, data);
           }
           
           // Atualizar último estado da mensagem e enviar evento de notificação
