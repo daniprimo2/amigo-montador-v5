@@ -418,6 +418,13 @@ The AmigoMontador platform is a responsive web application that connects furnitu
   - Enhanced profile data structure with proper city, state, and specialties fields for assembler profiles
   - Added profilePhotoUrl field mapping for consistent profile image display
   - User profile pages now load correctly with complete rating history and location information
+- January 4, 2025. Fixed service status categorization in store dashboard
+  - Resolved issue where services with "awaiting_evaluation" status were incorrectly showing in "Finalizados" tab
+  - Updated status badge component to properly support all service statuses including "awaiting_evaluation"
+  - Added purple gradient styling and star icon for "awaiting_evaluation" status with "Aguardando avaliação" label
+  - Modified filtering logic to place "awaiting_evaluation" services in "Em Andamento" tab instead of "Finalizados"
+  - Services now correctly categorized: open services in "Em Aberto", in-progress and awaiting-evaluation in "Em Andamento", completed services in "Finalizados"
+  - Status counting logic updated to reflect accurate service states in dashboard counters
 
 ## User Preferences
 

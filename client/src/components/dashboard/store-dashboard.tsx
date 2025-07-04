@@ -783,14 +783,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({ onLogout }) => {
   
   // Debug: Contar status dos serviços
   const openCount = allServices.filter(service => service.status === 'open').length;
-  const inProgressCount = allServices.filter(service => service.status === 'in-progress').length;
-  const completedCount = allServices.filter(service => service.status === 'completed' || service.status === 'awaiting_evaluation').length;
+  const inProgressCount = allServices.filter(service => service.status === 'in-progress' || service.status === 'awaiting_evaluation').length;
+  const completedCount = allServices.filter(service => service.status === 'completed').length;
   
   // Filtrar serviços com base na guia ativa
   const services = allServices.filter(service => {
     if (activeTab === 'open') return service.status === 'open';
-    if (activeTab === 'in-progress') return service.status === 'in-progress';
-    if (activeTab === 'completed') return service.status === 'completed' || service.status === 'awaiting_evaluation';
+    if (activeTab === 'in-progress') return service.status === 'in-progress' || service.status === 'awaiting_evaluation';
+    if (activeTab === 'completed') return service.status === 'completed';
     return true;
   }).sort((a, b) => {
     // Para serviços "Em Andamento", ordenar por data de início (mais próxima primeiro)
