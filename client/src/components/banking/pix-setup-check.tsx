@@ -65,16 +65,16 @@ export const PixSetupCheck: React.FC<PixSetupCheckProps> = ({ userId, userType }
 
   return (
     <>
-      <Card className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <Card className="w-full mobile-card">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              <CardTitle>Configuração PIX</CardTitle>
+              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+              <CardTitle className="text-base sm:text-lg">Configuração PIX</CardTitle>
             </div>
             {getStatusBadge(pixStatus.isPixReady)}
           </div>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Status da configuração para pagamentos PIX
           </CardDescription>
         </CardHeader>

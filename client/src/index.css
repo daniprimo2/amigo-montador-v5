@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-first responsive design utilities */
+@layer components {
+  .mobile-card {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Mobile dialog optimizations */
+  @media (max-width: 640px) {
+    [data-radix-popper-content-wrapper] {
+      transform: none !important;
+      position: fixed !important;
+      inset: 8px !important;
+      width: auto !important;
+      height: auto !important;
+    }
+  }
+}
+
 /* Responsive web optimizations */
 @layer utilities {
   /* Safe area support for modern browsers with safe areas */

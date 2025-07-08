@@ -217,9 +217,9 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto w-[95vw]">
-        <DialogHeader className="pb-6 border-b border-gray-100">
-          <DialogTitle className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto px-4 py-6 sm:px-6">
+        <DialogHeader className="pb-4 sm:pb-6 border-b border-gray-100">
+          <DialogTitle className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2 sm:gap-3">
             {status === "editing" && (
               <>
                 <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -280,34 +280,34 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                 <>
                   {/* Informações do montador com avaliação */}
                   {assemblerData && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
-                      <div className="flex justify-between items-center mb-3">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 sm:p-4 shadow-sm mobile-card">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                          <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                             {(assemblerData.user?.name || 'M').charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{assemblerData.user?.name || 'Montador'}</h3>
-                            <p className="text-sm text-gray-600">Montador Profissional</p>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{assemblerData.user?.name || 'Montador'}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600">Montador Profissional</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1 border border-yellow-200">
+                        <div className="flex items-center gap-2 bg-white rounded-lg px-2 sm:px-3 py-1 border border-yellow-200 w-fit">
                           <RatingStars
                             rating={assemblerData.rating || 0}
                             size="sm"
                           />
-                          <span className="text-sm font-semibold text-yellow-700">
+                          <span className="text-xs sm:text-sm font-semibold text-yellow-700">
                             {assemblerData.rating ? assemblerData.rating.toFixed(1) : '0.0'}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="text-sm text-gray-600">
-                        <div className="flex items-center gap-1 mb-1">
+                      <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
                           <span className="font-medium">Especialidades:</span>
-                          <span>{assemblerData.specialties?.join(', ') || 'Não informadas'}</span>
+                          <span className="break-words">{assemblerData.specialties?.join(', ') || 'Não informadas'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
                           <span className="font-medium">Região:</span>
                           <span>{assemblerData.city} - {assemblerData.state}</span>
                         </div>
@@ -316,42 +316,42 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                   )}
                 
                   <div className="space-y-3">
-                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="price" className="text-sm sm:text-base font-medium text-gray-700">
                       Valor do serviço
                     </Label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-green-600 font-semibold">
+                      <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-green-600 font-semibold text-sm sm:text-base">
                         R$
                       </span>
                       <Input
                         id="price"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="pl-10 h-11 border-gray-200 hover:border-green-300 focus:border-green-500 focus:ring-green-500 transition-colors"
+                        className="pl-8 sm:pl-10 h-12 sm:h-11 border-gray-200 hover:border-green-300 focus:border-green-500 focus:ring-green-500 transition-colors touch-target text-sm sm:text-base"
                         placeholder="0,00"
                       />
                     </div>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-700 font-medium">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mobile-card">
+                      <p className="text-xs sm:text-sm text-green-700 font-medium">
                         💰 Valor atual: {formatDisplayPrice(service?.price || "0")}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3 sm:space-y-4">
+                    <Label htmlFor="date" className="text-sm sm:text-base font-medium text-gray-700">
                       Data de início do serviço
                     </Label>
                     
                     {/* Display selected date */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-800">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 sm:p-4 mobile-card">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-medium text-blue-800">
                             Data selecionada
                           </p>
-                          <p className="text-base font-semibold text-blue-900">
+                          <p className="text-sm sm:text-base font-semibold text-blue-900 truncate">
                             {date ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Nenhuma data selecionada"}
                           </p>
                         </div>
@@ -359,30 +359,30 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
                     </div>
 
                     {/* Calendar Component - Always visible */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg">
-                      <div className="flex justify-center">
+                    <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 md:p-6 shadow-lg mobile-card">
+                      <div className="flex justify-center w-full">
                         <CalendarComponent
                           mode="single"
                           selected={date}
                           onSelect={setDate}
                           locale={ptBR}
                           disabled={(date) => date < new Date()}
-                          className="rounded-lg mx-auto"
+                          className="rounded-lg w-full max-w-sm mx-auto"
                           classNames={{
-                            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                            month: "space-y-4 w-full",
-                            caption: "flex justify-center pt-1 relative items-center mb-4",
-                            caption_label: "text-lg font-semibold text-gray-800",
+                            months: "flex flex-col space-y-4 w-full",
+                            month: "space-y-3 w-full",
+                            caption: "flex justify-center pt-1 relative items-center mb-3 sm:mb-4",
+                            caption_label: "text-base sm:text-lg font-semibold text-gray-800",
                             nav: "space-x-1 flex items-center",
-                            nav_button: "h-8 w-8 bg-gray-100 hover:bg-gray-200 rounded-full p-0 opacity-70 hover:opacity-100 transition-all duration-200",
+                            nav_button: "h-7 w-7 sm:h-8 sm:w-8 bg-gray-100 hover:bg-gray-200 rounded-full p-0 opacity-70 hover:opacity-100 transition-all duration-200 touch-target",
                             nav_button_previous: "absolute left-1",
                             nav_button_next: "absolute right-1",
                             table: "w-full border-collapse space-y-1",
                             head_row: "flex w-full",
-                            head_cell: "text-gray-500 rounded-md w-10 font-medium text-sm flex-1 text-center py-2",
+                            head_cell: "text-gray-500 rounded-md font-medium text-xs sm:text-sm flex-1 text-center py-2 min-w-0",
                             row: "flex w-full mt-1",
-                            cell: "text-center text-sm p-0 relative flex-1 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                            day: "h-10 w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-blue-100 hover:text-blue-900 rounded-lg transition-all duration-200 mx-auto",
+                            cell: "text-center text-xs sm:text-sm p-0 relative flex-1 min-w-0 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: "h-8 w-8 sm:h-10 sm:w-10 p-0 font-medium aria-selected:opacity-100 hover:bg-blue-100 hover:text-blue-900 rounded-lg transition-all duration-200 mx-auto touch-target",
                             day_selected: "bg-blue-600 text-white hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white shadow-md",
                             day_today: "bg-gray-100 text-gray-900 font-bold border-2 border-blue-300",
                             day_outside: "text-gray-300 opacity-50",
@@ -443,18 +443,18 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
         </div>
 
         {status === "editing" && (
-          <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-3 pt-6 border-t border-gray-100">
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-100">
             <Button
               variant="outline"
               onClick={onClose}
-              className="h-11 px-6 border-gray-300 hover:bg-gray-50 transition-colors"
+              className="h-12 sm:h-11 px-4 sm:px-6 border-gray-300 hover:bg-gray-50 transition-colors touch-target text-sm sm:text-base order-2 sm:order-1"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleHireAssembler}
               disabled={isLoading}
-              className="h-11 px-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-12 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 touch-target text-sm sm:text-base order-1 sm:order-2"
             >
               {isLoading ? (
                 <>
