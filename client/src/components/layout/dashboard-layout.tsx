@@ -152,7 +152,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         refetchUnreadCount();
         handleTabChange('chat');
       }}
-      className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+      className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
         activeTab === 'chat' 
           ? 'text-primary bg-primary/10 scale-105' 
           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
@@ -173,7 +173,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         hasNewMessage={hasNewMessage}
         onAnimationComplete={() => setHasNewMessage(false)}
       />
-      <span className="text-xs font-medium mt-1">Chat</span>
+      <span className="text-[10px] sm:text-xs font-medium mt-0.5 sm:mt-1">Chat</span>
     </button>
   );
 
@@ -195,11 +195,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     return (
       <button 
         onClick={handleSupportClick}
-        className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-green-500 hover:text-green-700 hover:bg-green-50 active:scale-95"
+        className="flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] text-green-500 hover:text-green-700 hover:bg-green-50 active:scale-95 touch-target"
         title="Suporte via WhatsApp"
       >
-        <MessageCircle className="h-5 w-5 mb-1" />
-        <span className="text-xs font-medium">Suporte</span>
+        <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+        <span className="text-[10px] sm:text-xs font-medium">Suporte</span>
       </button>
     );
   };
@@ -207,119 +207,119 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const renderNavigation = () => {
     if (userType === 'lojista') {
       return (
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'home' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Home className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Início</span>
+            <Home className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('services')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'services' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <List className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Serviços</span>
+            <List className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Serviços</span>
           </button>
           <button 
             onClick={() => handleTabChange('analytics')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'analytics' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <BarChart3 className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Analytics</span>
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Analytics</span>
           </button>
           <button 
             onClick={() => handleTabChange('ranking')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'ranking' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Trophy className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Ranking</span>
+            <Trophy className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
           <SupportButton />
           <button 
             onClick={handleLogout}
-            className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"
+            className="flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95 touch-target"
             title="Voltar ao login"
           >
-            <LogOut className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Sair</span>
+            <LogOut className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Sair</span>
           </button>
         </div>
       );
     } else {
       return (
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           <button 
             onClick={() => handleTabChange('home')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'home' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Home className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Início</span>
+            <Home className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Início</span>
           </button>
           <button 
             onClick={() => handleTabChange('explore')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'explore' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Map className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Explorar</span>
+            <Map className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Explorar</span>
           </button>
           <button 
             onClick={() => handleTabChange('analytics')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'analytics' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <BarChart3 className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Analytics</span>
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Analytics</span>
           </button>
           <button 
             onClick={() => handleTabChange('ranking')}
-            className={`flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] ${
+            className={`flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] touch-target ${
               activeTab === 'ranking' 
                 ? 'text-primary bg-primary/10 scale-105' 
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 active:scale-95'
             }`}
           >
-            <Trophy className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Ranking</span>
+            <Trophy className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Ranking</span>
           </button>
           <ChatButton />
           <SupportButton />
           <button 
             onClick={handleLogout}
-            className="flex flex-col items-center py-3 px-1 rounded-xl transition-all duration-200 min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95"
+            className="flex flex-col items-center py-2 sm:py-3 px-0.5 sm:px-1 rounded-lg sm:rounded-xl transition-all duration-200 min-h-[48px] sm:min-h-[64px] text-red-500 hover:text-red-700 hover:bg-red-50 active:scale-95 touch-target"
             title="Voltar ao login"
           >
-            <LogOut className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Sair</span>
+            <LogOut className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 sm:mb-1" />
+            <span className="text-[10px] sm:text-xs font-medium">Sair</span>
           </button>
         </div>
       );

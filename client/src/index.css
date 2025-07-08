@@ -498,6 +498,31 @@
   @apply w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
 }
 
+/* Enhanced mobile responsiveness classes */
+.mobile-file-item {
+  @apply flex flex-col sm:flex-row sm:items-center justify-between p-2.5 gap-2 sm:gap-0;
+}
+
+.mobile-file-actions {
+  @apply flex items-center gap-1 justify-end sm:justify-start;
+}
+
+.mobile-file-button {
+  @apply p-2 sm:p-1.5 rounded-full transition-colors;
+}
+
+.mobile-text-responsive {
+  @apply text-xs sm:text-sm;
+}
+
+.mobile-footer {
+  @apply flex flex-col sm:flex-row gap-3 pt-4 sm:pt-6 border-t border-gray-100;
+}
+
+.mobile-footer-button {
+  @apply h-12 sm:h-10 px-4 sm:px-6 text-sm sm:text-base;
+}
+
 .auth-button {
   @apply w-full py-3 px-4 bg-primary text-white font-medium rounded-full shadow-md hover:bg-opacity-90 transition;
 }

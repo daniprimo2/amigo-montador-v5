@@ -320,15 +320,15 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Editar Serviço</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[95vw] max-w-none sm:max-w-[600px] max-h-[90vh] overflow-y-auto mobile-card">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-lg sm:text-xl">Editar Serviço</DialogTitle>
+          <DialogDescription className="text-sm">
             Edite as informações do serviço e gerencie os arquivos anexados.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4 grid gap-4">
+        <div className="py-2 sm:py-4 grid gap-3 sm:gap-4">
           <div className="grid gap-2">
             <Label htmlFor="title" className="text-sm font-medium">Título *</Label>
             <Input 
@@ -337,7 +337,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
               placeholder="Ex: Montagem de armário de cozinha" 
               value={editedService.title}
               onChange={handleInputChange}
-              className="w-full"
+              className="w-full h-10 sm:h-9 text-sm sm:text-base"
             />
           </div>
           
@@ -350,11 +350,11 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
               rows={3}
               value={editedService.description}
               onChange={handleInputChange}
-              className="w-full resize-y min-h-[5rem]"
+              className="w-full resize-y min-h-[4rem] sm:min-h-[5rem] text-sm sm:text-base"
             />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="grid gap-2">
               <Label htmlFor="startDate" className="text-sm font-medium">Data de Início *</Label>
               <Input 
@@ -363,7 +363,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 type="date"
                 value={editedService.startDate}
                 onChange={handleInputChange}
-                className="w-full"
+                className="w-full h-10 sm:h-9 text-sm sm:text-base"
               />
             </div>
             
@@ -375,13 +375,13 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 type="date"
                 value={editedService.endDate}
                 onChange={handleInputChange}
-                className="w-full"
+                className="w-full h-10 sm:h-9 text-sm sm:text-base"
               />
             </div>
             {dateError && <p className="text-xs text-red-500 col-span-1 sm:col-span-2">{dateError}</p>}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="grid gap-2">
               <Label htmlFor="price" className="text-sm font-medium">Valor *</Label>
               <Input
@@ -390,7 +390,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 placeholder="Ex: R$ 0,00"
                 value={editedService.price}
                 onChange={handlePriceChange}
-                className="w-full"
+                className="w-full h-10 sm:h-9 text-sm sm:text-base"
                 inputMode="numeric"
               />
               <p className="text-xs text-gray-500">Digite apenas números (sem pontos ou vírgulas)</p>
@@ -404,7 +404,7 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 placeholder="Ex: MDF, Madeira Maciça" 
                 value={editedService.materialType}
                 onChange={handleInputChange}
-                className="w-full"
+                className="w-full h-10 sm:h-9 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -415,19 +415,19 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
             
             {/* Arquivos existentes */}
             {projectFiles.length > 0 ? (
-              <div className="space-y-2 max-h-[180px] overflow-y-auto p-1 mt-2 border rounded-md bg-gray-50">
+              <div className="space-y-2 max-h-[160px] sm:max-h-[180px] overflow-y-auto p-1 mt-2 border rounded-md bg-gray-50">
                 {projectFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2.5 border rounded-md bg-white">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="text-sm font-medium truncate">{file.name}</span>
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 border rounded-md bg-white gap-2 sm:gap-0">
+                    <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium truncate">{file.name}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 justify-end sm:justify-start">
                       <a 
                         href={file.path} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-2 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors touch-target"
                         title="Visualizar PDF"
                       >
                         <FileText className="h-4 w-4 text-gray-600" />
@@ -435,14 +435,14 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                       <a 
                         href={file.path} 
                         download
-                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-2 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors touch-target"
                         title="Baixar PDF"
                       >
                         <Download className="h-4 w-4 text-gray-600" />
                       </a>
                       <button
                         onClick={() => handleFileDelete(file.path)}
-                        className="p-1.5 hover:bg-red-50 text-red-500 rounded-full transition-colors"
+                        className="p-2 sm:p-1.5 hover:bg-red-50 text-red-500 rounded-full transition-colors touch-target"
                         title="Excluir PDF"
                       >
                         <X className="h-4 w-4" />
@@ -452,11 +452,11 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic mt-2">Nenhum arquivo disponível para este serviço.</p>
+              <p className="text-xs sm:text-sm text-gray-500 italic mt-2">Nenhum arquivo disponível para este serviço.</p>
             )}
             
             {/* Upload de novos arquivos */}
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <Label htmlFor="file-upload" className="text-sm font-medium">Adicionar Novos Arquivos</Label>
               <div className="mt-2">
                 <input
@@ -472,19 +472,19 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
                   type="button"
                   variant="outline"
                   onClick={handleUploadButtonClick}
-                  className="w-full flex items-center justify-center gap-2"
+                  className="w-full flex items-center justify-center gap-2 h-10 sm:h-9 text-sm sm:text-base touch-target"
                 >
                   <Upload className="h-4 w-4" />
                   Selecionar Arquivos PDF
                 </Button>
                 {newFiles && newFiles.length > 0 && (
-                  <div className="mt-2 p-2 bg-gray-50 border rounded-md">
+                  <div className="mt-2 p-2 bg-gray-50 border rounded-md mobile-card">
                     <p className="text-sm font-medium">Arquivos selecionados:</p>
                     <ul className="mt-1 space-y-1">
                       {Array.from(newFiles).map((file, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-center">
-                          <FileText className="h-4 w-4 mr-1.5 text-primary" />
-                          {file.name}
+                        <li key={index} className="text-xs sm:text-sm text-gray-700 flex items-center">
+                          <FileText className="h-4 w-4 mr-1.5 text-primary flex-shrink-0" />
+                          <span className="truncate">{file.name}</span>
                         </li>
                       ))}
                     </ul>
@@ -495,14 +495,18 @@ export const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
           </div>
         </div>
         
-        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4 sm:pt-6 border-t border-gray-100">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="h-12 sm:h-10 px-4 sm:px-6 text-sm sm:text-base touch-target order-2 sm:order-1"
+          >
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || !!dateError}
-            className="bg-primary hover:bg-opacity-90 text-white"
+            className="bg-primary hover:bg-opacity-90 text-white h-12 sm:h-10 px-4 sm:px-6 text-sm sm:text-base touch-target order-1 sm:order-2"
           >
             {isSubmitting ? (
               <>

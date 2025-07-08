@@ -300,21 +300,23 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50" 
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50 touch-target px-2 py-1 sm:px-3 sm:py-2" 
                   onClick={handleEditClick}
                   title="Editar serviço"
                 >
                   <PencilIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline ml-1">Editar</span>
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="text-red-600 border-red-200 hover:bg-red-50" 
+                  className="text-red-600 border-red-200 hover:bg-red-50 touch-target px-2 py-1 sm:px-3 sm:py-2" 
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
                   title="Excluir serviço"
                 >
                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline ml-1">Excluir</span>
                 </Button>
               </>
             )}
@@ -323,12 +325,12 @@ export const StoreServiceCard: React.FC<StoreServiceCardProps> = ({
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="text-blue-600 border-blue-200 hover:bg-blue-50" 
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 touch-target px-2 py-1 sm:px-3 sm:py-2" 
                 onClick={handleChatClick}
                 title="Ver conversa com candidatos"
               >
-                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden sm:inline">Ver Conversa</span>
+                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline ml-1">Chat</span>
               </Button>
             )}
           </div>

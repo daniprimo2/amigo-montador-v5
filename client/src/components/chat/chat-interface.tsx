@@ -646,22 +646,22 @@ toast({
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full mobile-card">
       {/* Cabeçalho do chat */}
-      <div className="bg-white p-4 rounded-t-lg shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="bg-white p-2 sm:p-4 rounded-t-lg shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <Button 
             variant="ghost" 
             size="sm" 
-            className="p-2 rounded-full" 
+            className="p-2 rounded-full touch-target flex-shrink-0" 
             onClick={onBack}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           
           {/* Foto do usuário da conversa */}
           {chatPartnerProfile && (
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
               <img
                 src={(chatPartnerProfile as any).profilePhotoUrl || chatPartnerProfile.store?.logoUrl || '/default-avatar.svg'}
                 alt={chatPartnerProfile.name}
@@ -673,10 +673,10 @@ toast({
             </div>
           )}
           
-          <div>
-            <h2 className="font-medium">{service?.title || 'Carregando...'}</h2>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-medium text-sm sm:text-base truncate">{service?.title || 'Carregando...'}</h2>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {chatPartnerProfile ? (
                   <>
                     {chatPartnerProfile.userType === 'lojista' && chatPartnerProfile.store 
@@ -696,18 +696,19 @@ toast({
         
         {/* Botões de ação - visíveis apenas para lojistas */}
         {user?.userType === 'lojista' && (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
             {/* Botão de Pagamento PIX - sempre disponível durante desenvolvimento para testes */}
             {service && service.price && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200 relative group"
+                className="gap-1 text-emerald-600 border-emerald-300 hover:bg-emerald-50 shadow-sm transition-all duration-200 relative group text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 touch-target"
                 onClick={() => setIsPixPaymentDialogOpen(true)}
                 title="⚠️ Modo de Desenvolvimento: API PIX em desenvolvimento, usar botão de teste"
               >
-                <CreditCard className="h-4 w-4" />
-                Pagar via PIX
+                <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Pagar via PIX</span>
+                <span className="sm:hidden">PIX</span>
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
               </Button>
             )}
@@ -717,7 +718,7 @@ toast({
               <Button
                 variant="outline"
                 size="sm"
-                className={`gap-1 ${hasPaymentProof 
+                className={`gap-1 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 touch-target ${hasPaymentProof 
                   ? 'text-purple-600 border-purple-600 hover:bg-purple-50' 
                   : 'text-green-600 border-green-600 hover:bg-green-50'
                 }`}
@@ -730,13 +731,23 @@ toast({
                 }}
                 disabled={transferPixPaymentMutation.isPending}
               >
-                <DollarSign className="h-4 w-4" />
-                {transferPixPaymentMutation.isPending 
-                  ? 'Processando...' 
-                  : hasPaymentProof 
-                    ? 'Repassar para Montador' 
-                    : 'Contratar Montador'
-                }
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">
+                  {transferPixPaymentMutation.isPending 
+                    ? 'Processando...' 
+                    : hasPaymentProof 
+                      ? 'Repassar para Montador' 
+                      : 'Contratar Montador'
+                  }
+                </span>
+                <span className="sm:hidden">
+                  {transferPixPaymentMutation.isPending 
+                    ? 'Proc...' 
+                    : hasPaymentProof 
+                      ? 'Repassar' 
+                      : 'Contratar'
+                  }
+                </span>
               </Button>
             )}
           </div>
@@ -744,7 +755,7 @@ toast({
       </div>
       
       {/* Área de mensagens */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+      <div className="flex-1 overflow-y-auto bg-gray-50 p-2 sm:p-4">
         {messagesError ? (
           // Error state
           <div className="flex flex-col items-center justify-center h-full text-center">
@@ -843,17 +854,15 @@ toast({
       </div>
       
       {/* Área de entrada de mensagem */}
-      <div className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-b-lg shadow-sm border-t border-gray-200">
-
-        
+      <div className="bg-gradient-to-r from-gray-50 to-white p-2 sm:p-3 rounded-b-lg shadow-sm border-t border-gray-200">
         {/* Verificar se o serviço está finalizado para desabilitar envio de mensagens */}
         {(service?.status === 'completed' || service?.status === 'awaiting_evaluation') ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3 text-center mobile-card">
             <div className="flex items-center justify-center gap-2 text-yellow-700">
-              <CheckSquare className="h-5 w-5" />
-              <span className="font-medium">Serviço Finalizado</span>
+              <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-medium text-sm sm:text-base">Serviço Finalizado</span>
             </div>
-            <p className="text-sm text-yellow-600 mt-1">
+            <p className="text-xs sm:text-sm text-yellow-600 mt-1">
               Este chat é apenas para visualização. O serviço foi concluído e não é possível enviar novas mensagens.
             </p>
           </div>
@@ -863,18 +872,18 @@ toast({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
-              className="flex-1"
+              className="flex-1 h-10 sm:h-9 text-sm sm:text-base"
               disabled={sendMessageMutation.isPending}
             />
             <Button 
               type="submit" 
               disabled={!message.trim() || sendMessageMutation.isPending}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm transition-all duration-200"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm transition-all duration-200 h-10 w-10 sm:h-9 sm:w-auto sm:px-3 touch-target flex-shrink-0"
             >
               {sendMessageMutation.isPending ? (
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Send className="h-5 w-5" />
+                <Send className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </Button>
           </form>
