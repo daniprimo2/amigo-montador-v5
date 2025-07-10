@@ -16,6 +16,7 @@ interface BankAccount {
   id: number;
   userId: number;
   bankName: string;
+  bankCode: string;
   accountType: string;
   accountNumber: string;
   agency: string;
@@ -24,6 +25,7 @@ interface BankAccount {
   holderDocumentNumber: string;
   pixKey?: string | null;
   pixKeyType?: string | null;
+  id_recebedor?: string;
 }
 
 interface BankAccountDialogProps {
@@ -42,6 +44,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
     resolver: zodResolver(bankAccountSchema),
     defaultValues: {
       bankName: '',
+      bankCode: '',
       accountType: 'corrente',
       accountNumber: '',
       agency: '',
@@ -50,6 +53,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
       holderDocumentNumber: '',
       pixKey: '',
       pixKeyType: 'cpf',
+      id_recebedor: '',
     },
   });
 
@@ -58,6 +62,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
     if (account) {
       form.reset({
         bankName: account.bankName,
+        bankCode: account.bankCode,
         accountType: account.accountType as 'corrente' | 'poupança',
         accountNumber: account.accountNumber,
         agency: account.agency,
@@ -66,10 +71,12 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
         holderDocumentNumber: account.holderDocumentNumber,
         pixKey: account.pixKey ?? '',
         pixKeyType: 'cpf',
+        id_recebedor: account.id_recebedor ?? '',
       });
     } else {
       form.reset({
         bankName: '',
+        bankCode: '',
         accountType: 'corrente',
         accountNumber: '',
         agency: '',
@@ -78,6 +85,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
         holderDocumentNumber: '',
         pixKey: '',
         pixKeyType: 'cpf',
+        id_recebedor: ''
       });
     }
   }, [account, form]);
@@ -196,7 +204,14 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Banco *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      const bank = JSON.parse(value);
+                      form.setValue('bankCode', bank.code);
+                      form.setValue('bankName', bank.name);
+                    }}
+                    value={JSON.stringify({ code: form.watch('bankCode'), name: form.watch('bankName') })}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o banco" />
@@ -204,7 +219,9 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                     </FormControl>
                     <SelectContent>
                       {banks.map((bank) => (
-                        <SelectItem key={bank.code} value={bank.name}>
+                        <SelectItem
+                          key={bank.code}
+                          value={JSON.stringify({ code: bank.code, name: bank.name })}>
                           {bank.name}
                         </SelectItem>
                       ))}
@@ -347,8 +364,8 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                         maxLength={form.watch('holderDocumentType') === 'cpf' ? 14 : 18}
                         onChange={(e) => {
                           const documentType = form.watch('holderDocumentType');
-                          const formatted = documentType === 'cpf' 
-                            ? formatCPF(e.target.value) 
+                          const formatted = documentType === 'cpf'
+                            ? formatCPF(e.target.value)
                             : formatCNPJ(e.target.value);
                           field.onChange(formatted);
                         }}
@@ -357,8 +374,8 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                           const value = field.value;
                           const documentType = form.watch('holderDocumentType');
                           if (value) {
-                            const isValid = documentType === 'cpf' 
-                              ? validateCPF(value) 
+                            const isValid = documentType === 'cpf'
+                              ? validateCPF(value)
                               : validateCNPJ(value);
                             if (!isValid) {
                               form.setError('holderDocumentNumber', {
@@ -418,7 +435,7 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                           const value = field.value;
                           if (value) {
                             const isValid = validateCPF(value);
-                            
+
                             if (!isValid) {
                               form.setError('pixKey', {
                                 type: 'manual',
@@ -438,14 +455,27 @@ export function BankAccountDialog({ open, onOpenChange, account, onSuccess }: Ba
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="id_recebedor"
+                render={({ field }) => (
+                  <FormItem className="hidden">
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
                 {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : (account ? 'Atualizar' : 'Adicionar')}

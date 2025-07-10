@@ -261,6 +261,12 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         return;
       }
 
+      const bankInfo = JSON.parse(data.bankName); // ← transforma a string JSON em objeto
+      const bankCode = bankInfo.code;
+      const bankName = bankInfo.name;
+
+      console.log(bankCode, bankName)
+
       // Combinar dados de todos os passos
       const userData = {
         // Dados básicos do usuário
@@ -299,7 +305,8 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
         certificatesUrls: documentUrls.certificatesUrls as string[] | undefined,
         
         // Dados bancários (apenas se estiverem preenchidos)
-        bankName: data.bankName || undefined,
+        bankName: bankName || undefined,
+        bankCode: bankCode || undefined,
         accountType: data.accountType || undefined,
         accountNumber: data.accountNumber || undefined,
         agency: data.agency || undefined,
@@ -476,7 +483,9 @@ export const RegisterAssemblerStep3: React.FC<RegisterAssemblerStep3Props> = ({
                   </FormControl>
                   <SelectContent className="max-h-60">
                     {getBanksOrderedByName().map((bank) => (
-                      <SelectItem key={bank.code} value={bank.name}>
+                      <SelectItem 
+                       key={bank.code}
+                       value={JSON.stringify({ code: bank.code, name: bank.name })}>
                         {bank.name}
                       </SelectItem>
                     ))}

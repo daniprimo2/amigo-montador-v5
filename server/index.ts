@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes.js";
-import { setupVite, serveStatic, log } from "./vite.js";
+import { registerRoutes } from "./routes.ts";
+import { setupVite, serveStatic, log } from "./vite.ts";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -87,57 +87,61 @@ app.use((req, res, next) => {
   next();
 });
 
-// Async server start
-(async () => {
-  try {
-    const server = await registerRoutes(app);
 
-    app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-      res.status(status).json({ message });
-      console.error('Server error:', err);
-    });
+try {
+  const server = await registerRoutes(app);
 
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      const publicPath = path.resolve(process.cwd(), "public");
-      const distPublicPath = path.resolve(__dirname, "public");
-      const rootIndexPath = path.resolve(process.cwd(), "index.html");
-
-      app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
-
-      if (fs.existsSync(distPublicPath)) {
-        app.use(express.static(distPublicPath));
-        app.use("*", (_req, res) => {
-          res.sendFile(path.resolve(distPublicPath, "index.html"));
-        });
-      } else if (fs.existsSync(publicPath)) {
-        app.use(express.static(publicPath));
-        app.use("*", (_req, res) => {
-          res.sendFile(path.resolve(publicPath, "index.html"));
-        });
-      } else if (fs.existsSync(rootIndexPath)) {
-        app.use(express.static(process.cwd()));
-        app.use("*", (_req, res) => {
-          res.sendFile(rootIndexPath);
-        });
-      } else {
-        serveStatic(app);
-      }
-    }
-
-    const port = parseInt(process.env.PORT || '5000');
-    const host = "127.0.0.1"; // força IPv4 (evita erro ENOTSUP no Windows)
-
-    server.listen(port, host, () => {
-        log(`Servidor rodando em http://${host}:${port}`);
-    });
-
-
-  } catch (error) {
-    console.error('Falha ao iniciar o servidor:', error);
+  if (!server?.listen) {
+    console.error("❌ registerRoutes não retornou um servidor com .listen()");
     process.exit(1);
   }
-})();
+
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    console.error('Server error:', err);
+  });
+
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    const publicPath = path.resolve(process.cwd(), "public");
+    const distPublicPath = path.resolve(__dirname, "public");
+    const rootIndexPath = path.resolve(process.cwd(), "index.html");
+
+    app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+
+    if (fs.existsSync(distPublicPath)) {
+      app.use(express.static(distPublicPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(distPublicPath, "index.html"));
+      });
+    } else if (fs.existsSync(publicPath)) {
+      app.use(express.static(publicPath));
+      app.use("*", (_req, res) => {
+        res.sendFile(path.resolve(publicPath, "index.html"));
+      });
+    } else if (fs.existsSync(rootIndexPath)) {
+      app.use(express.static(process.cwd()));
+      app.use("*", (_req, res) => {
+        res.sendFile(rootIndexPath);
+      });
+    } else {
+      serveStatic(app);
+    }
+  }
+
+  const port = parseInt(process.env.PORT || '5000');
+  const host = "127.0.0.1"; // força IPv4 (evita erro ENOTSUP no Windows)
+
+  server.listen(port, host, () => {
+      log(`Servidor rodando em http://${host}:${port}`);
+  });
+
+
+} catch (error) {
+  console.error('Falha ao iniciar o servidor:', error);
+  process.exit(1);
+}
+

@@ -168,7 +168,16 @@ export const bankAccounts = pgTable("bank_accounts", {
   pixKey: text("pix_key"),
   pixKeyType: text("pix_key_type"), // 'cpf', 'cnpj', 'email', 'telefone', 'aleatória'
   createdAt: timestamp("created_at").defaultNow(),
+  id_recebedor: text("id_recebedor"),  
+  bank_code: integer("bank_code"),
 });
+
+export const session = pgTable("session", {
+  sid: text("sid").primaryKey(),
+  sess: jsonb("sess").notNull(),
+  expire: timestamp("expire").notNull()
+});
+
 
 // Tokens de recuperação de senha
 export const passwordResetTokens = pgTable("password_reset_tokens", {

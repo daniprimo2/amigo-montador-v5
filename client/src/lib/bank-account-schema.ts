@@ -3,10 +3,10 @@ import { z } from 'zod';
 // Função para validar CPF
 const validateCPF = (cpf: string): boolean => {
   const cleanCPF = cpf.replace(/\D/g, '');
-  
+
   if (cleanCPF.length !== 11) return false;
   if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
-  
+
   let sum = 0;
   for (let i = 0; i < 9; i++) {
     sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
@@ -14,7 +14,7 @@ const validateCPF = (cpf: string): boolean => {
   let remainder = (sum * 10) % 11;
   if (remainder === 10 || remainder === 11) remainder = 0;
   if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
-  
+
   sum = 0;
   for (let i = 0; i < 10; i++) {
     sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
@@ -27,34 +27,34 @@ const validateCPF = (cpf: string): boolean => {
 // Função para validar CNPJ
 const validateCNPJ = (cnpj: string): boolean => {
   const cleanCNPJ = cnpj.replace(/\D/g, '');
-  
+
   if (cleanCNPJ.length !== 14) return false;
   if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
-  
+
   let length = cleanCNPJ.length - 2;
   let numbers = cleanCNPJ.substring(0, length);
   const digits = cleanCNPJ.substring(length);
   let sum = 0;
   let pos = length - 7;
-  
+
   for (let i = length; i >= 1; i--) {
     sum += parseInt(numbers.charAt(length - i)) * pos--;
     if (pos < 2) pos = 9;
   }
-  
+
   let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
   if (result !== parseInt(digits.charAt(0))) return false;
-  
+
   length = length + 1;
   numbers = cleanCNPJ.substring(0, length);
   sum = 0;
   pos = length - 7;
-  
+
   for (let i = length; i >= 1; i--) {
     sum += parseInt(numbers.charAt(length - i)) * pos--;
     if (pos < 2) pos = 9;
   }
-  
+
   result = sum % 11 < 2 ? 0 : 11 - sum % 11;
   return result === parseInt(digits.charAt(1));
 };
@@ -62,25 +62,25 @@ const validateCNPJ = (cnpj: string): boolean => {
 // Função para validar telefone com DDD (aceita prefixo +55 opcional)
 const validatePhone = (phone: string): boolean => {
   let cleanPhone = phone.replace(/\D/g, '');
-  
+
   // Remover prefixo +55 se presente
   if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
     cleanPhone = cleanPhone.substring(2);
   }
-  
+
   // Deve ter 10 ou 11 dígitos (DDD + número)
   if (cleanPhone.length !== 10 && cleanPhone.length !== 11) return false;
-  
+
   // Verificar se o DDD é válido (11-99)
   const ddd = parseInt(cleanPhone.substring(0, 2));
   if (ddd < 11 || ddd > 99) return false;
-  
+
   // Para números com 11 dígitos, o terceiro dígito deve ser 9 (celular)
   if (cleanPhone.length === 11) {
     const thirdDigit = parseInt(cleanPhone.charAt(2));
     if (thirdDigit !== 9) return false;
   }
-  
+
   return true;
 };
 
@@ -102,6 +102,12 @@ const baseBankAccountSchema = z.object({
     .min(1, 'Nome do banco é obrigatório')
     .max(100, 'Nome do banco deve ter no máximo 100 caracteres')
     .regex(/^[a-zA-ZÀ-ÿ\s0-9\-\.]+$/, 'Nome do banco contém caracteres inválidos'),
+  bankCode: z
+    .string()
+    .optional()
+    .refine((val) => val === undefined || !isNaN(Number(val)), {
+      message: 'Código do banco deve ser um número válido',
+    }),
   accountType: z.enum(['corrente', 'poupança'], {
     required_error: 'Tipo de conta é obrigatório',
   }),
@@ -138,6 +144,7 @@ const baseBankAccountSchema = z.object({
   pixKeyType: z.enum(['cpf'], {
     required_error: 'Selecione o tipo de chave PIX.',
   }),
+  id_recebedor: z.string().optional(),
 });
 
 // Schema completo com validações conforme especificação
@@ -239,29 +246,29 @@ export const formatAccountNumber = (accountNumber: string): string => {
 // Função para detectar automaticamente o tipo de chave PIX
 export const detectPixKeyType = (key: string): string | null => {
   if (!key) return null;
-  
+
   const cleanKey = key.replace(/\D/g, '');
-  
+
   // CPF (11 dígitos) ou CNPJ (14 dígitos)
   if ((cleanKey.length === 11 && validateCPF(key)) || (cleanKey.length === 14 && validateCNPJ(key))) {
     return 'cpf_cnpj';
   }
-  
+
   // Email
   if (key.includes('@') && validateEmail(key)) {
     return 'email';
   }
-  
+
   // Telefone
   if ((cleanKey.length === 10 || cleanKey.length === 11) && validatePhone(key)) {
     return 'telefone';
   }
-  
+
   // Chave aleatória (UUID)
   if (key.includes('-') && key.length === 36 && validateRandomKey(key)) {
     return 'uuid';
   }
-  
+
   return null;
 };
 

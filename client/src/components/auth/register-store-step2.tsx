@@ -192,6 +192,10 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
         logoUrl = URL.createObjectURL(logoFiles[0]);
       }
 
+      const bankInfo = JSON.parse(data.bankName); // ← transforma a string JSON em objeto
+      const bankCode = bankInfo.code;
+      const bankName = bankInfo.name;
+
       // Combinar dados do passo 1 e 2
       const userData = {
         ...step1Data,
@@ -200,7 +204,8 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
         neighborhood: data.neighborhood,
         logoUrl,
         // Dados bancários
-        bankName: data.bankName,
+        bankName: bankName,
+        bankCode: bankCode,
         accountType: data.accountType,
         accountNumber: data.accountNumber,
         agency: data.agency,
@@ -588,7 +593,9 @@ export const RegisterStoreStep2: React.FC<RegisterStoreStep2Props> = ({
                   </FormControl>
                   <SelectContent className="max-h-60">
                     {getBanksOrderedByName().map((bank) => (
-                      <SelectItem key={bank.code} value={bank.name}>
+                      <SelectItem 
+                      key={bank.code} 
+                      value={JSON.stringify({ code: bank.code, name: bank.name })}>
                         {bank.name}
                       </SelectItem>
                     ))}

@@ -8,10 +8,12 @@ import fs from "fs";
 import path from "path";
 import { storage } from "./storage.js";
 import { User as SelectUser, InsertBankAccount } from "../shared/schema.js";
+import { PagarmeService } from "../services/PagarmeService.js";
+
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -54,12 +56,12 @@ export function setupAuth(app: Express) {
         if (!user) {
           return done(null, false);
         }
-        
+
         const validPassword = await comparePasswords(password, user.password);
         if (!validPassword) {
           return done(null, false);
         }
-        
+
         return done(null, user);
       } catch (error) {
         console.error('Erro no login:', error);
@@ -95,20 +97,20 @@ export function setupAuth(app: Express) {
       }
 
       const profileFile = req.files.profilePicture as any;
-      
+
       // Verificar tipo de arquivo
       if (!profileFile.mimetype.startsWith('image/')) {
         return res.status(400).json({ message: "O arquivo deve ser uma imagem" });
       }
-      
+
       // Verificar tamanho (max 5MB)
       if (profileFile.size > 5 * 1024 * 1024) {
         return res.status(400).json({ message: "A imagem deve ter menos de 5MB" });
       }
-      
+
       // Converter foto de perfil para base64
       let profileBuffer: Buffer;
-      
+
       // Como useTempFiles está ativado, precisamos ler do arquivo temporário
       if (profileFile.tempFilePath && fs.existsSync(profileFile.tempFilePath)) {
         profileBuffer = fs.readFileSync(profileFile.tempFilePath);
@@ -118,7 +120,7 @@ export function setupAuth(app: Express) {
       } else {
         return res.status(400).json({ message: "Dados da foto de perfil não foram recebidos corretamente" });
       }
-      
+
       const profilePhotoData = `data:${profileFile.mimetype};base64,${profileBuffer.toString('base64')}`;
 
       // Para lojistas, também verificar se o logo foi fornecido (obrigatório)
@@ -129,20 +131,20 @@ export function setupAuth(app: Express) {
         }
 
         const logoFile = req.files.logoFile as any;
-        
+
         // Verificar tipo de arquivo do logo
         if (!logoFile.mimetype.startsWith('image/')) {
           return res.status(400).json({ message: "O logo deve ser uma imagem" });
         }
-        
+
         // Verificar tamanho (max 10MB)
         if (logoFile.size > 10 * 1024 * 1024) {
           return res.status(400).json({ message: "O logo deve ter menos de 10MB" });
         }
-        
+
         // Converter logo para base64
         let logoBuffer: Buffer;
-        
+
         console.log('Processando logo da loja:', {
           nome: logoFile.name,
           tipo: logoFile.mimetype,
@@ -152,7 +154,7 @@ export function setupAuth(app: Express) {
           temData: !!logoFile.data,
           tamanhoData: logoFile.data ? logoFile.data.length : 0
         });
-        
+
         // Como useTempFiles está ativado, precisamos ler do arquivo temporário
         if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
           logoBuffer = fs.readFileSync(logoFile.tempFilePath);
@@ -171,16 +173,16 @@ export function setupAuth(app: Express) {
           });
           return res.status(400).json({ message: "Dados do logo não foram recebidos corretamente" });
         }
-        
+
         // Verificar se o buffer não está vazio
         if (!logoBuffer || logoBuffer.length === 0) {
           console.error('Erro: Buffer do logo está vazio');
           return res.status(400).json({ message: "Dados do logo estão corrompidos" });
         }
-        
+
         logoData = `data:${logoFile.mimetype};base64,${logoBuffer.toString('base64')}`;
         console.log('Logo convertido para base64, tamanho final:', logoData.length, 'caracteres');
-        
+
         // Limpar arquivo temporário se existir
         if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
           try {
@@ -241,8 +243,8 @@ export function setupAuth(app: Express) {
             holderDocumentNumber: '00000000000'
           };
           await storage.createBankAccount(bankAccountData);
-          } else {
-          }
+        } else {
+        }
       } else if (userType === 'montador') {
         // Log para debug dos dados recebidos
         console.log('Dados do montador recebidos:', {
@@ -255,34 +257,75 @@ export function setupAuth(app: Express) {
         });
 
         const assemblerData = {
-            userId: user.id,
-            address: req.body.address || '',
-            addressNumber: req.body.addressNumber || '',
-            neighborhood: req.body.neighborhood || '',
-            cep: req.body.cep || '',
-            city: req.body.city || '',
-            state: req.body.state || '',
-            specialties: req.body.specialties || [],
-            technicalAssistance: req.body.technicalAssistance || false,
-            experience: req.body.experience || '',
-            workRadius: parseInt(req.body.radius) || 20,
-            rating: 0,
-            documents: req.body.documents || {},
-            documentType: req.body.documentType || '',
-            documentNumber: req.body.documentNumber || '',
-            // Usar os URLs dos documentos que vêm do upload
-            rgFrontData: req.body.rgFrontUrl || '',
-            rgBackData: req.body.rgBackUrl || '',
-            proofOfAddressData: req.body.proofOfAddressUrl || '',
-            certificatesData: req.body.certificatesUrls || [],
-            professionalDescription: req.body.professionalDescription || ''
-          };
+          userId: user.id,
+          address: req.body.address || '',
+          addressNumber: req.body.addressNumber || '',
+          neighborhood: req.body.neighborhood || '',
+          cep: req.body.cep || '',
+          city: req.body.city || '',
+          state: req.body.state || '',
+          specialties: req.body.specialties || [],
+          technicalAssistance: req.body.technicalAssistance || false,
+          experience: req.body.experience || '',
+          workRadius: parseInt(req.body.radius) || 20,
+          rating: 0,
+          documents: req.body.documents || {},
+          documentType: req.body.documentType || '',
+          documentNumber: req.body.documentNumber || '',
+          // Usar os URLs dos documentos que vêm do upload
+          rgFrontData: req.body.rgFrontUrl || '',
+          rgBackData: req.body.rgBackUrl || '',
+          proofOfAddressData: req.body.proofOfAddressUrl || '',
+          certificatesData: req.body.certificatesUrls || [],
+          professionalDescription: req.body.professionalDescription || ''
+        };
         await storage.createAssembler(assemblerData);
         // Criar informações bancárias se fornecidas
         if (req.body.bankName && req.body.accountNumber) {
+
+
+          //registra dados no pagarme e retorna id_recebedor
+          const resultRecebedorPagarme = await PagarmeService.criarRecipient({
+            banco: req.body.bankCode,
+            agencia: req.body.agency,
+            conta: req.body.accountNumber,
+            tipoDocumento: req.body.holderDocumentType,
+            cpf_cnpj: req.body.holderDocumentNumber,
+            nome: req.body.holderName,
+            tipoConta: "conta_" + req.body.accountType
+          });
+
+          let id_recebedor;
+
+          if (!resultRecebedorPagarme || typeof resultRecebedorPagarme !== 'object') {
+            id_recebedor = undefined;
+            console.log('Resposta inválida da API (pagarme) para registrar id_recebedor');
+          } else {
+            id_recebedor = resultRecebedorPagarme.id;
+          }
+
+          if (!id_recebedor || typeof id_recebedor !== 'string' || !id_recebedor.startsWith('re_')) {
+            id_recebedor = undefined;
+            console.log('ID do recebedor ausente ou inválido');
+          } else {
+            id_recebedor = resultRecebedorPagarme.id;
+
+          }
+
+          // console.log(resultRecebedorPagarme);
+          // console.log({
+          //   banco: req.body.bankCode,
+          //   agencia: req.body.agency,
+          //   conta: req.body.accountNumber, 
+          //   tipoDocumento: req.body.holderDocumentType,
+          //   cpf_cnpj: req.body.holderDocumentNumber,
+          //   nome: req.body.holderName,
+          // })
+
           const bankAccountData = {
             userId,
             bankName: req.body.bankName,
+            bank_code: req.body.bankCode,
             accountType: req.body.accountType,
             accountNumber: req.body.accountNumber,
             agency: req.body.agency,
@@ -290,11 +333,15 @@ export function setupAuth(app: Express) {
             holderDocumentType: req.body.holderDocumentType,
             holderDocumentNumber: req.body.holderDocumentNumber,
             pixKey: req.body.pixKey || null,
-            pixKeyType: req.body.pixKeyType || null
+            pixKeyType: req.body.pixKeyType || null,
+            id_recebedor: id_recebedor || null
           };
+
+          console.log(bankAccountData);
+ 
           await storage.createBankAccount(bankAccountData);
-          } else {
-          }
+        } else {
+        }
       }
 
       // Limpar arquivos temporários
@@ -306,7 +353,7 @@ export function setupAuth(app: Express) {
           console.warn('Erro ao remover arquivo temporário de perfil:', cleanupError);
         }
       }
-      
+
       if (req.body.userType === 'lojista' && req.files && req.files.logoFile) {
         const logoFile = req.files.logoFile as any;
         if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
@@ -322,11 +369,12 @@ export function setupAuth(app: Express) {
       // Login automático após registro
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.status(201).json(user);
+        return res.status(201).json(user); 
+
       });
     } catch (error) {
       console.error("Erro no registro:", error);
-      
+
       // Limpar arquivos temporários em caso de erro também
       if (req.files && req.files.profilePicture) {
         const profileFile = req.files.profilePicture as any;
@@ -339,7 +387,7 @@ export function setupAuth(app: Express) {
           }
         }
       }
-      
+
       if (req.body.userType === 'lojista' && req.files && req.files.logoFile) {
         const logoFile = req.files.logoFile as any;
         if (logoFile.tempFilePath && fs.existsSync(logoFile.tempFilePath)) {
@@ -351,7 +399,7 @@ export function setupAuth(app: Express) {
           }
         }
       }
-      
+
       return res.status(500).json({ message: "Erro ao registrar usuário" });
     }
   });

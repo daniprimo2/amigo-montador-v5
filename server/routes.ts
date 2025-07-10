@@ -1,21 +1,22 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
-import { setupAuth } from "./auth.js";
-import { db } from "./db.js";
+import { setupAuth } from "./auth.ts";
+import { db } from "./db.ts";
 import { eq, and, not, isNotNull, or, sql, inArray, desc } from "drizzle-orm";
-import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount, type Application } from "../shared/schema.js";
+import { services, applications, stores, assemblers, messages, users, ratings, bankAccounts, type User, type Store, type Assembler, type Service, type Message, type Rating, type InsertRating, type BankAccount, type InsertBankAccount, type Application } from "../shared/schema.ts";
 import { WebSocketServer, WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';
 import fileUpload from 'express-fileupload';
 import axios from 'axios';
-import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.js';
-import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.js';
-import { processDateField } from './utils/date-converter.js';
-import { emailService } from './email-service.js';
+import { parseBrazilianPrice, formatToBrazilianPrice } from './utils/price-formatter.ts';
+import { geocodeFromCEP, getCityCoordinates, calculateDistance } from './geocoding.ts';
+import { processDateField } from './utils/date-converter.ts';
+import { emailService } from './email-service.ts';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+import { PagarmeService } from "../services/PagarmeService.js";
 
 // Middleware to check for mandatory evaluations for assemblers
 async function checkMandatoryEvaluations(req: any, res: any, next: any) {
@@ -38,13 +39,13 @@ async function checkMandatoryEvaluations(req: any, res: any, next: any) {
       storeId: services.storeId,
       status: services.status
     })
-    .from(services)
-    .innerJoin(applications, and(
-      eq(applications.serviceId, services.id),
-      eq(applications.assemblerId, userAssembler.id),
-      eq(applications.status, 'accepted')
-    ))
-    .where(eq(services.status, 'awaiting_evaluation'));
+      .from(services)
+      .innerJoin(applications, and(
+        eq(applications.serviceId, services.id),
+        eq(applications.assemblerId, userAssembler.id),
+        eq(applications.status, 'accepted')
+      ))
+      .where(eq(services.status, 'awaiting_evaluation'));
 
     // Check if assembler has any pending evaluations
     for (const service of serviceResults) {
@@ -154,7 +155,7 @@ function generatePaymentProofImage(data: {
       </text>
     </svg>
   `;
-  
+
   // Convert SVG to data URL
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
@@ -188,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const server = createServer(app);
 
   // WebSocket server
-  const wss = new WebSocketServer({ 
+  const wss = new WebSocketServer({
     server,
     path: '/ws'
   });
@@ -201,12 +202,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configuração WebSocket
   wss.on('connection', (ws: WebSocket, req) => {
     console.log('🔗 Nova conexão WebSocket estabelecida');
-    
+
     ws.on('message', (message: string) => {
       try {
         const data = JSON.parse(message);
         console.log('📩 Mensagem WebSocket recebida:', data);
-        
+
         if (data.type === 'auth' && data.userId) {
           // Fechar conexão anterior se existir para este usuário
           const existingConnection = userConnections.get(data.userId);
@@ -221,11 +222,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userConnections.set(data.userId, ws);
           (ws as any).userId = data.userId; // Armazenar userId na conexão para filtros
           (ws as any).userType = data.userType;
-          
+
           console.log(`✅ Usuário ${data.userId} (${data.userType}) autenticado no WebSocket`);
           console.log(`📊 Total de conexões ativas: ${userConnections.size}`);
           console.log(`🗺️ Conexões mapeadas: ${Array.from(userConnections.keys()).join(', ')}`);
-          
+
           if (data.userType === 'lojista') {
             storeClients.add(ws);
             console.log(`🏪 Lojista adicionado. Total lojistas: ${storeClients.size}`);
@@ -246,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (ws as any).userId;
       const userType = (ws as any).userType;
       console.log(`🔌 Conexão WebSocket fechada para usuário ${userId} (${userType})`);
-      
+
       // Add small delay before removing connection to handle rapid reconnections
       setTimeout(() => {
         // Check if this connection is still the active one for this user
@@ -257,17 +258,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           console.log(`🔄 Usuário ${userId} já tem nova conexão ativa, mantendo`);
         }
-        
+
         // Remover dos grupos de clientes
         storeClients.delete(ws);
         assemblerClients.delete(ws);
-        
+
         console.log(`📊 Conexões restantes: ${userConnections.size} total, ${storeClients.size} lojistas, ${assemblerClients.size} montadores`);
       }, 500); // 500ms delay before cleanup
     });
   });
 
   // Função global para enviar notificações com retry e fallback
+<<<<<<< Updated upstream
   global.sendNotification = function(userId: number, message: any): boolean {
     // VALIDAÇÃO CRÍTICA: Verificar se o userId é válido
     if (!userId || typeof userId !== 'number' || userId <= 0) {
@@ -286,6 +288,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: Date.now()
     };
     
+=======
+  global.sendNotification = function (userId: number, message: any): boolean {
+    console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
+    console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
+
+>>>>>>> Stashed changes
     const connection = userConnections.get(userId);
     if (connection && connection.readyState === WebSocket.OPEN) {
       // Validação adicional: verificar se a conexão realmente pertence ao usuário
@@ -304,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } else {
       console.log(`❌ Conexão não encontrada ou fechada para usuário ${userId}`);
-      
+
       // Try to find any active connection for this user (multiple tabs scenario)
       const connections = Array.from(userConnections.entries());
       for (let i = 0; i < connections.length; i++) {
@@ -324,13 +332,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       console.log(`❌ Todas as tentativas de notificação falharam para usuário ${userId}`);
       return false;
     }
   };
 
-  global.notifyNewMessage = async function(serviceId: number, senderId: number): Promise<void> {
+  global.notifyNewMessage = async function (serviceId: number, senderId: number): Promise<void> {
     try {
       const service = await storage.getServiceById(serviceId);
       if (!service) return;
@@ -376,12 +384,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Não autenticado" });
     }
-    
+
     const user = req.user;
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
-    
+
     res.json(user);
   });
 
@@ -407,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ler arquivo para buffer
       let fileBuffer: Buffer;
-      
+
       if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
         fileBuffer = fs.readFileSync(file.tempFilePath);
         // Limpar arquivo temporário
@@ -417,10 +425,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         return res.status(400).json({ message: "Dados do arquivo não foram recebidos corretamente" });
       }
-      
+
       // Converter para base64
       const fileBase64 = `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
-      
+
       console.log('Arquivo convertido para base64. Tamanho:', fileBase64.length, 'caracteres');
 
       // Retornar dados do arquivo em base64
@@ -478,9 +486,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Tipo de foto.data:', typeof foto.data);
       console.log('foto.data é Buffer?', Buffer.isBuffer(foto.data));
       console.log('foto.tempFilePath:', foto.tempFilePath);
-      
+
       let imageBuffer: Buffer;
-      
+
       // Como useTempFiles está ativado, precisamos ler do arquivo temporário
       if (foto.tempFilePath && fs.existsSync(foto.tempFilePath)) {
         console.log('Lendo arquivo temporário:', foto.tempFilePath);
@@ -494,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Nenhum dado de imagem encontrado!');
         return res.status(400).json({ message: "Dados da imagem não foram recebidos corretamente" });
       }
-      
+
       const imageBase64 = `data:${foto.mimetype};base64,${imageBuffer.toString('base64')}`;
       console.log('Imagem convertida para base64. Tamanho:', imageBase64.length, 'caracteres');
 
@@ -505,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!store) {
           return res.status(404).json({ message: "Loja não encontrada" });
         }
-        
+
         console.log('Atualizando logo da loja. Store ID:', store.id);
         await storage.updateStore(store.id, { logoData: imageBase64 });
       } else {
@@ -525,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json({ 
+      res.json({
         success: true,
         photoUrl: imageBase64,
         photoData: imageBase64,
@@ -546,10 +554,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       // Fetch user's average rating and total ratings count
       const ratingData = await storage.getUserAverageRating(user.id);
-      
+
       let profileData: any = {
         id: user.id,
         name: user.name,
@@ -627,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json({ 
+      res.json({
         success: true,
         message: 'Perfil atualizado com sucesso'
       });
@@ -646,7 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       // Only assemblers can access this endpoint
       if (user.userType !== 'montador') {
         return res.status(403).json({ message: "Apenas montadores podem acessar serviços ativos" });
@@ -665,8 +673,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: applications.status,
         createdAt: applications.createdAt
       })
-      .from(applications)
-      .where(eq(applications.assemblerId, assembler.id));
+        .from(applications)
+        .where(eq(applications.assemblerId, assembler.id));
 
       const activeServices = [];
 
@@ -675,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const service = await storage.getServiceById(application.serviceId);
         if (service) {
           const store = await storage.getStore(service.storeId);
-          
+
           activeServices.push({
             ...service,
             applicationStatus: application.status,
@@ -706,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       // Only assemblers can access this endpoint
       if (user.userType !== 'montador') {
         return res.status(403).json({ message: "Apenas montadores podem acessar serviços disponíveis" });
@@ -720,20 +728,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get services within 20km radius with distance calculation
       const servicesWithDistance = await storage.getAvailableServicesForAssemblerWithDistance(assembler);
-      
+
       // Get store information and applications for each service
       const servicesWithStoreInfo = await Promise.all(
         servicesWithDistance.map(async (service) => {
           // Get store information
           const store = await storage.getStore(service.storeId);
-          
+
           // Check if assembler has already applied to this service
           const existingApplication = await storage.getApplicationByServiceAndAssembler(service.id, assembler.id);
-          
+
           // Get all applications for this service to determine status
           const allApplications = await storage.getApplicationsByServiceId(service.id);
           const acceptedApplication = allApplications.find(app => app.status === 'accepted');
-          
+
           return {
             ...service,
             store: store ? {
@@ -801,55 +809,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get services that are awaiting evaluation where user is involved
-      let awaitingServices: Array<{id: number, title: string, storeId: number, status: string}> = [];
-      
+      let awaitingServices: Array<{ id: number, title: string, storeId: number, status: string }> = [];
+
       if (req.user.userType === 'lojista') {
         // Get store services awaiting evaluation
         const userStore = await storage.getStoreByUserId(req.user.id);
         if (!userStore) {
           return res.json({ pendingRatings: [], hasPendingRatings: false });
         }
-        
+
         awaitingServices = await db.select({
           id: services.id,
           title: services.title,
           storeId: services.storeId,
           status: services.status
         })
-        .from(services)
-        .where(
-          and(
-            eq(services.status, 'awaiting_evaluation'),
-            eq(services.storeId, userStore.id)
-          )
-        );
+          .from(services)
+          .where(
+            and(
+              eq(services.status, 'awaiting_evaluation'),
+              eq(services.storeId, userStore.id)
+            )
+          );
       } else {
         // Get assembler services awaiting evaluation via applications
         const userAssembler = await storage.getAssemblerByUserId(req.user.id);
         if (!userAssembler) {
           return res.json({ pendingRatings: [], hasPendingRatings: false });
         }
-        
+
         const serviceResults = await db.select({
           id: services.id,
           title: services.title,
           storeId: services.storeId,
           status: services.status
         })
-        .from(services)
-        .innerJoin(applications, and(
-          eq(applications.serviceId, services.id),
-          eq(applications.assemblerId, userAssembler.id),
-          eq(applications.status, 'accepted')
-        ))
-        .where(eq(services.status, 'awaiting_evaluation'));
-        
+          .from(services)
+          .innerJoin(applications, and(
+            eq(applications.serviceId, services.id),
+            eq(applications.assemblerId, userAssembler.id),
+            eq(applications.status, 'accepted')
+          ))
+          .where(eq(services.status, 'awaiting_evaluation'));
+
         awaitingServices = serviceResults;
       }
 
       // Filter services where user hasn't rated yet
       const pendingEvaluations = [];
-      
+
       for (const service of awaitingServices) {
         // Determine who the user should rate
         let toUserId: number;
@@ -873,10 +881,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const assembler = await storage.getAssemblerById(acceptedApplication[0].assemblerId);
           if (!assembler) continue;
-          
+
           const assemblerUser = await storage.getUser(assembler.userId);
           if (!assemblerUser) continue;
-          
+
           toUserId = assembler.userId;
           otherUserType = 'montador';
           otherUserName = assemblerUser.name;
@@ -884,10 +892,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Assembler should rate the store
           const store = await storage.getStore(service.storeId);
           if (!store) continue;
-          
+
           const storeUser = await storage.getUser(store.userId);
           if (!storeUser) continue;
-          
+
           toUserId = store.userId;
           otherUserType = 'lojista';
           otherUserName = storeUser.name;
@@ -895,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if user has already rated this service
         const existingRating = await storage.getRatingByServiceIdAndUser(service.id, req.user.id, toUserId);
-        
+
         if (!existingRating) {
           pendingEvaluations.push({
             serviceId: service.id,
@@ -911,11 +919,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         awaitingServicesCount: awaitingServices.length,
         pendingEvaluationsCount: pendingEvaluations.length,
         services: awaitingServices.map(s => ({ id: s.id, title: s.title, status: s.status })),
-        pendingEvaluations: pendingEvaluations.map(p => ({ 
-          serviceId: p.serviceId, 
-          serviceName: p.serviceName, 
-          otherUserName: p.otherUserName, 
-          otherUserType: p.otherUserType 
+        pendingEvaluations: pendingEvaluations.map(p => ({
+          serviceId: p.serviceId,
+          serviceName: p.serviceName,
+          otherUserName: p.otherUserName,
+          otherUserType: p.otherUserType
         }))
       });
 
@@ -953,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Buscar todas as candidaturas para este serviço
       const applications = await storage.getApplicationsByServiceId(serviceId);
-      
+
       // Para lojistas, incluir informações das candidaturas
       if (user.userType === 'lojista') {
         // Verificar se o usuário é dono do serviço
@@ -981,7 +989,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const userApplication = applications.find(app => app.assemblerId === assembler.id);
-        
+
         res.json({
           ...service,
           hasApplied: !!userApplication,
@@ -1006,7 +1014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       // Verificar se o usuário é lojista
       if (user.userType !== 'lojista') {
         return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
@@ -1019,13 +1027,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const serviceData = req.body;
-      
+
       // Validar campos obrigatórios
       const requiredFields = ['title', 'description', 'location', 'address', 'addressNumber', 'cep', 'date', 'price', 'materialType'];
       const missingFields = requiredFields.filter(field => !serviceData[field] || serviceData[field].toString().trim() === '');
-      
+
       if (missingFields.length > 0) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Campos obrigatórios não preenchidos",
           missingFields: missingFields
         });
@@ -1034,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Geocodificar o CEP para obter latitude e longitude
       let latitude = '0';
       let longitude = '0';
-      
+
       try {
         const coords = await geocodeFromCEP(serviceData.cep.trim());
         latitude = coords.latitude;
@@ -1088,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       // Verificar se o usuário é lojista
       if (user.userType !== 'lojista') {
         return res.status(403).json({ message: "Apenas lojistas podem criar serviços" });
@@ -1107,13 +1115,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         return res.status(400).json({ message: "Dados do serviço inválidos" });
       }
-      
+
       // Validar campos obrigatórios
       const requiredFields = ['title', 'description', 'location', 'address', 'addressNumber', 'cep', 'date', 'price', 'materialType'];
       const missingFields = requiredFields.filter(field => !serviceData[field] || serviceData[field].toString().trim() === '');
-      
+
       if (missingFields.length > 0) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Campos obrigatórios não preenchidos",
           missingFields: missingFields
         });
@@ -1123,7 +1131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let projectFilesData = '';
       if (req.files && req.files.projectFiles) {
         const files = Array.isArray(req.files.projectFiles) ? req.files.projectFiles : [req.files.projectFiles];
-        
+
         // Validar arquivos
         for (const file of files) {
           if (!file.name.toLowerCase().endsWith('.pdf')) {
@@ -1137,7 +1145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Converter arquivos para base64 e concatenar
         const base64Files = files.map(file => {
           let fileBuffer: Buffer;
-          
+
           // Como useTempFiles está ativado, precisamos ler do arquivo temporário
           if (file.tempFilePath && fs.existsSync(file.tempFilePath)) {
             fileBuffer = fs.readFileSync(file.tempFilePath);
@@ -1147,20 +1155,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             throw new Error(`Dados do arquivo ${file.name} não foram recebidos corretamente`);
           }
-          
+
           return {
             name: file.name,
             data: `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`
           };
         });
-        
+
         projectFilesData = JSON.stringify(base64Files);
       }
 
       // Geocodificar o CEP para obter latitude e longitude
       let latitude = '0';
       let longitude = '0';
-      
+
       try {
         const coords = await geocodeFromCEP(serviceData.cep.trim());
         latitude = coords.latitude;
@@ -1217,7 +1225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('Erro ao criar serviço com arquivos:', error);
-      
+
       // Limpar arquivos temporários em caso de erro também
       if (req.files && req.files.projectFiles) {
         const files = Array.isArray(req.files.projectFiles) ? req.files.projectFiles : [req.files.projectFiles];
@@ -1232,7 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-      
+
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
@@ -1317,9 +1325,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Marcar mensagens como lidas
       await storage.markMessagesAsRead(serviceId, user.id);
 
-      res.json({ 
+      res.json({
         success: true,
-        message: "Mensagens marcadas como lidas" 
+        message: "Mensagens marcadas como lidas"
       });
 
     } catch (error) {
@@ -1351,7 +1359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verificar se o serviço está finalizado - bloquear envio de mensagens
       if (service.status === 'completed' || service.status === 'awaiting_evaluation') {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Não é possível enviar mensagens para serviços finalizados",
           error: "SERVICE_COMPLETED"
         });
@@ -1406,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se a mensagem existe
       const messages = await storage.getMessagesByServiceId(0); // Buscar todas as mensagens temporariamente
       const message = messages.find(m => m.id === messageId);
-      
+
       if (!message) {
         return res.status(404).json({ message: "Mensagem não encontrada" });
       }
@@ -1441,7 +1449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = req.user!;
       const serviceId = parseInt(req.params.serviceId);
-      
+
       // Verificar se o usuário é montador
       if (user.userType !== 'montador') {
         return res.status(403).json({ message: "Apenas montadores podem se candidatar a serviços" });
@@ -1467,7 +1475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o montador já se candidatou
       const existingApplication = await storage.getApplicationByServiceAndAssembler(serviceId, assembler.id);
       if (existingApplication) {
-        return res.status(200).json({ 
+        return res.status(200).json({
           message: "Você já se candidatou a este serviço. Aguarde a resposta do lojista.",
           application: existingApplication,
           alreadyApplied: true
@@ -1495,9 +1503,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (assembler.specialties && Array.isArray(assembler.specialties) && assembler.specialties.length > 0) {
         assemblerInfo.push(`Especialidades: ${assembler.specialties.join(', ')}`);
       }
-      
+
       const detailedInfo = assemblerInfo.length > 0 ? `\n\n📋 Informações do profissional:\n${assemblerInfo.join('\n')}` : '';
-      
+
       await storage.createMessage({
         serviceId: serviceId,
         assemblerId: assembler.id, // Incluir assemblerId para isolamento de conversas
@@ -1527,10 +1535,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               assemblerLocation: `${assembler.city}, ${assembler.state}`
             }
           };
-          
+
           // Enviar notificação WebSocket
           global.sendNotification(storeUser.id, notificationData);
-          
+
           // Log da notificação enviada
           console.log(`✅ Notificação de nova candidatura enviada para lojista ${storeUser.name} (ID: ${storeUser.id})`);
           console.log(`📋 Serviço: ${service.title} (ID: ${serviceId})`);
@@ -1558,7 +1566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       if (user.userType !== 'lojista') {
         return res.status(403).json({ message: "Apenas lojistas podem acessar esta rota" });
       }
@@ -1570,23 +1578,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Buscar todos os serviços da loja
       const storeServices = await storage.getServicesByStoreId(store.id);
-      
+
       // Para cada serviço, buscar TODAS as conversas individuais com montadores
       const servicesWithMessages = [];
-      
+
       for (const service of storeServices) {
         // Buscar todas as aplicações do serviço para identificar os montadores que interagiram
         const applications = await storage.getApplicationsByServiceId(service.id);
-        
+
         for (const application of applications) {
           // Para cada montador, verificar se há mensagens específicas dessa conversa
           const messages = await storage.getMessagesByServiceAndAssembler(service.id, application.assemblerId);
-          
+
           if (messages.length > 0) {
             // Buscar informações do montador
             const assembler = await storage.getAssemblerById(application.assemblerId);
             let assemblerInfo = null;
-            
+
             if (assembler) {
               const assemblerUser = await storage.getUser(assembler.userId);
               assemblerInfo = {
@@ -1596,7 +1604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 applicationStatus: application.status
               };
             }
-            
+
             servicesWithMessages.push({
               ...service,
               lastMessageAt: messages[messages.length - 1]?.sentAt,
@@ -1632,7 +1640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
-      
+
       if (user.userType !== 'lojista') {
         return res.status(403).json({ message: "Apenas lojistas podem acessar esta rota" });
       }
@@ -1645,11 +1653,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Buscar serviços da loja com candidaturas pendentes
       const storeServices = await storage.getServicesByStoreId(store.id);
       const servicesWithPending = [];
-      
+
       for (const service of storeServices) {
         const applications = await storage.getApplicationsByServiceId(service.id);
         const pendingApplications = applications.filter(app => app.status === 'pending');
-        
+
         if (pendingApplications.length > 0) {
           // Buscar informações do montador
           for (const application of pendingApplications) {
@@ -1678,6 +1686,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+ 
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      let profileData: any = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        userType: user.userType,
+        profilePhotoData: user.profilePhotoData,
+        profilePhotoUrl: user.profilePhotoData,
+        // City e state não existem na tabela users, só nas tabelas stores e assemblers
+        city: '',
+        state: ''
+      };
+
+      if (user.userType === 'lojista') {
+        const store = await storage.getStoreByUserId(user.id);
+        if (store) {
+          // Atualizar city e state do perfil com dados da loja
+          profileData.city = store.city || '';
+          profileData.state = store.state || '';
+
+          profileData.store = {
+            id: store.id,
+            name: store.name,
+            address: store.address,
+            city: store.city || '',
+            state: store.state || '',
+            logoUrl: store.logoData,
+            logoData: store.logoData
+          };
+        }
+      } else if (user.userType === 'montador') {
+        const assembler = await storage.getAssemblerByUserId(user.id);
+        if (assembler) {
+          // Atualizar city e state do perfil com dados do montador
+          profileData.city = assembler.city || '';
+          profileData.state = assembler.state || '';
+
+          profileData.assembler = {
+            id: assembler.id,
+            experience: assembler.experience,
+            description: assembler.professionalDescription || '',
+            availability: assembler.availability,
+            rating: assembler.rating
+          };
+
+          // Garantir que specialties seja sempre um array de strings
+          if (assembler.specialties) {
+            if (Array.isArray(assembler.specialties)) {
+              profileData.specialties = assembler.specialties.map(spec =>
+                typeof spec === 'string' ? spec : String(spec)
+              );
+            } else {
+              profileData.specialties = [String(assembler.specialties)];
+            }
+          } else {
+            profileData.specialties = [];
+          }
+        }
+      }
+
+      res.json(profileData);
+    } catch (error) {
+      console.error('Erro ao buscar perfil do usuário:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  }); 
 
   // Rota para obter contagem de mensagens não lidas
   app.get("/api/messages/unread-count", async (req, res) => {
@@ -1688,7 +1770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = req.user!;
       const unreadCount = await storage.getTotalUnreadMessageCount(user.id);
-      
+
       res.json({ count: unreadCount });
     } catch (error) {
       console.error('Erro ao buscar contagem de mensagens não lidas:', error);
@@ -1706,7 +1788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = req.user!;
       const bankAccounts = await storage.getBankAccountsByUserId(user.id);
-      
+
       res.json(bankAccounts);
     } catch (error) {
       console.error('Erro ao buscar contas bancárias:', error);
@@ -1724,7 +1806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const accountId = parseInt(req.params.id);
       const bankAccount = await storage.getBankAccountById(accountId);
-      
+
       if (!bankAccount) {
         return res.status(404).json({ message: "Conta bancária não encontrada" });
       }
@@ -1733,7 +1815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (bankAccount.userId !== user.id) {
         return res.status(403).json({ message: "Acesso negado" });
       }
-      
+
       res.json(bankAccount);
     } catch (error) {
       console.error('Erro ao buscar conta bancária:', error);
@@ -1749,6 +1831,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = req.user!;
+      let id_recebedor;
+
+      // Cria novo recebedor
+      const resUpIdRecebedorPagarme = await PagarmeService.criarRecipient({
+        banco: req.body.bankCode,
+        agencia: req.body.agency,
+        conta: req.body.accountNumber,
+        tipoDocumento: req.body.holderDocumentType,
+        cpf_cnpj: req.body.holderDocumentNumber,
+        nome: req.body.holderName,
+        tipoConta: "conta_" + req.body.accountType
+      });
+
+      if (
+        resUpIdRecebedorPagarme &&
+        typeof resUpIdRecebedorPagarme === 'object' &&
+        typeof resUpIdRecebedorPagarme.id === 'string' &&
+        resUpIdRecebedorPagarme.id.startsWith('re_')
+      ) {
+        id_recebedor = resUpIdRecebedorPagarme.id;
+        console.log('Novo recebedor criado:', id_recebedor);
+      } else {
+        console.log('ID do recebedor ausente ou inválido');
+        id_recebedor = undefined;
+      }
+
       const bankAccountData: InsertBankAccount = {
         userId: user.id,
         bankName: req.body.bankName,
@@ -1759,11 +1867,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         holderDocumentType: req.body.holderDocumentType,
         holderDocumentNumber: req.body.holderDocumentNumber,
         pixKey: req.body.pixKey || null,
-        pixKeyType: req.body.pixKeyType || null
+        pixKeyType: req.body.pixKeyType || null,
+        bank_code: req.body.bankCode,
+        id_recebedor: id_recebedor || null
       };
 
       const newBankAccount = await storage.createBankAccount(bankAccountData);
-      
+
       res.status(201).json(newBankAccount);
     } catch (error) {
       console.error('Erro ao criar conta bancária:', error);
@@ -1781,7 +1891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const accountId = parseInt(req.params.id);
       const existingAccount = await storage.getBankAccountById(accountId);
-      
+
       if (!existingAccount) {
         return res.status(404).json({ message: "Conta bancária não encontrada" });
       }
@@ -1791,8 +1901,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
+      console.log(req.body);
+
+      let id_recebedor = req.body.id_recebedor;
+      let resUpIdRecebedorPagarme;
+
+      if (id_recebedor && id_recebedor !== '') {
+        // Atualiza dados bancários do recebedor existente
+        resUpIdRecebedorPagarme = await PagarmeService.atualizarContaBancariaDoRecebedor({
+          recipient_id: id_recebedor,
+          banco: req.body.bankCode,
+          agencia: req.body.agency,
+          conta: req.body.accountNumber,
+          tipoDocumento: req.body.holderDocumentType,
+          cpf_cnpj: req.body.holderDocumentNumber.replace(/\D/g, ''),
+          nome: req.body.holderName,
+          tipoConta: "conta_" + req.body.accountType
+        });
+
+        console.log('Recebedor atualizado:', resUpIdRecebedorPagarme);
+
+        if (resUpIdRecebedorPagarme.message == "The new bank account should have the same document number as the previous") {
+          // Cria novo recebedor
+          resUpIdRecebedorPagarme = await PagarmeService.criarRecipient({
+            banco: req.body.bankCode,
+            agencia: req.body.agency,
+            conta: req.body.accountNumber,
+            tipoDocumento: req.body.holderDocumentType,
+            cpf_cnpj: req.body.holderDocumentNumber,
+            nome: req.body.holderName,
+            tipoConta: "conta_" + req.body.accountType
+          });
+
+          if (
+            resUpIdRecebedorPagarme &&
+            typeof resUpIdRecebedorPagarme === 'object' &&
+            typeof resUpIdRecebedorPagarme.id === 'string' &&
+            resUpIdRecebedorPagarme.id.startsWith('re_')
+          ) {
+            id_recebedor = resUpIdRecebedorPagarme.id;
+            console.log('Novo recebedor criado:', id_recebedor);
+          } else {
+            console.log('ID do recebedor ausente ou inválido');
+            id_recebedor = undefined;
+          }
+        } else if (resUpIdRecebedorPagarme.type == "invalid_parameter") {
+          res.status(500).json({ message: "❗Erro inesperado:" + resUpIdRecebedorPagarme.message });
+        }
+      } else {
+        // Cria novo recebedor
+        resUpIdRecebedorPagarme = await PagarmeService.criarRecipient({
+          banco: req.body.bankCode,
+          agencia: req.body.agency,
+          conta: req.body.accountNumber,
+          tipoDocumento: req.body.holderDocumentType,
+          cpf_cnpj: req.body.holderDocumentNumber,
+          nome: req.body.holderName,
+          tipoConta: "conta_" + req.body.accountType
+        });
+
+        if (
+          resUpIdRecebedorPagarme &&
+          typeof resUpIdRecebedorPagarme === 'object' &&
+          typeof resUpIdRecebedorPagarme.id === 'string' &&
+          resUpIdRecebedorPagarme.id.startsWith('re_')
+        ) {
+          id_recebedor = resUpIdRecebedorPagarme.id;
+          console.log('Novo recebedor criado:', id_recebedor);
+        } else {
+          console.log('ID do recebedor ausente ou inválido');
+          id_recebedor = undefined;
+        }
+      }
+
       const updateData = {
         bankName: req.body.bankName,
+        bank_code: req.body.bankCode,
         accountType: req.body.accountType,
         accountNumber: req.body.accountNumber,
         agency: req.body.agency,
@@ -1800,11 +1984,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         holderDocumentType: req.body.holderDocumentType,
         holderDocumentNumber: req.body.holderDocumentNumber,
         pixKey: req.body.pixKey || null,
-        pixKeyType: req.body.pixKeyType || null
+        pixKeyType: req.body.pixKeyType || null,
+        id_recebedor: id_recebedor
       };
 
+      console.log(updateData)
+
       const updatedAccount = await storage.updateBankAccount(accountId, updateData);
-      
+
       res.json(updatedAccount);
     } catch (error) {
       console.error('Erro ao atualizar conta bancária:', error);
@@ -1822,7 +2009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const accountId = parseInt(req.params.id);
       const existingAccount = await storage.getBankAccountById(accountId);
-      
+
       if (!existingAccount) {
         return res.status(404).json({ message: "Conta bancária não encontrada" });
       }
@@ -1833,10 +2020,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await storage.deleteBankAccount(accountId);
-      
+
       res.json({ message: "Conta bancária removida com sucesso" });
     } catch (error) {
       console.error('Erro ao deletar conta bancária:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+
+  // Integração Pagarme endpoints
+  // Cria um recebedor
+  app.post("/api/payment/recebedor", async (req, res) => {
+    try {
+
+    } catch (error) {
+      console.error('Erro ao gerar token PIX:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
@@ -1851,7 +2050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate a secure token for PIX authentication
       const token = crypto.randomBytes(32).toString('hex');
-      
+
       res.json({
         success: true,
         token
@@ -1870,7 +2069,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { serviceId, amount, description, token } = req.body;
-      
+
       // Validate required fields
       if (!serviceId || !amount || !token) {
         return res.status(400).json({ message: "Dados incompletos" });
@@ -1886,10 +2085,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentId = crypto.randomBytes(16).toString('hex');
       const reference = `AMG-${Date.now()}-${serviceId}`;
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-      
+
       // Mock PIX code for demonstration
       const pixCode = `00020126580014br.gov.bcb.pix0136${paymentId}520400005303986540${amount}5802BR5925AMIGO MONTADOR LTDA6009SAO PAULO62070503***63044B2A`;
-      
+
       // Generate QR code as data URL (mock)
       const qrCodeData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`;
 
@@ -1916,7 +2115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { paymentId, token } = req.body;
-      
+
       if (!paymentId || !token) {
         return res.status(400).json({ message: "Dados incompletos" });
       }
@@ -1940,19 +2139,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('=== SIMULATE PIX CONFIRM DEBUG ===');
       console.log('User:', req.user);
       console.log('Body:', req.body);
-      
+
       if (!req.user) {
         console.log('❌ Usuário não autenticado');
         return res.status(401).json({ message: "Não autenticado" });
       }
 
       const { serviceId } = req.body;
-      
+
       if (!serviceId) {
         console.log('❌ ServiceId não fornecido');
         return res.status(400).json({ message: "ID do serviço é obrigatório" });
       }
-      
+
       console.log('✅ Processando serviceId:', serviceId);
 
       // Get service details
@@ -1968,7 +2167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🔍 Buscando candidaturas...');
       const applications = await storage.getApplicationsByServiceId(serviceId);
       console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
-      
+
       // Check if there's an accepted application
       let acceptedApplication = applications.find(app => app.status === 'accepted');
       let assemblerId: number | undefined;
@@ -2003,7 +2202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate payment proof image
       const proofImage = generatePaymentProofImage(proofData);
-      
+
       // Create a detailed payment proof message with visual content
       const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
 
@@ -2037,7 +2236,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       console.log('🔔 Notificando outros montadores que não foram aceitos...');
       const otherAssemblers = applications.filter(app => app.assemblerId !== assemblerId);
       console.log('👥 Montadores rejeitados a serem notificados:', otherAssemblers.length);
-      
+
       if (otherAssemblers.length > 0) {
         for (const application of otherAssemblers) {
           try {
@@ -2055,7 +2254,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
                   message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
                   timestamp: new Date().toISOString()
                 };
-                
+
                 // Send WebSocket notification to the assembler
                 console.log('📤 Enviando notificação WebSocket...');
                 const notificationSent = global.sendNotification(assemblerUser.id, notificationMessage);
@@ -2093,7 +2292,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       }
 
       const { serviceId, paymentProof, paymentReference, isAutomatic } = req.body;
-      
+
       if (!serviceId || !paymentProof) {
         return res.status(400).json({ message: "Dados incompletos" });
       }
@@ -2159,7 +2358,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       }
 
       const { serviceId } = req.body;
-      
+
       if (!serviceId) {
         return res.status(400).json({ message: "ID do serviço é obrigatório" });
       }
@@ -2180,7 +2379,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
       // Simulate payment proof validation
       // In a real implementation, this would validate the payment with the bank/payment provider
-      
+
       res.json({
         success: true,
         message: "Comprovante validado com sucesso. Botão de repasse habilitado.",
@@ -2200,7 +2399,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       }
 
       const { serviceId } = req.body;
-      
+
       if (!serviceId) {
         return res.status(400).json({ message: "ID do serviço é obrigatório" });
       }
@@ -2282,7 +2481,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         userName: storeUser.name,
         evaluateUser: assemblerUser.name
       });
-      
+
       const storeNotificationMessage = {
         type: 'evaluation_required',
         serviceId: serviceId,
@@ -2295,7 +2494,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         },
         message: 'É necessário avaliar o montador para finalizar o serviço.'
       };
-      
+
       const storeNotificationSent = global.sendNotification(storeUser.id, storeNotificationMessage);
       console.log(`✅ Notificação enviada para lojista: ${storeNotificationSent ? 'Sucesso' : 'Falhou'}`);
 
@@ -2306,7 +2505,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           userName: assemblerUser.name,
           evaluateUser: storeUser.name
         });
-        
+
         const assemblerNotificationMessage = {
           type: 'evaluation_required',
           serviceId: serviceId,
@@ -2319,16 +2518,16 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           },
           message: 'É necessário avaliar o lojista para finalizar o serviço.'
         };
-        
+
         console.log(`🔍 Verificando conexões antes de enviar: ${Array.from(userConnections.keys()).join(', ')}`);
         const assemblerNotificationSent = global.sendNotification(assemblerUser.id, assemblerNotificationMessage);
         console.log(`✅ Notificação enviada para montador: ${assemblerNotificationSent ? 'Sucesso' : 'Falhou'}`);
         console.log(`🔍 ID do montador usado para notificação: ${assemblerUser.id}`);
-        
+
         // If WebSocket notification failed, create a persistent notification message
         if (!assemblerNotificationSent) {
           console.log('⚠️ Notificação WebSocket falhou. Criando notificação persistente no chat...');
-          
+
           // Create a system message to ensure the assembler knows they need to evaluate
           storage.createMessage({
             serviceId: serviceId,
@@ -2458,7 +2657,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
       // Check if both parties have now rated each other
       const otherRating = await storage.getRatingByServiceIdAndUser(serviceId, toUserId, req.user.id);
-      
+
       console.log(`🔍 Verificando avaliações mútuas para serviço ${serviceId}:`, {
         currentUserRating: {
           fromUserId: req.user.id,
@@ -2476,11 +2675,11 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         } : null,
         mutualEvaluationComplete: !!otherRating
       });
-      
+
       if (otherRating) {
         // Both parties have rated each other, now we can mark the service as completed
         await storage.updateServiceStatus(serviceId, 'completed');
-        
+
         // Get the assembler ID for proper conversation routing
         const acceptedApplication = await db.select()
           .from(applications)
@@ -2491,9 +2690,9 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
             )
           )
           .limit(1);
-        
+
         const assemblerId = acceptedApplication.length > 0 ? acceptedApplication[0].assemblerId : null;
-        
+
         // Send notification message about completion
         await storage.createMessage({
           serviceId: serviceId,
@@ -2502,13 +2701,13 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           content: `Avaliação mútua concluída! O serviço foi finalizado com sucesso.`,
           messageType: 'evaluation_completed' as const
         });
-        
+
         console.log(`✅ Serviço ${serviceId} COMPLETADO após avaliações mútuas`);
       } else {
         // Only one party has rated, service should remain in awaiting_evaluation status
         console.log(`⏳ Serviço ${serviceId} aguardando avaliação da outra parte (${fromUserType} → ${toUserType})`);
         console.log(`⚠️ ALERTA: Serviço ${serviceId} NÃO pode ser completado até que ambas as partes avaliem`);
-        
+
         // Ensure the service remains in awaiting_evaluation status
         await storage.updateServiceStatus(serviceId, 'awaiting_evaluation');
       }
@@ -2551,7 +2750,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
   app.get("/api/users/:userId/profile", async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       if (!userId) {
         return res.status(400).json({ message: "ID do usuário inválido" });
       }
@@ -2564,7 +2763,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
       // Get user's rating statistics
       const ratingStats = await storage.getUserAverageRating(userId);
-      
+
       // Get user's detailed ratings
       const ratings = await storage.getUserRatingsWithDetails(userId);
 
@@ -2649,7 +2848,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       }
 
       const ratingStats = await storage.getUserAverageRating(req.user.id);
-      
+
       res.json(ratingStats);
 
     } catch (error) {
@@ -2668,10 +2867,10 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       }
 
       const user = req.user!;
-      
+
       // Get user services
       let userServices: any[] = [];
-      
+
       if (user.userType === 'lojista') {
         const userStore = await storage.getStoreByUserId(user.id);
         if (userStore) {
@@ -2685,7 +2884,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       // Calculate basic metrics
       const totalServices = userServices.length;
       const completedServices = userServices.filter(s => s.status === 'completed').length;
-      const pendingServices = userServices.filter(s => 
+      const pendingServices = userServices.filter(s =>
         s.status === 'open' || s.status === 'in-progress' || s.status === 'awaiting_evaluation'
       ).length;
 
@@ -2764,7 +2963,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
       // Get user services
       let userServices: any[] = [];
-      
+
       if (user.userType === 'lojista') {
         const userStore = await storage.getStoreByUserId(user.id);
         if (userStore) {
