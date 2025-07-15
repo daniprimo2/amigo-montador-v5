@@ -101,7 +101,7 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
       
       // Formatar a data para o formato esperado pelo backend (DD/MM/YYYY)
       const formattedDate = date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "";
-      
+
       // Enviar a atualização do serviço
       const response = await apiRequest({
         method: "PATCH",
@@ -112,6 +112,8 @@ export const HireAssemblerDialog: React.FC<HireAssemblerDialogProps> = ({
           status: "in-progress" // Alterar o status para "em andamento"
         },
       });
+
+      console.log(response)
       
       if (!response.ok) {
         throw new Error("Falha ao atualizar o serviço");

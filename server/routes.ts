@@ -209,15 +209,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('📩 Mensagem WebSocket recebida:', data);
 
         if (data.type === 'auth' && data.userId) {
-          // Fechar conexão anterior se existir para este usuário
-          const existingConnection = userConnections.get(data.userId);
-          if (existingConnection && existingConnection !== ws) {
-            console.log(`🔄 Fechando conexão anterior para usuário ${data.userId}`);
-            existingConnection.close();
-            storeClients.delete(existingConnection);
-            assemblerClients.delete(existingConnection);
-          }
-          
           // Associar esta conexão WebSocket ao usuário
           userConnections.set(data.userId, ws);
           (ws as any).userId = data.userId; // Armazenar userId na conexão para filtros
@@ -269,66 +260,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Função global para enviar notificações com retry e fallback
-<<<<<<< Updated upstream
-  global.sendNotification = function(userId: number, message: any): boolean {
-    // VALIDAÇÃO CRÍTICA: Verificar se o userId é válido
-    if (!userId || typeof userId !== 'number' || userId <= 0) {
-      console.log(`🚫 ERRO CRÍTICO: userId inválido: ${userId}`);
-      return false;
-    }
-    
-    console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
-    console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
-    
-    // ISOLAMENTO TOTAL: Garantir que a mensagem só pode ser para este usuário específico
-    const messageWithUserId = {
-      ...message,
-      userId: userId,
-      targetUserId: userId, // Campo adicional para validação dupla
-      timestamp: Date.now()
-    };
-    
-=======
   global.sendNotification = function (userId: number, message: any): boolean {
     console.log(`🔍 Buscando conexão WebSocket para usuário ID: ${userId}`);
     console.log(`🔍 Conexões ativas: ${Array.from(userConnections.keys()).join(', ')}`);
 
->>>>>>> Stashed changes
     const connection = userConnections.get(userId);
     if (connection && connection.readyState === WebSocket.OPEN) {
-      // Validação adicional: verificar se a conexão realmente pertence ao usuário
-      if ((connection as any).userId === userId) {
-        try {
-          connection.send(JSON.stringify(messageWithUserId));
-          console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
-          return true;
-        } catch (error) {
-          console.log(`❌ Erro ao enviar notificação: ${error}`);
-          return false;
-        }
-      } else {
-        console.log(`🚫 ERRO CRÍTICO: Conexão não pertence ao usuário ${userId}`);
+      try {
+        connection.send(JSON.stringify(message));
+        console.log(`✅ Notificação enviada com sucesso para usuário ${userId}`);
+        return true;
+      } catch (error) {
+        console.log(`❌ Erro ao enviar notificação: ${error}`);
         return false;
       }
     } else {
       console.log(`❌ Conexão não encontrada ou fechada para usuário ${userId}`);
 
       // Try to find any active connection for this user (multiple tabs scenario)
-      const connections = Array.from(userConnections.entries());
-      for (let i = 0; i < connections.length; i++) {
-        const [connectedUserId, ws] = connections[i];
+      for (const [connectedUserId, ws] of userConnections.entries()) {
         if (connectedUserId === userId && ws.readyState === WebSocket.OPEN) {
-          // Validação tripla: verificar múltiplas condições
-          if ((ws as any).userId === userId && connectedUserId === userId) {
-            try {
-              ws.send(JSON.stringify(messageWithUserId));
-              console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
-              return true;
-            } catch (error) {
-              console.log(`❌ Erro na conexão alternativa: ${error}`);
-            }
-          } else {
-            console.log(`🚫 ERRO CRÍTICO: Validação tripla falhou para usuário ${userId}`);
+          try {
+            ws.send(JSON.stringify(message));
+            console.log(`✅ Notificação enviada via conexão alternativa para usuário ${userId}`);
+            return true;
+          } catch (error) {
+            console.log(`❌ Erro na conexão alternativa: ${error}`);
           }
         }
       }
@@ -349,33 +306,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = {
         type: 'new_message',
         serviceId: serviceId,
-        senderId: senderId,
-        message: 'Nova mensagem recebida no chat'
+        senderId: senderId
       };
 
-      // Notificar loja APENAS se ela não for o remetente
-      if (store.userId !== senderId) {
-        console.log(`🔔 Enviando notificação de nova mensagem para lojista ${store.userId} (remetente: ${senderId})`);
-        global.sendNotification(store.userId, message);
-      } else {
-        console.log(`⏭️ Não enviando notificação para lojista ${store.userId} - é o próprio remetente`);
-      }
+      // Notificar loja
+      sendNotification(store.userId, message);
 
-      // Notificar montador se existir e não for o remetente
+      // Notificar montador se existir
       const applications = await storage.getApplicationsByServiceId(serviceId);
       for (const app of applications) {
         if (app.status === 'accepted') {
           const assembler = await storage.getAssemblerById(app.assemblerId);
-          if (assembler && assembler.userId !== senderId) {
-            console.log(`🔔 Enviando notificação de nova mensagem para montador ${assembler.userId} (remetente: ${senderId})`);
-            global.sendNotification(assembler.userId, message);
-          } else if (assembler && assembler.userId === senderId) {
-            console.log(`⏭️ Não enviando notificação para montador ${assembler.userId} - é o próprio remetente`);
+          if (assembler) {
+            sendNotification(assembler.userId, message);
           }
         }
       }
     } catch (error) {
-      console.error('Erro ao notificar nova mensagem:', error);
+      // Error logging removed for production
     }
   };
 
@@ -945,6 +893,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
+
+
       const user = req.user!;
       const serviceId = parseInt(req.params.serviceId);
 
@@ -1338,10 +1288,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rota para enviar mensagem
   app.post("/api/services/:serviceId/messages", checkMandatoryEvaluations, async (req, res) => {
+
+    console.log(req.body)
+
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Não autenticado" });
       }
+
+
 
       const user = req.user!;
       const serviceId = parseInt(req.params.serviceId);
@@ -1685,8 +1640,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para buscar perfil de usuário por ID (usado no chat)
+  app.get("/api/users/:userId/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
 
- 
       const userId = parseInt(req.params.userId);
       const user = await storage.getUser(userId);
 
@@ -1759,7 +1719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Erro ao buscar perfil do usuário:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
-  }); 
+  });
 
   // Rota para obter contagem de mensagens não lidas
   app.get("/api/messages/unread-count", async (req, res) => {
@@ -2068,10 +2028,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
-      const { serviceId, amount, description, token } = req.body;
+      const { serviceId, amount, description, assemblerInfo } = req.body;
 
       // Validate required fields
-      if (!serviceId || !amount || !token) {
+      if (!serviceId || !amount || !assemblerInfo) {
         return res.status(400).json({ message: "Dados incompletos" });
       }
 
@@ -2081,26 +2041,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Generate PIX payment data
-      const paymentId = crypto.randomBytes(16).toString('hex');
-      const reference = `AMG-${Date.now()}-${serviceId}`;
+      //pega os dados do montador
+      const assembler = await storage.getAssemblerByUserId(assemblerInfo.userId);
+      if (!assembler) {
+        return res.status(404).json({ message: "Montador não encontrado" });
+      }
+
+      //pega o cpf ou cnpj do lojista 
+      const accountStore = await storage.getBankAccountsByUserId(req.user.id);
+      if (!accountStore || accountStore.length === 0 || !accountStore[0].holderDocumentNumber) {
+        return res.status(404).json({ message: "Faltam informações nos Dados Bancários do Lojista: campo Número de Documento" });
+      }
+      const cpf_cnpj_store = accountStore[0].holderDocumentNumber;
+
+      //pega o id_recebedor cadastrado do montador
+      const BankAccountsByUserId = await storage.getBankAccountsByUserId(assemblerInfo.userId);
+      if (!BankAccountsByUserId || BankAccountsByUserId.length === 0 || !BankAccountsByUserId[0].id_recebedor) {
+        return res.status(404).json({ message: "Dados Bancários do Montador são inválidos" });
+      }
+      const id_recebedor = BankAccountsByUserId[0].id_recebedor;
+
+      const expiresDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-      // Mock PIX code for demonstration
-      const pixCode = `00020126580014br.gov.bcb.pix0136${paymentId}520400005303986540${amount}5802BR5925AMIGO MONTADOR LTDA6009SAO PAULO62070503***63044B2A`;
+      const telefone = req.user.phone || '';
+      const apenasNumeros = telefone.replace(/\D/g, ''); // remove tudo que não for número
+      const DDD = apenasNumeros.substring(0, 2);
+      const phoneLimpo = apenasNumeros.substring(2);
 
-      // Generate QR code as data URL (mock)
-      const qrCodeData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`;
+      // console.log({
+      //   valor: service.price.replace(/[.,]/g, ''), //alterar para tirar os virgulas 
+      //   nome: req.user.name,
+      //   cnpj_cnpj: cpf_cnpj_store,
+      //   ddd: DDD,
+      //   celular: phoneLimpo,
+      //   email: req.user.email,
+      //   idrecebedor: id_recebedor,
+      //   pix_expiration_date: expiresDate,
+      // });
 
-      res.json({
-        success: true,
-        pixCode,
-        qrCode: qrCodeData,
-        reference,
-        amount: parseFloat(amount),
-        expiresAt: expiresAt.toISOString(),
-        paymentId
+      //Cria a transação no pagarme
+      const resultPagarmaTransaction = await PagarmeService.criarTransacaoPixComSplit({
+        valor: parseInt(service.price.replace(/[.,]/g, '')),
+        nome: req.user.name,
+        cpf_cnpj: cpf_cnpj_store,
+        ddd: DDD,
+        celular: phoneLimpo,
+        email: req.user.email,
+        idrecebedor: id_recebedor,
+        pix_expiration_date: expiresDate,
       });
+
+      if (resultPagarmaTransaction.success !== false) {
+
+        console.log(resultPagarmaTransaction)
+
+        // Generate PIX payment data
+        const paymentId = resultPagarmaTransaction.id;
+        const reference = resultPagarmaTransaction.acquirer_name//`AMG-${Date.now()}-${serviceId}`;
+
+        // Mock PIX code for demonstration
+        const pixCode = resultPagarmaTransaction.pix_qr_code;
+        // Generate QR code as data URL (mock)
+        const qrCodeData = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${resultPagarmaTransaction.pix_qr_code}`;
+
+
+        //atualiza o reference do pagamento guardando o id de pagamento do pagarme
+        await storage.updateService(serviceId, {paymentReference: paymentId});
+
+        res.json({
+          success: true,
+          pixCode,
+          qrCode: qrCodeData,
+          reference,
+          amount: parseFloat(amount),
+          expiresAt: resultPagarmaTransaction.pix_expiration_date,
+          paymentId
+        });
+
+      }else {
+          res.status(500).json({ message: "Erro ao criar pagamento PIX" });
+      }
+
+
     } catch (error) {
       console.error('Erro ao criar pagamento PIX:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
@@ -2114,9 +2137,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Não autenticado" });
       }
 
-      const { paymentId, token } = req.body;
+      const { paymentId } = req.body;
 
-      if (!paymentId || !token) {
+      if (!paymentId) {
         return res.status(400).json({ message: "Dados incompletos" });
       }
 
@@ -2767,48 +2790,24 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
       // Get user's detailed ratings
       const ratings = await storage.getUserRatingsWithDetails(userId);
 
-      // Prepare the response data
-      let profileData: any = {
+      // Get user-specific data (store or assembler)
+      let specificData = null;
+      if (user.userType === 'lojista') {
+        specificData = await storage.getStoreByUserId(userId);
+      } else if (user.userType === 'montador') {
+        specificData = await storage.getAssemblerByUserId(userId);
+      }
+
+      res.json({
         id: user.id,
         name: user.name,
         userType: user.userType,
         profilePhotoData: user.profilePhotoData,
-        profilePhotoUrl: user.profilePhotoData, // Frontend expects this field
         averageRating: ratingStats.averageRating,
         totalRatings: ratingStats.totalRatings,
         ratings: ratings,
-        city: '',
-        state: '',
-        specialties: []
-      };
-
-      // Get user-specific data (store or assembler)
-      if (user.userType === 'lojista') {
-        const store = await storage.getStoreByUserId(userId);
-        if (store) {
-          profileData.city = store.city || '';
-          profileData.state = store.state || '';
-        }
-      } else if (user.userType === 'montador') {
-        const assembler = await storage.getAssemblerByUserId(userId);
-        if (assembler) {
-          profileData.city = assembler.city || '';
-          profileData.state = assembler.state || '';
-          
-          // Handle specialties - ensure it's always an array of strings
-          if (assembler.specialties) {
-            if (Array.isArray(assembler.specialties)) {
-              profileData.specialties = assembler.specialties.map(spec => 
-                typeof spec === 'string' ? spec : String(spec)
-              );
-            } else {
-              profileData.specialties = [String(assembler.specialties)];
-            }
-          }
-        }
-      }
-
-      res.json(profileData);
+        specificData: specificData
+      });
 
     } catch (error) {
       console.error('Erro ao buscar perfil do usuário:', error);
