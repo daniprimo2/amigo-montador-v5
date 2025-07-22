@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { Request, Response, Express } from 'express';
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
 import { setupAuth } from "./auth.ts";
@@ -17,6 +17,18 @@ import { emailService } from './email-service.ts';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { PagarmeService } from "../services/PagarmeService.js";
+
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';;
+import { rawBodySaver } from './middleware/rawBody.ts';
+
+
+// Carrega .env uma única vez no módulo
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+config({ path: path.resolve(__dirname, '../.env') });
+const API_KEY = process.env.PAGARME_API_KEY;
+
 
 // Middleware to check for mandatory evaluations for assemblers
 async function checkMandatoryEvaluations(req: any, res: any, next: any) {
@@ -160,6 +172,33 @@ function generatePaymentProofImage(data: {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
+function verifyPagarmeSignature(req: any, res: any, next: any) {
+  const signature = req.headers['x-hub-signature'];
+  const rawBody = req.body; // Buffer bruto
+
+  if (!signature || !rawBody) {
+    console.log('❌ Assinatura ou corpo da requisição ausente');
+    return res.status(400).json({ message: 'Assinatura ou corpo ausente' });
+  }
+
+  const calculatedSignature = 'sha1=' + crypto
+    .createHmac('sha1', API_KEY || '')
+    .update(rawBody)
+    .digest('hex');
+
+  console.log('Corpo bruto:', rawBody.toString('utf8'));
+  console.log('Signature recebida:', signature);
+  console.log('Signature calculada:', calculatedSignature);
+
+  if (signature === calculatedSignature) {
+    console.log('✅ Assinatura válida');
+    next();
+  } else {
+    console.log('❌ Assinatura inválida');
+    return res.status(401).json({ message: 'Assinatura inválida' });
+  }
+}
+
 declare global {
   namespace Express {
     interface Request {
@@ -173,7 +212,13 @@ declare global {
   var notifyNewMessage: (serviceId: number, senderId: number) => Promise<void>;
 }
 
+interface RawBodyRequest extends Request {
+  rawBody?: Buffer;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+
+
   // Configurar middleware de upload de arquivos
   app.use(fileUpload({
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -185,6 +230,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configurar autenticação
   setupAuth(app);
 
+  const API_KEY = process.env.PAGARME_API_KEY;
+
   // Servidor HTTP
   const server = createServer(app);
 
@@ -193,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     server,
     path: '/ws'
   });
+
 
   // Mapas para rastrear conexões WebSocket
   const userConnections = new Map<number, WebSocket>();
@@ -1989,38 +2037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Integração Pagarme endpoints
-  // Cria um recebedor
-  app.post("/api/payment/recebedor", async (req, res) => {
-    try {
-
-    } catch (error) {
-      console.error('Erro ao gerar token PIX:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-
   // PIX Payment endpoints
-  // Generate PIX authentication token
-  app.post("/api/payment/pix/token", async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Não autenticado" });
-      }
-
-      // Generate a secure token for PIX authentication
-      const token = crypto.randomBytes(32).toString('hex');
-
-      res.json({
-        success: true,
-        token
-      });
-    } catch (error) {
-      console.error('Erro ao gerar token PIX:', error);
-      res.status(500).json({ message: "Erro interno do servidor" });
-    }
-  });
-
   // Create PIX payment
   app.post("/api/payment/pix/create", async (req, res) => {
     try {
@@ -2069,16 +2086,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const DDD = apenasNumeros.substring(0, 2);
       const phoneLimpo = apenasNumeros.substring(2);
 
-      // console.log({
-      //   valor: service.price.replace(/[.,]/g, ''), //alterar para tirar os virgulas 
-      //   nome: req.user.name,
-      //   cnpj_cnpj: cpf_cnpj_store,
-      //   ddd: DDD,
-      //   celular: phoneLimpo,
-      //   email: req.user.email,
-      //   idrecebedor: id_recebedor,
-      //   pix_expiration_date: expiresDate,
-      // });
+      console.log({
+        valor: service.price.replace(/[.,]/g, ''), //alterar para tirar os virgulas 
+        nome: req.user.name,
+        cnpj_cnpj: cpf_cnpj_store,
+        ddd: DDD,
+        celular: phoneLimpo,
+        email: req.user.email,
+        idrecebedor: id_recebedor,
+        pix_expiration_date: expiresDate,
+      });
+
+      //aqui faz o repasse no pagarme
+      const upRecebedor = await PagarmeService.fecharRecebedorMontador({ 
+        recipient_id: id_recebedor,  
+        status: false});
+
+      console.log(upRecebedor)
 
       //Cria a transação no pagarme
       const resultPagarmaTransaction = await PagarmeService.criarTransacaoPixComSplit({
@@ -2107,7 +2131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
         //atualiza o reference do pagamento guardando o id de pagamento do pagarme
-        await storage.updateService(serviceId, {paymentReference: paymentId});
+        await storage.updateService(serviceId, { paymentReference: paymentId });
 
         res.json({
           success: true,
@@ -2116,17 +2140,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reference,
           amount: parseFloat(amount),
           expiresAt: resultPagarmaTransaction.pix_expiration_date,
-          paymentId
+          paymentId: serviceId
         });
 
-      }else {
-          res.status(500).json({ message: "Erro ao criar pagamento PIX" });
+      } else {
+        res.status(500).json({ message: "Erro ao criar pagamento PIX" });
       }
 
 
     } catch (error) {
       console.error('Erro ao criar pagamento PIX:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // valida se o id da transação ja existe, se a transação ja expirou e se ja foi pago
+  app.post("/api/payment/pix/statuspix", async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Não autenticado" });
+      }
+
+      const { serviceId, assemblerInfo } = req.body;
+
+      // Validate required fields
+      if (!serviceId) {
+        return res.status(400).json({ message: "Dados incompletos" });
+      }
+
+      // Verify service exists and user has access
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // status: 1 -> não existe registro de idtransferencia
+      // status: 2 -> existe registro de idtransferencia
+      // statuspayment:    3 -> aguardando pagamento
+      // statuspayment:    4 -> pagamento realizado
+
+      const serviceIdPagamento = service.paymentReference;
+      if (serviceIdPagamento == null || !serviceIdPagamento) {
+        return res.json({
+          status: false,
+          statuspayment: false
+        });
+      }
+
+      const resConsultaTransferencia = await PagarmeService.consultaTransacaoPix({
+        id_transacao: serviceIdPagamento
+      });
+
+      let status;
+      let statuspayment;
+      if (resConsultaTransferencia.status == 'waiting_payment') {
+        status = true;
+        statuspayment = false;
+      } else if (resConsultaTransferencia.status == 'paid') {
+        status = true;
+        statuspayment = true;
+      } else {
+        status = false;
+        statuspayment = false;
+      }
+
+      const qrCodeData = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${resConsultaTransferencia.pix_qr_code}`;
+
+
+      res.json({
+        status: status,
+        statuspayment: statuspayment,
+        pixCode: resConsultaTransferencia.pix_qr_code,
+        qrCode: qrCodeData,
+        reference: resConsultaTransferencia.acquirer_name,
+        amount: (resConsultaTransferencia.amount / 100).toFixed(2).replace('.', ','),
+        expiresAt: resConsultaTransferencia.pix_expiration_date,
+        paymentId: serviceId
+      })
+
+    } catch (error) {
+      console.error('Erro ao verificar status PIX:', error);
+      res.status(500).json({ message: "Erro interno do servidor" })
     }
   });
 
@@ -2156,12 +2250,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  app.post('/webhook/pagarme', async (req, res) => {
+
+    try {
+      const postbackData = req.body;
+
+      const { id: transactionId, current_status: status } = postbackData;
+
+      //pega o id da transação vinculado ao serviço
+      // Get service details
+      const service = await storage.getServiceByPaymentId(transactionId);
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      const serviceId = service.id;
+      const storeId = service.storeId;
+
+      const userStore = await storage.getStore(storeId);
+      const userStoreCod = userStore?.userId ?? 0;
+      switch (status) {
+        case 'paid':
+          // marcar como pago
+          //atualiza o status do serviço se for pago
+          // Update service status to "Em Andamento" when payment is confirmed
+          await storage.updateServiceStatus(serviceId, 'in-progress');
+
+          // Get all applications for this service first
+          console.log('🔍 Buscando candidaturas...');
+          const applications = await storage.getApplicationsByServiceId(serviceId);
+          console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
+
+          // Check if there's an accepted application
+          let acceptedApplication = applications.find(app => app.status === 'accepted');
+          let assemblerId: number | undefined;
+
+          // If no assembler is accepted yet, auto-accept the first applicant for testing
+          if (!acceptedApplication && applications.length > 0) {
+            console.log('🔄 Auto-aceitando primeiro candidato para teste...');
+            const firstApplication = applications[0];
+            await storage.acceptApplication(firstApplication.id, serviceId);
+            assemblerId = firstApplication.assemblerId;
+            console.log(`✅ Montador ${assemblerId} aceito automaticamente`);
+          } else if (acceptedApplication) {
+            assemblerId = acceptedApplication.assemblerId;
+            console.log('✅ Montador aceito encontrado:', assemblerId);
+          }
+
+          // // Get user info for payment proof
+          // const user = await storage.getUser(userStoreCod);
+          // if (!user) {
+          //   return res.status(404).json({ message: "Usuário não encontrado" });
+          // }
+
+          // Generate automatic payment proof message
+          const timestamp = new Date().toLocaleString('pt-BR');
+          const proofData = {
+            serviceId: serviceId,
+            amount: service.price,
+            reference: `AMG-${Date.now()}-${serviceId}`,
+            payerName: userStore?.name ?? '',
+            timestamp
+          };
+
+          // Generate payment proof image
+          const proofImage = generatePaymentProofImage(proofData);
+
+          // Create a detailed payment proof message with visual content
+          const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
+
+💰 Valor Pago: R$ ${service.price}
+📅 Data: ${timestamp}
+📋 Referência: ${proofData.reference}
+👤 Pagador: ${userStore?.name}
+🏪 Serviço: ${service.title}
+
+✅ Status: PAGAMENTO CONFIRMADO
+✅ Serviço atualizado para "Em Andamento"
+
+Este é um comprovante automático gerado pelo sistema de teste PIX.`;
+
+          // Send payment proof message only to the accepted assembler
+          console.log('✅ Enviando mensagem de comprovante para o montador aceito...');
+          if (assemblerId) {
+            const messageResult = await storage.createMessage({
+              serviceId: serviceId,
+              senderId: userStoreCod ?? 0,
+              assemblerId: assemblerId,
+              content: proofContent,
+              messageType: 'payment_proof'
+            });
+            console.log(`✅ Comprovante enviado para montador aceito (ID: ${assemblerId}):`, messageResult);
+          } else {
+            console.log('❌ Nenhum montador aceito encontrado para enviar o comprovante');
+          }
+
+          // Notify all other assemblers (who were NOT accepted) that the service started with another
+          console.log('🔔 Notificando outros montadores que não foram aceitos...');
+          const otherAssemblers = applications.filter(app => app.assemblerId !== assemblerId);
+          console.log('👥 Montadores rejeitados a serem notificados:', otherAssemblers.length);
+
+          if (otherAssemblers.length > 0) {
+            for (const application of otherAssemblers) {
+              try {
+                console.log(`🔄 Notificando montador ID ${application.assemblerId}...`);
+                const assemblerRecord = await storage.getAssemblerById(application.assemblerId);
+                if (assemblerRecord) {
+                  // Get the user data for the assembler
+                  const assemblerUser = await storage.getUser(assemblerRecord.userId);
+                  if (assemblerUser) {
+                    console.log(`✅ Montador encontrado: ${assemblerUser.id} - ${assemblerUser.name}`);
+                    const notificationMessage = {
+                      type: 'service_started_with_other',
+                      serviceId: serviceId,
+                      serviceTitle: service.title,
+                      message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
+                      timestamp: new Date().toISOString()
+                    };
+
+                    // Send WebSocket notification to the assembler
+                    console.log('📤 Enviando notificação WebSocket...');
+                    const notificationSent = global.sendNotification(assemblerUser.id, notificationMessage);
+                    console.log(`📡 Notificação enviada: ${notificationSent ? 'Sucesso' : 'Falhou'}`);
+                    console.log(`🔍 ID do usuário usado para notificação: ${assemblerUser.id}`);
+                  } else {
+                    console.log(`❌ Dados do usuário não encontrados para montador ID: ${assemblerRecord.userId}`);
+                  }
+                } else {
+                  console.log(`❌ Montador não encontrado para ID: ${application.assemblerId}`);
+                }
+              } catch (error) {
+                console.error('❌ Erro ao notificar montador:', error);
+              }
+            }
+          } else {
+            console.log('ℹ️ Nenhum outro montador para notificar');
+          }
+
+          res.json({
+            success: true,
+            message: "Pagamento confirmado e serviço atualizado para Em Andamento"
+          });
+
+          break;
+        default:
+          return res.status(200).send('Webhook recebido com sucesso');
+        // case 'refused':
+        //   // cancelar pedido ou alertar usuário
+        //   await storage.updateServiceStatus(transactionId, 'open');
+
+        //   break;
+      }
+
+      // res.status(200).send('Webhook recebido com sucesso');
+    } catch (error) {
+      console.error('Erro ao processar webhook:', error);
+      res.status(500).send('Erro interno no servidor');
+    }
+  });
+
   // Simulate PIX payment confirmation for testing
+
   app.post("/api/payment/pix/simulate-confirm", async (req, res) => {
     try {
-      console.log('=== SIMULATE PIX CONFIRM DEBUG ===');
-      console.log('User:', req.user);
-      console.log('Body:', req.body);
+      // console.log('=== SIMULATE PIX CONFIRM DEBUG ===');
+      // console.log('User:', req.user);
+      // console.log('Body:', req.body);
 
       if (!req.user) {
         console.log('❌ Usuário não autenticado');
@@ -2183,51 +2438,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
-      // Update service status to "Em Andamento" when payment is confirmed
-      await storage.updateServiceStatus(serviceId, 'in-progress');
+      const serviceIdPagamento = service.paymentReference ?? '';
+      const resConsultaTransferencia = await PagarmeService.consultaTransacaoPix({
+        id_transacao: serviceIdPagamento
+      });
 
-      // Get all applications for this service first
-      console.log('🔍 Buscando candidaturas...');
-      const applications = await storage.getApplicationsByServiceId(serviceId);
-      console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
+      let status;
+      let statuspayment;
+      console.log('status pagamento: ' + resConsultaTransferencia.status)
+      if (resConsultaTransferencia.status != 'paid') {
+        console.error('Aguardando Pagamento');
+        res.status(400).json({ message: "Aguardando Pagamento" });
+      } else {
+        // Update service status to "Em Andamento" when payment is confirmed
+        // await storage.updateServiceStatus(serviceId, 'in-progress');
 
-      // Check if there's an accepted application
-      let acceptedApplication = applications.find(app => app.status === 'accepted');
-      let assemblerId: number | undefined;
+        // Get all applications for this service first
+        console.log('🔍 Buscando candidaturas...');
+        const applications = await storage.getApplicationsByServiceId(serviceId);
+        console.log('📋 Candidaturas encontradas:', applications.map(app => ({ id: app.id, assemblerId: app.assemblerId, status: app.status })));
 
-      // If no assembler is accepted yet, auto-accept the first applicant for testing
-      if (!acceptedApplication && applications.length > 0) {
-        console.log('🔄 Auto-aceitando primeiro candidato para teste...');
-        const firstApplication = applications[0];
-        await storage.acceptApplication(firstApplication.id, serviceId);
-        assemblerId = firstApplication.assemblerId;
-        console.log(`✅ Montador ${assemblerId} aceito automaticamente`);
-      } else if (acceptedApplication) {
-        assemblerId = acceptedApplication.assemblerId;
-        console.log('✅ Montador aceito encontrado:', assemblerId);
-      }
+        // Check if there's an accepted application
+        let acceptedApplication = applications.find(app => app.status === 'accepted');
+        let assemblerId: number | undefined;
 
-      // Get user info for payment proof
-      const user = await storage.getUser(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: "Usuário não encontrado" });
-      }
+        // If no assembler is accepted yet, auto-accept the first applicant for testing
+        if (!acceptedApplication && applications.length > 0) {
+          console.log('🔄 Auto-aceitando primeiro candidato para teste...');
+          const firstApplication = applications[0];
+          await storage.acceptApplication(firstApplication.id, serviceId);
+          assemblerId = firstApplication.assemblerId;
+          console.log(`✅ Montador ${assemblerId} aceito automaticamente`);
+        } else if (acceptedApplication) {
+          assemblerId = acceptedApplication.assemblerId;
+          console.log('✅ Montador aceito encontrado:', assemblerId);
+        }
 
-      // Generate automatic payment proof message
-      const timestamp = new Date().toLocaleString('pt-BR');
-      const proofData = {
-        serviceId: serviceId,
-        amount: service.price,
-        reference: `AMG-${Date.now()}-${serviceId}`,
-        payerName: user.name,
-        timestamp
-      };
+        // Get user info for payment proof
+        const user = await storage.getUser(req.user.id);
+        if (!user) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
 
-      // Generate payment proof image
-      const proofImage = generatePaymentProofImage(proofData);
+        // Generate automatic payment proof message
+        const timestamp = new Date().toLocaleString('pt-BR');
+        const proofData = {
+          serviceId: serviceId,
+          amount: service.price,
+          reference: `AMG-${Date.now()}-${serviceId}`,
+          payerName: user.name,
+          timestamp
+        };
 
-      // Create a detailed payment proof message with visual content
-      const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
+        // Generate payment proof image
+        const proofImage = generatePaymentProofImage(proofData);
+
+        // Create a detailed payment proof message with visual content
+        const proofContent = `🎉 COMPROVANTE DE PAGAMENTO PIX
 
 💰 Valor Pago: R$ ${service.price}
 📅 Data: ${timestamp}
@@ -2240,67 +2507,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 Este é um comprovante automático gerado pelo sistema de teste PIX.`;
 
-      // Send payment proof message only to the accepted assembler
-      console.log('✅ Enviando mensagem de comprovante para o montador aceito...');
-      if (assemblerId) {
-        const messageResult = await storage.createMessage({
-          serviceId: serviceId,
-          senderId: req.user.id,
-          assemblerId: assemblerId,
-          content: proofContent,
-          messageType: 'payment_proof'
-        });
-        console.log(`✅ Comprovante enviado para montador aceito (ID: ${assemblerId}):`, messageResult);
-      } else {
-        console.log('❌ Nenhum montador aceito encontrado para enviar o comprovante');
-      }
-
-      // Notify all other assemblers (who were NOT accepted) that the service started with another
-      console.log('🔔 Notificando outros montadores que não foram aceitos...');
-      const otherAssemblers = applications.filter(app => app.assemblerId !== assemblerId);
-      console.log('👥 Montadores rejeitados a serem notificados:', otherAssemblers.length);
-
-      if (otherAssemblers.length > 0) {
-        for (const application of otherAssemblers) {
-          try {
-            console.log(`🔄 Notificando montador ID ${application.assemblerId}...`);
-            const assemblerRecord = await storage.getAssemblerById(application.assemblerId);
-            if (assemblerRecord) {
-              // Get the user data for the assembler
-              const assemblerUser = await storage.getUser(assemblerRecord.userId);
-              if (assemblerUser) {
-                console.log(`✅ Montador encontrado: ${assemblerUser.id} - ${assemblerUser.name}`);
-                const notificationMessage = {
-                  type: 'service_started_with_other',
-                  serviceId: serviceId,
-                  serviceTitle: service.title,
-                  message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
-                  timestamp: new Date().toISOString()
-                };
-
-                // Send WebSocket notification to the assembler
-                console.log('📤 Enviando notificação WebSocket...');
-                const notificationSent = global.sendNotification(assemblerUser.id, notificationMessage);
-                console.log(`📡 Notificação enviada: ${notificationSent ? 'Sucesso' : 'Falhou'}`);
-                console.log(`🔍 ID do usuário usado para notificação: ${assemblerUser.id}`);
-              } else {
-                console.log(`❌ Dados do usuário não encontrados para montador ID: ${assemblerRecord.userId}`);
-              }
-            } else {
-              console.log(`❌ Montador não encontrado para ID: ${application.assemblerId}`);
-            }
-          } catch (error) {
-            console.error('❌ Erro ao notificar montador:', error);
-          }
+        // Send payment proof message only to the accepted assembler
+        console.log('✅ Enviando mensagem de comprovante para o montador aceito...');
+        if (assemblerId) {
+          const messageResult = await storage.createMessage({
+            serviceId: serviceId,
+            senderId: req.user.id,
+            assemblerId: assemblerId,
+            content: proofContent,
+            messageType: 'payment_proof'
+          });
+          console.log(`✅ Comprovante enviado para montador aceito (ID: ${assemblerId}):`, messageResult);
+        } else {
+          console.log('❌ Nenhum montador aceito encontrado para enviar o comprovante');
         }
-      } else {
-        console.log('ℹ️ Nenhum outro montador para notificar');
+
+        // Notify all other assemblers (who were NOT accepted) that the service started with another
+        console.log('🔔 Notificando outros montadores que não foram aceitos...');
+        const otherAssemblers = applications.filter(app => app.assemblerId !== assemblerId);
+        console.log('👥 Montadores rejeitados a serem notificados:', otherAssemblers.length);
+
+        if (otherAssemblers.length > 0) {
+          for (const application of otherAssemblers) {
+            try {
+              console.log(`🔄 Notificando montador ID ${application.assemblerId}...`);
+              const assemblerRecord = await storage.getAssemblerById(application.assemblerId);
+              if (assemblerRecord) {
+                // Get the user data for the assembler
+                const assemblerUser = await storage.getUser(assemblerRecord.userId);
+                if (assemblerUser) {
+                  console.log(`✅ Montador encontrado: ${assemblerUser.id} - ${assemblerUser.name}`);
+                  const notificationMessage = {
+                    type: 'service_started_with_other',
+                    serviceId: serviceId,
+                    serviceTitle: service.title,
+                    message: `O serviço "${service.title}" foi iniciado com outro montador. Você pode continuar procurando por outros serviços disponíveis.`,
+                    timestamp: new Date().toISOString()
+                  };
+
+                  // Send WebSocket notification to the assembler
+                  console.log('📤 Enviando notificação WebSocket...');
+                  const notificationSent = global.sendNotification(assemblerUser.id, notificationMessage);
+                  console.log(`📡 Notificação enviada: ${notificationSent ? 'Sucesso' : 'Falhou'}`);
+                  console.log(`🔍 ID do usuário usado para notificação: ${assemblerUser.id}`);
+                } else {
+                  console.log(`❌ Dados do usuário não encontrados para montador ID: ${assemblerRecord.userId}`);
+                }
+              } else {
+                console.log(`❌ Montador não encontrado para ID: ${application.assemblerId}`);
+              }
+            } catch (error) {
+              console.error('❌ Erro ao notificar montador:', error);
+            }
+          }
+        } else {
+          console.log('ℹ️ Nenhum outro montador para notificar');
+        }
+
+        res.json({
+          success: true,
+          isCompleted: true,
+          message: "Pagamento confirmado e serviço atualizado para Em Andamento"
+        });
+
       }
 
-      res.json({
-        success: true,
-        message: "Pagamento confirmado e serviço atualizado para Em Andamento"
-      });
+
     } catch (error) {
       console.error('Erro ao simular confirmação PIX:', error);
       res.status(500).json({ message: "Erro interno do servidor" });
@@ -2433,6 +2705,9 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         return res.status(404).json({ message: "Serviço não encontrado" });
       }
 
+      //valor do projeto a ser liberado no pagarme para o montador
+      const amount = parseInt(service.price.replace(/[.,]/g, ''))
+
       // Check if user is the store owner
       if (req.user.userType !== 'lojista') {
         return res.status(403).json({ message: "Apenas lojistas podem fazer repasses" });
@@ -2458,6 +2733,9 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         )
         .limit(1);
 
+
+
+
       if (acceptedApplication.length === 0) {
         return res.status(404).json({ message: "Montador não encontrado para este serviço" });
       }
@@ -2467,12 +2745,24 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
         return res.status(404).json({ message: "Dados do montador não encontrados" });
       }
 
+      //pega o id_recebedor do montador
+      const bankAccountAssemble = await storage.getBankAccountsByUserId(assembler.userId);
+      const id_recebedor = bankAccountAssemble[0].id_recebedor ?? '';
       const assemblerUser = await storage.getUser(assembler.userId);
       const storeUser = await storage.getUser(req.user.id);
 
       if (!assemblerUser || !storeUser) {
         return res.status(404).json({ message: "Dados dos usuários não encontrados" });
       }
+
+      //aqui faz o repasse no pagarme
+      const upRecebedor = await PagarmeService.transferirParaMontador({ 
+        recipient_id: id_recebedor, 
+        amount, 
+        status: true});
+
+      console.log(upRecebedor)
+
 
       // Send transfer notification message
       await storage.createMessage({
@@ -2565,7 +2855,7 @@ Este é um comprovante automático gerado pelo sistema de teste PIX.`;
           });
         }
       }, 1000); // Wait 1 second before sending assembler notification
-
+ 
       res.json({
         success: true,
         message: "Pagamento transferido com sucesso e serviço concluído"

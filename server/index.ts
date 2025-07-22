@@ -5,6 +5,8 @@ import path from "path";
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { config } from 'dotenv';
+import bodyParser from 'body-parser';
+import { rawBodySaver } from './middleware/rawBody.ts';
 
 // Carregar variáveis de ambiente
 config();
@@ -14,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
+app.use(express.json()); 
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from public directory (for PDFs, assets, etc.)

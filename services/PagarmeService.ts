@@ -134,7 +134,7 @@ export class PagarmeService {
             },
             capture: true,
             async: true,
-            postback_url: "https://api.amigomontador.com/webhook",
+            postback_url: "https://api.amigomontador.com/webhook/pagarme",
             split_rules: [
                 {
                     recipient_id: ID_RECEBEDOR, // valor fixo da sua plataforma
@@ -156,6 +156,8 @@ export class PagarmeService {
             return response.data;
         } catch (error: any) {
             const errors = error?.response?.data?.errors;
+
+            console.log(errors)
 
             if (Array.isArray(errors)) {
                 console.log('🛑 Erros da API Pagar.me:');
@@ -179,6 +181,23 @@ export class PagarmeService {
         }
     }
 
+    static async consultaTransacaoPix(data: {
+        id_transacao: string;
+    }) {
+        const response = await axios.get(
+            `https://api.pagar.me/1/transactions/${data.id_transacao}`,
+            {
+                params: {
+                    api_key: API_KEY, // ou 'sua_api_key'
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        return response.data;
+    }
 
     static async estornar(data: {
         transaction_id: string;
@@ -229,6 +248,25 @@ export class PagarmeService {
             api_key: API_KEY,
             recipient_id: params.recipient_id,
             amount: params.amount,
+        });
+
+        return transferResponse.data;
+    }
+
+    static async fecharRecebedorMontador(params: {
+        recipient_id: string; 
+        status: boolean;
+    }) {
+        // Atualiza o recebedor (se necessário)
+        await axios.put(`${API_URL}/recipients/${params.recipient_id}`, {
+            api_key: API_KEY,
+            transfer_enabled: params.status,
+        });
+
+        // Realiza a transferência manual
+        const transferResponse = await axios.post(`${API_URL}/transfers`, {
+            api_key: API_KEY,
+            recipient_id: params.recipient_id,
         });
 
         return transferResponse.data;

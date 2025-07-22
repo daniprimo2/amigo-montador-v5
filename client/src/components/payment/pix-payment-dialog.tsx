@@ -63,6 +63,10 @@ export function PixPaymentDialog({
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [showMandatoryRating, setShowMandatoryRating] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+  const [pixCode, setPixCode] = useState('');
+  const [loading, setLoading] = useState(true);
+
   const { toast } = useToast();
 
   // The amount should be displayed exactly as stored in the service
@@ -102,15 +106,16 @@ export function PixPaymentDialog({
 
   // Check PIX payment status
   const checkPaymentStatusMutation = useMutation({
-    mutationFn: async ({ paymentId }: { paymentId: string;}) => {
+    mutationFn: async ({ paymentId }: { paymentId: string; }) => {
       const response = await apiRequest({
         method: 'POST',
-        url: '/api/payment/pix/status',
-        data: { paymentId }
+        url: '/api/payment/pix/simulate-confirm',//'/api/payment/pix/status',
+        data: { serviceId: paymentId }
       });
       return await response.json();
     },
     onSuccess: (data: any) => {
+      console.log(data)
       if (data.success && data.isCompleted) {
         setPaymentCompleted(true);
         setIsCheckingPayment(false);
@@ -120,7 +125,7 @@ export function PixPaymentDialog({
         }
 
         // Automatically send payment proof to chat
-        sendAutomaticPaymentProof(data.paymentData);
+        // sendAutomaticPaymentProof(data.paymentData);
 
         toast({
           title: "Pagamento Confirmado!",
@@ -136,6 +141,69 @@ export function PixPaymentDialog({
     },
     onError: (error) => {
       console.error("Erro ao verificar status do pagamento:", error);
+    }
+  });
+
+  const validStatusPix = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest({
+        method: 'POST',
+        url: '/api/payment/pix/statuspix',
+        data: {
+          serviceId
+        }
+      });
+
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+
+      console.log(data);
+
+      if (data.status) {
+
+          
+        const isPixExpired = (expiresAt: string) => {
+          const expiration = new Date(expiresAt).getTime();
+          const now = Date.now(); // também retorna em UTC
+          return now >= expiration;
+        };
+ 
+        // setPixData(data);
+        // setStep("payment");
+        // setIsCheckingPayment(true);
+
+        // // Start automatic payment status checking
+        // startPaymentStatusPolling(data.paymentId);
+
+        if (data.statuspayment) {
+          setStep("proof");
+        } else {
+
+          console.log(isPixExpired(data.pix_expiration_date))
+
+          if (isPixExpired(data.pix_expiration_date)) {
+            setStep("generate"); // Expirado ou erro
+
+          } else {
+            setPixData(data);
+            setStep("payment");
+            setIsCheckingPayment(true);
+
+            // Start automatic payment status checking
+            startPaymentStatusPolling(data.paymentId);
+          }
+
+        }
+
+      } else {
+        setStep("generate");
+      }
+
+
+    },
+    onError: () => {
+      setStep("generate");
     }
   });
 
@@ -189,7 +257,7 @@ export function PixPaymentDialog({
   // Submit payment proof
   const submitProofMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/payment/pix/confirm', {
+      const response = await fetch('/api/payment/pix/simulate-confirm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -239,6 +307,7 @@ export function PixPaymentDialog({
 
     intervalRef.current = setInterval(() => {
       if (!paymentCompleted && paymentId) {
+        console.log(paymentId)
         checkPaymentStatusMutation.mutate({ paymentId });
       }
     }, 5000); // Check every 5 seconds
@@ -294,7 +363,7 @@ export function PixPaymentDialog({
       // Create a visual payment proof by calling the backend to generate the image
       const response = await apiRequest({
         method: 'POST',
-        url: '/api/payment/pix/confirm',
+        url: '/api/payment/pix/simulate-confirm',
         data: {
           serviceId,
           paymentProof: `Pagamento confirmado automaticamente via PIX - Valor: R$ ${amount} - Referência: ${pixData?.reference}`,
@@ -323,26 +392,21 @@ export function PixPaymentDialog({
     }
   };
 
-  // Clean up interval on unmount or dialog close
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, []);
-
   // Stop polling when payment is completed
   useEffect(() => {
+
     if (paymentCompleted && intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+
+    validStatusPix.mutate();
   }, [paymentCompleted]);
 
+
+
   const createPixPayment = () => {
-    createPixMutation.mutate(); 
+    createPixMutation.mutate();
   };
 
   // const handleGeneratePixPayment = () => {

@@ -37,6 +37,7 @@
     "@types/nodemailer": "^6.4.17",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "connect-pg-simple": "^10.0.0",

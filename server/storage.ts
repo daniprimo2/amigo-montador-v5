@@ -1,9 +1,9 @@
 import { eq, and, not, ne, isNotNull, isNull, or, sql, inArray, desc } from "drizzle-orm";
 import { db } from "./db.js";
-import { 
+import {
   users, stores, assemblers, services, applications, messages, messageReads, ratings, bankAccounts, passwordResetTokens,
   type User, type Store, type Assembler, type Service, type Application, type Message, type Rating, type BankAccount, type PasswordResetToken,
-  type InsertUser, type InsertStore, type InsertAssembler, type InsertService, type InsertApplication, 
+  type InsertUser, type InsertStore, type InsertAssembler, type InsertService, type InsertApplication,
   type InsertMessage, type InsertRating, type InsertBankAccount, type InsertPasswordResetToken
 } from "../shared/schema.js";
 import session from "express-session";
@@ -15,17 +15,17 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User>;
-  
+
   getStoreByUserId(userId: number): Promise<Store | undefined>;
   getStore(id: number): Promise<Store | undefined>;
   createStore(store: InsertStore): Promise<Store>;
   updateStore(id: number, storeData: Partial<Store>): Promise<Store>;
-  
+
   getAssemblerByUserId(userId: number): Promise<Assembler | undefined>;
   getAssemblerById(id: number): Promise<Assembler | undefined>;
   createAssembler(assembler: InsertAssembler): Promise<Assembler>;
   updateAssembler(id: number, assemblerData: Partial<Assembler>): Promise<Assembler>;
-  
+
   getServiceById(id: number): Promise<Service | undefined>;
   getServicesByStoreId(storeId: number, status?: string): Promise<Service[]>;
   getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]>;
@@ -34,13 +34,13 @@ export interface IStorage {
   updateServiceStatus(id: number, status: string): Promise<Service>;
   updateService(id: number, serviceData: Partial<Service>): Promise<Service>;
   deleteService(id: number): Promise<void>;
-  
+
   getApplicationById(id: number): Promise<Application | undefined>;
   getApplicationByServiceAndAssembler(serviceId: number, assemblerId: number): Promise<Application | undefined>;
   getApplicationsByServiceId(serviceId: number): Promise<Application[]>;
   createApplication(application: InsertApplication): Promise<Application>;
   acceptApplication(id: number, serviceId: number): Promise<void>;
-  
+
   getMessagesByServiceId(serviceId: number): Promise<Message[]>;
   getMessagesByServiceAndAssembler(serviceId: number, assemblerId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
@@ -48,22 +48,22 @@ export interface IStorage {
   getUnreadMessageCountForService(serviceId: number, userId: number): Promise<number>;
   hasUnreadMessages(serviceId: number, userId: number): Promise<boolean>;
   getTotalUnreadMessageCount(userId: number): Promise<number>;
-  
+
   getRatingByServiceIdAndUser(serviceId: number, fromUserId: number, toUserId: number): Promise<Rating | undefined>;
   getRatingsByServiceId(serviceId: number): Promise<Rating[]>;
   createRating(rating: InsertRating): Promise<Rating>;
-  
+
   getBankAccountsByUserId(userId: number): Promise<BankAccount[]>;
   getBankAccountById(id: number): Promise<BankAccount | undefined>;
   createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, bankAccountData: Partial<BankAccount>): Promise<BankAccount>;
   deleteBankAccount(id: number): Promise<void>;
-  
+
   createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenAsUsed(tokenId: number): Promise<void>;
   deleteExpiredPasswordResetTokens(): Promise<void>;
-  
+
   getUserAverageRating(userId: number): Promise<{ averageRating: number; totalRatings: number }>;
   getUserRatingsWithDetails(userId: number): Promise<(Rating & { fromUserName: string; fromUserType: string; serviceTitle: string })[]>;
   getTopRatedUsers(userType: 'lojista' | 'montador', limit?: number): Promise<Array<{
@@ -74,7 +74,7 @@ export interface IStorage {
     totalRatings: number;
     profilePhotoData: string;
   }>>;
-  
+
   sessionStore: session.Store;
 }
 
@@ -155,13 +155,31 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getServiceByPaymentId(paymentReference: string): Promise<Service | undefined> {
+    const result = await db
+      .select()
+      .from(services)
+      .where(eq(services.paymentReference, paymentReference))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateServiceStatusByPaymentReference(paymentReference: string, status: string): Promise<Service> {
+    const result = await db
+      .update(services)
+      .set({ status })
+      .where(eq(services.paymentReference, paymentReference))
+      .returning();
+    return result[0];
+  }
+
   async getServicesByStoreId(storeId: number, status?: string): Promise<Service[]> {
     if (status) {
       return await db.select().from(services)
         .where(and(eq(services.storeId, storeId), eq(services.status, status)))
         .orderBy(desc(services.createdAt));
     }
-    
+
     return await db.select().from(services)
       .where(eq(services.storeId, storeId))
       .orderBy(desc(services.createdAt));
@@ -170,14 +188,14 @@ export class DatabaseStorage implements IStorage {
   async getAvailableServicesForAssembler(assembler: Assembler): Promise<Service[]> {
     // Get all open services
     const openServices = await db.select().from(services).where(eq(services.status, 'open')).orderBy(desc(services.createdAt));
-    
+
     // Get services where this assembler has already applied
     const assemblerApplications = await db.select({ serviceId: applications.serviceId })
       .from(applications)
       .where(eq(applications.assemblerId, assembler.id));
-    
+
     const appliedServiceIds = new Set(assemblerApplications.map(app => app.serviceId));
-    
+
     // Return only services where the assembler hasn't applied yet
     return openServices.filter(service => !appliedServiceIds.has(service.id));
   }
@@ -187,14 +205,14 @@ export class DatabaseStorage implements IStorage {
     const allServices = await db.select().from(services)
       .where(inArray(services.status, ['open', 'in-progress', 'completed', 'awaiting_evaluation']))
       .orderBy(desc(services.createdAt));
-    
+
     // Get services where this assembler has applications
     const assemblerApplications = await db.select({ serviceId: applications.serviceId, status: applications.status })
       .from(applications)
       .where(eq(applications.assemblerId, assembler.id));
-    
+
     const assemblerServiceIds = new Set(assemblerApplications.map(app => app.serviceId));
-    
+
     // Get services where this assembler has been accepted (is the chosen assembler)
     const acceptedApplications = await db.select({ serviceId: applications.serviceId })
       .from(applications)
@@ -202,33 +220,33 @@ export class DatabaseStorage implements IStorage {
         eq(applications.assemblerId, assembler.id),
         eq(applications.status, 'accepted')
       ));
-    
+
     const acceptedServiceIds = new Set(acceptedApplications.map(app => app.serviceId));
-    
+
     // Apply consistent status-based visibility rules to prevent duplicates
     const availableServices = allServices.filter(service => {
       // Open services: visible to all assemblers
       if (service.status === 'open') {
         return true;
       }
-      
+
       // In-progress, completed, awaiting_evaluation: only visible to accepted assembler
       if (['in-progress', 'completed', 'awaiting_evaluation'].includes(service.status)) {
         return acceptedServiceIds.has(service.id);
       }
-      
+
       return false;
     });
-    
+
     console.log(`Total de serviços encontrados: ${allServices.length}`);
     console.log(`Serviços abertos (visíveis a todos): ${allServices.filter(s => s.status === 'open').length}`);
     console.log(`Serviços onde montador foi aceito: ${acceptedServiceIds.size}`);
     console.log(`TODOS OS SERVIÇOS disponíveis para este montador: ${availableServices.length}`);
-    
+
     // Get assembler coordinates from CEP
     let assemblerLat: number;
     let assemblerLng: number;
-    
+
     try {
       const geocoding = await import('./geocoding.js');
       const coords = await geocoding.geocodeFromCEP(assembler.cep || '');
@@ -241,14 +259,14 @@ export class DatabaseStorage implements IStorage {
       assemblerLat = -23.5505199;
       assemblerLng = -46.6333094;
     }
-    
+
     // Calculate distance for each service and filter by 20km radius
     const servicesWithDistance = [];
-    
+
     for (const service of availableServices) {
       const serviceLat = parseFloat(service.latitude);
       const serviceLng = parseFloat(service.longitude);
-      
+
       let distance = 0;
       try {
         const geocoding = await import('./geocoding.js');
@@ -258,7 +276,7 @@ export class DatabaseStorage implements IStorage {
         console.log('Erro ao calcular distância:', error);
         distance = 999; // Set high distance if calculation fails
       }
-      
+
       // Only include services within 20km radius
       if (distance <= 20) {
         console.log(`Serviço ID ${service.id}: INCLUÍDO (distância: ${distance.toFixed(2)}km <= 20km)`);
@@ -270,7 +288,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Serviço ID ${service.id}: EXCLUÍDO (distância: ${distance.toFixed(2)}km > 20km)`);
       }
     }
-    
+
     // Sort by distance (closest first)
     return servicesWithDistance.sort((a, b) => a.distance - b.distance);
   }
@@ -309,6 +327,7 @@ export class DatabaseStorage implements IStorage {
   async getApplicationsByServiceId(serviceId: number): Promise<Application[]> {
     return await db.select().from(applications).where(eq(applications.serviceId, serviceId));
   }
+ 
 
   async createApplication(applicationData: InsertApplication): Promise<Application> {
     const result = await db.insert(applications).values(applicationData).returning();
@@ -433,7 +452,7 @@ export class DatabaseStorage implements IStorage {
           not(eq(messages.senderId, userId)), // Don't count own messages
           isNull(messageReads.messageId) // Only unread messages
         ));
-      
+
       console.log(`📊 Contagem de mensagens não lidas para usuário ${userId}: ${result[0]?.count || 0} (de ${serviceIds.length} serviços)`);
       return Number(result[0]?.count || 0);
     } catch (error) {
@@ -509,8 +528,8 @@ export class DatabaseStorage implements IStorage {
       averageRating: sql<number>`COALESCE(AVG(${ratings.rating}), 0)`,
       totalRatings: sql<number>`COUNT(${ratings.id})`
     })
-    .from(ratings)
-    .where(eq(ratings.toUserId, userId));
+      .from(ratings)
+      .where(eq(ratings.toUserId, userId));
 
     return {
       averageRating: Number(result[0]?.averageRating || 0),
@@ -536,11 +555,11 @@ export class DatabaseStorage implements IStorage {
       fromUserName: users.name,
       serviceTitle: services.title
     })
-    .from(ratings)
-    .innerJoin(users, eq(ratings.fromUserId, users.id))
-    .innerJoin(services, eq(ratings.serviceId, services.id))
-    .where(eq(ratings.toUserId, userId))
-    .orderBy(desc(ratings.createdAt));
+      .from(ratings)
+      .innerJoin(users, eq(ratings.fromUserId, users.id))
+      .innerJoin(services, eq(ratings.serviceId, services.id))
+      .where(eq(ratings.toUserId, userId))
+      .orderBy(desc(ratings.createdAt));
 
     return result as any[];
   }
@@ -561,13 +580,13 @@ export class DatabaseStorage implements IStorage {
       averageRating: sql<number>`COALESCE(AVG(${ratings.rating}), 0)`,
       totalRatings: sql<number>`COUNT(${ratings.id})`
     })
-    .from(users)
-    .leftJoin(ratings, eq(ratings.toUserId, users.id))
-    .where(eq(users.userType, userType))
-    .groupBy(users.id, users.name, users.userType, users.profilePhotoData)
-    .having(sql`COUNT(${ratings.id}) > 0`)
-    .orderBy(desc(sql`AVG(${ratings.rating})`), desc(sql`COUNT(${ratings.id})`))
-    .limit(limit);
+      .from(users)
+      .leftJoin(ratings, eq(ratings.toUserId, users.id))
+      .where(eq(users.userType, userType))
+      .groupBy(users.id, users.name, users.userType, users.profilePhotoData)
+      .having(sql`COUNT(${ratings.id}) > 0`)
+      .orderBy(desc(sql`AVG(${ratings.rating})`), desc(sql`COUNT(${ratings.id})`))
+      .limit(limit);
 
     return result.map(row => ({
       id: row.id,
