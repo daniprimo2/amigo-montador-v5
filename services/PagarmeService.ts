@@ -157,8 +157,6 @@ export class PagarmeService {
         } catch (error: any) {
             const errors = error?.response?.data?.errors;
 
-            console.log(errors)
-
             if (Array.isArray(errors)) {
                 console.log('🛑 Erros da API Pagar.me:');
                 errors.forEach((e: any, i: number) =>
@@ -254,22 +252,47 @@ export class PagarmeService {
     }
 
     static async fecharRecebedorMontador(params: {
-        recipient_id: string; 
+        recipient_id: string;
         status: boolean;
     }) {
-        // Atualiza o recebedor (se necessário)
-        await axios.put(`${API_URL}/recipients/${params.recipient_id}`, {
-            api_key: API_KEY,
-            transfer_enabled: params.status,
-        });
+        try {
+            // Atualiza o recebedor (se necessário)
+            const res = await axios.put(`${API_URL}/recipients/${params.recipient_id}`, {
+                api_key: API_KEY,
+                transfer_enabled: params.status,
+            });
 
-        // Realiza a transferência manual
-        const transferResponse = await axios.post(`${API_URL}/transfers`, {
-            api_key: API_KEY,
-            recipient_id: params.recipient_id,
-        });
+            // // Realiza a transferência manual
+            // const transferResponse = await axios.post(`${API_URL}/transfers`, {
+            //     api_key: API_KEY,
+            //     recipient_id: params.recipient_id,
+            // });
 
-        return transferResponse.data;
+            return res;
+        } catch (error: any) {
+            const errors = error?.response?.data?.errors;
+
+            if (Array.isArray(errors)) {
+                console.log('🛑 Erros da API Pagar.me:');
+                errors.forEach((e: any, i: number) =>
+                    console.log(`  ${i + 1}. ${e.message} (${e.parameter_name})`)
+                );
+
+                return {
+                    success: false,
+                    message: errors[0]?.message || 'Erro desconhecido na API Pagar.me',
+                    type: errors[0]?.type,
+                    parameter: errors[0]?.parameter_name,
+                };
+            } else {
+                console.error('❗Erro inesperado:', error?.response?.data || error?.message);
+                return {
+                    success: false,
+                    message: 'Erro inesperado ao criar transação',
+                };
+            }
+        }
+
     }
 
 }
