@@ -9,21 +9,45 @@ const __dirname = path.dirname(__filename);
 console.log('🚀 Iniciando aplicação...');
 
 // Verificar se temos um arquivo JS compilado
-const jsFile = path.join(__dirname, 'index.js');
+const jsFile = path.join(__dirname, 'dist/index.js');
+const jsFileRoot = path.join(__dirname, 'index.js');
 const tsFile = path.join(__dirname, 'server/index.ts');
+
+console.log('🔍 Procurando arquivos de entrada...');
+console.log('Verificando:', jsFile);
+console.log('Verificando:', jsFileRoot);
+console.log('Verificando:', tsFile);
 
 let command, args;
 
 if (fs.existsSync(jsFile)) {
-  console.log('📦 Executando versão compilada (JS)...');
+  console.log('📦 Executando versão compilada (JS) em dist/...');
   command = 'node';
   args = [jsFile];
+} else if (fs.existsSync(jsFileRoot)) {
+  console.log('📦 Executando versão compilada (JS) no root...');
+  command = 'node';
+  args = [jsFileRoot];
 } else if (fs.existsSync(tsFile)) {
   console.log('📝 Executando versão TypeScript com tsx...');
   command = 'npx';
   args = ['tsx', tsFile];
 } else {
   console.error('❌ Arquivo de entrada não encontrado!');
+  console.error('Arquivos verificados:');
+  console.error('- ', jsFile, fs.existsSync(jsFile) ? '✅' : '❌');
+  console.error('- ', jsFileRoot, fs.existsSync(jsFileRoot) ? '✅' : '❌');
+  console.error('- ', tsFile, fs.existsSync(tsFile) ? '✅' : '❌');
+  
+  // Tentar listar o conteúdo do diretório para debug
+  console.error('Conteúdo do diretório atual:');
+  try {
+    const files = fs.readdirSync(__dirname);
+    files.forEach(file => console.error('- ', file));
+  } catch (error) {
+    console.error('Erro ao listar diretório:', error.message);
+  }
+  
   process.exit(1);
 }
 
