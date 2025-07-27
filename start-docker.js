@@ -20,7 +20,11 @@ console.log('Verificando:', tsFile);
 
 let command, args;
 
-if (fs.existsSync(jsFile)) {
+if (fs.existsSync(tsFile)) {
+  console.log('📝 Executando versão TypeScript com tsx...');
+  command = 'npx';
+  args = ['tsx', tsFile];
+} else if (fs.existsSync(jsFile)) {
   console.log('📦 Executando versão compilada (JS) em dist/...');
   command = 'node';
   args = [jsFile];
@@ -28,10 +32,6 @@ if (fs.existsSync(jsFile)) {
   console.log('📦 Executando versão compilada (JS) no root...');
   command = 'node';
   args = [jsFileRoot];
-} else if (fs.existsSync(tsFile)) {
-  console.log('📝 Executando versão TypeScript com tsx...');
-  command = 'npx';
-  args = ['tsx', tsFile];
 } else {
   console.error('❌ Arquivo de entrada não encontrado!');
   console.error('Arquivos verificados:');
