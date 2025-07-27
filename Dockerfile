@@ -54,6 +54,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/default-avatar.svg ./
 COPY --from=builder --chown=nodejs:nodejs /app/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/migrations ./migrations
 COPY --from=builder --chown=nodejs:nodejs /app/server ./server
+COPY --from=builder --chown=nodejs:nodejs /app/services ./services
 
 # Mudar para usuário não-root
 USER nodejs
