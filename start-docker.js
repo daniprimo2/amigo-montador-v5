@@ -20,18 +20,11 @@ console.log('Verificando:', tsFile);
 
 let command, args;
 
+// SEMPRE tentar TypeScript primeiro para evitar problemas de sintaxe
 if (fs.existsSync(tsFile)) {
   console.log('📝 Executando versão TypeScript com tsx...');
   command = 'npx';
   args = ['tsx', tsFile];
-} else if (fs.existsSync(jsFile)) {
-  console.log('📦 Executando versão compilada (JS) em dist/...');
-  command = 'node';
-  args = [jsFile];
-} else if (fs.existsSync(jsFileRoot)) {
-  console.log('📦 Executando versão compilada (JS) no root...');
-  command = 'node';
-  args = [jsFileRoot];
 } else {
   console.error('❌ Arquivo de entrada não encontrado!');
   console.error('Arquivos verificados:');
