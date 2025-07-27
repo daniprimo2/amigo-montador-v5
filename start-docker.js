@@ -25,6 +25,14 @@ if (fs.existsSync(tsFile)) {
   console.log('📝 Executando versão TypeScript com tsx...');
   command = 'npx';
   args = ['tsx', tsFile];
+} else if (fs.existsSync(jsFile)) {
+  console.log('📦 Executando versão compilada (JS) em dist/...');
+  command = 'node';
+  args = [jsFile];
+} else if (fs.existsSync(jsFileRoot)) {
+  console.log('📦 Executando versão compilada (JS) no root...');
+  command = 'node';
+  args = [jsFileRoot];
 } else {
   console.error('❌ Arquivo de entrada não encontrado!');
   console.error('Arquivos verificados:');
@@ -37,6 +45,14 @@ if (fs.existsSync(tsFile)) {
   try {
     const files = fs.readdirSync(__dirname);
     files.forEach(file => console.error('- ', file));
+    
+    // Verificar se existe diretório server
+    const serverDir = path.join(__dirname, 'server');
+    if (fs.existsSync(serverDir)) {
+      console.error('Conteúdo do diretório server:');
+      const serverFiles = fs.readdirSync(serverDir);
+      serverFiles.forEach(file => console.error('  - ', file));
+    }
   } catch (error) {
     console.error('Erro ao listar diretório:', error.message);
   }
