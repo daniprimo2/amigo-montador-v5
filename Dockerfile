@@ -32,7 +32,7 @@ RUN if [ ! -f dist/index.js ]; then \
 FROM node:18-alpine AS production
 
 # Instalar dependências do sistema para produção
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init wget
 
 # Criar usuário não-root
 RUN addgroup -g 1001 -S nodejs
@@ -45,15 +45,14 @@ COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copiar arquivos built
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 COPY --from=builder --chown=nodejs:nodejs /app/attached_assets ./attached_assets
 
 # Copiar arquivos necessários para runtime
-COPY --chown=nodejs:nodejs package*.json ./
-COPY --chown=nodejs:nodejs start-docker.js ./
-COPY --chown=nodejs:nodejs default-avatar.svg ./
-COPY --chown=nodejs:nodejs shared ./shared
-COPY --chown=nodejs:nodejs migrations ./migrations
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/start-docker.js ./
+COPY --from=builder --chown=nodejs:nodejs /app/default-avatar.svg ./
+COPY --from=builder --chown=nodejs:nodejs /app/shared ./shared
+COPY --from=builder --chown=nodejs:nodejs /app/migrations ./migrations
 
 # Mudar para usuário não-root
 USER nodejs
@@ -67,7 +66,7 @@ ENV PORT=5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
 
 # Usar dumb-init para proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
