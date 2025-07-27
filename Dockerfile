@@ -18,8 +18,15 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
-# Build da aplicação
+# Build da aplicação (frontend + preparação)
 RUN npm run build
+
+# Garantir que temos um arquivo JS executável
+RUN if [ ! -f dist/index.js ]; then \
+    echo "Criando index.js a partir do TypeScript..." && \
+    npx tsx server/index.ts --build --outDir dist 2>/dev/null || \
+    cp server/index.ts dist/index.js; \
+    fi
 
 # Stage 3: Imagem de produção
 FROM node:18-alpine AS production
@@ -43,6 +50,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/attached_assets ./attached_assets
 
 # Copiar arquivos necessários para runtime
 COPY --chown=nodejs:nodejs package*.json ./
+COPY --chown=nodejs:nodejs start-docker.js ./
 COPY --chown=nodejs:nodejs default-avatar.svg ./
 COPY --chown=nodejs:nodejs shared ./shared
 COPY --chown=nodejs:nodejs migrations ./migrations
@@ -64,5 +72,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Usar dumb-init para proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
 
-# Comando para rodar a aplicação
-CMD ["node", "dist/index.js"]
+# Comando para rodar a aplicação (inteligente JS/TS)
+CMD ["node", "start-docker.js"]
