@@ -149,7 +149,7 @@ export const LoginForm: React.FC = () => {
             />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Bem-vindo de volta</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Bem-vindo</h2>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -200,9 +200,7 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
@@ -228,10 +226,11 @@
   }
 
   /* Better placeholder visibility */
-  input::placeholder,
-  textarea::placeholder {
-    @apply text-muted-foreground opacity-70;
-  }
+input::placeholder,
+textarea::placeholder {
+  @apply text-muted-foreground opacity-70;
+}
+
 
   /* Enhanced button text contrast */
   .btn {
